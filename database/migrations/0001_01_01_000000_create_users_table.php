@@ -14,9 +14,24 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->unsignedBigInteger('profile_id')->nullable()->unique()->index();
+            $table->string('username')->unique()->index();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->unsignedTinyInteger('role')->default(1);
+            $table->boolean('is_admin')->default(false);
+            $table->boolean('has_2fa')->default(false);
+            $table->string('two_factor_secret')->nullable();
+            $table->json('two_factor_backups')->nullable();
+            $table->boolean('can_upload')->default(true);
+            $table->boolean('can_comment')->default(true);
+            $table->boolean('can_like')->default(true);
+            $table->boolean('can_follow')->default(true);
+            $table->text('admin_note')->nullable();
+            $table->unsignedTinyInteger('trust_level')->default(5)->nullable();
+            $table->timestamp('delete_after')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
