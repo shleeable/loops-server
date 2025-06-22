@@ -44,6 +44,7 @@ return new class extends Migration
             $table->boolean('can_stitch')->default(false);
             $table->boolean('is_pinned')->default(false)->index();
             $table->unsignedTinyInteger('pinned_order')->nullable();
+            $table->foreign('profile_id')->references('id')->on('profiles')->cascadeOnDelete();
             $table->timestamps();
         });
     }
