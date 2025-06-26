@@ -3,12 +3,13 @@
 namespace App\Services;
 
 use App\Models\AdminSetting;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class SettingsFileService
 {
     protected $publicDisk;
+
     protected $privateDisk;
 
     public function __construct()
@@ -39,7 +40,7 @@ class SettingsFileService
                     'primary' => $settings['branding.primaryColor'] ?? '#3b82f6',
                     'secondary' => $settings['branding.secondaryColor'] ?? '#8b5cf6',
                     'accent' => $settings['branding.accentColor'] ?? '#10b981',
-                ]
+                ],
             ],
             'registration' => [
                 'open' => $settings['general.openRegistration'] ?? true,
@@ -53,7 +54,7 @@ class SettingsFileService
             'federation' => [
                 'enabled' => $settings['federation.enableFederation'] ?? false,
                 'mode' => $settings['federation.federationMode'] ?? 'open',
-            ]
+            ],
         ];
 
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -75,7 +76,7 @@ class SettingsFileService
         $config = [
             'version' => now()->timestamp,
             'generated_at' => now()->toISOString(),
-            'settings' => $settings
+            'settings' => $settings,
         ];
 
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -105,6 +106,7 @@ class SettingsFileService
 
             if ($config) {
                 Cache::put('settings:public', $config, now()->addHours(24));
+
                 return $config;
             }
         }
@@ -131,6 +133,7 @@ class SettingsFileService
 
             if ($config) {
                 Cache::put('settings:admin', $config, now()->addHours(24));
+
                 return $config;
             }
         }
