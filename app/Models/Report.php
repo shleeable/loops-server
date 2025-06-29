@@ -13,15 +13,15 @@ class Report extends Model
 
     public function reportEntityType()
     {
-        if($this->reported_profile_id) {
+        if ($this->reported_profile_id) {
             return 'profile';
         }
 
-        if($this->reported_video_id) {
+        if ($this->reported_video_id) {
             return 'video';
         }
 
-        if($this->reported_comment_id) {
+        if ($this->reported_comment_id) {
             return 'comment';
         }
 
@@ -35,6 +35,6 @@ class Report extends Model
 
     public function adminUrl()
     {
-        return url('/admin/reports/show/' . $this->id);
+        return url('/admin/reports/show/'.$this->id);
     }
 }
