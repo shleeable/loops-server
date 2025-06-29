@@ -7,7 +7,10 @@ use App\Services\HashidService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Observers\CommentObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
+#[ObservedBy([CommentObserver::class])]
 class Comment extends Model
 {
     use HasFactory, HasSnowflakePrimary;
@@ -45,7 +48,9 @@ class Comment extends Model
 
     public function shareUrl(): string
     {
-        return "c:id:1";
+        $vid = HashidService::encode($this->video_id);
+        $cid = HashidService::encode($this->id);
+        return "/v/{$vid}?c={$cid}";
     }
 
     public function video()
