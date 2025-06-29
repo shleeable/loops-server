@@ -3,12 +3,12 @@
 namespace App\Models;
 
 use App\Concerns\HasSnowflakePrimary;
+use App\Observers\CommentObserver;
 use App\Services\HashidService;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Observers\CommentObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
 #[ObservedBy([CommentObserver::class])]
 class Comment extends Model
@@ -50,6 +50,7 @@ class Comment extends Model
     {
         $vid = HashidService::encode($this->video_id);
         $cid = HashidService::encode($this->id);
+
         return "/v/{$vid}?c={$cid}";
     }
 
