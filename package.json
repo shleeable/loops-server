@@ -24,6 +24,7 @@
         "boxicons": "^2.1.4",
         "date-fns": "^4.1.0",
         "emoji-mart-vue-fast": "^15.0.3",
+        "esbuild": ">=0.25.0",
         "feather-icons": "^4.29.2",
         "fs-extra": "^11.2.0",
         "highlight.js": "^11.11.1",
@@ -39,5 +40,8 @@
         "vue-advanced-cropper": "^2.8.9",
         "vue-recaptcha": "2.0.2",
         "vue-router": "^4.5.0"
+    },
+    "devDependencies": {
+      "esbuild": ">=0.25.0"
     }
 }
