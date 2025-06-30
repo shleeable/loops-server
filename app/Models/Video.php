@@ -19,6 +19,17 @@ class Video extends Model
     use HasFactory, HasSnowflakePrimary;
 
     /**
+     * Status Bitmask
+     * 0 = Unused
+     * 1 = Pending Transcoding
+     * 2 = Published
+     * 3 = Reserved
+     * 4 = Archived
+     * 5 = Reserved
+     * 6 = Admin unpublished
+     **/
+
+    /**
      * Indicates if the IDs are auto-incrementing.
      *
      * @var bool
@@ -35,6 +46,7 @@ class Video extends Model
     protected function casts(): array
     {
         return [
+            'status' => 'integer',
             'profile_id' => 'string',
             'is_sensitive' => 'boolean',
             'media_metadata' => 'array',
@@ -51,6 +63,17 @@ class Video extends Model
     protected function canComment(Builder $query): void
     {
         $query->where('comment_state', 4);
+    }
+
+    public function statusLabel()
+    {
+        return match ($this->status) {
+            1 => 'pending',
+            2 => 'published',
+            4 => 'archived',
+            6 => 'unpublished',
+            default => null
+        };
     }
 
     public function hashid()
