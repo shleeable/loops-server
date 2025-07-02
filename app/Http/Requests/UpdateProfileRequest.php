@@ -14,7 +14,7 @@ class UpdateProfileRequest extends FormRequest
     public function authorize(): bool
     {
         return (bool) $this->user() &&
-               $this->user()->status === 1 &&
+               $this->user()->profile->status == 1 &&
                $this->user()->profile_id;
     }
 
