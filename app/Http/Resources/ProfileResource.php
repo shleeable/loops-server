@@ -27,7 +27,7 @@ class ProfileResource extends JsonResource
             'post_count' => $this->video_count,
             'follower_count' => $this->followers,
             'following_count' => $this->following,
-            'url' => $this->getPublicUrl(),
+            'url' => url('/@'.$this->username),
             'is_blocking' => null,
             'links' => $this->links ?? [],
             'created_at' => $this->created_at->format('c'),
