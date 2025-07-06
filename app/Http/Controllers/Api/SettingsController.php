@@ -14,6 +14,7 @@ use App\Models\UserFilter;
 use App\Services\AccountService;
 use App\Services\AvatarService;
 use App\Services\TwoFactorService;
+use App\Services\UserAuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use PragmaRX\Google2FA\Google2FA;
@@ -22,9 +23,12 @@ class SettingsController extends Controller
 {
     use ApiHelpers;
 
-    public function __construct()
+    protected UserAuditLogService $auditService;
+
+    public function __construct(UserAuditLogService $auditService)
     {
         $this->middleware('auth');
+        $this->auditService = $auditService;
     }
 
     public function storeBio(UpdateProfileRequest $request)
@@ -32,6 +36,7 @@ class SettingsController extends Controller
         $user = $request->user();
         $pid = $user->profile_id;
         $profile = $user->profile;
+        $originalData = $user->only(['name', 'bio']);
 
         if ($request->filled('name')) {
             $name = $request->filled('name') ? $request->input('name') : AccountService::getDefaultDisplayName($user->profile_id);
@@ -46,6 +51,15 @@ class SettingsController extends Controller
 
         $profile->save();
 
+        $changedFields = [];
+        foreach ($request->validated() as $key => $value) {
+            if ($originalData[$key] !== $value) {
+                $changedFields[] = $key;
+            }
+        }
+
+        $this->auditService->logProfileUpdated($user, $changedFields);
+
         AccountService::del($pid);
 
         return $this->data(AccountService::get($pid));
@@ -53,18 +67,22 @@ class SettingsController extends Controller
 
     public function updateAvatar(UpdateAvatarRequest $request)
     {
-        $profile = $request->user()->profile;
+        $user = $request->user();
+        $profile = $user->profile;
 
         AvatarService::updateAvatar($profile, $request->file('avatar'));
+        $this->auditService->logProfileAvatarUpdated($user);
 
         return $this->data(AccountService::get($profile->id));
     }
 
     public function deleteAvatar(Request $request)
     {
-        $profile = $request->user()->profile;
+        $user = $request->user();
+        $profile = $user->profile;
 
         AvatarService::deleteAvatar($profile);
+        $this->auditService->logProfileAvatarDeleted($user);
 
         return $this->data(AccountService::get($profile->id));
     }
@@ -80,6 +98,7 @@ class SettingsController extends Controller
         $user = $request->user();
         $user->password = Hash::make($newPassword);
         $user->save();
+        $this->auditService->logPasswordChanged($user);
 
         return $this->success();
     }
@@ -95,6 +114,8 @@ class SettingsController extends Controller
         $user->two_factor_backups = null;
         $user->has_2fa = false;
         $user->save();
+
+        $this->auditService->logTwoFactorDisabled($user);
 
         return $this->success();
     }
@@ -133,6 +154,8 @@ class SettingsController extends Controller
         $user->two_factor_secret = $request->session()->get('2fa_secret');
         $user->has_2fa = true;
         $user->save();
+
+        $this->auditService->logTwoFactorEnabled($user);
 
         return $this->success();
     }
