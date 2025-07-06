@@ -41,10 +41,12 @@ class VideoService
 
             return [
                 'id' => (string) $video->id,
+                'hid' => $video->hashid(),
                 'account' => AccountService::compact($video->profile_id),
                 'caption' => $video->caption,
                 'captionText' => $captionText,
                 'url' => $video->shareUrl(),
+                'likes' => $video->likes,
                 'created_at' => $video->created_at->format('c'),
                 'media' => [
                     'width' => 1280,
