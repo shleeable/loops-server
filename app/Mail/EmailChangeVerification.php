@@ -4,7 +4,6 @@ namespace App\Mail;
 
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -15,6 +14,7 @@ class EmailChangeVerification extends Mailable
     use Queueable, SerializesModels;
 
     public $user;
+
     public $token;
 
     /**
@@ -41,12 +41,13 @@ class EmailChangeVerification extends Mailable
      */
     public function content(): Content
     {
-        $verificationUrl = url('/auth/verify-email/' . $this->user->id . '/' . $this->token . '?type=change');
+        $verificationUrl = url('/auth/verify-email/'.$this->user->id.'/'.$this->token.'?type=change');
+
         return new Content(
             view: 'emails.email-change-verification',
             with: [
                 'user' => $this->user,
-                'verificationUrl' => $verificationUrl
+                'verificationUrl' => $verificationUrl,
             ],
         );
     }
