@@ -107,6 +107,22 @@ class UserAuditLogService
         return $this->log($user, 'avatar_deleted');
     }
 
+    public function logAccountDataSettingsUpdated(
+        User|int $user,
+        array $changedFields = [],
+    ): UserAuditLog {
+        return $this->log($user, 'account_data_settings_updated', [
+            'changed_fields' => $changedFields,
+        ]);
+    }
+
+    public function logAccountDataSelectiveExport(
+        User|int $user,
+        $activity = null
+    ): UserAuditLog {
+        return $this->log($user, 'selective_export', null, $activity);
+    }
+
     public function logPasswordReset(User|int $user, array $additionalData = []): UserAuditLog
     {
         return $this->log($user, 'password_reset', [
