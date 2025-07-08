@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\DataExport;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class CleanupExpiredExports extends Command
@@ -37,12 +38,12 @@ class CleanupExpiredExports extends Command
 
         foreach ($expiredExports as $export) {
             try {
-                if ($export->file_path && Storage::exists($export->file_path)) {
-                    Storage::delete($export->file_path);
+                if ($export->file_path && Storage::disk('exports')->exists($export->file_path)) {
+                    Storage::disk('exports')->delete($export->file_path);
                 }
-
                 $export->update(['status' => 'expired']);
                 $cleanedCount++;
+                Cache::forget("acct-data:data-export-history:{$export->user_id}");
 
                 $this->line("✓ Cleaned export ID {$export->id}");
             } catch (\Exception $e) {
