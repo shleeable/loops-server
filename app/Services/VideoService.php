@@ -47,6 +47,7 @@ class VideoService
                 'captionText' => $captionText,
                 'url' => $video->shareUrl(),
                 'likes' => $video->likes,
+                'comments' => $video->comments,
                 'created_at' => $video->created_at->format('c'),
                 'media' => [
                     'width' => 1280,
