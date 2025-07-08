@@ -11,7 +11,7 @@ class Notification extends Model
 
     /**
      * Types Bitmask
-     * 0-10 = Reserved
+     * 0-10 = TBA
      * 11 = New Follower
      * 12 = Reserved
      * 13 = Someone you know joined Loops
