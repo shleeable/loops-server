@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\HasSnowflakePrimary;
 use App\Observers\VideoObserver;
 use App\Services\HashidService;
+use DB;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -111,5 +112,22 @@ class Video extends Model
                     $this->vid_optimized :
                     $this->vid
             );
+    }
+
+    public function recalculateCommentsCount(): int
+    {
+        $actualCount = DB::selectOne("
+            SELECT (
+                (SELECT COUNT(*) FROM comments
+                 WHERE video_id = ?)
+                +
+                (SELECT COUNT(*) FROM comment_replies
+                 WHERE video_id = ? AND status = 'active' AND deleted_at IS NULL)
+            ) as total_count
+        ", [$this->id, $this->id])->total_count;
+
+        $this->update(['comments' => $actualCount]);
+
+        return $actualCount;
     }
 }

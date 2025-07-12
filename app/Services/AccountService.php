@@ -44,6 +44,16 @@ class AccountService
         ];
     }
 
+    public static function deletedAccount()
+    {
+        return [
+            'id' => (string) '0',
+            'name' => 'User',
+            'username' => 'deleted',
+            'avatar' => '/storage/avatars/default.jpg',
+        ];
+    }
+
     public static function del($id)
     {
         return Cache::forget(self::CACHE_KEY.$id);

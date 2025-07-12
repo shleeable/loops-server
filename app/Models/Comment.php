@@ -9,11 +9,15 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[ObservedBy([CommentObserver::class])]
 class Comment extends Model
 {
-    use HasFactory, HasSnowflakePrimary;
+    use HasFactory, HasSnowflakePrimary, SoftDeletes;
+
+    protected $fillable = ['video_id', 'profile_id', 'caption', 'status'];
 
     /**
      * Indicates if the IDs are auto-incrementing.
@@ -39,6 +43,11 @@ class Comment extends Model
             'is_hidden' => 'boolean',
             'is_sensitive' => 'boolean',
         ];
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(CommentReply::class, 'comment_id', 'id');
     }
 
     public function profile(): BelongsTo

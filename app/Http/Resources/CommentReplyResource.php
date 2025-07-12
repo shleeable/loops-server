@@ -18,6 +18,25 @@ class CommentReplyResource extends JsonResource
     {
         $pid = $request->user() ? $request->user()->profile_id : false;
 
+        if ($this->deleted_at && $this->status != 'active') {
+            $msg = $this->status === 'deleted_by_user' ?
+                'This comment was deleted by the user' :
+                'This comment was deleted by admins';
+
+            return [
+                'id' => (string) $this->id,
+                'v_id' => (string) $this->video_id,
+                'account' => AccountService::deletedAccount(),
+                'caption' => $msg,
+                'likes' => 0,
+                'liked' => false,
+                'url' => null,
+                'tombstone' => true,
+                'is_owner' => false,
+                'created_at' => $this->created_at->format('c'),
+            ];
+        }
+
         $res = [
             'id' => (string) $this->id,
             'v_id' => (string) $this->video_id,
@@ -26,6 +45,7 @@ class CommentReplyResource extends JsonResource
             'likes' => $this->likes ?? 0,
             'liked' => $pid ? LikeService::hasCommentReplyLike($this->comment_id, $this->id, $pid) : false,
             'url' => $this->shareUrl(),
+            'tombstone' => false,
             'is_owner' => $pid ? (string) $this->profile_id === (string) $pid : false,
             'created_at' => $this->created_at->format('c'),
         ];

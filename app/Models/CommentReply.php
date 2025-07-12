@@ -7,10 +7,13 @@ use App\Services\HashidService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CommentReply extends Model
 {
-    use HasFactory, HasSnowflakePrimary;
+    use HasFactory, HasSnowflakePrimary, SoftDeletes;
+
+    protected $fillable = ['video_id', 'profile_id', 'comment_id', 'caption', 'status'];
 
     /**
      * Indicates if the IDs are auto-incrementing.
