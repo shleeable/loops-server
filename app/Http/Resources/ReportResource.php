@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Comment;
 use App\Services\AccountService;
 use App\Services\ReportService;
 use App\Services\VideoService;
@@ -28,7 +29,8 @@ class ReportResource extends JsonResource
             $contentPreview = VideoService::getMediaData($this->reported_video_id);
         } elseif ($this->reported_comment_id) {
             $contentType = 'comment';
-            $contentPreview = null;
+            $comment = Comment::findOrFail($this->reported_comment_id);
+            $contentPreview = new CommentResource($comment);
         }
 
         return [
