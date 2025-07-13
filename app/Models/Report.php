@@ -14,6 +14,18 @@ class Report extends Model
 
     public $guarded = [];
 
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'metadata' => 'array',
+        ];
+    }
+
     #[Scope]
     protected function search(Builder $query, ?string $search): Builder
     {
