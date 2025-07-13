@@ -11,11 +11,11 @@ class StoreReportRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        if(!$this->user()) {
+        if (! $this->user()) {
             return false;
         }
 
-        if($this->user()->trust_level < 5) {
+        if ($this->user()->trust_level < 5) {
             return false;
         }
 
@@ -33,7 +33,7 @@ class StoreReportRequest extends FormRequest
             'type' => 'required|in:video,profile,comment,reply',
             'id' => 'required|string',
             'key' => 'required|integer|min:1010|max:1026',
-            'comment' => 'sometimes|nullable|string|min:1|max:500'
+            'comment' => 'sometimes|nullable|string|min:1|max:500',
         ];
     }
 }
