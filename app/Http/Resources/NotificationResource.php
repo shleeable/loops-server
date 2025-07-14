@@ -34,6 +34,7 @@ class NotificationResource extends JsonResource
                 return [
                     'id' => (string) $this->id,
                     'type' => 'internal',
+                    'read_at' => $this->read_at,
                     'created_at' => $this->created_at,
                 ];
                 break;
@@ -51,6 +52,7 @@ class NotificationResource extends JsonResource
             'video_id' => (string) $this->video_id,
             'video_thumbnail' => $thumb,
             'actor' => AccountService::compact($this->profile_id),
+            'read_at' => $this->read_at,
             'created_at' => $this->created_at,
         ];
     }
@@ -61,6 +63,7 @@ class NotificationResource extends JsonResource
             'id' => (string) $this->id,
             'type' => 'new_follower',
             'actor' => AccountService::compact($this->profile_id),
+            'read_at' => $this->read_at,
             'created_at' => $this->created_at,
         ];
     }
@@ -76,6 +79,7 @@ class NotificationResource extends JsonResource
             'actor' => AccountService::compact($this->profile_id),
             'video_id' => (string) $this->video_id,
             'video_thumbnail' => $thumb,
+            'read_at' => $this->read_at,
             'created_at' => $this->created_at,
         ];
     }
