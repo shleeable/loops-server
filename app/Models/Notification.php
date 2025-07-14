@@ -43,7 +43,7 @@ class Notification extends Model
      *
      * @var array
      */
-    protected $fillable = ['user_id', 'type', 'video_id', 'profile_id', 'comment_id', 'comment_reply_id'];
+    protected $fillable = ['user_id', 'type', 'video_id', 'read_at', 'profile_id', 'comment_id', 'comment_reply_id'];
 
     /**
      * Get the attributes that should be cast.
