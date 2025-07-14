@@ -244,6 +244,19 @@ class AdminController extends Controller
         return $this->success();
     }
 
+    public function reportDismissAllByAccount(Request $request, $id)
+    {
+        $report = Report::whereAdminSeen(false)->findOrFail($id);
+
+        Report::whereReporterProfileId($report->reporter_profile_id)
+            ->update([
+                'handled' => true,
+                'admin_seen' => true,
+            ]);
+
+        return $this->success();
+    }
+
     public function reportDeleteVideo(Request $request, $id)
     {
         $report = Report::whereNotNull('reported_video_id')->whereAdminSeen(false)->findOrFail($id);
