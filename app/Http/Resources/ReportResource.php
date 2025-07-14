@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Comment;
+use App\Models\CommentReply;
 use App\Services\AccountService;
 use App\Services\ReportService;
 use App\Services\VideoService;
@@ -31,6 +32,11 @@ class ReportResource extends JsonResource
             $contentType = 'comment';
             $comment = Comment::findOrFail($this->reported_comment_id);
             $contentPreview = new CommentResource($comment);
+        } elseif ($this->reported_comment_reply_id) {
+            $contentType = 'reply';
+            $comment = CommentReply::with('parent')->findOrFail($this->reported_comment_reply_id);
+            $contentPreview = (new CommentReplyResource($comment))->toArray(request());
+            $contentPreview['parent'] = new CommentResource($comment->parent);
         }
 
         return [
@@ -39,6 +45,8 @@ class ReportResource extends JsonResource
             'content_type' => $contentType,
             'content_preview' => $contentPreview,
             'admin_notes' => $this->admin_notes,
+            'user_message' => $this->user_message,
+            'is_remote' => (bool) $this->is_remote,
             'reason' => ReportService::getById($this->report_type),
             'status' => $this->admin_seen == 0 ? 'pending' : 'resolved',
             'created_at' => $this->created_at,
