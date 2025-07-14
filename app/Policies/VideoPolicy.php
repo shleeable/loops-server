@@ -17,7 +17,7 @@ class VideoPolicy
             return true;
         }
 
-        if (! $user->email_verified_at || $user->status != 1) {
+        if (! $user->email_verified_at) {
             return false;
         }
 
