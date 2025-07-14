@@ -271,6 +271,47 @@ class AdminController extends Controller
 
     }
 
+    public function reportDeleteComment(Request $request, $id)
+    {
+        $report = Report::whereNotNull('reported_comment_id')->whereAdminSeen(false)->findOrFail($id);
+        $comment = Comment::withCount('children')->findOrFail($report->reported_comment_id);
+        $report->admin_seen = true;
+        $report->save();
+        $vid = $comment->video_id;
+        if ($comment->children_count == 0) {
+            $comment->forceDelete();
+        } else {
+            $comment->status = 'deleted_by_admin';
+            $comment->delete();
+            $report->admin_seen = true;
+            $report->save();
+        }
+        if ($vid) {
+            Video::findOrFail($vid)->recalculateCommentsCount();
+        }
+
+        return $this->success();
+    }
+
+    public function reportDeleteCommentReply(Request $request, $id)
+    {
+        $report = Report::whereNotNull('reported_comment_reply_id')->whereAdminSeen(false)->findOrFail($id);
+        $commentReply = CommentReply::with('parent')->findOrFail($report->reported_comment_reply_id);
+        $vid = $commentReply->video_id;
+        if ($commentReply->parent) {
+            $commentReply->parent->decrement('replies');
+        } else {
+            $parent = Comment::withTrashed()->findOrFail($commentReply->comment_id);
+            $parent->forceDelete();
+        }
+        $commentReply->forceDelete();
+        if ($vid) {
+            Video::findOrFail($vid)->recalculateCommentsCount();
+        }
+
+        return $this->success();
+    }
+
     public function reportUpdateAdminNotes(Request $request, $id)
     {
         $request->validate([
