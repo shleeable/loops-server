@@ -66,6 +66,35 @@ class AccountController extends Controller
         );
     }
 
+    public function notificationUnreadCount(Request $request)
+    {
+        $pid = $request->user()->profile_id;
+
+        return $this->data(['unread_count' => NotificationService::getUnreadCount($pid)]);
+    }
+
+    public function markNotificationAsRead(Request $request, $id)
+    {
+        $pid = $request->user()->profile_id;
+
+        $notify = Notification::whereUserId($pid)->findOrFail($id);
+        $notify->read_at = now();
+        $notify->save();
+
+        NotificationService::clearUnreadCount($pid);
+
+        return new NotificationResource($notify);
+    }
+
+    public function markAllNotificationsAsRead(Request $request)
+    {
+        $pid = $request->user()->profile_id;
+        Notification::whereUserId($pid)->update(['read_at' => now()]);
+        NotificationService::clearUnreadCount($pid);
+
+        return $this->success();
+    }
+
     public function accountBlock(Request $request, $id)
     {
         $pid = $request->user()->profile_id;
