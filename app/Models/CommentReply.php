@@ -7,6 +7,7 @@ use App\Services\HashidService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CommentReply extends Model
@@ -36,6 +37,11 @@ class CommentReply extends Model
             'is_hidden' => 'boolean',
             'is_sensitive' => 'boolean',
         ];
+    }
+
+    public function parent(): HasOne
+    {
+        return $this->hasOne(Comment::class, 'id', 'comment_id');
     }
 
     public function profile(): BelongsTo
