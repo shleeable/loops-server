@@ -3,9 +3,36 @@
 namespace App\Services;
 
 use App\Models\Notification;
+use Illuminate\Support\Facades\Cache;
 
 class NotificationService
 {
+    const NOTIFY_UNREAD_KEY = 'api:s:notify:unread:';
+
+    public static function getUnreadCount($profileId)
+    {
+        if (! $profileId) {
+            return 0;
+        }
+
+        return Cache::remember(
+            self::NOTIFY_UNREAD_KEY.$profileId,
+            now()->addHours(24),
+            function () use ($profileId) {
+                return Notification::whereUserId($profileId)->whereNull('read_at')->count();
+            }
+        );
+    }
+
+    public static function clearUnreadCount($profileId)
+    {
+        if (! $profileId) {
+            return 0;
+        }
+
+        return Cache::forget(self::NOTIFY_UNREAD_KEY.$profileId);
+    }
+
     public static function newVideoLike($uid, $vid, $pid)
     {
         return Notification::updateOrCreate([
@@ -32,10 +59,10 @@ class NotificationService
             'user_id' => $uid,
             'profile_id' => $pid,
         ])->first();
-        if($res) {
+        if ($res) {
             $res->delete();
         }
-        return;
+
     }
 
     public static function newVideoComment($pid, $uid, $vid, $cid)
@@ -69,7 +96,7 @@ class NotificationService
         $n->item_type = $itemClass;
         $n->item_id = $itemId;
 
-        if($meta) {
+        if ($meta) {
             $n->meta = $meta;
         }
 
