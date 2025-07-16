@@ -30,7 +30,7 @@ class StoreCommentRequest extends FormRequest
     {
         return [
             'parent_id' => 'sometimes|integer|exists:comments,id',
-            'comment' => 'required|string|min:2|max:500',
+            'comment' => 'required|string|min:1|max:500',
         ];
     }
 }
