@@ -81,8 +81,6 @@ class SettingsFileService
 
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-        $this->privateDisk->put('config/admin-config.json', $json);
-
         Cache::put('settings:admin', $config, now()->addHours(24));
 
         return $json;
@@ -93,13 +91,11 @@ class SettingsFileService
      */
     public function getPublicConfig(): array
     {
-        // Try cache first
         $config = Cache::get('settings:public');
         if ($config) {
             return $config;
         }
 
-        // Try file next
         if ($this->publicDisk->exists('config/app-config.json')) {
             $json = $this->publicDisk->get('config/app-config.json');
             $config = json_decode($json, true);
@@ -111,39 +107,24 @@ class SettingsFileService
             }
         }
 
-        // Fallback to database and regenerate
         return json_decode($this->generatePublicConfig(), true);
     }
 
     /**
-     * Get admin config (from cache, file, or DB fallback)
+     * Get admin config (from cache or DB fallback)
      */
     public function getAdminConfig(): array
     {
-        // Try cache first
         $config = Cache::get('settings:admin');
         if ($config) {
             return $config;
         }
 
-        // Try file next
-        if ($this->privateDisk->exists('config/admin-config.json')) {
-            $json = $this->privateDisk->get('config/admin-config.json');
-            $config = json_decode($json, true);
-
-            if ($config) {
-                Cache::put('settings:admin', $config, now()->addHours(24));
-
-                return $config;
-            }
-        }
-
-        // Fallback to database and regenerate
         return json_decode($this->generateAdminConfig(), true);
     }
 
     /**
-     * Get CDN URL for public config (for high-traffic sites)
+     * Get CDN URL for public config
      */
     public function getPublicConfigUrl(): string
     {
