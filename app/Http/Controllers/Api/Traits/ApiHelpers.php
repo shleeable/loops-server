@@ -13,7 +13,7 @@ trait ApiHelpers
             array_merge($res, $addl);
         }
 
-        return response()->json($res, $code, $headers);
+        return response()->json($res, $code, $headers, JSON_UNESCAPED_SLASHES);
     }
 
     public function error($msg, $code = 403, $headers = [])
