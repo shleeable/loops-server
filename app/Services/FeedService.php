@@ -40,7 +40,7 @@ class FeedService
     public static function getPublicVideoFeed($limit = 10)
     {
         $videos = Video::published()
-            ->where('created_at', '>', now()->subDays(14))
+            ->where('created_at', '>', now()->subDays(90))
             ->orderBy('videos.likes', 'desc')
             ->limit($limit)
             ->get();
