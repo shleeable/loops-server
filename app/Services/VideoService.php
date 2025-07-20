@@ -11,6 +11,26 @@ class VideoService
 {
     const CACHE_KEY = 'api:s:video:';
 
+    public static function totalUserCount($pid, $onlyPublished = true, $refresh = false)
+    {
+        $key = self::CACHE_KEY.'total-user-count-pid:'.$pid;
+
+        if ($onlyPublished) {
+            $key = $key.':published';
+        }
+
+        if ($refresh) {
+            Cache::forget(self::CACHE_KEY.'total-user-count-pid:'.$pid);
+            Cache::forget(self::CACHE_KEY.'total-user-count-pid:'.$pid.':published');
+        }
+
+        return Cache::remember($key, now()->addDays(7), function () use ($pid, $onlyPublished) {
+            return $onlyPublished ?
+                Video::whereProfileId($pid)->published()->count() :
+                Video::whereProfileId($pid)->count();
+        });
+    }
+
     public static function deleteMediaData($id)
     {
         return Cache::forget(self::CACHE_KEY.$id);
