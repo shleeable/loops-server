@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Storage;
 
 #[ObservedBy([VideoObserver::class])]
@@ -129,5 +130,27 @@ class Video extends Model
         $this->update(['comments' => $actualCount]);
 
         return $actualCount;
+    }
+
+    public function hashtags(): BelongsToMany
+    {
+        return $this->belongsToMany(Hashtag::class, 'video_hashtags');
+    }
+
+    public function syncHashtagsFromCaption()
+    {
+        preg_match_all('/#([A-Za-z0-9_-]{1,30})/', $this->caption, $matches);
+        $hashtags = [];
+
+        foreach ($matches[1] as $tag) {
+            $hashtag = Hashtag::firstOrCreate([
+                'name' => $tag,
+            ]);
+            if ($hashtag->can_autolink) {
+                $hashtags[] = $hashtag->id;
+            }
+        }
+
+        $this->hashtags()->sync($hashtags);
     }
 }
