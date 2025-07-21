@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 
 class LoginController extends Controller
 {
@@ -36,5 +38,25 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
         $this->middleware('auth')->only('logout');
+    }
+
+    protected function sendLoginResponse(Request $request)
+    {
+        $request->session()->regenerate();
+
+        $this->clearLoginAttempts($request);
+
+        $user = $this->guard()->user();
+
+        if ($user->has_2fa) {
+            Session::put('2fa:user:id', $user->id);
+            Session::put('2fa:user:attempts', 0);
+            $this->guard()->logout();
+
+            return response()->json(['has_2fa' => true]);
+        }
+
+        return $this->authenticated($request, $user)
+                ?: redirect()->intended($this->redirectPath());
     }
 }
