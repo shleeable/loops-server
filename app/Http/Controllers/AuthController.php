@@ -33,6 +33,6 @@ class AuthController extends Controller
             return response()->json(['success' => true, 'error' => null]);
         }
 
-        return response()->json(['success' => false, 'error' => 'Invalid code', 'force_relogin' => false]);
+        return response()->json(['success' => false, 'error' => 'Invalid code, please try again.', 'force_relogin' => false]);
     }
 }
