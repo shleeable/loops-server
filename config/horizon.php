@@ -202,11 +202,30 @@ return [
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
             ],
+
+           'email-verification-supervisor' => [
+                'connection' => 'redis',
+                'queue' => ['email-verification'],
+                'balance' => false,
+                'processes' => env('QUEUE_EMAIL_VERIFICATION_WORKERS', 1),
+                'tries' => 3,
+                'timeout' => 120,
+                'nice' => 0,
+            ],
         ],
 
         'local' => [
             'supervisor-1' => [
                 'maxProcesses' => 3,
+            ],
+
+            'email-verification-supervisor' => [
+                'connection' => 'redis',
+                'queue' => ['email-verification'],
+                'balance' => false,
+                'processes' => 1,
+                'tries' => 3,
+                'timeout' => 120,
             ],
         ],
     ],
