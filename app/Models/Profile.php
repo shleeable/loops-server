@@ -26,7 +26,7 @@ class Profile extends Model
      *
      * @var array
      */
-    protected $fillable = ['user_id', 'username', 'name', 'avatar'];
+    protected $fillable = ['user_id', 'username', 'name', 'avatar', 'followers', 'following'];
 
     protected $guarded = [];
 
