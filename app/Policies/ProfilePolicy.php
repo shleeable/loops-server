@@ -13,7 +13,15 @@ class ProfilePolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        if ($user->is_admin) {
+            return true;
+        }
+
+        if (! $user->email_verified_at) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
