@@ -28,4 +28,12 @@ class UserFilterService
             ->whereAccountId($targetId)
             ->exists();
     }
+
+    public static function isBlockedBy($pid, $targetId)
+    {
+        return DB::table('user_filters')
+            ->whereProfileId($pid)
+            ->whereAccountId($targetId)
+            ->exists();
+    }
 }
