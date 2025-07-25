@@ -110,6 +110,7 @@ class AccountController extends Controller
         Follower::whereProfileId($pid)->whereFollowingId($profile->id)->delete();
         Follower::whereProfileId($profile->id)->whereFollowingId($pid)->delete();
 
+        FollowerService::refreshAndSync($pid, $profile->id);
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_blocking'] = true;
 
@@ -127,6 +128,7 @@ class AccountController extends Controller
             ->whereAccountId($profile->id)
             ->delete();
 
+        FollowerService::refreshAndSync($pid, $profile->id);
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_blocking'] = false;
 
