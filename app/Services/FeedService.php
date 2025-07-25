@@ -8,11 +8,17 @@ use Exception;
 
 class FeedService
 {
-    public static function getAccountFeed($profileId, $limit = 10)
+    public static function getAccountFeed($profileId, $limit, $sort)
     {
         $feed = Video::whereProfileId($profileId)
             ->whereStatus(2)
-            ->orderByDesc('id')
+            ->when($sort, function ($query, $sort) {
+                match ($sort) {
+                    'Latest' => $query->orderByDesc('id'),
+                    'Popular' => $query->orderByDesc('likes'),
+                    'Oldest' => $query->orderBy('created_at')
+                };
+            })
             ->cursorPaginate(10);
 
         return VideoResource::collection($feed);
@@ -40,7 +46,7 @@ class FeedService
     public static function getPublicVideoFeed($limit = 10)
     {
         $videos = Video::published()
-            ->where('created_at', '>', now()->subDays(90))
+            ->where('created_at', '>', now()->subDays(93))
             ->orderBy('videos.likes', 'desc')
             ->limit($limit)
             ->get();
