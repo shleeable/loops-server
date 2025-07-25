@@ -128,6 +128,25 @@ class AdminSettingsController extends Controller
         return $descriptions[$key] ?? null;
     }
 
+    public function deleteLogo(Request $request)
+    {
+        $files = Storage::disk('public')->allFiles('branding');
+
+        Storage::disk('public')->delete($files);
+
+        AdminSetting::set(
+            'branding.logo',
+            null,
+            'string',
+            true,
+            'Logo'
+        );
+        (new SettingsFileService)->flush();
+
+        return $this->data(['logo_url' => url('/nav-logo.png')]);
+
+    }
+
     public function updateLogo(Request $request)
     {
         $request->validate([
