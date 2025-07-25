@@ -36,11 +36,6 @@ class SettingsFileService
             'branding' => [
                 'logo' => $settings['branding.logo'] ?? null,
                 'favicon' => $settings['branding.favicon'] ?? null,
-                'colors' => [
-                    'primary' => $settings['branding.primaryColor'] ?? '#3b82f6',
-                    'secondary' => $settings['branding.secondaryColor'] ?? '#8b5cf6',
-                    'accent' => $settings['branding.accentColor'] ?? '#10b981',
-                ],
             ],
             'registration' => [
                 'open' => $settings['general.openRegistration'] ?? true,
