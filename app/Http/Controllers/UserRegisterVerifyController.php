@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Api\Traits\ApiHelpers;
+use App\Http\Requests\StoreRegisterUsernameRequest;
+use App\Http\Requests\StoreUserRegisterVerifyRequest;
+use App\Jobs\Auth\NewAccountEmailVerifyJob;
+use App\Models\AdminSetting;
+use App\Models\User;
+use App\Models\UserRegisterVerify;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use App\Models\AdminSetting;
-use App\Models\UserRegisterVerify;
-use App\Models\User;
-use App\Http\Requests\StoreUserRegisterVerifyRequest;
-use App\Http\Requests\StoreRegisterUsernameRequest;
-use App\Http\Controllers\Api\Traits\ApiHelpers;
-use App\Jobs\Auth\NewAccountEmailVerifyJob;
 
 class UserRegisterVerifyController extends Controller
 {
@@ -35,6 +35,7 @@ class UserRegisterVerifyController extends Controller
         $request->session()->put('user:reg:verify_attempts', 0);
 
         NewAccountEmailVerifyJob::dispatch($reg);
+
         return $this->success();
     }
 
@@ -48,13 +49,12 @@ class UserRegisterVerifyController extends Controller
                 'email:rfc,dns,spoof,strict',
                 'exists:user_register_verifies,email',
             ],
-            'code' => 'required|digits:6'
+            'code' => 'required|digits:6',
         ]);
-
 
         $request->session()->increment('user:reg:verify_attempts');
 
-        if($request->session()->get('user:reg:verify_attempts') >= 10) {
+        if ($request->session()->get('user:reg:verify_attempts') >= 10) {
             return $this->error('Too many invalid attempts, please try again later.');
         }
 
@@ -62,7 +62,7 @@ class UserRegisterVerifyController extends Controller
         $code = $request->code;
         $reg = UserRegisterVerify::whereEmail($request->email)->whereVerifyCode($code)->first();
 
-        if(!$reg || $reg->verifed_at !== null || $reg->email_last_sent_at === null) {
+        if (! $reg || $reg->verifed_at !== null || $reg->email_last_sent_at === null) {
             return $this->error('Invalid or expired code');
         }
 
@@ -81,7 +81,7 @@ class UserRegisterVerifyController extends Controller
         $regId = $request->session()->get('user:reg:id');
         $reg = UserRegisterVerify::whereNotNull('verified_at')->find($regId);
 
-        if(!$reg) {
+        if (! $reg) {
             return $this->error('Invalid session key');
         }
 
@@ -103,20 +103,21 @@ class UserRegisterVerifyController extends Controller
         Auth::login($user);
 
         $reg->delete();
+
         return $this->success();
     }
 
     public function preflightCheck($request)
     {
-        if($request->user()) {
+        if ($request->user()) {
             return $this->error('You are already logged in, you must logout before registering a new account.');
         }
 
-        if(config('mail.default') == 'log') {
+        if (config('mail.default') == 'log') {
             return $this->error('Mail service not configured, please contact support for assistance.');
         }
 
-        if(AdminSetting::where('key', 'general.openRegistration')->whereRaw("JSON_EXTRACT(value, '$') = false")->exists()) {
+        if (AdminSetting::where('key', 'general.openRegistration')->whereRaw("JSON_EXTRACT(value, '$') = false")->exists()) {
             return $this->error('Registration is closed');
         }
     }
