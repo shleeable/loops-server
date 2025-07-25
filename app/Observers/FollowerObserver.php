@@ -13,11 +13,7 @@ class FollowerObserver
      */
     public function created(Follower $follower): void
     {
-        $follower->profile->increment('following');
-        $follower->following->increment('followers');
-        AccountService::del($follower->profile_id);
-        AccountService::del($follower->following_id);
-        FollowerService::del($follower->profile_id, $follower->following_id);
+        FollowerService::refreshAndSync($follower->profile_id, $follower->following_id);
     }
 
     /**
@@ -25,9 +21,7 @@ class FollowerObserver
      */
     public function updated(Follower $follower): void
     {
-        AccountService::del($follower->profile_id);
-        AccountService::del($follower->following_id);
-        FollowerService::del($follower->profile_id, $follower->following_id);
+        FollowerService::refreshAndSync($follower->profile_id, $follower->following_id);
     }
 
     /**
@@ -35,11 +29,7 @@ class FollowerObserver
      */
     public function deleted(Follower $follower): void
     {
-        $follower->profile->decrement('following');
-        $follower->following->decrement('followers');
-        AccountService::del($follower->profile_id);
-        AccountService::del($follower->following_id);
-        FollowerService::del($follower->profile_id, $follower->following_id);
+        FollowerService::refreshAndSync($follower->profile_id, $follower->following_id);
     }
 
     /**
@@ -47,7 +37,7 @@ class FollowerObserver
      */
     public function restored(Follower $follower): void
     {
-        //
+        FollowerService::refreshAndSync($follower->profile_id, $follower->following_id);
     }
 
     /**
@@ -55,6 +45,6 @@ class FollowerObserver
      */
     public function forceDeleted(Follower $follower): void
     {
-        //
+        FollowerService::refreshAndSync($follower->profile_id, $follower->following_id);
     }
 }
