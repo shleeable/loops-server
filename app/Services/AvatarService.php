@@ -77,7 +77,7 @@ class AvatarService
                 'public'
             );
 
-            return $filename;
+            return Storage::disk('s3')->url($filename);
         } finally {
             if (file_exists($processedImagePath)) {
                 unlink($processedImagePath);
@@ -87,21 +87,15 @@ class AvatarService
 
     private static function processImage($avatarFile, int $profileId): string
     {
-        $image = Image::read($avatarFile);
-        $image->resize(300, 300, function ($constraint) {
-            $constraint->aspectRatio();
-            $constraint->upsize();
-        });
-
         $tempFileName = 'avatar-'.$profileId.'-'.time().'.jpg';
         $tempPath = storage_path('app/avatars-temp/'.$tempFileName);
 
-        $tempDir = dirname($tempPath);
-        if (! is_dir($tempDir)) {
-            mkdir($tempDir, 0755, true);
-        }
+        Storage::disk('local')->makeDirectory('avatars-temp');
 
-        $image->save($tempPath);
+        Image::read($avatarFile)
+            ->cover(300, 300)
+            ->toJpeg(85)
+            ->save($tempPath);
 
         return $tempPath;
     }
