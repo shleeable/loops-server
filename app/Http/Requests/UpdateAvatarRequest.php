@@ -20,7 +20,7 @@ class UpdateAvatarRequest extends FormRequest
                 'required',
                 'file',
                 'mimes:jpg,png,jpeg',
-                'min:10',
+                'min:1',
                 'max:'.(2 * 1024),
             ],
         ];
