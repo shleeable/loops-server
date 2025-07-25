@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->statefulApi();
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
@@ -42,7 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     'data' => [],
                     'error' => [
                         'code' => 403,
-                        'message' => 'This action is not authorized.'
+                        'message' => $e->getMessage() ?? 'This action is not authorized.'
                     ]
                 ], 403);
             }
