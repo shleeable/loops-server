@@ -8,14 +8,10 @@ use Illuminate\Support\Facades\Storage;
 
 class SettingsFileService
 {
-    protected $publicDisk;
-
-    protected $privateDisk;
-
-    public function __construct()
+    public function flush()
     {
-        $this->publicDisk = Storage::disk('public');
-        $this->privateDisk = Storage::disk('local');
+        $this->generatePublicConfig();
+        $this->generateAdminConfig();
     }
 
     /**
@@ -26,37 +22,22 @@ class SettingsFileService
         $settings = AdminSetting::getPublicSettings();
 
         $config = [
-            'version' => now()->timestamp,
-            'generated_at' => now()->toISOString(),
             'app' => [
                 'name' => $settings['general.instanceName'] ?? config('app.name'),
                 'url' => $settings['general.instanceUrl'] ?? config('app.url'),
                 'description' => $settings['general.instanceDescription'] ?? '',
             ],
             'branding' => [
-                'logo' => $settings['branding.logo'] ?? null,
-                'favicon' => $settings['branding.favicon'] ?? null,
+                'logo' => $settings['branding.logo'] ?? url('/nav-logo.png'),
+                'favicon' => $settings['branding.favicon'] ?? url('/favicon.png'),
             ],
-            'registration' => [
-                'open' => $settings['general.openRegistration'] ?? true,
-                'email_verification' => $settings['general.emailVerification'] ?? true,
-            ],
-            'media' => [
-                'max_video_size' => $settings['media.maxVideoSize'] ?? 100,
-                'max_video_duration' => $settings['media.maxVideoDuration'] ?? 300,
-                'allowed_video_formats' => $settings['media.allowedVideoFormats'] ?? ['mp4', 'webm'],
-            ],
-            'federation' => [
-                'enabled' => $settings['federation.enableFederation'] ?? false,
-                'mode' => $settings['federation.federationMode'] ?? 'open',
-            ],
+            'registration' => $settings['general.openRegistration'] ?? false,
+            'federation' => $settings['federation.enableFederation'] ?? false,
         ];
 
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-        $this->publicDisk->put('config/app-config.json', $json);
-
-        Cache::put('settings:public', $config, now()->addHours(24));
+        Cache::put('settings:public', $config);
 
         return $json;
     }
@@ -76,7 +57,7 @@ class SettingsFileService
 
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-        Cache::put('settings:admin', $config, now()->addHours(24));
+        Cache::put('settings:admin', $config);
 
         return $json;
     }
@@ -89,17 +70,6 @@ class SettingsFileService
         $config = Cache::get('settings:public');
         if ($config) {
             return $config;
-        }
-
-        if ($this->publicDisk->exists('config/app-config.json')) {
-            $json = $this->publicDisk->get('config/app-config.json');
-            $config = json_decode($json, true);
-
-            if ($config) {
-                Cache::put('settings:public', $config, now()->addHours(24));
-
-                return $config;
-            }
         }
 
         return json_decode($this->generatePublicConfig(), true);
@@ -123,6 +93,6 @@ class SettingsFileService
      */
     public function getPublicConfigUrl(): string
     {
-        return $this->publicDisk->url('config/app-config.json');
+        return Storage::disk('public')->url('config/app-config.json');
     }
 }
