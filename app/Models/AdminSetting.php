@@ -14,6 +14,8 @@ class AdminSetting extends Model
         'description',
         'is_public',
         'version',
+        'created_at',
+        'updated_at',
         'updated_by',
     ];
 
@@ -21,6 +23,7 @@ class AdminSetting extends Model
         'value' => 'array',
         'is_public' => 'boolean',
         'version' => 'integer',
+        'updated_at' => 'datetime',
     ];
 
     protected static function booted()
