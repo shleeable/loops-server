@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\AdminSetting;
-use App\Services\SettingsFileService;
+use Illuminate\Console\Command;
+
 use function Laravel\Prompts\text;
 
 class AdminSetAppUrl extends Command
@@ -34,12 +34,12 @@ class AdminSetAppUrl extends Command
             hint: 'Enter your domain without https://',
             validate: fn (string $value) => match (true) {
                 strlen($value) < 3 => 'Domain must be at least 3 characters.',
-                !filter_var('https://' . $value, FILTER_VALIDATE_URL) => 'Please enter a valid domain.',
+                ! filter_var('https://'.$value, FILTER_VALIDATE_URL) => 'Please enter a valid domain.',
                 default => null
             }
         );
 
-        $updatedUrl = 'https://' . $domain;
+        $updatedUrl = 'https://'.$domain;
 
         AdminSetting::set(
             key: 'general.instanceUrl',
