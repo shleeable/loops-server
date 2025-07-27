@@ -28,8 +28,8 @@ class SettingsFileService
                 'description' => $settings['general.instanceDescription'] ?? '',
             ],
             'branding' => [
-                'logo' => $settings['branding.logo'] ?? url('/nav-logo.png'),
-                'favicon' => $settings['branding.favicon'] ?? url('/favicon.png'),
+                'logo' => $settings['branding.logo'] ?? '/nav-logo.png',
+                'favicon' => $settings['branding.favicon'] ?? '/favicon.png',
             ],
             'media' => [
                 'max_video_size' => $settings['media.maxVideoSize'] ?? 100,
