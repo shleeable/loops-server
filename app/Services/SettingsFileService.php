@@ -31,6 +31,11 @@ class SettingsFileService
                 'logo' => $settings['branding.logo'] ?? url('/nav-logo.png'),
                 'favicon' => $settings['branding.favicon'] ?? url('/favicon.png'),
             ],
+            'media' => [
+                'max_video_size' => $settings['media.maxVideoSize'] ?? 100,
+                'max_video_duration' => $settings['media.maxVideoDuration'] ?? 300,
+                'allowed_video_formats' => $settings['media.allowedVideoFormats'] ?? ['mp4'],
+            ],
             'registration' => $settings['general.openRegistration'] ?? false,
             'federation' => $settings['federation.enableFederation'] ?? false,
         ];
@@ -49,11 +54,7 @@ class SettingsFileService
     {
         $settings = AdminSetting::getAllSettings();
 
-        $config = [
-            'version' => now()->timestamp,
-            'generated_at' => now()->toISOString(),
-            'settings' => $settings,
-        ];
+        $config = $settings;
 
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
@@ -80,11 +81,6 @@ class SettingsFileService
      */
     public function getAdminConfig(): array
     {
-        $config = Cache::get('settings:admin');
-        if ($config) {
-            return $config;
-        }
-
         return json_decode($this->generateAdminConfig(), true);
     }
 
