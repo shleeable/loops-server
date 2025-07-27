@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\FeedController;
 use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\VideoController;
 use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\ExploreController;
@@ -19,8 +20,10 @@ use App\Http\Controllers\UserRegisterVerifyController;
 use App\Http\Controllers\PageController;
 use App\Http\Middleware\AdminOnlyAccess;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+Route::get('/v1/web/report-rules', [WebPublicController::class, 'reportTypes']);
 
+Route::get('/v1/platform/contact', [WebPublicController::class, 'getContactInfo']);
+Route::get('/v1/page/content', [WebPublicController::class, 'getPageContent']);
+
+Route::get('/v1/accounts/suggested',[AccountController::class, 'getSuggestedAccounts']);
 
