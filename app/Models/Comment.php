@@ -3,16 +3,13 @@
 namespace App\Models;
 
 use App\Concerns\HasSnowflakePrimary;
-use App\Observers\CommentObserver;
 use App\Services\HashidService;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[ObservedBy([CommentObserver::class])]
 class Comment extends Model
 {
     use HasFactory, HasSnowflakePrimary, SoftDeletes;
