@@ -19,19 +19,17 @@ class AdminSettingsController extends Controller
 
     protected $settingsFileService;
 
-    public function __construct(SettingsFileService $settingsFileService)
+    public function __construct()
     {
         $this->middleware(AdminOnlyAccess::class);
-        $this->settingsFileService = $settingsFileService;
     }
 
     public function index(): JsonResponse
     {
-        $settings = $this->settingsFileService->getAdminConfig();
+        $settings = (new SettingsFileService)->getAdminConfig();
 
         return response()->json([
             'data' => $settings,
-            'config_url' => $this->settingsFileService->getPublicConfigUrl(),
         ]);
     }
 
@@ -68,13 +66,11 @@ class AdminSettingsController extends Controller
             }
         }
 
-        $this->settingsFileService->generatePublicConfig();
-        $this->settingsFileService->generateAdminConfig();
+        (new SettingsFileService)->flush();
 
         return response()->json([
             'success' => true,
             'message' => 'Settings updated successfully',
-            'config_url' => $this->settingsFileService->getPublicConfigUrl(),
         ]);
     }
 
