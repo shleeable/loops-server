@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Video;
+use Cache;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\File;
 
