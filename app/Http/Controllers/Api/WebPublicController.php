@@ -182,10 +182,10 @@ class WebPublicController extends Controller
 
         $keys = Cache::get('settings:admin');
         $contactInfo = [
-            'admin_email' => $keys['settings']['general.adminEmail'],
-            'support_email' => $keys['settings']['general.supportEmail'],
-            'support_forum_url' => $keys['settings']['general.supportForum'],
-            'fediverse_account' => $keys['settings']['general.supportFediverseAccount'],
+            'admin_email' => $keys['general.adminEmail'],
+            'support_email' => $keys['general.supportEmail'],
+            'support_forum_url' => $keys['general.supportForum'],
+            'fediverse_account' => $keys['general.supportFediverseAccount'],
         ];
 
         $contactInfo = array_filter($contactInfo, function ($value) {
