@@ -209,4 +209,19 @@ class AccountController extends Controller
 
         return $this->data($res);
     }
+
+    public function getSuggestedAccounts(Request $request)
+    {
+        $accounts = Profile::whereStatus(1)
+            ->whereLocal(true)
+            ->orderByDesc('followers')
+            ->take(10)
+            ->pluck('id');
+
+        $res = $accounts->map(function ($id) {
+            return AccountService::get($id);
+        })->filter()->shuffle()->toArray();
+
+        return $this->data($res);
+    }
 }
