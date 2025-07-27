@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Mobile Application Issues
+    url: https://github.com/joinloops/loops-app
+    about: Please create issues in the mobile app repo.
+  - name: Question? Join our Discord!
+    url: https://discord.gg/cFmx5PN2dm
+    about: Please ask and answer questions in our Discord server
