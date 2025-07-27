@@ -66,7 +66,7 @@
             <h1 class="title">Welcome to Loops!</h1>
         </div>
 
-        <p>Hi <strong>&commat;{{ $user->username }}</strong>,</p>
+        <p>Hi @<strong>{{ $user->username }}</strong>,</p>
 
         <p>Thanks for joining <a href="https://{{$host}}">Loops</a>! To get started and secure your account, please verify your email address by clicking the button below:</p>
 
