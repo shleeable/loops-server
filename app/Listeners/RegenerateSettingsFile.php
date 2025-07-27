@@ -4,7 +4,6 @@ namespace App\Listeners;
 
 use App\Events\SettingsUpdated;
 use App\Services\SettingsFileService;
-use Cache;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
 class RegenerateSettingsFile implements ShouldQueue
@@ -20,8 +19,5 @@ class RegenerateSettingsFile implements ShouldQueue
     {
         $this->settingsFileService->generatePublicConfig();
         $this->settingsFileService->generateAdminConfig();
-
-        Cache::forget('settings:public');
-        Cache::forget('settings:admin');
     }
 }
