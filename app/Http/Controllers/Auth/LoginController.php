@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Rules\HCaptchaRule;
+use App\Rules\TurnstileRule;
+use App\Services\CaptchaService;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
@@ -38,6 +41,43 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
         $this->middleware('auth')->only('logout');
+    }
+
+    /**
+     * Validate the user login request.
+     *
+     * @return void
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    protected function validateLogin(Request $request)
+    {
+        $hasCaptcha = config('captcha.enabled');
+
+        $rules = [
+            $this->username() => 'required|string',
+            'password' => 'required|string',
+        ];
+
+        if ($hasCaptcha) {
+            $rules['captcha_type'] = ['required', 'in:turnstile,hcaptcha'];
+
+            if (config('captcha.driver') === 'turnstile') {
+                $rules['captcha_token'] = [
+                    'required',
+                    'string',
+                    new TurnstileRule(new CaptchaService),
+                ];
+            } elseif (config('captcha.driver') === 'hcaptcha') {
+                $rules['captcha_token'] = [
+                    'required',
+                    'string',
+                    new HCaptchaRule(new CaptchaService),
+                ];
+            }
+        }
+
+        $request->validate($rules);
     }
 
     protected function sendLoginResponse(Request $request)
