@@ -8,16 +8,12 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 
 class RegenerateSettingsFile implements ShouldQueue
 {
-    protected $settingsFileService;
-
-    public function __construct(SettingsFileService $settingsFileService)
-    {
-        $this->settingsFileService = $settingsFileService;
-    }
+    public function __construct()
+    {}
 
     public function handle(SettingsUpdated $event)
     {
-        $this->settingsFileService->generatePublicConfig();
-        $this->settingsFileService->generateAdminConfig();
+        (new SettingsFileService)->generatePublicConfig();
+        (new SettingsFileService)->generateAdminConfig();
     }
 }
