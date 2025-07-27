@@ -212,15 +212,28 @@ class AccountController extends Controller
 
     public function getSuggestedAccounts(Request $request)
     {
+        $pid = $request->user()->profile_id;
+
         $accounts = Profile::whereStatus(1)
             ->whereLocal(true)
+            ->where('id', '!=', $pid)
             ->orderByDesc('followers')
             ->take(10)
             ->pluck('id');
 
         $res = $accounts->map(function ($id) {
             return AccountService::get($id);
-        })->filter()->shuffle()->toArray();
+        })->filter(function ($acct) use ($pid) {
+            if (! $acct) {
+                return false;
+            }
+
+            if (FollowerService::follows($pid, $acct['id'])) {
+                return false;
+            }
+
+            return true;
+        })->shuffle()->toArray();
 
         return $this->data($res);
     }
