@@ -3,6 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Models\AdminSetting;
+use App\Rules\HCaptchaRule;
+use App\Rules\TurnstileRule;
+use App\Services\CaptchaService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -37,7 +40,8 @@ class StoreUserRegisterVerifyRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $hasCaptcha = config('captcha.enabled');
+        $rules = [
             'email' => [
                 'required',
                 'email:rfc,dns,spoof,strict',
@@ -45,5 +49,25 @@ class StoreUserRegisterVerifyRequest extends FormRequest
                 'unique:users,email',
             ],
         ];
+
+        if ($hasCaptcha) {
+            $rules['captcha_type'] = ['required', 'in:turnstile,hcaptcha'];
+
+            if (config('captcha.driver') === 'turnstile') {
+                $rules['captcha_token'] = [
+                    'required',
+                    'string',
+                    new TurnstileRule(new CaptchaService),
+                ];
+            } elseif (config('captcha.driver') === 'hcaptcha') {
+                $rules['captcha_token'] = [
+                    'required',
+                    'string',
+                    new HCaptchaRule(new CaptchaService),
+                ];
+            }
+        }
+
+        return $rules;
     }
 }

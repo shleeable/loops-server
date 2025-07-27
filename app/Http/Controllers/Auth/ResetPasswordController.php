@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Rules\HCaptchaRule;
+use App\Rules\TurnstileRule;
+use App\Services\CaptchaService;
 use Illuminate\Foundation\Auth\ResetsPasswords;
+use Illuminate\Validation\Rules;
 
 class ResetPasswordController extends Controller
 {
@@ -26,4 +30,40 @@ class ResetPasswordController extends Controller
      * @var string
      */
     protected $redirectTo = '/';
+
+    /**
+     * Get the password reset validation rules.
+     *
+     * @return array
+     */
+    protected function rules()
+    {
+        $hasCaptcha = config('captcha.enabled');
+
+        $rules = [
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ];
+
+        if ($hasCaptcha) {
+            $rules['captcha_type'] = ['required', 'in:turnstile,hcaptcha'];
+
+            if (config('captcha.driver') === 'turnstile') {
+                $rules['captcha_token'] = [
+                    'required',
+                    'string',
+                    new TurnstileRule(new CaptchaService),
+                ];
+            } elseif (config('captcha.driver') === 'hcaptcha') {
+                $rules['captcha_token'] = [
+                    'required',
+                    'string',
+                    new HCaptchaRule(new CaptchaService),
+                ];
+            }
+        }
+
+        return $rules;
+    }
 }
