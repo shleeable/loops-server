@@ -61,7 +61,7 @@ class AdminSettingsSeeder extends Seeder
             ],
             [
                 'key' => 'general.openRegistration',
-                'value' => true,
+                'value' => false,
                 'type' => 'boolean',
                 'is_public' => true,
                 'description' => 'Allow new users to register without approval'
