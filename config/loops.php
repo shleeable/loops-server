@@ -1,0 +1,20 @@
+<?php
+
+return [
+    'feed' => [
+        'fyp' => [
+            'max_page' => [
+                'enabled' => env('LOOPS_FEED_FYP_MAXP_ENABLED', false),
+                'max_days' => env('LOOPS_FEED_FYP_MAXP_MAX_DAYS', 7),
+            ],
+        ]
+    ],
+
+    'reports' => [
+        'rate_limits' => [
+            'admin_exempt' => env('LOOPS_REPORT_ADMIN_EX_LIMIT', true),
+            'daily' => env('LOOPS_REPORT_DAILY_LIMIT', 5),
+            'monthly' => env('LOOPS_REPORT_MONTHLY_LIMIT', 200),
+        ],
+    ]
+];
