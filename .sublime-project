@@ -1,0 +1,43 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "folder_exclude_patterns": [
+        "node_modules",
+        "vendor",
+        "storage/logs",
+        "storage/framework",
+        "bootstrap/cache",
+        "public/build"
+      ],
+      "file_exclude_patterns": [
+        "*.log"
+      ]
+    }
+  ],
+  "settings": {
+    "LSP": {
+      "vue-language-server": {
+        "enabled": true,
+        "selector": "text.html.vue"
+      },
+      "tailwindcss-language-server": {
+        "enabled": true,
+        "selector": "text.html.vue, source.css, source.scss",
+        "settings": {
+          "tailwindCSS": {
+            "experimental": {
+              "classRegex": [
+                ["class:\\s*?[\"'`]([^\"'`]*).*?[\"'`]", "[\"'`]([^\"'`]*)[\"'`]"],
+                ["className:\\s*?[\"'`]([^\"'`]*).*?[\"'`]", "[\"'`]([^\"'`]*)[\"'`]"]
+              ]
+            },
+            "includeLanguages": {
+              "vue": "html"
+            }
+          }
+        }
+      }
+    }
+  }
+}
