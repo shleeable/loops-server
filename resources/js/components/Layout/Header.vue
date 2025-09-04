@@ -126,9 +126,7 @@
                                     <div
                                         class="font-medium text-xs text-gray-400 dark:text-slate-600"
                                     >
-                                        {{
-                                            formatCount(result.post_count)
-                                        }}
+                                        {{ formatCount(result.post_count) }}
                                         videos
                                     </div>
                                     <div
@@ -139,9 +137,7 @@
                                     <div
                                         class="font-medium text-xs text-gray-400 dark:text-slate-600"
                                     >
-                                        {{
-                                            formatCount(result.follower_count)
-                                        }}
+                                        {{ formatCount(result.follower_count) }}
                                         Followers
                                     </div>
                                 </div>
@@ -410,9 +406,7 @@
                                 <div
                                     class="font-medium text-xs text-gray-400 dark:text-slate-600"
                                 >
-                                    {{
-                                        formatCount(result.follower_count)
-                                    }}
+                                    {{ formatCount(result.follower_count) }}
                                     Followers
                                 </div>
                             </div>
