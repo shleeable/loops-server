@@ -30,7 +30,7 @@ Loops is a TikTok-like video sharing platform (with [ActivityPub](https://activi
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/pixelfed/loops-server.git
+git clone https://github.com/joinloops/loops-server.git
 cd loops-server
 ```
 
