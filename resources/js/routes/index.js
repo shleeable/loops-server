@@ -256,12 +256,12 @@ const router = createRouter({
         //   component: () => import('~/pages/dashboard/screen-time.vue'),
         //   meta: { requiresAuth: true }
         // },
-        {
-            path: "/dashboard/preferences",
-            name: "dashboardPref",
-            component: () => import("~/pages/dashboard/preferences.vue"),
-            meta: { requiresAuth: true },
-        },
+        // {
+        //     path: "/dashboard/preferences",
+        //     name: "dashboardPref",
+        //     component: () => import("~/pages/dashboard/preferences.vue"),
+        //     meta: { requiresAuth: true },
+        // },
         {
             path: "/admin",
             component: () => import("~/layouts/AdminLayout.vue"),
