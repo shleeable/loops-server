@@ -65,6 +65,7 @@ import {
     shallowRef,
     markRaw,
     nextTick,
+    watch,
 } from "vue";
 import { useSnapScroll } from "~/composables/useSnapScroll";
 import { useFeedInteraction } from "~/composables/useFeedInteraction";
