@@ -1,8 +1,10 @@
-<p align="center"><a href="https://joinloops.org" target="_blank"><img src="https://raw.githubusercontent.com/joinloops/art/refs/heads/main/loops-logo-opticalsmall.png" width="200" alt="Loops Logo" style="border-radius:1rem;"></a></p>
+# Loops
 
-# Loops Server
+The [federated](https://fediverse.info) short video sharing platform.
 
-This is the backend server that powers the [Loops](https://loops.video) service.
+<p align="center">
+<img src="https://pixelfed.nyc3.cdn.digitaloceanspaces.com/media/loops-readme.jpg" />
+</p>
 
 ## Installation
 
@@ -17,8 +19,8 @@ Loops server is open-sourced software licensed under the AGPL license.
 The ways you can communicate on the project are below. Before interacting, please
 read through the [Code Of Conduct](CODE_OF_CONDUCT.md).
 
-* Mastodon: [@pixelfed@mastodon.social](https://mastodon.social/@pixelfed)
-* E-mail: [hello@pixelfed.org](mailto:hello@pixelfed.org)
+* Mastodon [@pixelfed@mastodon.social](https://mastodon.social/@pixelfed)
+* Join our [Discord community](https://discord.gg/wvud8BgFv8) 
 
 ## Funding
 
