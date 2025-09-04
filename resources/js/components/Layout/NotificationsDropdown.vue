@@ -1,0 +1,190 @@
+<template>
+    <div class="relative">
+        <slot
+            name="trigger"
+            :unread-count="notificationsStore.unreadCount"
+            :is-open="isOpen"
+            :toggle="() => (isOpen = !isOpen)"
+        />
+
+        <Teleport to="body">
+            <div
+                v-if="isOpen"
+                class="fixed inset-0 bg-black/30 z-10"
+                @click="isOpen = false"
+            />
+
+            <div
+                v-if="isOpen"
+                class="fixed right-4 top-16 w-[400px] max-h-[500px] overflow-y-auto bg-white dark:bg-slate-900 rounded-lg shadow-xl border border-gray-200 dark:border-slate-800 z-30"
+            >
+                <div
+                    class="fixed w-[400px] p-4 mb-3 border-b border-gray-200 dark:border-slate-800 shadow dark:shadow-slate-900 rounded-lg z-30 backdrop-blur-lg bg-white/60 dark:bg-slate-950/60"
+                >
+                    <h3 class="text-lg font-semibold dark:text-slate-500">
+                        Notifications
+                    </h3>
+                </div>
+
+                <div class="relative top-[60px]">
+                    <div v-if="isLoading" class="p-4 text-center">
+                        <div
+                            class="animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600 mx-auto"
+                        ></div>
+                    </div>
+
+                    <div
+                        v-else-if="isError"
+                        class="p-4 text-center text-red-600"
+                    >
+                        Error loading notifications
+                    </div>
+
+                    <div v-else>
+                        <div class="divide-y divide-gray-200">
+                            <div
+                                v-for="page in data?.pages"
+                                :key="page.meta.next_cursor"
+                            >
+                                <div
+                                    v-for="(notification, idx) in page.data"
+                                    :key="notification.id"
+                                    class="p-4 hover:bg-gray-50 dark:hover:bg-slate-700"
+                                    :class="{
+                                        'bg-gray-100 dark:bg-slate-800':
+                                            idx % 2,
+                                    }"
+                                >
+                                    <div class="flex items-start gap-3">
+                                        <button
+                                            @click="gotoProfile(notification)"
+                                        >
+                                            <img
+                                                :src="notification.actor.avatar"
+                                                :alt="notification.actor.name"
+                                                class="w-10 h-10 rounded-full"
+                                            />
+                                        </button>
+                                        <div>
+                                            <div
+                                                class="flex items-center gap-1"
+                                            >
+                                                <button
+                                                    @click="
+                                                        gotoProfile(
+                                                            notification,
+                                                        )
+                                                    "
+                                                >
+                                                    <p
+                                                        class="text-sm tracking-tight font-medium dark:text-slate-200"
+                                                    >
+                                                        {{
+                                                            notification.actor
+                                                                .name
+                                                        }}
+                                                    </p>
+                                                </button>
+                                                <span
+                                                    class="text-sm tracking-tight text-gray-600 dark:text-slate-400"
+                                                >
+                                                    {{
+                                                        getNotificationText(
+                                                            notification,
+                                                        )
+                                                    }}
+                                                </span>
+                                            </div>
+                                            <div
+                                                v-if="
+                                                    notification.video_thumbnail
+                                                "
+                                                class="mt-2"
+                                            >
+                                                <LoopLink
+                                                    :id="notification.video_id"
+                                                >
+                                                    <img
+                                                        :src="
+                                                            notification.video_thumbnail
+                                                        "
+                                                        :alt="'Video thumbnail'"
+                                                        class="w-16 h-16 rounded object-cover shadow-xl"
+                                                    />
+                                                </LoopLink>
+                                            </div>
+                                            <span
+                                                class="text-xs tracking-tight text-gray-500"
+                                            >
+                                                {{
+                                                    formatDate(
+                                                        notification.created_at,
+                                                    )
+                                                }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="hasNextPage" class="p-4 text-center">
+                            <button
+                                @click="fetchNextPage"
+                                :disabled="isFetchingNextPage"
+                                class="text-red-600 hover:text-red-700 disabled:opacity-50"
+                            >
+                                <span v-if="isFetchingNextPage">
+                                    <LoadingSpinner />
+                                </span>
+                                <span v-else>Load more</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
+    </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from "vue";
+import { useNotificationStore } from "~/stores/notifications";
+import { useNotifications } from "~/composables/useNotifications";
+import { format } from "date-fns";
+import { useRouter } from "vue-router";
+import LoopLink from "../LoopLink.vue";
+
+const isOpen = ref(false);
+const notificationsStore = useNotificationStore();
+const router = useRouter();
+
+const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+} = useNotifications();
+
+const formatDate = (date) => {
+    return format(new Date(date), "MMM d, yyyy");
+};
+
+const gotoProfile = (notification) => {
+    isOpen.value = false;
+    router.push(`/@${notification.actor.username}`);
+};
+
+const getNotificationText = (notification) => {
+    switch (notification.type) {
+        case "video.like":
+            return "liked your video";
+        case "new_follower":
+            return "started following you";
+        default:
+            return "interacted with you";
+    }
+};
+</script>
