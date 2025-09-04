@@ -4,6 +4,10 @@
 
 This is the backend server that powers the [Loops](https://loops.video) service.
 
+## Installation
+
+See the [installation guide](INSTALLATION.md)
+
 ## License
 
 Loops server is open-sourced software licensed under the AGPL license.
