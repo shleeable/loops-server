@@ -9,10 +9,6 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                'resources/sass/app.scss',
-                'resources/sass/landing.scss',
-                'resources/sass/dashboard.scss',
-                'resources/sass/next.css',
                 'resources/js/app.js',
             ],
             refresh: true,
@@ -35,12 +31,5 @@ export default defineConfig({
     },
     optimizeDeps: {
         exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util']
-    },
-    server: {
-        cors: true,
-        headers: {
-            'Cross-Origin-Opener-Policy': 'same-origin',
-            'Cross-Origin-Embedder-Policy': 'require-corp',
-        }
     }
 });
