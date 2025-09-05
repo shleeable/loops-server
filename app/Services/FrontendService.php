@@ -39,6 +39,7 @@ class FrontendService
     public static function getAppData()
     {
         $res = self::getCache();
+        $res['app_version'] = app('app_version');
 
         return json_encode($res, JSON_UNESCAPED_SLASHES);
     }

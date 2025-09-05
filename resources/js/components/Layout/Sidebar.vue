@@ -162,11 +162,19 @@
                 <div class="text-[10.5px] text-gray-400 font-light">
                     {{ getCopyright() }}
                 </div>
-                <a
-                    class="text-[10.5px] text-gray-400 hover:text-red-400"
-                    href="https://joinloops.org"
-                    >Powered by Loops</a
-                >
+                <div class="flex flex-col">
+                    <a
+                        class="text-[10.5px] text-gray-400 hover:text-red-400"
+                        href="https://joinloops.org"
+                        >Powered by Loops</a
+                    >
+                    <a
+                        class="text-[8px] text-gray-400 hover:text-red-400"
+                        href="https://github.com/joinloops/loops-server"
+                        target="_blank"
+                        >v{{ appVersion() }}</a
+                    >
+                </div>
             </div>
 
             <div class="pb-14"></div>
@@ -206,6 +214,10 @@ const getCustomNavItems = () => {
 
 const appLogoUrl = () => {
     return appConfig.branding.logo || `/nav-logo.png`;
+};
+
+const appVersion = () => {
+    return appConfig.app_version;
 };
 
 const getCopyright = () => {
