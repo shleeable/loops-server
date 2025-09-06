@@ -71,6 +71,10 @@ return Application::configure(basePath: dirname(__DIR__))
             : ($headersMap[$trustedHeadersRaw] ?? $headersMap['all']);
 
         $middleware->trustProxies(at: $trustedProxies, headers: $headers);
+
+        if (env('FORCE_HTTPS', true)) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
