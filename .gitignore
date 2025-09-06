@@ -22,3 +22,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+/app/Console/Commands/FindMissingTranslations.php
+/app/Console/Commands/FindDuplicateLangKeys.php
+/app/Console/Commands/SortLangFiles.php
