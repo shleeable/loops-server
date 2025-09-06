@@ -32,4 +32,14 @@ return [
     'tabOptions' => [
         'Videos' => 'Videos',
     ],
+    'noMorePostsToLoad' => 'No more posts to load',
+    'noVideosYet' => 'No videos yet',
+    'youHaventPostedAnyVideosYet' => 'You haven\'t posted any videos yet',
+    'userHasntPostedAnyVideosYet' => ':username hasn\'t posted any videos yet',
+    'loadingProfileDotDotDot' => 'Loading profile...',
+    'profileNotFound' => 'Profile not found',
+    'profile404ErrorMessage' => 'We couldn\'t find a profile with the username &commat;<b>:userId</b>. Please check the username and try again.',
+    'profile500ErrorMessage' => 'Our servers are having trouble right now. Please try again in a few moments.',
+    'profileOfflineErrorMessage' => 'Please check your internet connection and try again.',
+    'profileUnknownErrorMessage' => 'Something unexpected happened. Please try again or contact us if the problem persists.',
 ];

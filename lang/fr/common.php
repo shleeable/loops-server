@@ -24,4 +24,9 @@ return [
     'markAllAsReadConfirmMessage' => 'Voulez-vous vraiment marquer toutes les notifications non lues comme lues ?',
     'today' => 'Aujourd’hui',
     'yesterday' => 'Hier',
+    'follow' => 'Suivre',
+    'somethingWentWrong' => 'Oups, une erreur est survenue',
+    'retryingDotDotDot' => 'Nouvel essai...',
+    'tryAgain' => 'Réessayer',
+    'goToHome' => 'Retour à l’accueil',
 ];

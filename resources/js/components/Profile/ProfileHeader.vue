@@ -53,7 +53,7 @@
                                     @click="handleToggleFollow"
                                     class="flex item-center rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-white bg-red-500 hover:bg-red-400 font-semibold border dark:border-slate-950 cursor-pointer"
                                 >
-                                    {{ t("profile.follow") }}
+                                    {{ t("common.follow") }}
                                 </button>
                                 <button
                                     v-else

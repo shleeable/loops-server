@@ -50,7 +50,7 @@
                         class="w-full bg-[#F02C56] hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center cursor-pointer"
                     >
                         <ArrowPathIcon class="h-5 w-5 mr-2" />
-                        {{ $t("post.tryAgain") }}
+                        {{ $t("common.tryAgain") }}
                     </button>
 
                     <button
@@ -177,7 +177,7 @@
                                 @click="profileStore.follow()"
                                 class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-red-600 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer"
                             >
-                                {{ $t("post.follow") }}
+                                {{ $t("common.follow") }}
                             </button>
                             <button
                                 v-else
@@ -193,7 +193,7 @@
                             @click="handleGuestFollow"
                             class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-red-600 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0"
                         >
-                            {{ $t("post.follow") }}
+                            {{ $t("common.follow") }}
                         </button>
                     </template>
                 </div>

@@ -27,7 +27,12 @@
         "markAsRead": "Marquer comme lu",
         "markAllAsReadConfirmMessage": "Voulez-vous vraiment marquer toutes les notifications non lues comme lues ?",
         "today": "Aujourd’hui",
-        "yesterday": "Hier"
+        "yesterday": "Hier",
+        "follow": "Suivre",
+        "somethingWentWrong": "Oups, une erreur est survenue",
+        "retryingDotDotDot": "Nouvel essai...",
+        "tryAgain": "Réessayer",
+        "goToHome": "Retour à l’accueil"
     },
     "language": {
         "picker": {
@@ -90,11 +95,9 @@
         "post": "Publier",
         "comments": "Commentaires",
         "loadingVideoDotDotDot": "Chargement de la vidéo...",
-        "tryAgain": "Réessayer",
         "goHome": "Accueil",
         "goBack": "Retour",
         "edit": "Modifier",
-        "follow": "Suivre",
         "copiedExclamation": "Copié !",
         "copyLink": "Copier le lien",
         "errorLoadingComments": "Erreur de chargement des commentaires",
@@ -142,23 +145,23 @@
         "blocked": "Bloqués",
         "unblock": "Débloquer",
         "block": "Bloquer",
-        "likes": "J'aime",
+        "likes": "J’aime",
         "youveReachedTheEndOfThisList": "Vous êtes arrivé au bout de la liste",
         "noFollowersYet": "Pas encore d’abonnés",
         "notFollowingAnyone": "Ne suit personne",
-        "whenPeopleFollowThisAccount": "Quand des personnes suivent ce compte, elles apparaissent ici.",
+        "whenPeopleFollowThisAccount": "Quand des personnes suivent ce compte, elles apparaîtront ici.",
         "whenThisAccountFollowsSomeone": "Quand ce compte suit quelqu’un, il apparaîtra ici.",
         "displayName": "Nom affiché",
-        "displayNameHelp": "Le nom affiché peut contenir jusqu’à 30 caractères.",
+        "displayNameHelp": "Jusqu’à 30 caractères maximum.",
         "bio": "Bio",
         "bioPlaceholder": "Ajoutez une bio (optionnel)",
-        "bioHelp": "Bio optionnelle (jusqu’à 80 caractères)",
-        "applyingDotDotDot": "Application...",
-        "avatarFileTypeError": "Veuillez choisir une image valide (PNG, JPEG ou JPG).",
+        "bioHelp": "Bio optionnelle (max. 80 caractères)",
+        "applyingDotDotDot": "Mise à jour...",
+        "avatarFileTypeError": "Choisissez une image valide (PNG, JPEG ou JPG).",
         "avatarFileSizeError": "L’image doit faire moins de 5 Mo.",
-        "avatarFailedToUploadError": "Échec de la mise à jour de l’avatar. Réessayez.",
+        "avatarFailedToUploadError": "Échec du téléchargement de l’avatar. Réessayez.",
         "deleteAvatar": "Supprimer l’avatar",
-        "deleteAvatarConfirmMessage": "Voulez-vous vraiment supprimer votre avatar ?",
+        "deleteAvatarConfirmMessage": "Supprimer votre avatar ?",
         "deleteAvatarFailedMessage": "Impossible de supprimer l’avatar. Réessayez.",
         "failedToUpdateProfileErrorMessage": "Échec de la mise à jour du profil. Réessayez.",
         "tabFilterOptions": {
@@ -168,7 +171,17 @@
         },
         "tabOptions": {
             "Videos": "Vidéos"
-        }
+        },
+        "noMorePostsToLoad": "Plus rien à charger",
+        "noVideosYet": "Pas encore de vidéos",
+        "youHaventPostedAnyVideosYet": "Vous n’avez pas encore posté de vidéos",
+        "userHasntPostedAnyVideosYet": "{username} n’a pas encore posté de vidéos",
+        "loadingProfileDotDotDot": "Chargement du profil...",
+        "profileNotFound": "Profil introuvable",
+        "profile404ErrorMessage": "Impossible de trouver un profil avec le pseudo &commat;<b>{userId}<\/b>. Vérifiez le pseudo et réessayez.",
+        "profile500ErrorMessage": "Nos serveurs ont un souci en ce moment. Réessayez dans quelques instants.",
+        "profileOfflineErrorMessage": "Vérifiez votre connexion internet et réessayez.",
+        "profileUnknownErrorMessage": "Un problème inattendu est survenu. Réessayez ou contactez-nous si ça persiste."
     },
     "reports": {
         "types": {

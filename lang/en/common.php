@@ -24,4 +24,9 @@ return [
     'markAllAsReadConfirmMessage' => 'Are you sure you want to mark all unread notifications as read?',
     'today' => 'Today',
     'yesterday' => 'Yesterday',
+    'follow' => 'Follow',
+    'somethingWentWrong' => 'Something went wrong',
+    'retryingDotDotDot' => 'Retrying...',
+    'tryAgain' => 'Try again',
+    'goToHome' => 'Go to Home',
 ];

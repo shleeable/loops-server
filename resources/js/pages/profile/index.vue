@@ -47,7 +47,7 @@
                 class="flex justify-center py-8"
             >
                 <p class="text-gray-500 dark:text-gray-400 text-sm">
-                    No more posts to load
+                    {{ $t("profile.noMorePostsToLoad") }}
                 </p>
             </div>
 
@@ -63,13 +63,13 @@
                 <h3
                     class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2"
                 >
-                    No videos yet
+                    {{ $t("profile.noVideosYet") }}
                 </h3>
                 <p class="text-gray-500 dark:text-gray-400 text-center">
                     {{
                         profileStore.isSelf
-                            ? "You haven't posted any videos yet"
-                            : `@${profileStore.username} hasn't posted any videos yet`
+                            ? $t("profile.youHaventPostedAnyVideosYet")
+                            : `@${$t("profile.userHasntPostedAnyVideosYet", { username: profileStore.username })}`
                     }}
                 </p>
             </div>
@@ -81,7 +81,7 @@
             >
                 <Spinner />
                 <p class="text-gray-500 dark:text-gray-400 mt-4 text-sm">
-                    Loading profile...
+                    {{ $t("profile.loadingProfileDotDotDot") }}
                 </p>
             </div>
         </div>
@@ -96,15 +96,14 @@
                 >
                     {{
                         error.type === "not-found"
-                            ? "Profile not found"
-                            : "Something went wrong"
+                            ? $t("profile.profileNotFound")
+                            : $t("common.somethingWentWrong")
                     }}
                 </h2>
                 <p
                     class="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed"
-                >
-                    {{ error.message }}
-                </p>
+                    v-html="error.message"
+                ></p>
 
                 <div class="space-y-3 w-full">
                     <button
@@ -114,7 +113,9 @@
                     >
                         <Spinner v-if="retryLoading" class="w-4 h-4 mr-2" />
                         <span>{{
-                            retryLoading ? "Retrying..." : "Try again"
+                            retryLoading
+                                ? $t("common.retryingDotDotDot")
+                                : $t("common.tryAgain")
                         }}</span>
                     </button>
 
@@ -122,7 +123,7 @@
                         @click="$router.push('/')"
                         class="w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
                     >
-                        Go to Home
+                        {{ $t("common.goToHome") }}
                     </button>
                 </div>
             </div>
@@ -140,6 +141,7 @@ import ProfileVideoCard from "~/components/Profile/ProfileVideoCard.vue";
 import { useProfileStore } from "~/stores/profile";
 import { useAuthStore } from "~/stores/auth";
 import { useUtils } from "@/composables/useUtils";
+import { useI18n } from "vue-i18n";
 
 const { formatCount } = useUtils();
 const authStore = useAuthStore();
@@ -148,6 +150,7 @@ const profileStore = useProfileStore();
 const route = useRoute();
 const router = useRouter();
 
+const { t } = useI18n();
 const show = ref(false);
 const showFollowersModal = ref(false);
 const showEditModal = ref(false);
@@ -172,9 +175,6 @@ const handleFilterChange = async (filter) => {
     await profileStore.updateSort(filter).finally(() => {
         profileStore.isLoadingMorePosts = false;
     });
-
-    console.log("Filter changed to:", filter);
-    // Add your filter change logic here
 };
 
 const openEditProfile = () => {
@@ -199,24 +199,24 @@ const loadProfileData = async (userId) => {
         if (err.response?.status === 404) {
             error.value = {
                 type: "not-found",
-                message: `We couldn't find a profile with the username "@${userId}". Please check the username and try again.`,
+                message: t("profile.profile404ErrorMessage", {
+                    userId: userId,
+                }),
             };
-        } else if (err.response?.status >= 500) {
+        } else if ([500, 502, 503].includes(err.response?.status)) {
             error.value = {
                 type: "server-error",
-                message:
-                    "Our servers are having trouble right now. Please try again in a few moments.",
+                message: t("profile.profile500ErrorMessage"),
             };
         } else if (!navigator.onLine) {
             error.value = {
                 type: "network-error",
-                message: "Please check your internet connection and try again.",
+                message: t("profile.profileOfflineErrorMessage"),
             };
         } else {
             error.value = {
                 type: "unknown-error",
-                message:
-                    "Something unexpected happened. Please try again or contact us if the problem persists.",
+                message: t("profile.profileUnknownErrorMessage"),
             };
         }
     } finally {

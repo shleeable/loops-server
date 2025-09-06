@@ -27,7 +27,12 @@
         "markAsRead": "Mark as Read",
         "markAllAsReadConfirmMessage": "Are you sure you want to mark all unread notifications as read?",
         "today": "Today",
-        "yesterday": "Yesterday"
+        "yesterday": "Yesterday",
+        "follow": "Follow",
+        "somethingWentWrong": "Something went wrong",
+        "retryingDotDotDot": "Retrying...",
+        "tryAgain": "Try again",
+        "goToHome": "Go to Home"
     },
     "language": {
         "picker": {
@@ -90,11 +95,9 @@
         "post": "Post",
         "comments": "Comments",
         "loadingVideoDotDotDot": "Loading video...",
-        "tryAgain": "Try Again",
         "goHome": "Go Home",
         "goBack": "Go Back",
         "edit": "Edit",
-        "follow": "Follow",
         "copiedExclamation": "Copied!",
         "copyLink": "Copy link",
         "errorLoadingComments": "Error loading comments",
@@ -168,7 +171,17 @@
         },
         "tabOptions": {
             "Videos": "Videos"
-        }
+        },
+        "noMorePostsToLoad": "No more posts to load",
+        "noVideosYet": "No videos yet",
+        "youHaventPostedAnyVideosYet": "You haven't posted any videos yet",
+        "userHasntPostedAnyVideosYet": "{username} hasn't posted any videos yet",
+        "loadingProfileDotDotDot": "Loading profile...",
+        "profileNotFound": "Profile not found",
+        "profile404ErrorMessage": "We couldn't find a profile with the username &commat;<b>{userId}<\/b>. Please check the username and try again.",
+        "profile500ErrorMessage": "Our servers are having trouble right now. Please try again in a few moments.",
+        "profileOfflineErrorMessage": "Please check your internet connection and try again.",
+        "profileUnknownErrorMessage": "Something unexpected happened. Please try again or contact us if the problem persists."
     },
     "reports": {
         "types": {
