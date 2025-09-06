@@ -10,6 +10,7 @@ return [
     'followers' => 'Abonnés',
     'following' => 'Abonnements',
     'goToHome' => 'Retour à l’accueil',
+    'lastUpdated' => 'Dernière mise à jour',
     'loadMore' => 'Voir plus',
     'loading' => 'Chargement',
     'markAllAsReadConfirmMessage' => 'Voulez-vous vraiment marquer toutes les notifications non lues comme lues ?',

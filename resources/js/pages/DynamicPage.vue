@@ -151,7 +151,8 @@
                         <p
                             class="text-sm text-gray-500 dark:text-gray-400 text-center"
                         >
-                            Last updated: {{ formatDate(pageData.updated_at) }}
+                            {{ $t("common.lastUpdated") }}:
+                            {{ formatDate(pageData.updated_at) }}
                         </p>
                     </div>
                 </div>

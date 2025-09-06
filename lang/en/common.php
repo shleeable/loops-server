@@ -10,6 +10,7 @@ return [
     'followers' => 'Followers',
     'following' => 'Following',
     'goToHome' => 'Go to Home',
+    'lastUpdated' => 'Last updated',
     'loadMore' => 'Load more',
     'loading' => 'Loading',
     'markAllAsReadConfirmMessage' => 'Are you sure you want to mark all unread notifications as read?',
