@@ -10,6 +10,11 @@ The [federated](https://fediverse.info) short video sharing platform.
 
 See the [installation guide](INSTALLATION.md)
 
+## Translations
+
+Want to help make Loops accessible in more languages? Check out the 
+[translation guide](TRANSLATING.md) to learn how you can contribute.
+
 ## License
 
 Loops server is open-sourced software licensed under the AGPL license.
