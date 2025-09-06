@@ -156,6 +156,33 @@
                         >
                     </div>
                 </template>
+
+                <div>
+                    <button
+                        class="pt-1 pr-4 font-medium flex cursor-pointer"
+                        @click="openLanguagePicker"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="size-4"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m10.5 21 5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802"
+                            />
+                        </svg>
+
+                        <LanguagePicker
+                            :is-open="isLanguagePickerOpen"
+                            @close="closeLanguagePicker"
+                        />
+                    </button>
+                </div>
             </div>
 
             <div class="flex justify-between flex-col gap-3 px-3 mt-5">
@@ -188,7 +215,11 @@ import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import SidebarNavItem from "@/components/Layout/SidebarNavItem.vue";
 import { useI18n } from "vue-i18n";
+import LanguagePicker from "@/components/Layout/LanguagePicker.vue";
+import { useLanguagePicker } from "@/composables/useLanguagePicker";
 const { t } = useI18n();
+const { isLanguagePickerOpen, openLanguagePicker, closeLanguagePicker } =
+    useLanguagePicker();
 
 const props = defineProps({
     isOpen: {
@@ -303,9 +334,9 @@ const footerLinks = computed(() => {
         { name: t("nav.about"), path: "/about" },
         { name: t("nav.contact"), path: "/contact" },
         { name: t("nav.community"), path: "/community-guidelines" },
-        { name: t("nav.developers"), path: "/platform/developers" },
-        { name: t("nav.federation"), path: "/federation" },
-        { name: t("nav.help"), path: "/help-center" },
+        // { name: t("nav.developers"), path: "/platform/developers" },
+        // { name: t("nav.federation"), path: "/federation" },
+        // { name: t("nav.help"), path: "/help-center" },
         { name: t("nav.privacy"), path: "/privacy" },
         { name: t("nav.terms"), path: "/terms" },
     ];

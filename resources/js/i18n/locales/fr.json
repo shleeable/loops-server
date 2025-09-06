@@ -1,0 +1,59 @@
+{
+    "auth": {
+        "failed": "These credentials do not match our records.",
+        "password": "The provided password is incorrect.",
+        "throttle": "Too many login attempts. Please try again in :seconds seconds."
+    },
+    "language": {
+        "picker": {
+            "title": "Sélectionner la langue",
+            "description": "Choisissez votre langue préférée. Cela changera la langue de toute l’application.",
+            "select": "Langue :",
+            "apply": "Appliquer les changements",
+            "current": "Langue actuelle :",
+            "cancel": "Annuler",
+            "note": "Votre préférence linguistique sera enregistrée automatiquement."
+        }
+    },
+    "nav": {
+        "home": "Accueil",
+        "following": "Abonnements",
+        "explore": "Explorer",
+        "profile": "Profil",
+        "admin": "Admin",
+        "popular": "Populaire",
+        "about": "À propos",
+        "contact": "Contact",
+        "community": "Communauté",
+        "privacy": "Confidentialité",
+        "terms": "Conditions",
+        "developers": "Développeurs",
+        "federation": "Fédération",
+        "help": "Aide",
+        "more": "Plus",
+        "settings": "Paramètres",
+        "notifications": "Notifications",
+        "uploadLoop": "Téléverser une boucle",
+        "logIn": "Se connecter",
+        "join": "Rejoindre",
+        "logOut": "Se déconnecter",
+        "poweredBy": "Propulsé par",
+        "search": "Rechercher",
+        "upload": "Téléverser",
+        "recentSearches": "Recherches récentes",
+        "clearAll": "Tout effacer",
+        "videos": "Vidéos",
+        "followers": "Abonnés",
+        "noResultsFound": "Aucun résultat trouvé",
+        "loginOrRegister": "Connexion ou inscription",
+        "loadMore": "Charger plus",
+        "errorLoadingNotifications": "Erreur lors du chargement des notifications"
+    },
+    "pagination": {
+        "previous": "&laquo; Previous",
+        "next": "Next &raquo;"
+    },
+    "profile": {
+        "editProfile": "Edit Profile"
+    }
+}
