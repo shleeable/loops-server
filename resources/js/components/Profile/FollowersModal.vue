@@ -24,7 +24,7 @@
                                             : 'text-gray-400 dark:text-slate-700',
                                     ]"
                                 >
-                                    Followers
+                                    {{ t("common.followers") }}
                                 </button>
                                 <button
                                     @click="activeTab = 'following'"
@@ -35,7 +35,7 @@
                                             : 'text-gray-400 dark:text-slate-700',
                                     ]"
                                 >
-                                    Following
+                                    {{ t("common.following") }}
                                 </button>
                             </div>
                         </div>
@@ -66,7 +66,8 @@
                                     <p
                                         class="text-gray-500 dark:text-slate-400"
                                     >
-                                        Loading {{ activeTab }}...
+                                        {{ t("common.loading") }}
+                                        {{ activeTab }}...
                                     </p>
                                 </div>
                             </Transition>
@@ -158,7 +159,12 @@
                                         v-if="showEndMessage"
                                         class="py-4 text-center text-gray-500 dark:text-slate-400"
                                     >
-                                        You've reached the end of this list ✨
+                                        {{
+                                            t(
+                                                "profile.youveReachedTheEndOfThisList",
+                                            )
+                                        }}
+                                        ✨
                                     </div>
                                 </Transition>
 
@@ -209,7 +215,7 @@ import { useInfiniteScroll } from "@vueuse/core";
 import { useProfileStore } from "@/stores/profile";
 import Avatar from "./Avatar.vue";
 import ProfileListCard from "./ProfileListCard.vue";
-
+import { useI18n } from "vue-i18n";
 const props = defineProps({
     show: {
         type: Boolean,
@@ -219,6 +225,7 @@ const props = defineProps({
 
 const emit = defineEmits(["close", "gotoProfile"]);
 
+const { t } = useI18n();
 const containerRef = ref(null);
 const activeTab = ref("followers");
 const isInitialLoading = ref(false);
@@ -266,14 +273,14 @@ const showEmptyState = computed(() => {
 
 const emptyStateTitle = computed(() => {
     return activeTab.value === "followers"
-        ? "No followers yet"
-        : "Not following anyone";
+        ? t("profile.noFollowersYet")
+        : t("profile.notFollowingAnyone");
 });
 
 const emptyStateMessage = computed(() => {
     return activeTab.value === "followers"
-        ? "When people follow this account, they'll appear here."
-        : "When this account follows someone, they'll appear here.";
+        ? t("profile.whenPeopleFollowThisAccount")
+        : t("profile.whenThisAccountFollowsSomeone");
 });
 
 const loadMore = async () => {

@@ -127,7 +127,7 @@
                                         class="font-medium text-xs text-gray-400 dark:text-slate-600"
                                     >
                                         {{ formatCount(result.post_count) }}
-                                        {{ t("nav.videos") }}
+                                        {{ t("common.videos") }}
                                     </div>
                                     <div
                                         class="font-medium text-xs text-gray-400 dark:text-slate-600"
@@ -138,7 +138,7 @@
                                         class="font-medium text-xs text-gray-400 dark:text-slate-600"
                                     >
                                         {{ formatCount(result.follower_count) }}
-                                        {{ t("nav.followers") }}
+                                        {{ t("common.followers") }}
                                     </div>
                                 </div>
                             </div>
@@ -411,7 +411,7 @@
                                     class="font-medium text-xs text-gray-400 dark:text-slate-600"
                                 >
                                     {{ formatCount(result.post_count) }}
-                                    {{ t("nav.videos") }}
+                                    {{ t("common.videos") }}
                                 </div>
                                 <div
                                     class="font-medium text-xs text-gray-400 dark:text-slate-600"
@@ -422,7 +422,7 @@
                                     class="font-medium text-xs text-gray-400 dark:text-slate-600"
                                 >
                                     {{ formatCount(result.follower_count) }}
-                                    {{ t("nav.followers") }}
+                                    {{ t("common.followers") }}
                                 </div>
                             </div>
                         </div>

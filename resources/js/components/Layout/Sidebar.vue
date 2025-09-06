@@ -274,7 +274,7 @@ const mainLinks = computed(() => {
         links = [
             { name: t("nav.home"), path: "/", icon: "bx bx-home" },
             {
-                name: t("nav.following"),
+                name: t("common.following"),
                 path: "/feed/following",
                 icon: "bx bx-user-plus",
             },

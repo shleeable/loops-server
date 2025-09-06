@@ -43,7 +43,7 @@
                             class="text-sm font-medium text-[#F02C56] hover:text-[#F02C56]/70 cursor-pointer"
                             :disabled="isLoading"
                         >
-                            {{ $t("post.loadMore") }}
+                            {{ $t("common.loadMore") }}
                         </button>
                     </div>
                 </div>

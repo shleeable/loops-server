@@ -184,7 +184,7 @@
                                 @click="profileStore.unfollow()"
                                 class="flex items-center border-[#F02C56] text-[#F02C56] border rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer hover:opacity-60"
                             >
-                                {{ $t("post.unfollow") }}
+                                {{ $t("common.unfollow") }}
                             </button>
                         </template>
                     </template>
@@ -301,7 +301,7 @@
                             >
                                 <FlagIcon class="h-4 w-4" />
                                 <span class="pl-2 font-semibold text-sm">{{
-                                    $t("post.report")
+                                    $t("common.report")
                                 }}</span>
                             </div>
                         </div>

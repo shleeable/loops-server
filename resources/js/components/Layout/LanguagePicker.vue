@@ -116,13 +116,13 @@
                                     :disabled="selectedLocale === $i18n.locale"
                                     class="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:focus:ring-offset-gray-800"
                                 >
-                                    {{ t("language.picker.apply") }}
+                                    {{ t("language.picker.applyChanges") }}
                                 </button>
                                 <button
                                     @click="closeModal"
                                     class="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors dark:focus:ring-offset-gray-800"
                                 >
-                                    {{ t("language.picker.cancel") }}
+                                    {{ t("common.cancel") }}
                                 </button>
                             </div>
 

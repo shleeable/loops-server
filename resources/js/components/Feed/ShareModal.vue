@@ -20,7 +20,7 @@
                             class="absolute right-4 top-4 text-gray-400 hover:text-gray-500"
                             @click="close"
                         >
-                            <span class="sr-only">Close</span>
+                            <span class="sr-only">{{ t("common.close") }}</span>
                             <svg
                                 class="h-6 w-6"
                                 fill="none"
@@ -99,6 +99,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import UrlCopyInput from "../Form/UrlCopyInput.vue";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps({
     url: {
@@ -127,11 +128,13 @@ const props = defineProps({
     },
 });
 
+const { t } = useI18n();
+
 const title = computed(() => {
     if (props.type === "video") {
-        return "Share this Loop";
+        return t("common.shareThisLoop");
     } else if (props.type === "profile") {
-        return "Share this account";
+        return t("common.shareThisAccount");
     }
 });
 

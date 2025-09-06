@@ -213,7 +213,7 @@
                                             ></i>
                                             <span
                                                 class="pl-2 font-semibold text-sm"
-                                                >{{ $t("post.report") }}</span
+                                                >{{ $t("common.report") }}</span
                                             >
                                         </button>
                                     </div>
@@ -329,7 +329,7 @@
                                         <i class="bx bx-flag text-[20px]"></i>
                                         <span
                                             class="pl-2 font-semibold text-sm"
-                                            >{{ $t("post.report") }}</span
+                                            >{{ $t("common.report") }}</span
                                         >
                                     </button>
                                 </div>

@@ -52,7 +52,7 @@
                                 <h2
                                     class="text-xl font-semibold text-gray-900 dark:text-white"
                                 >
-                                    {{ t("post.report") }}
+                                    {{ t("common.report") }}
                                 </h2>
                             </div>
                             <button
@@ -110,7 +110,7 @@
                                         :disabled="!canProceedToNextStep"
                                         class="px-6 py-3 bg-[#F02C56] text-white font-medium rounded-lg hover:bg-[#F02C56]/80 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors cursor-pointer"
                                     >
-                                        {{ t("post.next") }}
+                                        {{ t("common.next") }}
                                     </button>
                                 </div>
                             </div>
@@ -171,7 +171,7 @@
                                         @click="closeReportModal"
                                         class="px-6 py-3 text-gray-700 dark:text-gray-500 font-medium rounded-lg hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
                                     >
-                                        {{ t("post.cancel") }}
+                                        {{ t("common.cancel") }}
                                     </button>
                                     <button
                                         v-if="!isSubmitting"

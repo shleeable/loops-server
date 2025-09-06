@@ -128,7 +128,7 @@
                     @click="closeModal"
                     class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors duration-200 cursor-pointer"
                 >
-                    {{ $t("post.cancel") }}
+                    {{ $t("common.cancel") }}
                 </button>
                 <button
                     @click="saveChanges"
@@ -138,7 +138,7 @@
                     <Spinner v-if="isSaving" class="h-4 w-4 mr-2" />
                     {{
                         isSaving
-                            ? $t("post.savingDotDotDot")
+                            ? $t("common.savingDotDotDot")
                             : $t("post.saveChanges")
                     }}
                 </button>

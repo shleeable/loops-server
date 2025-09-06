@@ -36,7 +36,7 @@
                                 @click="openEditProfile"
                                 class="flex items-center gap-2 sm:gap-3 rounded-md py-1.5 px-4 sm:px-6 text-sm sm:text-[15px] font-semibold border hover:bg-gray-100 dark:text-slate-400 dark:border-slate-500 dark:hover:bg-slate-900 cursor-pointer"
                             >
-                                <div>Edit profile</div>
+                                <div>{{ t("profile.editProfile") }}</div>
                             </button>
 
                             <template v-else>
@@ -45,21 +45,22 @@
                                     @click="handleUnblock"
                                     class="flex item-center rounded-md py-[4px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-[#F02C56] cursor-pointer"
                                 >
-                                    Blocked
+                                    {{ t("profile.blocked") }}
+                                    {{ t("profile.") }}
                                 </button>
                                 <button
                                     v-else-if="!profile.isFollowing"
                                     @click="handleToggleFollow"
                                     class="flex item-center rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-white bg-red-500 hover:bg-red-400 font-semibold border dark:border-slate-950 cursor-pointer"
                                 >
-                                    Follow
+                                    {{ t("profile.follow") }}
                                 </button>
                                 <button
                                     v-else
                                     @click="handleToggleFollow"
                                     class="flex item-center rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-border-[#F02C56] cursor-pointer"
                                 >
-                                    Unfollow
+                                    {{ t("common.unfollow") }}
                                 </button>
                             </template>
 
@@ -110,7 +111,7 @@
                                                 <FlagIcon
                                                     class="w-4 h-4 mr-3"
                                                 />
-                                                Report
+                                                {{ t("common.report") }}
                                             </button>
                                             <button
                                                 v-if="
@@ -123,7 +124,7 @@
                                                 <NoSymbolIcon
                                                     class="w-4 h-4 mr-3"
                                                 />
-                                                Unblock
+                                                {{ t("profile.unblock") }}
                                             </button>
                                             <button
                                                 v-else
@@ -133,7 +134,7 @@
                                                 <NoSymbolIcon
                                                     class="w-4 h-4 mr-3"
                                                 />
-                                                Block
+                                                {{ t("profile.block") }}
                                             </button>
                                         </div>
                                     </div>
@@ -156,7 +157,7 @@
                             <div
                                 class="text-xs sm:text-sm lg:text-lg text-gray-500 font-light"
                             >
-                                Videos
+                                {{ t("common.videos") }}
                             </div>
                         </div>
                         <div
@@ -171,7 +172,7 @@
                             <div
                                 class="text-xs sm:text-sm lg:text-lg text-gray-500 font-light"
                             >
-                                Followers
+                                {{ t("common.followers") }}
                             </div>
                         </div>
                         <div
@@ -185,7 +186,7 @@
                             <div
                                 class="text-xs sm:text-sm lg:text-lg text-gray-500 font-light"
                             >
-                                Likes
+                                {{ t("profile.likes") }}
                             </div>
                         </div>
                     </div>
@@ -228,7 +229,7 @@ import EditModal from "~/components/Profile/EditModal.vue";
 import { useAlertModal } from "@/composables/useAlertModal.js";
 import { useReportModal } from "@/composables/useReportModal";
 const { openReportModal } = useReportModal();
-
+import { useI18n } from "vue-i18n";
 import {
     CogIcon,
     PhotoIcon,
@@ -239,6 +240,7 @@ import {
     NoSymbolIcon,
 } from "@heroicons/vue/24/outline";
 
+const { t } = useI18n();
 const router = useRouter();
 const profile = useProfileStore();
 const { toggleFollow } = useProfileStore();

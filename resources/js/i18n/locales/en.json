@@ -4,20 +4,36 @@
         "password": "The provided password is incorrect.",
         "throttle": "Too many login attempts. Please try again in {seconds} seconds."
     },
+    "common": {
+        "close": "Close",
+        "cancel": "Cancel",
+        "save": "Save",
+        "shareThisLoop": "Share this Loop",
+        "shareThisAccount": "Share this account",
+        "apply": "Apply",
+        "avatar": "Avatar",
+        "loading": "Loading",
+        "followers": "Followers",
+        "following": "Following",
+        "loadMore": "Load more",
+        "next": "Next",
+        "report": "Report",
+        "savingDotDotDot": "Saving...",
+        "unfollow": "Unfollow",
+        "videos": "Videos"
+    },
     "language": {
         "picker": {
             "title": "Select Language",
             "description": "Select your preferred language. This will change the language for the entire application.",
             "select": "Select Language:",
-            "apply": "Apply Changes",
+            "applyChanges": "Apply Changes",
             "current": "Current Language:",
-            "cancel": "Cancel",
             "note": "Your language preference will be saved automatically."
         }
     },
     "nav": {
         "home": "Home",
-        "following": "Following",
         "explore": "Explore",
         "profile": "Profile",
         "admin": "Admin",
@@ -42,11 +58,8 @@
         "upload": "Upload",
         "recentSearches": "Recent Searches",
         "clearAll": "Clear All",
-        "videos": "Videos",
-        "followers": "Followers",
         "noResultsFound": "No results found",
         "loginOrRegister": "Login or Register",
-        "loadMore": "Load more",
         "errorLoadingNotifications": "Error loading notifications"
     },
     "pagination": {
@@ -55,7 +68,6 @@
     },
     "post": {
         "permalink": "Permalink",
-        "report": "Report",
         "noCommentsYet": "No comments yet",
         "addCommentDotDotDot": "Add comment...",
         "post": "Post",
@@ -66,12 +78,10 @@
         "goBack": "Go Back",
         "edit": "Edit",
         "follow": "Follow",
-        "unfollow": "Unfollow",
         "copiedExclamation": "Copied!",
         "copyLink": "Copy link",
         "errorLoadingComments": "Error loading comments",
         "commentsAreDisabledForThisVideo": "Comments are disabled for this video",
-        "loadMore": "Load more",
         "commentsHaveBeenDisabled": "Comments have been disabled",
         "signInToLeaveAComment": "Sign in to leave a comment",
         "editVideo": "Edit Video",
@@ -85,11 +95,8 @@
         "allowPeopleToDownloadThisVideo": "Allow people to download this video",
         "deleteVideo": "Delete Video",
         "thisActionCannotBeUndone": "This action cannot be undone. Your video will be permanently removed.",
-        "cancel": "Cancel",
-        "savingDotDotDot": "Saving...",
         "saveChanges": "Save Changes",
         "pleaseSelectAScenario": "Please select a scenario",
-        "next": "Next",
         "yourReportingThis": "You're reporting this {type} for: {message}",
         "additionalDetails": "Additional details",
         "characters": "characters",
@@ -114,7 +121,37 @@
         "hide": "Hide"
     },
     "profile": {
-        "editProfile": "Edit Profile"
+        "editProfile": "Edit Profile",
+        "blocked": "Blocked",
+        "unblock": "Unblock",
+        "block": "Block",
+        "likes": "Likes",
+        "youveReachedTheEndOfThisList": "You've reached the end of this list",
+        "noFollowersYet": "No followers yet",
+        "notFollowingAnyone": "Not following anyone",
+        "whenPeopleFollowThisAccount": "When people follow this account, they'll appear here.",
+        "whenThisAccountFollowsSomeone": "When this account follows someone, they'll appear here.",
+        "displayName": "Display Name",
+        "displayNameHelp": "Display names can be up to 30 characters long.",
+        "bio": "Bio",
+        "bioPlaceholder": "Add an optional bio",
+        "bioHelp": "Optional bio (up to 80 characters)",
+        "applyingDotDotDot": "Applying...",
+        "avatarFileTypeError": "Please select a valid image file (PNG, JPEG, or JPG).",
+        "avatarFileSizeError": "Image file size must be less than 5MB.",
+        "avatarFailedToUploadError": "Failed to update avatar. Please try again.",
+        "deleteAvatar": "Delete Avatar",
+        "deleteAvatarConfirmMessage": "Are you sure you want to delete your avatar?",
+        "deleteAvatarFailedMessage": "Failed to delete avatar. Please try again.",
+        "failedToUpdateProfileErrorMessage": "Failed to update profile. Please try again.",
+        "tabFilterOptions": {
+            "Latest": "Latest",
+            "Popular": "Popular",
+            "Oldest": "Oldest"
+        },
+        "tabOptions": {
+            "Videos": "Videos"
+        }
     },
     "reports": {
         "types": {

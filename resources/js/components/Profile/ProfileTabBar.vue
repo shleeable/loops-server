@@ -18,7 +18,7 @@
                         :name="tab.icon"
                         class="inline-block mr-2 text-sm"
                     />
-                    {{ tab.label }}
+                    {{ $t(`profile.tabOptions.${tab.label}`) }}
 
                     <div
                         v-if="activeTab === tab.key"
@@ -40,7 +40,7 @@
                                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
                         ]"
                     >
-                        {{ filter }}
+                        {{ $t(`profile.tabFilterOptions.${filter}`) }}
                     </button>
                 </div>
             </div>

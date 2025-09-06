@@ -9,7 +9,7 @@
                 class="sticky top-0 z-10 flex items-center justify-between w-full p-5 border-b border-b-gray-300 dark:border-b-slate-800 bg-white dark:bg-slate-900"
             >
                 <div class="text-[22px] font-medium dark:text-slate-400">
-                    Edit profile
+                    {{ t("profile.editProfile") }}
                 </div>
                 <button
                     @click="closeEditProfile"
@@ -38,7 +38,7 @@
                             <div
                                 class="font-semibold text-[15px] sm:mb-0 mb-1 text-gray-700 sm:w-[160px] sm:text-left dark:text-gray-400"
                             >
-                                Avatar
+                                {{ t("common.avatar") }}
                             </div>
 
                             <div
@@ -91,7 +91,7 @@
                             <div
                                 class="font-semibold text-[15px] sm:mb-0 mb-1 text-gray-700 sm:w-[160px] sm:text-left text-center dark:text-gray-400"
                             >
-                                Display Name
+                                {{ t("profile.displayName") }}
                             </div>
 
                             <div
@@ -99,7 +99,7 @@
                             >
                                 <div class="sm:w-[60%] w-full max-w-md">
                                     <TextInput
-                                        placeholder="Display Name"
+                                        :placeholder="t('profile.displayName')"
                                         v-model="userName"
                                         input-type="text"
                                         :max="30"
@@ -107,8 +107,7 @@
                                     />
                                     <div class="flex justify-between mt-2">
                                         <div class="text-[11px] text-gray-500">
-                                            Display names can be up to 30
-                                            characters long.
+                                            {{ t("profile.displayNameHelp") }}
                                         </div>
                                         <div
                                             v-if="userName"
@@ -130,7 +129,7 @@
                             <div
                                 class="font-semibold text-sm sm:mb-0 mb-1 text-gray-700 sm:text-left dark:text-gray-400"
                             >
-                                Bio
+                                {{ t("profile.bio") }}
                             </div>
 
                             <div
@@ -142,13 +141,15 @@
                                         rows="4"
                                         v-model="userBio"
                                         maxlength="80"
-                                        placeholder="Add an optional bio"
+                                        :placeholder="
+                                            t('profile.bioPlaceholder')
+                                        "
                                         :disabled="isSaving"
                                         class="resize-none w-full bg-[#F1F1F2] dark:bg-slate-900 dark:text-slate-50 text-gray-800 border dark:border-slate-800 border-gray-300 rounded-md py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-[#F02C56] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                                     ></textarea>
                                     <div class="flex justify-between mt-1">
                                         <div class="text-[11px] text-gray-500">
-                                            Optional bio (up to 80 characters)
+                                            {{ t("profile.bioHelp") }}
                                         </div>
                                         <div
                                             v-if="userBio"
@@ -193,7 +194,7 @@
                     >
                         <span
                             class="px-2 font-medium text-[15px] dark:text-slate-400"
-                            >Cancel</span
+                            >{{ t("common.cancel") }}</span
                         >
                     </button>
 
@@ -228,11 +229,11 @@
                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                 ></path>
                             </svg>
-                            Saving...
+                            {{ t("common.savingDotDotDot") }}
                         </span>
-                        <span v-else class="mx-4 font-medium text-[15px]"
-                            >Save</span
-                        >
+                        <span v-else class="mx-4 font-medium text-[15px]">{{
+                            t("common.save")
+                        }}</span>
                     </button>
                 </div>
 
@@ -248,7 +249,7 @@
                     >
                         <span
                             class="px-2 font-medium text-[15px] dark:text-slate-400"
-                            >Cancel</span
+                            >{{ t("common.cancel") }}</span
                         >
                     </button>
 
@@ -278,11 +279,11 @@
                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                 ></path>
                             </svg>
-                            Applying...
+                            {{ t("profile.applyingDotDotDot") }}
                         </span>
-                        <span v-else class="mx-4 font-medium text-[15px]"
-                            >Apply</span
-                        >
+                        <span v-else class="mx-4 font-medium text-[15px]">{{
+                            t("common.apply")
+                        }}</span>
                     </button>
                 </div>
             </div>
@@ -304,6 +305,7 @@ import {
     PaintBrushIcon,
     TrashIcon,
 } from "@heroicons/vue/24/outline";
+import { useI18n } from "vue-i18n";
 
 const emit = defineEmits(["updated", "close"]);
 const { alertModal, confirmModal } = useAlertModal();
@@ -313,6 +315,7 @@ const profileStore = useProfileStore();
 
 const route = useRoute();
 
+const { t } = useI18n();
 const file = ref(null);
 const cropper = ref(null);
 const uploadedImage = ref(null);
@@ -345,13 +348,13 @@ const getUploadedImage = (e) => {
 
     const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
     if (!allowedTypes.includes(selectedFile.type)) {
-        error.value = "Please select a valid image file (PNG, JPEG, or JPG).";
+        error.value = t("profile.avatarFileTypeError");
         return;
     }
 
     const maxSize = 2 * 1024 * 1024;
     if (selectedFile.size > maxSize) {
-        error.value = "Image file size must be less than 5MB.";
+        error.value = t("profile.avatarFileSizeError");
         return;
     }
 
@@ -384,7 +387,7 @@ const cropAndUpdateImage = async () => {
         if (fileInput) fileInput.value = "";
     } catch (err) {
         console.error("Error updating avatar:", err);
-        error.value = "Failed to update avatar. Please try again.";
+        error.value = t("profile.avatarFailedToUploadError");
     } finally {
         isSaving.value = false;
     }
@@ -394,10 +397,10 @@ const deleteAvatar = async () => {
     if (!canDeleteAvatar.value || isSaving.value) return;
 
     const result = await confirmModal(
-        "Delete Avatar",
-        `Are you sure you want to delete your avatar?`,
-        "Delete",
-        "Cancel",
+        t("profile.deleteAvatar"),
+        t("profile.deleteAvatarConfirmMessage"),
+        t("profile.delete"),
+        t("common.cancel"),
     );
 
     if (!result) return;
@@ -414,7 +417,7 @@ const deleteAvatar = async () => {
         originalImage.value = "/storage/avatars/default.jpg";
     } catch (err) {
         console.error("Error deleting avatar:", err);
-        error.value = "Failed to delete avatar. Please try again.";
+        error.value = t("profile.deleteAvatarFailedMessage");
     } finally {
         isSaving.value = false;
     }
@@ -444,7 +447,7 @@ const updateUserInfo = async () => {
         }, 300);
     } catch (err) {
         console.error("Error updating profile:", err);
-        error.value = "Failed to update profile. Please try again.";
+        error.value = t("profile.failedToUpdateProfileErrorMessage");
     } finally {
         isSaving.value = false;
     }

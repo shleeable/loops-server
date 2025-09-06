@@ -7,7 +7,6 @@ return [
         'select' => 'Langue :',
         'apply' => 'Appliquer les changements',
         'current' => 'Langue actuelle :',
-        'cancel' => 'Annuler',
         'note' => 'Votre préférence linguistique sera enregistrée automatiquement.',
     ],
 ];

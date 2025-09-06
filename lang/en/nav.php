@@ -2,7 +2,6 @@
 
 return [
     'home' => 'Home',
-    'following' => 'Following',
     'explore' => 'Explore',
     'profile' => 'Profile',
     'admin' => 'Admin',
@@ -27,10 +26,7 @@ return [
     'upload' => 'Upload',
     'recentSearches' => 'Recent Searches',
     'clearAll' => 'Clear All',
-    'videos' => 'Videos',
-    'followers' => 'Followers',
     'noResultsFound' => 'No results found',
     'loginOrRegister' => 'Login or Register',
-    'loadMore' => 'Load more',
     'errorLoadingNotifications' => 'Error loading notifications',
 ];
