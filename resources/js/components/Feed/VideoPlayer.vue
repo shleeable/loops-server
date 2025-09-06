@@ -67,7 +67,6 @@
                             </button>
                         </div>
 
-                        <!-- Mute/Unmute button -->
                         <button
                             v-if="!isPaused && hasGlobalInteraction && isMuted"
                             @click.stop="toggleMute"
@@ -96,7 +95,6 @@
                             </div>
                         </div>
 
-                        <!-- Mobile interaction buttons -->
                         <div
                             class="absolute right-2 bottom-4 flex flex-col items-center space-y-6 lg:hidden pointer-events-auto z-10"
                         >
@@ -197,7 +195,9 @@
                                             ></i>
                                             <span
                                                 class="pl-2 font-semibold text-sm"
-                                                >Permalink</span
+                                                >{{
+                                                    $t("post.permalink")
+                                                }}</span
                                             >
                                         </LoopLink>
                                         <button
@@ -213,7 +213,7 @@
                                             ></i>
                                             <span
                                                 class="pl-2 font-semibold text-sm"
-                                                >Report</span
+                                                >{{ $t("post.report") }}</span
                                             >
                                         </button>
                                     </div>
@@ -222,7 +222,6 @@
                         </div>
                     </div>
 
-                    <!-- Desktop interaction buttons -->
                     <div
                         class="hidden lg:flex flex-col items-center space-y-6 ml-4"
                     >
@@ -314,8 +313,9 @@
                                         :id="videoId"
                                     >
                                         <i class="bx bx-link text-[20px]"></i>
-                                        <span class="pl-2 font-semibold text-sm"
-                                            >Permalink</span
+                                        <span
+                                            class="pl-2 font-semibold text-sm"
+                                            >{{ $t("post.permalink") }}</span
                                         >
                                     </LoopLink>
                                     <button
@@ -327,8 +327,9 @@
                                         @click="handleReport"
                                     >
                                         <i class="bx bx-flag text-[20px]"></i>
-                                        <span class="pl-2 font-semibold text-sm"
-                                            >Report</span
+                                        <span
+                                            class="pl-2 font-semibold text-sm"
+                                            >{{ $t("post.report") }}</span
                                         >
                                     </button>
                                 </div>
@@ -339,7 +340,6 @@
             </div>
         </div>
 
-        <!-- Comments Backdrop -->
         <div
             v-if="showComments"
             class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
@@ -349,7 +349,6 @@
             @click.stop="toggleComments"
         ></div>
 
-        <!-- Comments Panel (keeping the same) -->
         <div
             v-if="showComments"
             :class="[
@@ -362,7 +361,6 @@
             @click.stop
             data-interactive="true"
         >
-            <!-- Comments content remains the same -->
             <div class="sticky top-0 z-10 bg-gray-50 dark:bg-slate-900">
                 <div
                     class="flex items-center justify-between p-4 border-b border-gray-300 dark:border-slate-700"
@@ -393,7 +391,9 @@
                     v-if="comments.length === 0 && !isLoading"
                     class="h-full flex items-center justify-center flex-grow text-dark dark:text-gray-600"
                 >
-                    <p class="text-sm text-gray-400">No comments yet</p>
+                    <p class="text-sm text-gray-400">
+                        {{ $t("post.noCommentsYet") }}
+                    </p>
                 </div>
 
                 <CommentItem
@@ -423,7 +423,7 @@
                     <div class="flex-1 relative">
                         <textarea
                             v-model="newComment"
-                            placeholder="Add comment..."
+                            :placeholder="$t('post.addCommentDotDotDot')"
                             class="w-full px-4 py-2 text-sm bg-gray-100 dark:bg-slate-800 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg resize-none focus:outline-none focus:ring-1 focus:ring-red-500"
                             rows="1"
                             style="min-height: 40px; max-height: 120px"
@@ -462,7 +462,7 @@
                         @touchstart.stop
                         @touchend.stop
                     >
-                        Post
+                        {{ $t("post.post") }}
                     </button>
                 </form>
             </div>
