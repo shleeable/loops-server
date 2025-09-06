@@ -74,10 +74,34 @@ class AdminController extends Controller
     public function videoModerate(Request $request, $id)
     {
         $request->validate([
-            'action' => 'required|in:unpublished,publish',
+            'action' => 'required|in:unpublished,publish,delete',
         ]);
 
         $action = $request->input('action');
+
+        if ($action === 'delete') {
+            $video = Video::findOrFail($id);
+            $pid = $video->profile_id;
+            VideoService::deleteMediaData($video->id);
+
+            if (str_starts_with($video->vid, 'https://')) {
+
+            } else {
+                if (Storage::exists($video->vid)) {
+                    Storage::delete($video->vid);
+                }
+                $s3Path = 'videos/'.$video->profile_id.'/'.$video->id.'/';
+                if (Storage::disk('s3')->exists($s3Path)) {
+                    Storage::disk('s3')->deleteDirectory($s3Path);
+                }
+            }
+            $video->forceDelete();
+
+            AccountService::del($pid);
+
+            return $this->success();
+        }
+
         $video = Video::findOrFail($id);
         $video->status = $action == 'unpublished' ? 6 : 2;
         $video->saveQuietly();

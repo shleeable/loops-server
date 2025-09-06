@@ -238,7 +238,7 @@
                                 Unlist Video
                             </button>
                             <button
-                                @click="moderateVideo('rejected')"
+                                @click="handleDeleteVideo()"
                                 v-if="video.status !== 'archived'"
                                 class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors cursor-pointer"
                             >
@@ -591,6 +591,20 @@ const moderateVideo = async (status) => {
         console.error("Error moderating video:", error);
     } finally {
         loading.value = false;
+    }
+};
+
+const handleDeleteVideo = async () => {
+    const result = await confirmModal(
+        "Delete Video?",
+        "Are you sure you want to delete this video?",
+        "Delete",
+        "Cancel",
+    );
+
+    if (result) {
+        await moderateVideo("delete");
+        router.push("/admin/videos");
     }
 };
 
