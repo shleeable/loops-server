@@ -9,7 +9,7 @@
                         <h1
                             class="text-2xl font-bold text-gray-900 dark:text-gray-100"
                         >
-                            Explore
+                            {{ $t("common.explore") }}
                         </h1>
                     </div>
                 </div>
@@ -56,7 +56,7 @@
                         @click="fetchHashtags"
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
-                        Retry
+                        {{ $t("common.retry") }}
                     </button>
                 </div>
 
@@ -101,7 +101,7 @@
 
                 <div v-else class="text-center py-12">
                     <div class="text-gray-500 mb-4">
-                        No videos found for this hashtag
+                        {{ $t("explore.noVideosFoundForThisHashtag") }}
                     </div>
                 </div>
             </div>

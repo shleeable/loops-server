@@ -5,12 +5,10 @@ return [
         'default' => 'An unexpected error occurred',
         'title' => 'Report Error',
     ],
-
     'success' => [
         'message' => 'Your report was successfully sent and will be reviewed by our content moderation team.<br /><br />Thank you for helping keeping our community safe ❤️',
         'title' => 'Report Submitted!',
     ],
-
     'types' => [
         1010 => 'Inappropriate and irrelevant search',
         1011 => 'Violence, abuse, and criminal exploitation',

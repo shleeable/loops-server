@@ -7,7 +7,6 @@ return [
     'community' => 'Communauté',
     'contact' => 'Contact',
     'developers' => 'Développeurs',
-    'explore' => 'Explorer',
     'federation' => 'Fédération',
     'help' => 'Aide',
     'home' => 'Accueil',

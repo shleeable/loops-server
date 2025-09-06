@@ -8,14 +8,12 @@
                     <h1
                         class="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl"
                     >
-                        Get in Touch
+                        {{ $t("contact.getInTouch") }}
                     </h1>
                     <p
                         class="mt-6 text-lg leading-8 text-gray-600 dark:text-slate-400 max-w-2xl mx-auto"
                     >
-                        We're here to help. Reach out to us through any of the
-                        channels below and we'll get back to you as soon as
-                        possible.
+                        {{ $t("contact.bodyMessage") }}
                     </p>
                 </div>
 
@@ -24,7 +22,7 @@
                         class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 dark:border-indigo-400"
                     ></div>
                     <p class="mt-4 text-gray-600 dark:text-slate-400">
-                        Loading contact information...
+                        {{ $t("contact.loadingContactInformationDotDotDot") }}
                     </p>
                 </div>
 
@@ -56,14 +54,12 @@
                                 <h3
                                     class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
                                 >
-                                    Admin Contact
+                                    {{ $t("contact.adminContact") }}
                                 </h3>
                                 <p
                                     class="text-gray-600 dark:text-slate-400 mb-4"
                                 >
-                                    For inquiries related to essential
-                                    operational matters (please use the in‑app
-                                    reporting system for content issues).
+                                    {{ $t("contact.adminContactMessage") }}
                                 </p>
                             </div>
                         </div>
@@ -96,13 +92,12 @@
                                 <h3
                                     class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
                                 >
-                                    Technical Support
+                                    {{ $t("contact.technicalSupport") }}
                                 </h3>
                                 <p
                                     class="text-gray-600 dark:text-slate-400 mb-4"
                                 >
-                                    Need help with our platform? Get technical
-                                    assistance and troubleshooting support.
+                                    {{ $t("contact.technicalSupportMessage") }}
                                 </p>
                             </div>
                         </div>
@@ -138,14 +133,12 @@
                                 <h3
                                     class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
                                 >
-                                    Community Forum
+                                    {{ $t("contact.communityForum") }}
                                 </h3>
                                 <p
                                     class="text-gray-600 dark:text-slate-400 mb-4"
                                 >
-                                    Join our community discussions, ask
-                                    questions, and share knowledge with other
-                                    users.
+                                    {{ $t("contact.communityForumMessage") }}
                                 </p>
                             </div>
                         </div>
@@ -157,7 +150,7 @@
                                 rel="noopener noreferrer"
                                 class="inline-flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors"
                             >
-                                Visit Forum
+                                {{ $t("contact.visitForum") }}
                                 <ArrowTopRightOnSquareIcon
                                     class="ml-2 h-4 w-4"
                                 />
@@ -181,13 +174,12 @@
                                 <h3
                                     class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
                                 >
-                                    Social Connect
+                                    {{ $t("contact.socialConnect") }}
                                 </h3>
                                 <p
                                     class="text-gray-600 dark:text-slate-400 mb-4"
                                 >
-                                    Follow us on the fediverse for updates and
-                                    quick questions via direct messages.
+                                    {{ $t("contact.socialConnectMessage") }}
                                 </p>
                             </div>
                         </div>
@@ -219,13 +211,10 @@
                         <h3
                             class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
                         >
-                            Response Time
+                            {{ $t("contact.responseTime") }}
                         </h3>
                         <p class="text-gray-600 dark:text-slate-400">
-                            We typically respond to all inquiries within 24
-                            hours during business days. For urgent technical
-                            issues, please include "URGENT" in your subject
-                            line.
+                            {{ $t("contact.responseTimeMessage") }}
                         </p>
                     </div>
                 </div>
@@ -244,10 +233,12 @@ import {
     AtSymbolIcon,
     ArrowTopRightOnSquareIcon,
 } from "@heroicons/vue/24/outline";
+import { useI18n } from "vue-i18n";
 
 const contactInfo = ref({});
 const loading = ref(true);
 const error = ref(null);
+const { t } = useI18n();
 
 const fetchContactInfo = async () => {
     try {
@@ -263,8 +254,7 @@ const fetchContactInfo = async () => {
         const data = await response.json();
         contactInfo.value = data;
     } catch (err) {
-        error.value =
-            "Failed to load contact information. Please try again later.";
+        error.value = t("contact.failedToLoadContactInformation");
         console.error("Error fetching contact info:", err);
     } finally {
         loading.value = false;

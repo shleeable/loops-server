@@ -278,7 +278,11 @@ const mainLinks = computed(() => {
                 path: "/feed/following",
                 icon: "bx bx-user-plus",
             },
-            { name: t("nav.explore"), path: "/explore", icon: "bx bx-compass" },
+            {
+                name: t("common.explore"),
+                path: "/explore",
+                icon: "bx bx-compass",
+            },
             {
                 name: t("nav.profile"),
                 path: `/@${authStore.getUser.username}`,
