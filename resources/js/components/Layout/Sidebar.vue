@@ -104,7 +104,7 @@
                             >
                                 <i class="bx bx-bell mr-3 text-xl"></i>
                                 <span class="text-sm font-medium">{{
-                                    t("nav.notifications")
+                                    t("common.notifications")
                                 }}</span>
                             </router-link>
                         </div>

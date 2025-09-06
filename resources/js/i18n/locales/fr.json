@@ -20,7 +20,14 @@
         "report": "Signaler",
         "savingDotDotDot": "Enregistrement...",
         "unfollow": "Se désabonner",
-        "videos": "Vidéos"
+        "videos": "Vidéos",
+        "notifications": "Notifications",
+        "unread": "Non lus",
+        "markAllRead": "Tout marquer comme lu",
+        "markAsRead": "Marquer comme lu",
+        "markAllAsReadConfirmMessage": "Voulez-vous vraiment marquer toutes les notifications non lues comme lues ?",
+        "today": "Aujourd’hui",
+        "yesterday": "Hier"
     },
     "language": {
         "picker": {
@@ -48,7 +55,6 @@
         "help": "Aide",
         "more": "Plus",
         "settings": "Paramètres",
-        "notifications": "Notifications",
         "uploadLoop": "Ajouter une Loop",
         "logIn": "Connexion",
         "join": "Inscription",
@@ -59,8 +65,19 @@
         "recentSearches": "Recherches récentes",
         "clearAll": "Tout effacer",
         "noResultsFound": "Aucun résultat",
-        "loginOrRegister": "Connexion ou inscription",
-        "errorLoadingNotifications": "Erreur de chargement des notifications"
+        "loginOrRegister": "Connexion ou inscription"
+    },
+    "notifications": {
+        "errorLoadingNotifications": "Erreur de chargement des notifications",
+        "allCaughtUp": "Tout est à jour !",
+        "noNotifications": "Aucune notification",
+        "messageTypes": {
+            "videoLike": "a aimé votre vidéo",
+            "newFollower": "a commencé à vous suivre",
+            "videoComment": "a commenté votre vidéo",
+            "videoShare": "a partagé votre vidéo",
+            "default": "a interagi avec votre contenu"
+        }
     },
     "pagination": {
         "previous": "&laquo; Précédent",

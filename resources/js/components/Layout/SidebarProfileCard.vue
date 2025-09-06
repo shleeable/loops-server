@@ -7,10 +7,7 @@
             class="rounded-full lg:mx-0 mx-auto"
             width="35"
             :src="user.avatar"
-            @error="
-                $event.target.src =
-                    'https://pxscdn.com/cache/avatars/default.jpg'
-            "
+            @error="$event.target.src = '/storage/avatars/default.jpg'"
         />
         <div class="lg:pl-2.5 lg:block hidden">
             <div class="flex items-center">

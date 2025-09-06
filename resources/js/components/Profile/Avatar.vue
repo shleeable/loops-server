@@ -32,7 +32,7 @@ const handleError = (e: Event) => {
     if (props.fallbackSrc) {
         img.src = props.fallbackSrc;
     } else {
-        img.src = "https://pxscdn.com/cache/avatars/default.jpg";
+        img.src = "/storage/avatars/default.jpg";
     }
 };
 </script>

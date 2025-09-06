@@ -17,4 +17,11 @@ return [
     'savingDotDotDot' => 'Saving...',
     'unfollow' => 'Unfollow',
     'videos' => 'Videos',
+    'notifications' => 'Notifications',
+    'unread' => 'Unread',
+    'markAllRead' => 'Mark All Read',
+    'markAsRead' => 'Mark as Read',
+    'markAllAsReadConfirmMessage' => 'Are you sure you want to mark all unread notifications as read?',
+    'today' => 'Today',
+    'yesterday' => 'Yesterday',
 ];

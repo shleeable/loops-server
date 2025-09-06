@@ -22,7 +22,7 @@
                     class="fixed w-[400px] p-4 mb-3 border-b border-gray-200 dark:border-slate-800 shadow dark:shadow-slate-900 rounded-lg z-30 backdrop-blur-lg bg-white/60 dark:bg-slate-950/60"
                 >
                     <h3 class="text-lg font-semibold dark:text-slate-500">
-                        {{ t("nav.notifications") }}
+                        {{ t("common.notifications") }}
                     </h3>
                 </div>
 
@@ -37,7 +37,7 @@
                         v-else-if="isError"
                         class="p-4 text-center text-red-600"
                     >
-                        {{ t("nav.errorLoadingNotifications") }}
+                        {{ t("notifications.errorLoadingNotifications") }}
                     </div>
 
                     <div v-else>
@@ -66,25 +66,26 @@
                                             />
                                         </button>
                                         <div>
+                                            <button
+                                                @click="
+                                                    gotoProfile(notification)
+                                                "
+                                            >
+                                                <p
+                                                    class="text-sm tracking-tight font-medium dark:text-slate-200"
+                                                >
+                                                    {{
+                                                        truncateMiddle(
+                                                            notification.actor
+                                                                .username,
+                                                            30,
+                                                        )
+                                                    }}
+                                                </p>
+                                            </button>
                                             <div
                                                 class="flex items-center gap-1"
                                             >
-                                                <button
-                                                    @click="
-                                                        gotoProfile(
-                                                            notification,
-                                                        )
-                                                    "
-                                                >
-                                                    <p
-                                                        class="text-sm tracking-tight font-medium dark:text-slate-200"
-                                                    >
-                                                        {{
-                                                            notification.actor
-                                                                .name
-                                                        }}
-                                                    </p>
-                                                </button>
                                                 <span
                                                     class="text-sm tracking-tight text-gray-600 dark:text-slate-400"
                                                 >
@@ -137,7 +138,7 @@
                                 <span v-if="isFetchingNextPage">
                                     <LoadingSpinner />
                                 </span>
-                                <span v-else>Load more</span>
+                                <span v-else>{{ t("common.loadMore") }}</span>
                             </button>
                         </div>
                     </div>
@@ -156,10 +157,12 @@ import { useRouter } from "vue-router";
 import LoopLink from "../LoopLink.vue";
 import { useI18n } from "vue-i18n";
 const { t } = useI18n();
+import { useUtils } from "@/composables/useUtils";
 
 const isOpen = ref(false);
 const notificationsStore = useNotificationStore();
 const router = useRouter();
+const { truncateMiddle, formatNumber, formatDate } = useUtils();
 
 const {
     data,
@@ -170,10 +173,6 @@ const {
     isError,
 } = useNotifications();
 
-const formatDate = (date) => {
-    return format(new Date(date), "MMM d, yyyy");
-};
-
 const gotoProfile = (notification) => {
     isOpen.value = false;
     router.push(`/@${notification.actor.username}`);
@@ -182,11 +181,15 @@ const gotoProfile = (notification) => {
 const getNotificationText = (notification) => {
     switch (notification.type) {
         case "video.like":
-            return "liked your video";
+            return t("notifications.messageTypes.videoLike");
         case "new_follower":
-            return "started following you";
+            return t("notifications.messageTypes.newFollower");
+        case "video.comment":
+            return t("notifications.messageTypes.videoComment");
+        case "video.share":
+            return t("notifications.messageTypes.videoShare");
         default:
-            return "interacted with you";
+            return t("notifications.messageTypes.default");
     }
 };
 </script>

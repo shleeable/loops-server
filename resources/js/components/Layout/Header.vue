@@ -105,6 +105,10 @@
                                 :src="result.avatar"
                                 class="w-12 h-12 rounded-full mr-3"
                                 :alt="result.title"
+                                @error="
+                                    $event.target.src =
+                                        '/storage/avatars/default.jpg'
+                                "
                             />
                             <div class="flex flex-col space-y-0.5">
                                 <div
@@ -254,6 +258,10 @@
                                 width="33"
                                 :src="authStore.user.avatar"
                                 alt="User avatar"
+                                @error="
+                                    $event.target.src =
+                                        '/storage/avatars/default.jpg'
+                                "
                             />
                         </button>
 
@@ -293,6 +301,9 @@
                         class="rounded-full"
                         width="32"
                         :src="authStore.user.avatar"
+                        @error="
+                            $event.target.src = '/storage/avatars/default.jpg'
+                        "
                         alt="User avatar"
                     />
                 </button>

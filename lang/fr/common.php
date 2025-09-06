@@ -17,4 +17,11 @@ return [
     'savingDotDotDot' => 'Enregistrement...',
     'unfollow' => 'Se désabonner',
     'videos' => 'Vidéos',
+    'notifications' => 'Notifications',
+    'unread' => 'Non lus',
+    'markAllRead' => 'Tout marquer comme lu',
+    'markAsRead' => 'Marquer comme lu',
+    'markAllAsReadConfirmMessage' => 'Voulez-vous vraiment marquer toutes les notifications non lues comme lues ?',
+    'today' => 'Aujourd’hui',
+    'yesterday' => 'Hier',
 ];

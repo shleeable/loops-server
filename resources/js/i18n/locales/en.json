@@ -20,7 +20,14 @@
         "report": "Report",
         "savingDotDotDot": "Saving...",
         "unfollow": "Unfollow",
-        "videos": "Videos"
+        "videos": "Videos",
+        "notifications": "Notifications",
+        "unread": "Unread",
+        "markAllRead": "Mark All Read",
+        "markAsRead": "Mark as Read",
+        "markAllAsReadConfirmMessage": "Are you sure you want to mark all unread notifications as read?",
+        "today": "Today",
+        "yesterday": "Yesterday"
     },
     "language": {
         "picker": {
@@ -48,7 +55,6 @@
         "help": "Help",
         "more": "More",
         "settings": "Settings",
-        "notifications": "Notifications",
         "uploadLoop": "Upload Loop",
         "logIn": "Log in",
         "join": "Join",
@@ -59,8 +65,19 @@
         "recentSearches": "Recent Searches",
         "clearAll": "Clear All",
         "noResultsFound": "No results found",
-        "loginOrRegister": "Login or Register",
-        "errorLoadingNotifications": "Error loading notifications"
+        "loginOrRegister": "Login or Register"
+    },
+    "notifications": {
+        "errorLoadingNotifications": "Error loading notifications",
+        "allCaughtUp": "You're all caught up!",
+        "noNotifications": "No notifications",
+        "messageTypes": {
+            "videoLike": "liked your video",
+            "newFollower": "started following you",
+            "videoComment": "commented on your video",
+            "videoShare": "shared your video",
+            "default": "interacted with your content"
+        }
     },
     "pagination": {
         "previous": "&laquo; Previous",

@@ -16,7 +16,6 @@ return [
     'help' => 'Help',
     'more' => 'More',
     'settings' => 'Settings',
-    'notifications' => 'Notifications',
     'uploadLoop' => 'Upload Loop',
     'logIn' => 'Log in',
     'join' => 'Join',
@@ -28,5 +27,4 @@ return [
     'clearAll' => 'Clear All',
     'noResultsFound' => 'No results found',
     'loginOrRegister' => 'Login or Register',
-    'errorLoadingNotifications' => 'Error loading notifications',
 ];

@@ -16,7 +16,6 @@ return [
     'help' => 'Aide',
     'more' => 'Plus',
     'settings' => 'Paramètres',
-    'notifications' => 'Notifications',
     'uploadLoop' => 'Ajouter une Loop',
     'logIn' => 'Connexion',
     'join' => 'Inscription',
@@ -28,5 +27,4 @@ return [
     'clearAll' => 'Tout effacer',
     'noResultsFound' => 'Aucun résultat',
     'loginOrRegister' => 'Connexion ou inscription',
-    'errorLoadingNotifications' => 'Erreur de chargement des notifications',
 ];

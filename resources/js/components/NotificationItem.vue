@@ -87,6 +87,7 @@ import {
     BellIcon,
 } from "@heroicons/vue/24/solid";
 import { useHashids } from "@/composables/useHashids";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps({
     notification: {
@@ -98,28 +99,29 @@ const props = defineProps({
 const emit = defineEmits(["mark-as-read"]);
 const router = useRouter();
 const { encodeHashid } = useHashids();
+const { t } = useI18n();
 
 const notificationConfig = {
     "video.like": {
-        message: "liked your video",
+        message: t("notifications.messageTypes.videoLike"),
         icon: HeartIcon,
         iconColor: "text-red-500",
         bgColor: "bg-red-100 dark:bg-red-900/30",
     },
     new_follower: {
-        message: "started following you",
+        message: t("notifications.messageTypes.newFollower"),
         icon: UserPlusIcon,
         iconColor: "text-blue-500",
         bgColor: "bg-blue-100 dark:bg-blue-900/30",
     },
     "video.comment": {
-        message: "commented on your video",
+        message: t("notifications.messageTypes.videoComment"),
         icon: ChatBubbleLeftIcon,
         iconColor: "text-green-500",
         bgColor: "bg-green-100 dark:bg-green-900/30",
     },
     "video.share": {
-        message: "shared your video",
+        message: t("notifications.messageTypes.videoShare"),
         icon: ArrowPathIcon,
         iconColor: "text-purple-500",
         bgColor: "bg-purple-100 dark:bg-purple-900/30",
@@ -128,7 +130,7 @@ const notificationConfig = {
 
 const getNotificationMessage = () => {
     const config = notificationConfig[props.notification.type];
-    return config?.message || "interacted with your content";
+    return config?.message || t("notifications.messageTypes.default");
 };
 
 const getNotificationIcon = () => {
@@ -147,7 +149,6 @@ const getIconBackgroundClass = () => {
 };
 
 const handleClick = () => {
-    // Mark as read if unread
     if (!props.notification.read_at) {
         emit("mark-as-read", props.notification.id);
     }
@@ -157,11 +158,9 @@ const handleClick = () => {
             props.notification.type === "video.like" &&
             props.notification.video_id
         ) {
-            // Navigate to video (adjust path as needed for your app)
             const vid = encodeHashid(props.notification.video_id);
             router.push(`/v/${vid}`);
         } else if (props.notification.type === "new_follower") {
-            // Navigate to user profile (adjust path as needed for your app)
             router.push(`/@${props.notification.actor.username}`);
         }
     } catch (error) {
@@ -198,12 +197,10 @@ const formatTimeAgo = (dateString) => {
 };
 
 const handleImageError = (event) => {
-    // Fallback to default avatar
-    event.target.src = "https://pxscdn.com/cache/avatars/default.jpg";
+    event.target.src = "/storage/avatars/default.jpg";
 };
 
 const handleVideoImageError = (event) => {
-    // Hide video thumbnail if it fails to load
     event.target.style.display = "none";
 };
 </script>
