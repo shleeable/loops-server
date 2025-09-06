@@ -2,6 +2,10 @@
 
 Loops is a TikTok-like video sharing platform (with [ActivityPub](https://activitypub.rocks) federation) built with Laravel. This guide covers installation, configuration, and deployment.
 
+> [!WARNING]
+> **S3-Compatible Storage Required**
+> Currently, Loops **requires an S3-compatible filesystem** (like AWS S3, MinIO, or DigitalOcean Spaces) for avatar and video storage. Support for local storage is on the way but is not yet implemented. Please ensure you have S3 credentials ready before proceeding.
+
 ## System Requirements
 
 ### Minimum Versions
