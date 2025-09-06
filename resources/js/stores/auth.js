@@ -1,4 +1,3 @@
-// stores/useAuthStore.js
 import { defineStore } from "pinia";
 import axios from "~/plugins/axios";
 import { useNotificationStore } from "~/stores/notifications";
@@ -86,6 +85,7 @@ export const useAuthStore = defineStore("auth", {
         },
 
         async login(credentials) {
+            const appConfig = window.appConfig;
             const axiosInstance = axios.getAxiosInstance();
             try {
                 this.loading = true;
@@ -93,8 +93,15 @@ export const useAuthStore = defineStore("auth", {
 
                 await axiosInstance.get("/sanctum/csrf-cookie");
                 const response = await axiosInstance.post(
-                    "/login",
+                    appConfig.app.url + "/login",
                     credentials,
+                    {
+                        headers: {
+                            Accept: "application/json",
+                            "Content-Type": "application/json",
+                            "X-Requested-With": "XMLHttpRequest",
+                        },
+                    },
                 );
                 if (response.data.has_2fa) {
                     this.needsTwoFactor = true;
