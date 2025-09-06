@@ -52,7 +52,7 @@
                                 <h2
                                     class="text-xl font-semibold text-gray-900 dark:text-white"
                                 >
-                                    Report
+                                    {{ t("post.report") }}
                                 </h2>
                             </div>
                             <button
@@ -68,7 +68,7 @@
                                 <p
                                     class="text-xs text-gray-600 dark:text-gray-500 mb-2"
                                 >
-                                    Please select a scenario
+                                    {{ t("post.pleaseSelectAScenario") }}
                                 </p>
 
                                 <div
@@ -110,7 +110,7 @@
                                         :disabled="!canProceedToNextStep"
                                         class="px-6 py-3 bg-[#F02C56] text-white font-medium rounded-lg hover:bg-[#F02C56]/80 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors cursor-pointer"
                                     >
-                                        Next
+                                        {{ t("post.next") }}
                                     </button>
                                 </div>
                             </div>
@@ -125,9 +125,13 @@
                                     <p
                                         class="text-sm text-gray-600 dark:text-gray-400"
                                     >
-                                        You're reporting this
-                                        {{ reportType }} for:
-                                        {{ selectedCategory?.message }}
+                                        {{
+                                            t("post.yourReportingThis", {
+                                                type: reportType,
+                                                message:
+                                                    selectedCategory?.message,
+                                            })
+                                        }}
                                     </p>
                                 </div>
 
@@ -136,7 +140,7 @@
                                         for="additional-details"
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                     >
-                                        Additional details
+                                        {{ t("post.additionalDetails") }}
                                         <span
                                             v-if="
                                                 selectedCategory?.key === '1026'
@@ -157,7 +161,7 @@
                                         class="text-xs text-gray-500 dark:text-gray-400 mt-1"
                                     >
                                         {{ additionalText.length }}/500
-                                        characters
+                                        {{ t("post.characters") }}
                                     </p>
                                 </div>
 
@@ -167,14 +171,14 @@
                                         @click="closeReportModal"
                                         class="px-6 py-3 text-gray-700 dark:text-gray-500 font-medium rounded-lg hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
                                     >
-                                        Cancel
+                                        {{ t("post.cancel") }}
                                     </button>
                                     <button
                                         v-if="!isSubmitting"
                                         @click="goToPreviousReportStep"
                                         class="px-6 py-3 text-gray-700 border dark:border-gray-700/50 dark:text-gray-500 font-medium rounded-lg hover:bg-gray-100 dark:hover:text-gray-100 dark:hover:bg-gray-900/20 transition-colors cursor-pointer"
                                     >
-                                        Go back
+                                        {{ t("post.goBack") }}
                                     </button>
                                     <button
                                         @click="submitReport"
@@ -191,8 +195,8 @@
                                         </span>
                                         <span>{{
                                             isSubmitting
-                                                ? "Submitting..."
-                                                : "Submit"
+                                                ? t("post.submittingDotDotDot")
+                                                : t("post.submit")
                                         }}</span>
                                     </button>
                                 </div>
@@ -207,6 +211,8 @@
 
 <script setup>
 import { useReportModal } from "@/composables/useReportModal";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 const {
     isOpen,
@@ -230,15 +236,15 @@ function getTextareaPlaceholder() {
 
     switch (selectedCategory.value.key) {
         case "1018":
-            return "Please describe the misinformation you're reporting...";
+            return t("post.reportTextPlaceholder1018");
         case "1021":
-            return "Please describe the fraudulent activity...";
+            return t("post.reportTextPlaceholder1021");
         case "1023":
-            return "Please describe the illegal content...";
+            return t("post.reportTextPlaceholder1023");
         case "1026":
-            return "Please provide additional details about your report...";
+            return t("post.reportTextPlaceholder1026");
         default:
-            return "Please provide additional details...";
+            return t("post.reportTextPlaceholderDefault");
     }
 }
 </script>

@@ -7,7 +7,7 @@
                 <Spinner />
             </div>
             <div v-else-if="error" class="p-4 text-center text-red-500">
-                {{ error?.message || "Error loading comments" }}
+                {{ error?.message || $t("post.errorLoadingComments") }}
             </div>
 
             <div v-else>
@@ -20,11 +20,13 @@
                         class="flex flex-col items-center space-y-2"
                     >
                         <i class="bx bx-comment-x text-[36px]"></i>
-                        <span>Comments are disabled for this video</span>
+                        <span>{{
+                            $t("post.commentsAreDisabledForThisVideo")
+                        }}</span>
                     </div>
                     <div v-else class="flex flex-col items-center space-y-2">
                         <i class="bx bx-comment-dots text-2xl"></i>
-                        <span>No comments yet</span>
+                        <span>{{ $t("post.noCommentsYet") }}</span>
                     </div>
                 </div>
                 <div v-else class="">
@@ -41,14 +43,13 @@
                             class="text-sm font-medium text-[#F02C56] hover:text-[#F02C56]/70 cursor-pointer"
                             :disabled="isLoading"
                         >
-                            Load more
+                            {{ $t("post.loadMore") }}
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Comments input section - only show if authenticated AND comments are enabled -->
         <div
             v-if="authStore.authenticated && canComment"
             class="p-4 border-t border-gray-200 dark:border-slate-800 flex-shrink-0"
@@ -59,7 +60,7 @@
                 <input
                     v-model="newComment"
                     class="w-full p-3 bg-transparent outline-none dark:text-slate-50 dark:bg-slate-800 border-0"
-                    placeholder="Add comment..."
+                    :placeholder="$t('post.addCommentDotDotDot')"
                     @keydown.enter.prevent="handleAddComment"
                 />
 
@@ -78,7 +79,7 @@
                         class="ml-2 text-sm text-gray-400 hover:text-red-500 cursor-pointer font-bold"
                         :disabled="isSubmitting || !newComment.trim()"
                     >
-                        Post
+                        {{ $t("post.post") }}
                     </button>
                 </div>
             </div>
@@ -89,7 +90,7 @@
             class="p-4 border-t border-gray-200 dark:border-slate-800 flex-shrink-0"
         >
             <div class="text-center text-gray-500 dark:text-slate-400 text-sm">
-                Comments have been disabled
+                {{ $t("post.commentsHaveBeenDisabled") }}
             </div>
         </div>
 
@@ -98,7 +99,7 @@
             class="p-4 border-t border-gray-200 dark:border-slate-800 flex-shrink-0"
         >
             <div class="text-center text-gray-500 dark:text-slate-400 text-sm">
-                Sign in to leave a comment
+                {{ $t("post.signInToLeaveAComment") }}
             </div>
         </div>
     </div>
@@ -121,7 +122,6 @@ const isSubmitting = ref(false);
 const selectedEmoji = ref("");
 const error = ref(null);
 
-// Computed properties to get store state
 const currentVideo = computed(() => videoStore.currentVideo);
 const videoId = computed(() => currentVideo.value?.id);
 const comments = computed(() =>
@@ -134,7 +134,6 @@ const hasMore = computed(() =>
     videoId.value ? commentStore.hasMore(videoId.value) : false,
 );
 
-// Check if comments are enabled for this video
 const canComment = computed(() => {
     return currentVideo.value?.permissions?.can_comment !== false;
 });
@@ -143,7 +142,6 @@ const onEmojiSelect = (emoji) => {
     newComment.value += emoji.native;
 };
 
-// Modified handleAddComment
 const handleAddComment = async () => {
     if (
         !newComment.value.trim() ||
@@ -165,18 +163,11 @@ const handleAddComment = async () => {
     }
 };
 
-// Watch currentVideo and fetch comments if they're enabled
 watch(
     currentVideo,
     async (newVideo, oldVideo) => {
         if (!newVideo || newVideo.id === oldVideo?.id) return;
 
-        console.log(
-            "Video changed, checking if comments are enabled for videoId:",
-            newVideo.id,
-        );
-
-        // Only fetch comments if they're enabled for this video
         if (newVideo.permissions?.can_comment !== false) {
             try {
                 error.value = null;
@@ -199,7 +190,6 @@ const loadMore = async () => {
     )
         return;
 
-    console.log("Loading more comments for videoId:", videoId.value);
     try {
         await commentStore.fetchComments(videoId.value, false);
     } catch (err) {

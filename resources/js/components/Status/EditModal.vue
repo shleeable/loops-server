@@ -11,7 +11,7 @@
                 class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700"
             >
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-                    Edit Video
+                    {{ $t("post.editVideo") }}
                 </h2>
                 <button
                     @click="closeModal"
@@ -26,13 +26,13 @@
                     <label
                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                     >
-                        Caption
+                        {{ $t("post.caption") }}
                     </label>
                     <textarea
                         v-model="formData.caption"
                         class="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F02C56] focus:border-[#F02C56] dark:bg-slate-800 dark:text-white resize-none"
                         rows="4"
-                        placeholder="Write your caption..."
+                        :placeholder="$t('post.writeYourCaptionDotDotDot')"
                         maxlength="500"
                     />
                     <div
@@ -48,10 +48,14 @@
                             <label
                                 class="text-sm font-medium text-gray-700 dark:text-gray-300"
                             >
-                                Pin to Profile
+                                {{ $t("post.pinToProfile") }}
                             </label>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
-                                Show this video at the top of your profile
+                                {{
+                                    $t(
+                                        "post.showThisVideoAtTheTopOfYourProfile",
+                                    )
+                                }}
                             </p>
                         </div>
                         <ToggleSwitch v-model="formData.pinToProfile" />
@@ -62,10 +66,10 @@
                             <label
                                 class="text-sm font-medium text-gray-700 dark:text-gray-300"
                             >
-                                Comments Enabled
+                                {{ $t("post.commentsEnabled") }}
                             </label>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
-                                Allow people to comment on this video
+                                {{ $t("post.allowPeopleToCommentOnThisVideo") }}
                             </p>
                         </div>
                         <ToggleSwitch v-model="formData.commentsEnabled" />
@@ -76,10 +80,10 @@
                             <label
                                 class="text-sm font-medium text-gray-700 dark:text-gray-300"
                             >
-                                Downloads Enabled
+                                {{ $t("post.downloadsEnabled") }}
                             </label>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
-                                Allow people to download this video
+                                {{ $t("post.allowPeopleToDownloadThisVideo") }}
                             </p>
                         </div>
                         <ToggleSwitch v-model="formData.downloadsEnabled" />
@@ -98,19 +102,18 @@
                                 <h3
                                     class="text-sm font-medium text-red-800 dark:text-red-400"
                                 >
-                                    Delete Video
+                                    {{ $t("post.deleteVideo") }}
                                 </h3>
                                 <p
                                     class="text-sm text-red-700 dark:text-red-300 mt-1"
                                 >
-                                    This action cannot be undone. Your video
-                                    will be permanently removed.
+                                    {{ $t("post.thisActionCannotBeUndone") }}
                                 </p>
                                 <button
                                     @click="confirmDelete"
                                     class="mt-3 bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-4 rounded-md transition-colors duration-200"
                                 >
-                                    Delete Video
+                                    {{ $t("post.deleteVideo") }}
                                 </button>
                             </div>
                         </div>
@@ -125,7 +128,7 @@
                     @click="closeModal"
                     class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors duration-200 cursor-pointer"
                 >
-                    Cancel
+                    {{ $t("post.cancel") }}
                 </button>
                 <button
                     @click="saveChanges"
@@ -133,7 +136,11 @@
                     class="px-4 py-2 text-sm font-medium text-white bg-[#F02C56] hover:bg-red-600 disabled:bg-red-300 disabled:cursor-not-allowed rounded-md transition-colors duration-200 flex items-center cursor-pointer"
                 >
                     <Spinner v-if="isSaving" class="h-4 w-4 mr-2" />
-                    {{ isSaving ? "Saving..." : "Save Changes" }}
+                    {{
+                        isSaving
+                            ? $t("post.savingDotDotDot")
+                            : $t("post.saveChanges")
+                    }}
                 </button>
             </div>
         </div>

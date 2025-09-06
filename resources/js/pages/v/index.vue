@@ -8,7 +8,9 @@
         >
             <div class="text-center">
                 <Spinner class="h-12 w-12 mx-auto mb-4" />
-                <p class="text-white text-lg">Loading video...</p>
+                <p class="text-white text-lg">
+                    {{ $t("post.loadingVideoDotDotDot") }}
+                </p>
             </div>
         </div>
 
@@ -48,7 +50,7 @@
                         class="w-full bg-[#F02C56] hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center cursor-pointer"
                     >
                         <ArrowPathIcon class="h-5 w-5 mr-2" />
-                        Try Again
+                        {{ $t("post.tryAgain") }}
                     </button>
 
                     <button
@@ -56,7 +58,7 @@
                         class="w-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center cursor-pointer"
                     >
                         <HomeIcon class="h-5 w-5 mr-2" />
-                        Go Home
+                        {{ $t("post.goHome") }}
                     </button>
                 </div>
             </div>
@@ -91,7 +93,9 @@
             >
                 <div class="text-center">
                     <Spinner class="h-12 w-12 text-white mx-auto mb-4" />
-                    <p class="text-white">Loading video...</p>
+                    <p class="text-white">
+                        {{ $t("post.loadingVideoDotDotDot") }}
+                    </p>
                 </div>
             </div>
 
@@ -165,7 +169,7 @@
                             @click="showEditModal = true"
                             class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-[#F02C56]/70 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer"
                         >
-                            Edit
+                            {{ $t("post.edit") }}
                         </button>
                         <template v-else>
                             <button
@@ -173,14 +177,14 @@
                                 @click="profileStore.follow()"
                                 class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-red-600 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer"
                             >
-                                Follow
+                                {{ $t("post.follow") }}
                             </button>
                             <button
                                 v-else
                                 @click="profileStore.unfollow()"
                                 class="flex items-center border-[#F02C56] text-[#F02C56] border rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer hover:opacity-60"
                             >
-                                Unfollow
+                                {{ $t("post.unfollow") }}
                             </button>
                         </template>
                     </template>
@@ -189,7 +193,7 @@
                             @click="handleGuestFollow"
                             class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-red-600 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0"
                         >
-                            Follow
+                            {{ $t("post.follow") }}
                         </button>
                     </template>
                 </div>
@@ -296,9 +300,9 @@
                                 class="flex items-center justify-start py-3 px-4 hover:bg-gray-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 cursor-pointer"
                             >
                                 <FlagIcon class="h-4 w-4" />
-                                <span class="pl-2 font-semibold text-sm"
-                                    >Report</span
-                                >
+                                <span class="pl-2 font-semibold text-sm">{{
+                                    $t("post.report")
+                                }}</span>
                             </div>
                         </div>
                     </div>

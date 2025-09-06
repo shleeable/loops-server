@@ -368,7 +368,9 @@
                     <h2
                         class="text-lg font-semibold text-black dark:text-gray-400"
                     >
-                        Comments ({{ formatCount(commentCount) }})
+                        {{ $t("post.comments") }} ({{
+                            formatCount(commentCount)
+                        }})
                     </h2>
                     <button
                         @click.stop="toggleComments"

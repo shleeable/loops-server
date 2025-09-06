@@ -7,18 +7,35 @@ use Illuminate\Support\Facades\File;
 
 class GenerateVueI18nTranslations extends Command
 {
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
     protected $signature = 'vue-i18n:generate
                             {--output=resources/js/i18n/locales : Output directory for translation files}';
 
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
     protected $description = 'Generate Vue I18n translation files from Laravel language files';
 
+    /**
+     * Execute the console command.
+     */
     public function handle()
     {
         $outputPath = $this->option('output');
-
         $this->generateTranslations($outputPath);
     }
 
+    /**
+     * Generate translation files for all locales.
+     *
+     * @param  string  $outputPath
+     */
     protected function generateTranslations($outputPath)
     {
         $langPath = base_path('lang');
@@ -28,6 +45,8 @@ class GenerateVueI18nTranslations extends Command
 
             return;
         }
+
+        File::ensureDirectoryExists($outputPath);
 
         $locales = $this->getLocales($langPath);
 
@@ -41,31 +60,52 @@ class GenerateVueI18nTranslations extends Command
             $this->processLocale($locale, $langPath, $outputPath);
         }
 
-        $this->info('Vue I18n translation files generated successfully!');
+        $this->info('Vue I18n translation files generated successfully! ✅');
         $this->generateIndexFile($outputPath, $locales);
     }
 
+    /**
+     * Get all available locales from the lang directory.
+     *
+     * @param  string  $langPath
+     * @return array
+     */
     protected function getLocales($langPath)
     {
         $locales = [];
 
-        // Get locale directories
         $directories = File::directories($langPath);
         foreach ($directories as $directory) {
             $locales[] = basename($directory);
         }
 
+        $jsonFiles = File::files($langPath);
+        foreach ($jsonFiles as $file) {
+            if ($file->getExtension() === 'json') {
+                $locale = $file->getFilenameWithoutExtension();
+                if (! in_array($locale, $locales)) {
+                    $locales[] = $locale;
+                }
+            }
+        }
+
         return $locales;
     }
 
+    /**
+     * Process all translation files for a given locale.
+     *
+     * @param  string  $locale
+     * @param  string  $langPath
+     * @param  string  $outputPath
+     */
     protected function processLocale($locale, $langPath, $outputPath)
     {
         $translations = [];
 
-        // Process PHP translation files
         $localeDir = $langPath.'/'.$locale;
-        if (File::exists($localeDir)) {
-            $files = File::files($localeDir);
+        if (File::isDirectory($localeDir)) {
+            $files = File::allFiles($localeDir);
 
             foreach ($files as $file) {
                 if ($file->getExtension() === 'php') {
@@ -82,35 +122,42 @@ class GenerateVueI18nTranslations extends Command
         $jsonFile = $langPath.'/'.$locale.'.json';
         if (File::exists($jsonFile)) {
             $jsonTranslations = json_decode(File::get($jsonFile), true);
-            if ($jsonTranslations) {
-                foreach ($jsonTranslations as $key => $value) {
-                    $this->setNestedValue($translations, $key, $value);
-                }
+            if (is_array($jsonTranslations)) {
+                $translations = array_merge($translations, $jsonTranslations);
             }
         }
 
         if (! empty($translations)) {
+            $this->convertPlaceholders($translations);
+
             $outputFile = $outputPath.'/'.$locale.'.json';
             File::put($outputFile, json_encode($translations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
             $this->line("Generated: {$locale}.json");
         }
     }
 
-    protected function setNestedValue(&$array, $key, $value)
+    /**
+     * Recursively convert Laravel-style placeholders to Vue-i18n style.
+     *
+     * @param  array  &$array  The array of translations to process.
+     */
+    protected function convertPlaceholders(&$array)
     {
-        $keys = explode('.', $key);
-        $current = &$array;
-
-        foreach ($keys as $k) {
-            if (! isset($current[$k])) {
-                $current[$k] = [];
+        foreach ($array as &$value) {
+            if (is_array($value)) {
+                $this->convertPlaceholders($value);
+            } elseif (is_string($value)) {
+                $value = preg_replace('/(?<!\w):(\w+)/', '{$1}', $value);
             }
-            $current = &$current[$k];
         }
-
-        $current = $value;
     }
 
+    /**
+     * Generate the main index.js file to bootstrap Vue I18n.
+     *
+     * @param  string  $outputPath
+     * @param  array  $locales
+     */
     protected function generateIndexFile($outputPath, $locales)
     {
         $imports = [];
@@ -121,6 +168,8 @@ class GenerateVueI18nTranslations extends Command
             $messages[] = "  {$locale}";
         }
 
+        $defaultLocale = in_array(config('app.locale'), $locales) ? config('app.locale') : ($locales[0] ?? 'en');
+
         $indexContent = "// Auto-generated by vue-i18n:generate command\n";
         $indexContent .= '// Generated: '.now()->format('c')." \n";
         $indexContent .= "import { createI18n } from 'vue-i18n'\n\n";
@@ -128,8 +177,8 @@ class GenerateVueI18nTranslations extends Command
         $indexContent .= "const messages = {\n".implode(",\n", $messages)."\n}\n\n";
         $indexContent .= "const i18n = createI18n({\n";
         $indexContent .= "  legacy: false,\n";
-        $indexContent .= "  locale: '".(in_array('en', $locales) ? 'en' : $locales[0])."',\n";
-        $indexContent .= "  fallbackLocale: '".(in_array('en', $locales) ? 'en' : $locales[0])."',\n";
+        $indexContent .= "  locale: '{$defaultLocale}',\n";
+        $indexContent .= "  fallbackLocale: 'en',\n";
         $indexContent .= "  messages\n";
         $indexContent .= "})\n\n";
         $indexContent .= "export default i18n\n";

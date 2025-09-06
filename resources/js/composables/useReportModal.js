@@ -1,27 +1,7 @@
-import { ref, computed, inject } from "vue";
+import { ref, computed } from "vue";
 import axios from "~/plugins/axios";
 import { useAlertModal } from "@/composables/useAlertModal.js";
-const { alertModal, confirmModal } = useAlertModal();
-
-const REPORT_CATEGORIES = [
-    { key: "1010", message: "Inappropriate and irrelevant search" },
-    { key: "1011", message: "Violence, abuse, and criminal exploitation" },
-    { key: "1012", message: "Hate and harassment" },
-    { key: "1013", message: "Suicide and self-harm" },
-    { key: "1014", message: "Disordered eating and unhealthy body image" },
-    { key: "1015", message: "Dangerous activities and challenges" },
-    { key: "1016", message: "Nudity and sexual content" },
-    { key: "1017", message: "Shocking and graphic content" },
-    { key: "1018", message: "Misinformation" },
-    { key: "1019", message: "Deceptive behavior and spam" },
-    { key: "1020", message: "Regulated goods and activities" },
-    { key: "1021", message: "Frauds and scams" },
-    { key: "1022", message: "Sharing personal information" },
-    { key: "1023", message: "Report illegal content" },
-    { key: "1024", message: "Counterfeits and intellectual property" },
-    { key: "1025", message: "Undisclosed branded content" },
-    { key: "1026", message: "Other" },
-];
+import { useI18n } from "vue-i18n";
 
 const CATEGORIES_WITH_TEXT_INPUT = [
     "1018", // Misinformation
@@ -43,6 +23,82 @@ const selectedCategory = ref(null);
 const additionalText = ref("");
 
 export function useReportModal() {
+    const { alertModal, confirmModal } = useAlertModal();
+    const { t } = useI18n();
+
+    const REPORT_CATEGORIES = computed(() => [
+        {
+            key: "1010",
+            message:
+                t("reports.types.1010") ||
+                "Inappropriate and irrelevant search",
+        },
+        {
+            key: "1011",
+            message:
+                t("reports.types.1011") ||
+                "Violence, abuse, and criminal exploitation",
+        },
+        {
+            key: "1012",
+            message: t("reports.types.1012") || "Hate and harassment",
+        },
+        {
+            key: "1013",
+            message: t("reports.types.1013") || "Suicide and self-harm",
+        },
+        {
+            key: "1014",
+            message:
+                t("reports.types.1014") ||
+                "Disordered eating and unhealthy body image",
+        },
+        {
+            key: "1015",
+            message:
+                t("reports.types.1015") ||
+                "Dangerous activities and challenges",
+        },
+        {
+            key: "1016",
+            message: t("reports.types.1016") || "Nudity and sexual content",
+        },
+        {
+            key: "1017",
+            message: t("reports.types.1017") || "Shocking and graphic content",
+        },
+        { key: "1018", message: t("reports.types.1018") || "Misinformation" },
+        {
+            key: "1019",
+            message: t("reports.types.1019") || "Deceptive behavior and spam",
+        },
+        {
+            key: "1020",
+            message:
+                t("reports.types.1020") || "Regulated goods and activities",
+        },
+        { key: "1021", message: t("reports.types.1021") || "Frauds and scams" },
+        {
+            key: "1022",
+            message: t("reports.types.1022") || "Sharing personal information",
+        },
+        {
+            key: "1023",
+            message: t("reports.types.1023") || "Report illegal content",
+        },
+        {
+            key: "1024",
+            message:
+                t("reports.types.1024") ||
+                "Counterfeits and intellectual property",
+        },
+        {
+            key: "1025",
+            message: t("reports.types.1025") || "Undisclosed branded content",
+        },
+        { key: "1026", message: t("reports.types.1026") || "Other" },
+    ]);
+
     const requiresTextInput = computed(() => {
         return (
             selectedCategory.value &&
@@ -120,18 +176,20 @@ export function useReportModal() {
                 })
                 .finally(() => {
                     alertModal(
-                        "Report Submitted!",
-                        "Your report was successfully sent and will be reviewed by our content moderation team.<br /><br />Thank you for helping keeping our community safe ❤️",
+                        t("reports.success.title") || "Report Submitted!",
+                        t("reports.success.message") ||
+                            "Your report was successfully sent and will be reviewed by our content moderation team.<br /><br />Thank you for helping keeping our community safe ❤️",
                     );
                 });
         } catch (error) {
             closeReportModal();
 
-            let msg = "An unexpected error occured";
+            let msg =
+                t("reports.error.default") || "An unexpected error occurred";
             if (error.response?.data?.message) {
                 msg = error.response.data.message;
             }
-            alertModal("Error", msg);
+            alertModal(t("reports.error.title") || "Error", msg);
             console.error("Error submitting report:", error);
         } finally {
             isSubmitting.value = false;

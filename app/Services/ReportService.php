@@ -31,7 +31,7 @@ class ReportService
         return array_map(function ($key, $value) {
             return [
                 'key' => (string) $key,
-                'message' => $value,
+                'message' => trans('reports.types.'.$key),
             ];
         }, array_keys(self::REPORT_TYPES), self::REPORT_TYPES);
     }

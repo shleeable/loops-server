@@ -41,7 +41,7 @@
                         <span
                             v-if="comment.account.id == activePost.account.id"
                             class="text-sm font-medium text-[#fe2c55]"
-                            >Creator</span
+                            >{{ $t("post.creator") }}</span
                         >
                     </router-link>
                 </div>
@@ -61,7 +61,11 @@
                             @click="isExpanded = !isExpanded"
                             class="text-gray-500 hover:text-gray-600 text-sm ml-1 cursor-pointer"
                         >
-                            {{ isExpanded ? "Show less" : "...more" }}
+                            {{
+                                isExpanded
+                                    ? $t("post.showLess")
+                                    : $t("post.dotDotDotMore")
+                            }}
                         </button>
                     </p>
                 </div>
@@ -79,7 +83,7 @@
                             @click="showReplyInput = !showReplyInput"
                             class="hover:text-gray-700 font-medium cursor-pointer"
                         >
-                            Reply
+                            {{ $t("post.reply") }}
                         </button>
                     </div>
                 </div>
@@ -98,7 +102,7 @@
                             <textarea
                                 v-model="replyText"
                                 class="w-full p-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-300 rounded-lg resize-none text-sm focus:border-[#F02C56] focus:outline-[#F02C56] dark:focus:outline-[#F02C56]"
-                                placeholder="Write a reply..."
+                                :placeholder="$t('post.writeAReplyDotDotDot')"
                                 rows="2"
                             ></textarea>
                             <div class="flex justify-end mt-2">
@@ -111,8 +115,8 @@
                                 >
                                     {{
                                         isSubmittingReply
-                                            ? "Posting..."
-                                            : "Reply"
+                                            ? $t("post.postingDotDotDot")
+                                            : $t("post.reply")
                                     }}
                                 </button>
                             </div>
@@ -132,8 +136,12 @@
                         <div
                             class="flex w-8 bg-gray-300 dark:bg-gray-700 h-[1px]"
                         ></div>
-                        View {{ totalRepliesCount }}
-                        {{ totalRepliesCount === 1 ? "reply" : "replies" }}
+                        {{ $t("post.view") }} {{ totalRepliesCount }}
+                        {{
+                            totalRepliesCount === 1
+                                ? $t("post.reply")
+                                : $t("post.replies")
+                        }}
                         <i class="bx bx-chevron-down text-lg" />
                     </button>
 
@@ -169,7 +177,7 @@
                             :to="comment.url"
                             class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                         >
-                            Permalink
+                            {{ $t("post.permalink") }}
                         </router-link>
 
                         <button
@@ -178,14 +186,18 @@
                             class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800"
                             :disabled="isDeletingComment"
                         >
-                            {{ isDeletingComment ? "Deleting..." : "Delete" }}
+                            {{
+                                isDeletingComment
+                                    ? $t("post.deletingDotDotDot")
+                                    : $t("post.delete")
+                            }}
                         </button>
                         <button
                             v-else
                             @click="handleReport"
                             class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                         >
-                            Report
+                            {{ $t("post.report") }}
                         </button>
                     </div>
                 </div>
@@ -234,7 +246,7 @@
                         class="flex w-8 bg-gray-300 dark:bg-gray-700 h-[1px]"
                     ></div>
                     <span class="flex">
-                        Load more replies
+                        {{ $t("post.loadMoreReplies") }}
                         <i class="bx bx-chevron-down text-lg" />
                     </span>
                 </button>
@@ -244,7 +256,7 @@
                         @click="hideReplies"
                         class="flex items-center space-x-1 text-sm text-gray-400 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors cursor-pointer"
                     >
-                        <span>Hide</span>
+                        <span>{{ $t("post.hide") }}</span>
                         <i class="bx bx-chevron-up text-lg"></i>
                     </button>
                 </div>

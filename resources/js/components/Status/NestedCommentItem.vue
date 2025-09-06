@@ -25,14 +25,14 @@
                     <span
                         v-if="comment.account.id == activePost.account.id"
                         class="text-sm font-medium text-[#fe2c55]"
-                        >Creator</span
+                        >{{ $t("post.creator") }}</span
                     >
                 </router-link>
             </div>
 
             <div class="mb-2">
                 <p
-                    class="text-[16px] text-gray-900 dark:text-gray-100 leading-relaxed"
+                    class="text-[16px] text-gray-900 dark:text-gray-100 leading-relaxed break-all"
                 >
                     {{ isExpanded ? comment.caption : truncatedText }}
                     <button
@@ -40,7 +40,11 @@
                         @click="isExpanded = !isExpanded"
                         class="text-gray-500 hover:text-gray-600 text-sm ml-1 cursor-pointer"
                     >
-                        {{ isExpanded ? "Show less" : "...more" }}
+                        {{
+                            isExpanded
+                                ? $t("post.showLess")
+                                : $t("post.dotDotDotMore")
+                        }}
                     </button>
                 </p>
             </div>
@@ -72,7 +76,7 @@
                         :to="comment.url"
                         class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
-                        Permalink
+                        {{ $t("post.permalink") }}
                     </router-link>
 
                     <button
@@ -81,19 +85,22 @@
                         class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800"
                         :disabled="isDeletingComment"
                     >
-                        {{ isDeletingComment ? "Deleting..." : "Delete" }}
+                        {{
+                            isDeletingComment
+                                ? $t("post.deletingDotDotDot")
+                                : $t("post.delete")
+                        }}
                     </button>
                     <button
                         v-else
                         @click="handleReport"
                         class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
-                        Report
+                        {{ $t("post.report") }}
                     </button>
                 </div>
             </div>
 
-            <!-- Like button -->
             <div class="relative flex justify-center items-center space-x-1">
                 <button
                     @click="handleLike"
