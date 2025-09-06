@@ -68,9 +68,6 @@
                                     {{ t("language.picker.current") }}
                                 </p>
                                 <div class="flex items-center space-x-2">
-                                    <span class="text-2xl">{{
-                                        currentLanguage.flag
-                                    }}</span>
                                     <span
                                         class="font-medium text-gray-900 dark:text-white"
                                     >
@@ -106,7 +103,6 @@
                                         :value="language.code"
                                         class="flex items-center"
                                     >
-                                        {{ language.flag }}
                                         {{ language.nativeName }} ({{
                                             language.name
                                         }})
@@ -161,18 +157,18 @@ const { locale, availableLocales, t } = useI18n();
 const selectedLocale = ref(locale.value);
 
 const languageInfo = {
-    en: { name: "English", flag: "🇺🇸", nativeName: "English" },
-    es: { name: "Spanish", flag: "🇪🇸", nativeName: "Español" },
-    fr: { name: "French", flag: "🇫🇷", nativeName: "Français" },
-    de: { name: "German", flag: "🇩🇪", nativeName: "Deutsch" },
-    it: { name: "Italian", flag: "🇮🇹", nativeName: "Italiano" },
-    pt: { name: "Portuguese", flag: "🇵🇹", nativeName: "Português" },
-    ja: { name: "Japanese", flag: "🇯🇵", nativeName: "日本語" },
-    ko: { name: "Korean", flag: "🇰🇷", nativeName: "한국어" },
-    zh: { name: "Chinese", flag: "🇨🇳", nativeName: "中文" },
-    ar: { name: "Arabic", flag: "🇸🇦", nativeName: "العربية" },
-    ru: { name: "Russian", flag: "🇷🇺", nativeName: "Русский" },
-    hi: { name: "Hindi", flag: "🇮🇳", nativeName: "हिन्दी" },
+    en: { name: "English", nativeName: "English" },
+    es: { name: "Spanish", nativeName: "Español" },
+    fr: { name: "French", nativeName: "Français" },
+    de: { name: "German", nativeName: "Deutsch" },
+    it: { name: "Italian", nativeName: "Italiano" },
+    pt: { name: "Portuguese", nativeName: "Português" },
+    ja: { name: "Japanese", nativeName: "日本語" },
+    ko: { name: "Korean", nativeName: "한국어" },
+    zh: { name: "Chinese", nativeName: "中文" },
+    ar: { name: "Arabic", nativeName: "العربية" },
+    ru: { name: "Russian", nativeName: "Русский" },
+    hi: { name: "Hindi", nativeName: "हिन्दी" },
 };
 
 const availableLanguages = computed(() => {
