@@ -1,9 +1,8 @@
 <?php
 
 return [
-    'errorLoadingNotifications' => 'Error loading notifications',
     'allCaughtUp' => 'You\'re all caught up!',
-    'noNotifications' => 'No notifications',
+    'errorLoadingNotifications' => 'Error loading notifications',
     'messageTypes' => [
         'videoLike' => 'liked your video',
         'newFollower' => 'started following you',
@@ -11,4 +10,5 @@ return [
         'videoShare' => 'shared your video',
         'default' => 'interacted with your content',
     ],
+    'noNotifications' => 'No notifications',
 ];
