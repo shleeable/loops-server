@@ -22,7 +22,7 @@
                     class="fixed w-[400px] p-4 mb-3 border-b border-gray-200 dark:border-slate-800 shadow dark:shadow-slate-900 rounded-lg z-30 backdrop-blur-lg bg-white/60 dark:bg-slate-950/60"
                 >
                     <h3 class="text-lg font-semibold dark:text-slate-500">
-                        {{ t('nav.notifications') }}
+                        {{ t("nav.notifications") }}
                     </h3>
                 </div>
 
@@ -37,7 +37,7 @@
                         v-else-if="isError"
                         class="p-4 text-center text-red-600"
                     >
-                        {{ t('nav.errorLoadingNotifications')}}
+                        {{ t("nav.errorLoadingNotifications") }}
                     </div>
 
                     <div v-else>
@@ -154,8 +154,8 @@ import { useNotifications } from "~/composables/useNotifications";
 import { format } from "date-fns";
 import { useRouter } from "vue-router";
 import LoopLink from "../LoopLink.vue";
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 const isOpen = ref(false);
 const notificationsStore = useNotificationStore();

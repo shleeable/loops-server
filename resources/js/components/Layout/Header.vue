@@ -68,13 +68,13 @@
                             <h3
                                 class="text-sm font-medium text-gray-700 dark:text-gray-400"
                             >
-                                {{ t('nav.recentSearches') }}
+                                {{ t("nav.recentSearches") }}
                             </h3>
                             <button
                                 @click="searchStore.clearRecentSearches"
                                 class="text-xs text-[#F02C56] hover:underline"
                             >
-                                {{ t('nav.clearAll') }}
+                                {{ t("nav.clearAll") }}
                             </button>
                         </div>
                         <div
@@ -127,7 +127,7 @@
                                         class="font-medium text-xs text-gray-400 dark:text-slate-600"
                                     >
                                         {{ formatCount(result.post_count) }}
-                                        {{ t('nav.videos') }}
+                                        {{ t("nav.videos") }}
                                     </div>
                                     <div
                                         class="font-medium text-xs text-gray-400 dark:text-slate-600"
@@ -138,7 +138,7 @@
                                         class="font-medium text-xs text-gray-400 dark:text-slate-600"
                                     >
                                         {{ formatCount(result.follower_count) }}
-                                        {{ t('nav.followers') }}
+                                        {{ t("nav.followers") }}
                                     </div>
                                 </div>
                             </div>
@@ -153,7 +153,7 @@
                         "
                         class="px-4 py-3 text-sm text-gray-500 text-center"
                     >
-                        {{ t('nav.noResultsFound') }}
+                        {{ t("nav.noResultsFound") }}
                     </div>
                 </div>
             </div>
@@ -174,9 +174,9 @@
                     class="hidden lg:flex items-center bg-[#F02C56] border border-[#F02C56] text-white rounded-lg px-5 py-2 hover:bg-[#F02C56]/80 hover:border-[#F02C5699] cursor-pointer"
                 >
                     <i class="bx bx-upload text-white text-[22px]"></i>
-                    <span class="px-2 font-medium tracking-tight text-[15px]"
-                        >{{ t('nav.upload') }}</span
-                    >
+                    <span class="px-2 font-medium tracking-tight text-[15px]">{{
+                        t("nav.upload")
+                    }}</span>
                 </button>
 
                 <div
@@ -192,7 +192,9 @@
                         @click="authStore.openAuthModal('register')"
                         class="flex items-center border-[#F02C56] text-[#F02C56] border dark:border-red-400 rounded-md px-3 py-[6px] cursor-pointer mr-3"
                     >
-                        <span class="mx-4 font-medium text-[15px]">{{ t('nav.join') }}</span>
+                        <span class="mx-4 font-medium text-[15px]">{{
+                            t("nav.join")
+                        }}</span>
                     </button>
 
                     <button
@@ -200,7 +202,9 @@
                         @click="authStore.openAuthModal('login')"
                         class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 rounded-md px-3 py-[6px] cursor-pointer"
                     >
-                        <span class="mx-4 font-medium text-[15px]">{{ t('nav.logIn') }}</span>
+                        <span class="mx-4 font-medium text-[15px]">{{
+                            t("nav.logIn")
+                        }}</span>
                     </button>
                 </div>
 
@@ -263,18 +267,18 @@
                                 class="flex items-center justify-start py-3 px-2 hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer dark:text-slate-200"
                             >
                                 <i class="ph-user text-[20px]"></i>
-                                <span class="pl-2 font-semibold text-sm"
-                                    >{{ t('nav.profile') }}</span
-                                >
+                                <span class="pl-2 font-semibold text-sm">{{
+                                    t("nav.profile")
+                                }}</span>
                             </router-link>
                             <div
                                 @click="logout"
                                 class="flex items-center justify-start py-3 px-1.5 hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-800 cursor-pointer"
                             >
                                 <i class="ic-outline-login text-[20px]"></i>
-                                <span class="pl-2 font-semibold text-sm"
-                                    >{{ t('nav.logOut') }}</span
-                                >
+                                <span class="pl-2 font-semibold text-sm">{{
+                                    t("nav.logOut")
+                                }}</span>
                             </div>
                         </div>
                     </div>
@@ -298,7 +302,7 @@
                     @click="authStore.openAuthModal('login')"
                     class="lg:hidden bg-[#F02C56] text-white rounded-md px-3 py-2 text-sm font-medium"
                 >
-                    {{ t('nav.loginOrRegister') }}
+                    {{ t("nav.loginOrRegister") }}
                 </button>
             </div>
         </div>
@@ -348,13 +352,13 @@
                         class="flex items-center justify-between px-4 py-2 border-b border-gray-100 dark:border-b-gray-800"
                     >
                         <h3 class="text-sm font-medium text-gray-700">
-                            {{ t('nav.recentSearches') }}
+                            {{ t("nav.recentSearches") }}
                         </h3>
                         <button
                             @mousedown="searchStore.clearRecentSearches"
                             class="text-xs text-[#F02C56] hover:underline cursor-pointer"
                         >
-                            {{ t('nav.clearAll') }}
+                            {{ t("nav.clearAll") }}
                         </button>
                     </div>
                     <div
@@ -406,7 +410,8 @@
                                 <div
                                     class="font-medium text-xs text-gray-400 dark:text-slate-600"
                                 >
-                                    {{ formatCount(result.post_count) }} {{ t('nav.videos') }}
+                                    {{ formatCount(result.post_count) }}
+                                    {{ t("nav.videos") }}
                                 </div>
                                 <div
                                     class="font-medium text-xs text-gray-400 dark:text-slate-600"
@@ -417,7 +422,7 @@
                                     class="font-medium text-xs text-gray-400 dark:text-slate-600"
                                 >
                                     {{ formatCount(result.follower_count) }}
-                                    {{ t('nav.followers') }}
+                                    {{ t("nav.followers") }}
                                 </div>
                             </div>
                         </div>
@@ -436,8 +441,8 @@ import { useAuthStore } from "@/stores/auth";
 import { debounce } from "lodash";
 import { useNotificationStore } from "~/stores/notifications";
 import { useUtils } from "@/composables/useUtils";
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 const emit = defineEmits(["toggleMobileDrawer", "openLogin"]);
 

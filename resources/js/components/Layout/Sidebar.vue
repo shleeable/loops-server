@@ -92,9 +92,9 @@
                                 class="flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300 border-b border-gray-200 dark:border-slate-700"
                             >
                                 <i class="bx bx-cog mr-3 text-xl"></i>
-                                <span class="text-sm font-medium"
-                                    >{{ t('nav.settings') }}</span
-                                >
+                                <span class="text-sm font-medium">{{
+                                    t("nav.settings")
+                                }}</span>
                             </router-link>
 
                             <router-link
@@ -103,9 +103,9 @@
                                 class="flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300"
                             >
                                 <i class="bx bx-bell mr-3 text-xl"></i>
-                                <span class="text-sm font-medium"
-                                    >{{ t('nav.notifications') }}</span
-                                >
+                                <span class="text-sm font-medium">{{
+                                    t("nav.notifications")
+                                }}</span>
                             </router-link>
                         </div>
                     </div>
@@ -120,7 +120,7 @@
                         class="w-full flex items-center justify-center bg-[#F02C56] text-white rounded-lg px-4 py-3 font-medium"
                     >
                         <i class="bx bx-upload mr-2 text-xl"></i>
-                        {{ t('nav.uploadLoop') }}
+                        {{ t("nav.uploadLoop") }}
                     </button>
 
                     <button
@@ -128,7 +128,7 @@
                         @click="handleLoginClick"
                         class="w-full flex items-center justify-center bg-[#F02C56] text-white rounded-lg px-4 py-3 font-medium"
                     >
-                        {{ t('nav.logIn') }}
+                        {{ t("nav.logIn") }}
                     </button>
 
                     <button
@@ -137,7 +137,7 @@
                         class="w-full flex items-center justify-center border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 rounded-lg px-4 py-3 font-medium hover:bg-gray-50 dark:hover:bg-slate-800"
                     >
                         <i class="ic-outline-login mr-2 text-xl"></i>
-                        {{ t('nav.logOut') }}
+                        {{ t("nav.logOut") }}
                     </button>
                 </div>
             </template>
@@ -166,7 +166,7 @@
                     <a
                         class="text-[10.5px] text-gray-400 hover:text-red-400"
                         href="https://joinloops.org"
-                        >{{ t("nav.poweredBy")}} Loops</a
+                        >{{ t("nav.poweredBy") }} Loops</a
                     >
                     <a
                         class="text-[8px] text-gray-400 hover:text-red-400"
@@ -187,8 +187,8 @@ import { inject, ref, computed, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import SidebarNavItem from "@/components/Layout/SidebarNavItem.vue";
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 const props = defineProps({
     isOpen: {
@@ -256,7 +256,11 @@ const mainLinks = computed(() => {
         ];
 
         if (authStore.isAdmin) {
-            links.push({ name: t("nav.admin"), path: "/admin", icon: "bx bx-badge" });
+            links.push({
+                name: t("nav.admin"),
+                path: "/admin",
+                icon: "bx bx-badge",
+            });
         }
 
         const userCustomPages = filterNavItemsByLocation("side_menu_user");

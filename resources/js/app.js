@@ -18,7 +18,7 @@ import "@mdi/font/css/materialdesignicons.min.css";
 import "boxicons/css/boxicons.min.css";
 import "remixicon/fonts/remixicon.css";
 import "../sass/next.css";
-import i18n from './i18n/locales'
+import i18n from "./i18n/locales";
 
 const app = createApp(App);
 const pinia = createPinia();
