@@ -3,7 +3,6 @@
 namespace App\Observers;
 
 use App\Models\Follower;
-use App\Services\AccountService;
 use App\Services\FollowerService;
 
 class FollowerObserver
