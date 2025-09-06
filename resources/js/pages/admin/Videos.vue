@@ -59,6 +59,10 @@
                             :src="item.account.avatar"
                             :alt="item.account.username"
                             class="w-8 h-8 rounded-full mr-2"
+                            @error="
+                                $event.target.src =
+                                    '/storage/avatars/default.jpg'
+                            "
                         />
                         <span>{{ item.account.username }}</span>
                     </div>

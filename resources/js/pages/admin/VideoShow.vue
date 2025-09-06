@@ -122,6 +122,10 @@
                                             :src="comment.account.avatar"
                                             :alt="comment.account.username"
                                             class="w-8 h-8 rounded-full flex-shrink-0"
+                                            @error="
+                                                $event.target.src =
+                                                    '/storage/avatars/default.jpg'
+                                            "
                                         />
                                         <div class="flex-1 min-w-0">
                                             <div
@@ -300,6 +304,10 @@
                                     :src="video.account.avatar"
                                     :alt="video.account.username"
                                     class="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-600"
+                                    @error="
+                                        $event.target.src =
+                                            '/storage/avatars/default.jpg'
+                                    "
                                 />
                                 <div>
                                     <div class="flex items-center gap-2">

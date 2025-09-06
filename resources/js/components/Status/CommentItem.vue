@@ -13,6 +13,7 @@
                     :src="comment.account.avatar"
                     :alt="comment.account.username"
                     class="w-10 h-10 rounded-full flex-shrink-0"
+                    @error="$event.target.src = '/storage/avatars/default.jpg'"
                 />
             </router-link>
             <div class="flex-1 min-w-0">
@@ -97,6 +98,10 @@
                             :src="authStore.user?.avatar"
                             :alt="authStore.user?.username"
                             class="w-8 h-8 rounded-full flex-shrink-0"
+                            @error="
+                                $event.target.src =
+                                    '/storage/avatars/default.jpg'
+                            "
                         />
                         <div class="flex-1">
                             <textarea

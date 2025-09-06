@@ -63,6 +63,10 @@
                                                 :src="notification.actor.avatar"
                                                 :alt="notification.actor.name"
                                                 class="w-10 h-10 rounded-full"
+                                                @error="
+                                                    $event.target.src =
+                                                        '/storage/avatars/default.jpg'
+                                                "
                                             />
                                         </button>
                                         <div>
@@ -111,6 +115,10 @@
                                                         "
                                                         :alt="'Video thumbnail'"
                                                         class="w-16 h-16 rounded object-cover shadow-xl"
+                                                        @error="
+                                                            $event.target.src =
+                                                                '/storage/videos/video-placeholder.jpg'
+                                                        "
                                                     />
                                                 </LoopLink>
                                             </div>

@@ -5,6 +5,7 @@
                 :src="comment.account.avatar"
                 :alt="comment.account.username"
                 class="w-6 h-6 rounded-full flex-shrink-0"
+                @error="$event.target.src = '/storage/avatars/default.jpg'"
             />
         </router-link>
         <div class="flex-1 min-w-0">

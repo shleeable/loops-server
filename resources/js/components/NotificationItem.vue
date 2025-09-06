@@ -201,7 +201,7 @@ const handleImageError = (event) => {
 };
 
 const handleVideoImageError = (event) => {
-    event.target.style.display = "none";
+    event.target.src = "/storage/videos/video-placeholder.jpg";
 };
 </script>
 

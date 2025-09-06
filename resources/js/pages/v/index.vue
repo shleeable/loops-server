@@ -133,6 +133,10 @@
                                 }"
                                 :src="currentVideo.account.avatar"
                                 :alt="currentVideo.account.username"
+                                @error="
+                                    $event.target.src =
+                                        '/storage/avatars/default.jpg'
+                                "
                             />
                         </router-link>
                         <div class="ml-3 pt-0.5 min-w-0 flex-1 items-center">

@@ -45,6 +45,10 @@
                             :src="item.reporter.avatar"
                             :alt="item.reporter.username"
                             class="w-8 h-8 rounded-full mr-2"
+                            @error="
+                                $event.target.src =
+                                    '/storage/avatars/default.jpg'
+                            "
                         />
                         <span class="font-bold">{{
                             item.reporter.username

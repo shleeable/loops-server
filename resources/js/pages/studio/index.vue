@@ -9,6 +9,10 @@
                         <img
                             :src="user.avatar"
                             class="w-20 h-20 rounded-full border border-gray-200 dark:border-gray-700 p-1"
+                            @error="
+                                $event.target.src =
+                                    '/storage/avatars/default.jpg'
+                            "
                         />
                         <div class="flex flex-col gap-1">
                             <div class="text-lg font-bold dark:text-white">

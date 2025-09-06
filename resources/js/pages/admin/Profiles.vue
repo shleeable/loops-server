@@ -40,6 +40,9 @@
                         :src="item.avatar"
                         :alt="item.username"
                         class="w-10 h-10 rounded-full mr-3"
+                        @error="
+                            $event.target.src = '/storage/avatars/default.jpg'
+                        "
                     />
                     <div class="flex flex-col gap-1">
                         <div class="flex gap-3">

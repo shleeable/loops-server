@@ -117,6 +117,10 @@
                                                 v-if="item.account.avatar"
                                                 :src="item.account.avatar"
                                                 :alt="item.account.username"
+                                                @error="
+                                                    $event.target.src =
+                                                        '/storage/avatars/default.jpg'
+                                                "
                                                 class="w-12 h-12 rounded-full object-cover"
                                             />
                                             <i
@@ -388,6 +392,10 @@
                                             v-if="suggestion.avatar"
                                             :src="suggestion.avatar"
                                             :alt="suggestion.username"
+                                            @error="
+                                                $event.target.src =
+                                                    '/storage/avatars/default.jpg'
+                                            "
                                             class="w-8 h-8 rounded-full object-cover"
                                         />
                                         <i

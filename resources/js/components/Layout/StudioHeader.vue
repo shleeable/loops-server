@@ -31,6 +31,10 @@
                                 width="33"
                                 :src="authStore.user.avatar"
                                 alt="User avatar"
+                                @error="
+                                    $event.target.src =
+                                        '/storage/avatars/default.jpg'
+                                "
                             />
                         </button>
 
@@ -71,6 +75,9 @@
                         width="32"
                         :src="authStore.user.avatar"
                         alt="User avatar"
+                        @error="
+                            $event.target.src = '/storage/avatars/default.jpg'
+                        "
                     />
                 </button>
             </div>

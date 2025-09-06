@@ -127,6 +127,10 @@
                                 :src="report.reporter.avatar"
                                 :alt="report.reporter.username"
                                 class="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-600 flex-shrink-0"
+                                @error="
+                                    $event.target.src =
+                                        '/storage/avatars/default.jpg'
+                                "
                             />
 
                             <div class="flex-1 min-w-0">
@@ -257,6 +261,10 @@
                                         report.content_preview.media.thumbnail
                                     "
                                     class="w-20 h-15 rounded object-cover flex-shrink-0"
+                                    @error="
+                                        $event.target.src =
+                                            '/storage/videos/video-placeholder.jpg'
+                                    "
                                 />
                                 <div class="flex-1 min-w-0">
                                     <p
@@ -541,6 +549,10 @@
                                     :src="report.content_preview.avatar"
                                     :alt="report.content_preview.username"
                                     class="w-12 h-12 rounded-full flex-shrink-0"
+                                    @error="
+                                        $event.target.src =
+                                            '/storage/avatars/default.jpg'
+                                    "
                                 />
                                 <div class="flex-1 min-w-0">
                                     <h4

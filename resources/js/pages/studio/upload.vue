@@ -330,6 +330,10 @@
                                                         :src="item.avatar"
                                                         :alt="item.name"
                                                         class="w-full h-full object-cover"
+                                                        @error="
+                                                            $event.target.src =
+                                                                '/storage/avatars/default.jpg'
+                                                        "
                                                     />
                                                     <span
                                                         v-else

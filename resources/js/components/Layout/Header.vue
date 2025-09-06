@@ -400,6 +400,10 @@
                             :src="result.avatar"
                             class="w-12 h-12 rounded-full mr-3"
                             :alt="result.title"
+                            @error="
+                                $event.target.src =
+                                    '/storage/avatars/default.jpg'
+                            "
                         />
                         <div class="flex flex-col space-y-0.5">
                             <div

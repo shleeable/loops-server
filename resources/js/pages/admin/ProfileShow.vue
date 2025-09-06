@@ -15,6 +15,10 @@
                             :src="profile.avatar"
                             :alt="profile.username"
                             class="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 bg-white shadow-lg"
+                            @error="
+                                $event.target.src =
+                                    '/storage/avatars/default.jpg'
+                            "
                         />
                     </div>
 

@@ -107,6 +107,10 @@
                                             :src="profileImage"
                                             alt="Profile"
                                             class="h-full w-full object-cover rounded-full"
+                                            @error="
+                                                $event.target.src =
+                                                    '/storage/avatars/default.jpg'
+                                            "
                                         />
                                     </div>
                                 </router-link>
@@ -234,6 +238,10 @@
                                         :src="profileImage"
                                         alt="Profile"
                                         class="h-full w-full object-cover rounded-full"
+                                        @error="
+                                            $event.target.src =
+                                                '/storage/avatars/default.jpg'
+                                        "
                                     />
                                 </div>
                             </router-link>

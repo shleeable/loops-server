@@ -8,6 +8,9 @@
                     <img
                         class="w-24 h-24 sm:w-32 sm:h-32 lg:max-w-[200px] lg:w-[200px] lg:h-[200px] rounded-full object-cover"
                         :src="profile.avatar"
+                        @error="
+                            $event.target.src = '/storage/avatars/default.jpg'
+                        "
                     />
                 </div>
 

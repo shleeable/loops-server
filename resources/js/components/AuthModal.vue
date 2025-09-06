@@ -548,6 +548,10 @@
                                             <img
                                                 :src="form.selectedAvatarUrl"
                                                 class="w-20 h-20 rounded-full"
+                                                @error="
+                                                    $event.target.src =
+                                                        '/storage/avatars/default.jpg'
+                                                "
                                             />
                                         </div>
                                     </div>
