@@ -113,9 +113,7 @@
                                 Maximum size:
                                 {{ appConfig.media.max_video_size }} MB, video
                                 duration:
-                                {{
-                                    appConfig.media.max_video_duration / 60
-                                }}
+                                {{ appConfig.media.max_video_duration / 60 }}
                                 minute(s).
                             </p>
                         </div>
@@ -365,9 +363,7 @@
                                                             v-if="item.count"
                                                             class="text-xs text-gray-500"
                                                         >
-                                                            {{
-                                                                item.count
-                                                            }}
+                                                            {{ item.count }}
                                                             posts
                                                         </div>
                                                         <div

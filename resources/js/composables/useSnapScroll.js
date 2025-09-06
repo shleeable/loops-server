@@ -192,8 +192,7 @@ export function useSnapScroll({
                 ) {
                     return true;
                 }
-            } catch {
-            }
+            } catch {}
 
             current = current.parentElement;
         }

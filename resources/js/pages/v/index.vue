@@ -675,7 +675,7 @@ onBeforeUnmount(() => {
 
 watch(isVideoLoaded, (newVal) => {
     if (newVal && videoRef.value) {
-        setTimeout(() => videoRef.value.play(), 500)
+        setTimeout(() => videoRef.value.play(), 500);
     }
 });
 

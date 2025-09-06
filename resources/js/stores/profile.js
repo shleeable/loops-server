@@ -1,9 +1,9 @@
 import { defineStore } from "pinia";
-import { ref, onMounted, inject, nextTick } from "vue";
+import { nextTick } from "vue";
 import axios from "@/plugins/axios";
 import { useAuthStore } from "@/stores/auth";
 import { useAlertModal } from "@/composables/useAlertModal.js";
-const { alertModal, confirmModal } = useAlertModal();
+const { confirmModal } = useAlertModal();
 
 export const useProfileStore = defineStore("profile", {
     state: () => ({
@@ -12,7 +12,6 @@ export const useProfileStore = defineStore("profile", {
         username: null,
         bio: "",
         avatar: "",
-        url: "",
         post: null,
         posts: null,
         postsNextCursor: null,
@@ -276,7 +275,7 @@ export const useProfileStore = defineStore("profile", {
             const axiosInstance = axios.getAxiosInstance();
             const pid = this.username;
             try {
-                const response = await axiosInstance
+                await axiosInstance
                     .post(`/api/v1/account/block/${this.id}`)
                     .finally(async () => {
                         await nextTick();
@@ -291,9 +290,9 @@ export const useProfileStore = defineStore("profile", {
             const axiosInstance = axios.getAxiosInstance();
             const pid = this.username;
             try {
-                const response = await axiosInstance
+                await axiosInstance
                     .post(`/api/v1/account/unblock/${this.id}`)
-                    .then((res) => {
+                    .then(() => {
                         this.relationship.blocking = false;
                         this.isBlocking = false;
                     })

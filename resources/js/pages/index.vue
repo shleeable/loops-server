@@ -65,11 +65,9 @@ const getVideoProps = (post, index) => ({
 
 const getVideoKey = (post) => post.id;
 
-const onVideoVisible = (index) => {
-};
+const onVideoVisible = (index) => {};
 
-const onVideoHidden = (index) => {
-};
+const onVideoHidden = (index) => {};
 
 const onUserInteraction = () => {
     handleFirstInteraction();

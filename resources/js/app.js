@@ -17,7 +17,7 @@ import router from "./routes/index";
 import "@mdi/font/css/materialdesignicons.min.css";
 import "boxicons/css/boxicons.min.css";
 import "remixicon/fonts/remixicon.css";
-import "../sass/next.css"
+import "../sass/next.css";
 
 const app = createApp(App);
 const pinia = createPinia();
