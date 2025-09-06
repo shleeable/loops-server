@@ -1,10 +1,10 @@
 <?php
 
+use App\Models\Page;
+use App\Services\PageService;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\Page;
-use App\Services\PageService;
 
 return new class extends Migration
 {
@@ -26,7 +26,7 @@ return new class extends Migration
                 'side_menu_all',
                 'footer_guest',
                 'footer_user',
-                'footer_all'
+                'footer_all',
             ])->default('none');
             $table->boolean('system_page')->default(false);
             $table->json('meta')->nullable();
@@ -36,10 +36,10 @@ return new class extends Migration
         });
 
         $pages = [
-            [ 'title' => 'About', 'slug' => 'about', 'source' => 'about.md'],
-            [ 'title' => 'Terms of Service', 'slug' => 'terms', 'source' => 'terms.md'],
-            [ 'title' => 'Privacy', 'slug' => 'privacy', 'source' => 'privacy.md'],
-            [ 'title' => 'Community Guidelines', 'slug' => 'community-guidelines', 'source' => 'community-guidelines.md'],
+            ['title' => 'About', 'slug' => 'about', 'source' => 'about.md'],
+            ['title' => 'Terms of Service', 'slug' => 'terms', 'source' => 'terms.md'],
+            ['title' => 'Privacy', 'slug' => 'privacy', 'source' => 'privacy.md'],
+            ['title' => 'Community Guidelines', 'slug' => 'community-guidelines', 'source' => 'community-guidelines.md'],
         ];
 
         foreach ($pages as $pageData) {

@@ -2,9 +2,8 @@
 
 namespace App\Services;
 
-use Exception;
-use Illuminate\Support\Facades\Redis;
 use Cache;
+use Exception;
 use Illuminate\Support\Carbon;
 
 class SnowflakeService
@@ -14,42 +13,42 @@ class SnowflakeService
 
     /**
      * Generate the next 64-bit unique ID
-     * @return int
+     *
      * @throws Exception
      */
     public static function next(): int
     {
         $seq = Cache::get('snowflake:seq');
 
-        if(!$seq) {
+        if (! $seq) {
             Cache::put('snowflake:seq', 1);
             $seq = 1;
         } else {
             Cache::increment('snowflake:seq');
         }
 
-        if($seq >= 4095) {
+        if ($seq >= 4095) {
             Cache::put('snowflake:seq', 0);
             $seq = 0;
         }
 
         return ((round(microtime(true) * 1000) - 1711624913000) << 22)
-        | (random_int(1,31) << 17)
-        | (random_int(1,31) << 12)
+        | (random_int(1, 31) << 17)
+        | (random_int(1, 31) << 12)
         | $seq;
     }
 
-    public static function byDate(Carbon $ts = null)
+    public static function byDate(?Carbon $ts = null)
     {
-        if($ts instanceOf Carbon) {
+        if ($ts instanceof Carbon) {
             $ts = now()->parse($ts)->timestamp;
         } else {
             return self::next();
         }
 
         return ((round($ts * 1000) - 1711624913000) << 22)
-        | (random_int(1,31) << 17)
-        | (random_int(1,31) << 12)
+        | (random_int(1, 31) << 17)
+        | (random_int(1, 31) << 12)
         | 0;
     }
 }

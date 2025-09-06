@@ -19,21 +19,21 @@ class FrontendService
 
     public static function getCaptchaData()
     {
-        if(!config('captcha.enabled')) {
+        if (! config('captcha.enabled')) {
             $res = json_encode([
                 'enabled' => false,
                 'provider' => null,
-                'siteKey' => null
+                'siteKey' => null,
             ], JSON_UNESCAPED_SLASHES);
         } else {
             $res = json_encode([
                 'enabled' => true,
                 'provider' => config('captcha.driver'),
-                'siteKey' => config('captcha.siteKey')
+                'siteKey' => config('captcha.siteKey'),
             ], JSON_UNESCAPED_SLASHES);
         }
 
-        return 'window.appCaptcha = ' . $res .';';
+        return 'window.appCaptcha = '.$res.';';
     }
 
     public static function getAppData()

@@ -2,8 +2,8 @@
 
 namespace App\Rules;
 
-use Closure;
 use App\Services\CaptchaService;
+use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
 class HCaptchaRule implements ValidationRule
@@ -19,7 +19,7 @@ class HCaptchaRule implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!$this->captchaService->verifyHCaptcha($value)) {
+        if (! $this->captchaService->verifyHCaptcha($value)) {
             $fail('The :attribute verification failed. Please try again.');
         }
     }

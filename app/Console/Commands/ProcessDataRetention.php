@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
 use App\Models\UserDataSettings;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -10,6 +9,7 @@ use Illuminate\Console\Command;
 class ProcessDataRetention extends Command
 {
     protected $signature = 'data:process-retention {--dry-run : Show what would be deleted without actually deleting}';
+
     protected $description = 'Process data retention policies and clean up old data';
 
     public function handle(): void
@@ -29,7 +29,9 @@ class ProcessDataRetention extends Command
 
         foreach ($settings as $setting) {
             $retentionMonths = $setting->getRetentionInMonths();
-            if (!$retentionMonths) continue;
+            if (! $retentionMonths) {
+                continue;
+            }
 
             $cutoffDate = Carbon::now()->subMonths($retentionMonths);
             $user = $setting->user;
@@ -41,7 +43,7 @@ class ProcessDataRetention extends Command
             if ($oldVideos + $oldComments + $oldViews > 0) {
                 $this->info("User {$user->username}: {$oldVideos} videos, {$oldComments} comments, {$oldViews} views to delete");
 
-                if (!$isDryRun) {
+                if (! $isDryRun) {
                     $user->videos()->where('created_at', '<', $cutoffDate)->delete();
                     $user->comments()->where('created_at', '<', $cutoffDate)->delete();
                     $user->videoViews()->where('created_at', '<', $cutoffDate)->delete();

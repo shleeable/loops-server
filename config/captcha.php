@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Str;
-
 return [
     'enabled' => env('LOOPS_CAPTCHA', false) && env('LOOPS_CAPTCHA_DRIVER') && (env('TURNSTILE_SECRET_KEY') || env('HCAPTCHA_SECRET_KEY')),
 

@@ -7,7 +7,7 @@ return [
                 'enabled' => env('LOOPS_FEED_FYP_MAXP_ENABLED', false),
                 'max_days' => env('LOOPS_FEED_FYP_MAXP_MAX_DAYS', 7),
             ],
-        ]
+        ],
     ],
 
     'reports' => [
@@ -16,5 +16,5 @@ return [
             'daily' => env('LOOPS_REPORT_DAILY_LIMIT', 5),
             'monthly' => env('LOOPS_REPORT_MONTHLY_LIMIT', 200),
         ],
-    ]
+    ],
 ];

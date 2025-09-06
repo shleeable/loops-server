@@ -14,8 +14,9 @@ class CaptchaService
     {
         $secretKey = config('services.turnstile.secret_key');
 
-        if (!$secretKey) {
+        if (! $secretKey) {
             Log::error('Turnstile secret key not configured');
+
             return false;
         }
 
@@ -32,19 +33,19 @@ class CaptchaService
                 return $result['success'] === true;
             }
 
-            if(config('logging.dev_log')) {
+            if (config('logging.dev_log')) {
                 Log::warning('Turnstile verification failed', [
                     'error_codes' => $result['error-codes'] ?? [],
-                    'response' => $result
+                    'response' => $result,
                 ]);
             }
 
             return false;
         } catch (\Exception $e) {
-            if(config('logging.dev_log')) {
+            if (config('logging.dev_log')) {
                 Log::error('Turnstile verification exception', [
                     'message' => $e->getMessage(),
-                    'token' => substr($token, 0, 10) . '...'
+                    'token' => substr($token, 0, 10).'...',
                 ]);
             }
 
@@ -59,8 +60,9 @@ class CaptchaService
     {
         $secretKey = config('services.hcaptcha.secret_key');
 
-        if (!$secretKey) {
+        if (! $secretKey) {
             Log::error('hCaptcha secret key not configured');
+
             return false;
         }
 
@@ -77,19 +79,19 @@ class CaptchaService
                 return $result['success'] === true;
             }
 
-            if(config('logging.dev_log')) {
+            if (config('logging.dev_log')) {
                 Log::warning('hCaptcha verification failed', [
                     'error_codes' => $result['error-codes'] ?? [],
-                    'response' => $result
+                    'response' => $result,
                 ]);
             }
 
             return false;
         } catch (\Exception $e) {
-            if(config('logging.dev_log')) {
+            if (config('logging.dev_log')) {
                 Log::error('hCaptcha verification exception', [
                     'message' => $e->getMessage(),
-                    'token' => substr($token, 0, 10) . '...'
+                    'token' => substr($token, 0, 10).'...',
                 ]);
             }
 

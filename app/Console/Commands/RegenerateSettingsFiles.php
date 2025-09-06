@@ -27,13 +27,13 @@ class RegenerateSettingsFiles extends Command
         $publicOnly = $this->option('public');
         $adminOnly = $this->option('admin');
 
-        if (!$publicOnly) {
+        if (! $publicOnly) {
             $this->info('Regenerating admin settings file...');
             $this->settingsFileService->generateAdminConfig();
             $this->info('✓ Admin settings file regenerated');
         }
 
-        if (!$adminOnly) {
+        if (! $adminOnly) {
             $this->info('Regenerating public settings file...');
             $this->settingsFileService->generatePublicConfig();
             $publicUrl = $this->settingsFileService->getPublicConfigUrl();

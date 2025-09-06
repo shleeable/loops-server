@@ -2,20 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\Traits\ApiHelpers;
+use App\Http\Requests\UpdateDataSettingsRequest;
 use App\Jobs\User\ProcessDataExport;
 use App\Models\DataExport;
 use App\Services\UserAuditLogService;
 use App\Services\UserDataService;
+use Cache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
-use App\Http\Controllers\Api\Traits\ApiHelpers;
-use App\Http\Requests\UpdateDataSettingsRequest;
-use Cache;
 
 class AccountDataController extends Controller
 {
@@ -36,16 +33,16 @@ class AccountDataController extends Controller
         $stats = Cache::remember(
             "acct-data:data-insights:{$user->id}",
             now()->addHours(12),
-            function() use($user) {
+            function () use ($user) {
 
-            return [
-                'videos' => $user->videos()->count(),
-                'comments' => $user->comments()->count(),
-                'likes' => $user->likes()->count(),
-                'watchTime' => $user->getTotalWatchTimeInHours(),
-                'totalSize' => $user->getTotalDataSize()
-            ];
-        });
+                return [
+                    'videos' => $user->videos()->count(),
+                    'comments' => $user->comments()->count(),
+                    'likes' => $user->likes()->count(),
+                    'watchTime' => $user->getTotalWatchTimeInHours(),
+                    'totalSize' => $user->getTotalDataSize(),
+                ];
+            });
 
         return $this->data($stats);
     }
@@ -58,13 +55,14 @@ class AccountDataController extends Controller
         $res = Cache::remember(
             "acct-data:data-settings:{$user->id}",
             now()->addHours(12),
-            function() use($settings) {
+            function () use ($settings) {
                 return [
                     'dataRetentionPeriod' => $settings->data_retention_period,
                     'analyticsTracking' => $settings->analytics_tracking,
-                    'researchDataSharing' => $settings->research_data_sharing
+                    'researchDataSharing' => $settings->research_data_sharing,
                 ];
-        });
+            });
+
         return $this->data($res);
     }
 
@@ -80,7 +78,7 @@ class AccountDataController extends Controller
         $settings->update([
             'data_retention_period' => $request->data_retention_period,
             'analytics_tracking' => $request->analytics_tracking,
-            'research_data_sharing' => $request->research_data_sharing
+            'research_data_sharing' => $request->research_data_sharing,
         ]);
 
         $changedFields = [];
@@ -107,27 +105,27 @@ class AccountDataController extends Controller
         if ($existingExport) {
             return $this->data([
                 'message' => 'An export is already in progress',
-                'export' => $existingExport
+                'export' => $existingExport,
             ], 409);
         }
 
         $export = $user->dataExports()->create([
             'type' => 'complete',
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
 
         ProcessDataExport::dispatch($export);
 
         return $this->data([
             'message' => 'Export request submitted successfully',
-            'export' => $export
+            'export' => $export,
         ]);
     }
 
     public function requestSelectiveExport(Request $request): JsonResponse
     {
         $request->validate([
-            'type' => ['required', Rule::in(['videos', 'profile', 'interactions', 'followers'])]
+            'type' => ['required', Rule::in(['videos', 'profile', 'interactions', 'followers'])],
         ]);
 
         $user = $request->user();
@@ -150,20 +148,20 @@ class AccountDataController extends Controller
             ->where('created_at', '>', now()->subHours(12))
             ->exists();
 
-        if($recentExport) {
+        if ($recentExport) {
             return $this->error('You have to wait 12 hours between export requests');
         }
 
         $export = $user->dataExports()->create([
             'type' => $type,
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
 
         ProcessDataExport::dispatch($export);
 
         return response()->json([
             'message' => 'Export request submitted successfully',
-            'export' => $export
+            'export' => $export,
         ]);
     }
 
@@ -174,22 +172,23 @@ class AccountDataController extends Controller
         $exports = Cache::remember(
             "acct-data:data-export-history:{$user->id}",
             now()->addHours(12),
-            function() use($user) {
-            return DataExport::whereUserId($user->id)
-                ->orderBy('created_at', 'desc')
-                ->limit(30)
-                ->get()
-                ->map(function ($export) {
-                    return [
-                        'id' => $export->id,
-                        'type' => $this->getExportTypeName($export->type),
-                        'date' => $export->created_at->format('c'),
-                        'status' => ucfirst($export->status),
-                        'size' => $export->formatted_size,
-                        'downloadUrl' => $export->download_url
-                    ];
-                });
-        });
+            function () use ($user) {
+                return DataExport::whereUserId($user->id)
+                    ->orderBy('created_at', 'desc')
+                    ->limit(30)
+                    ->get()
+                    ->map(function ($export) {
+                        return [
+                            'id' => $export->id,
+                            'type' => $this->getExportTypeName($export->type),
+                            'date' => $export->created_at->format('c'),
+                            'status' => ucfirst($export->status),
+                            'size' => $export->formatted_size,
+                            'downloadUrl' => $export->download_url,
+                        ];
+                    });
+            });
+
         return $this->data($exports);
     }
 
@@ -203,7 +202,7 @@ class AccountDataController extends Controller
             return $this->error('Export file not available', 404);
         }
 
-        if (!Storage::disk('exports')->exists($export->file_path)) {
+        if (! Storage::disk('exports')->exists($export->file_path)) {
             return $this->error('Export file not found', 404);
         }
 
@@ -233,7 +232,7 @@ class AccountDataController extends Controller
         }
 
         return response()->json([
-            'message' => "Cleaned up {$expiredExports->count()} expired exports"
+            'message' => "Cleaned up {$expiredExports->count()} expired exports",
         ]);
     }
 

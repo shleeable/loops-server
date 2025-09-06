@@ -25,16 +25,16 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('reports', function (Blueprint $table) {
-            if(Schema::hasColumn('reports', 'reported_comment_reply_id')) {
+            if (Schema::hasColumn('reports', 'reported_comment_reply_id')) {
                 $table->dropForeign('reported_comment_reply_id');
                 $table->dropColumn('reported_comment_reply_id');
             }
 
-            if(Schema::hasColumn('reports', 'user_message')) {
+            if (Schema::hasColumn('reports', 'user_message')) {
                 $table->dropColumn('user_message');
             }
 
-            if(Schema::hasColumn('reports', 'is_remote')) {
+            if (Schema::hasColumn('reports', 'is_remote')) {
                 $table->dropColumn('is_remote');
             }
         });

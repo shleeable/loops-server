@@ -11,11 +11,11 @@ class EmailChange extends Model
         'old_email',
         'new_email',
         'token',
-        'expires_at'
+        'expires_at',
     ];
 
     protected $casts = [
-        'expires_at' => 'datetime'
+        'expires_at' => 'datetime',
     ];
 
     public function user()

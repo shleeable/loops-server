@@ -4,8 +4,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -31,8 +31,8 @@ return Application::configure(basePath: dirname(__DIR__))
                     'data' => [],
                     'error' => [
                         'code' => 404,
-                        'message' => 'Record not found.'
-                    ]
+                        'message' => 'Record not found.',
+                    ],
                 ], 404);
             }
         });
@@ -43,8 +43,8 @@ return Application::configure(basePath: dirname(__DIR__))
                     'data' => [],
                     'error' => [
                         'code' => 403,
-                        'message' => $e->getMessage() ?? 'This action is not authorized.'
-                    ]
+                        'message' => $e->getMessage() ?? 'This action is not authorized.',
+                    ],
                 ], 403);
             }
         });

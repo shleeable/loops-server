@@ -1,31 +1,30 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AccountDataController;
+use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\Api\AccountController;
-use App\Http\Controllers\Api\FeedController;
-use App\Http\Controllers\Api\SettingsController;
-use App\Http\Controllers\Api\VideoController;
-use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\ExploreController;
+use App\Http\Controllers\Api\FeedController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StudioController;
+use App\Http\Controllers\Api\VideoController;
+use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\EmailChangeController;
-use App\Http\Controllers\AccountDataController;
-use App\Http\Controllers\UserRegisterVerifyController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\UserRegisterVerifyController;
 use App\Http\Middleware\AdminOnlyAccess;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/v1/web/report-rules', [WebPublicController::class, 'reportTypes']);
 
 Route::get('/v1/platform/contact', [WebPublicController::class, 'getContactInfo']);
 Route::get('/v1/page/content', [WebPublicController::class, 'getPageContent']);
 
-Route::get('/v1/accounts/suggested',[AccountController::class, 'getSuggestedAccounts']);
+Route::get('/v1/accounts/suggested', [AccountController::class, 'getSuggestedAccounts']);
 
 // Auth
 Route::post('/v1/auth/2fa/verify', [AuthController::class, 'verifyTwoFactor']);
@@ -38,7 +37,6 @@ Route::get('/v1/upload/autocomplete/hashtag', [VideoController::class, 'getAutoc
 Route::get('/v1/upload/autocomplete/mention', [VideoController::class, 'getAutocompleteMention'])->middleware('auth:sanctum');
 Route::get('/v1/studio/posts', [StudioController::class, 'getPosts'])->middleware('auth:sanctum');
 Route::post('/v1/studio/upload', [VideoController::class, 'store'])->middleware('auth:sanctum');
-
 
 // Search
 Route::post('/v1/search/users', [SearchController::class, 'get'])->middleware('auth:sanctum');
@@ -93,7 +91,6 @@ Route::post('/v1/account/data/export/selective', [AccountDataController::class, 
 Route::get('/v1/account/data/export/history', [AccountDataController::class, 'getExportHistory'])->name('export.history')->middleware(['auth:sanctum']);
 Route::get('/v1/account/data/export/{id}/download', [AccountDataController::class, 'downloadExport'])->name('export.download')->middleware(['auth:sanctum']);
 
-
 // Account Feeds
 Route::get('/v1/feed/account/self', [FeedController::class, 'selfAccountFeed'])->middleware('auth:sanctum');
 Route::get('/v1/feed/account/{id}', [WebPublicController::class, 'getAccountFeed']);
@@ -123,7 +120,6 @@ Route::post('/v1/video/delete/{id}', [VideoController::class, 'destroy'])->middl
 Route::post('/v1/video/like/{id}', [VideoController::class, 'like'])->middleware('auth:sanctum');
 Route::post('/v1/video/unlike/{id}', [VideoController::class, 'unlike'])->middleware('auth:sanctum');
 Route::get('/v1/video/{id}', [WebPublicController::class, 'showVideo']);
-
 
 // Reports
 Route::post('/v1/report', [ReportController::class, 'store'])->middleware('auth:sanctum');

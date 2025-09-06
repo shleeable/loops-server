@@ -203,7 +203,7 @@ return [
                 'balanceCooldown' => 3,
             ],
 
-           'email-verification-supervisor' => [
+            'email-verification-supervisor' => [
                 'connection' => 'redis',
                 'queue' => ['email-verification'],
                 'balance' => false,

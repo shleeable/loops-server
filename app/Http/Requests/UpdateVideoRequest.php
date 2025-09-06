@@ -2,10 +2,8 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use App\Models\Video;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateVideoRequest extends FormRequest
 {
@@ -14,10 +12,11 @@ class UpdateVideoRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        if(!$this->user()) {
+        if (! $this->user()) {
             return false;
         }
         $video = Video::whereStatus(2)->find($this->route('id'));
+
         return $video && $this->user()->can('update', $video);
     }
 
@@ -55,7 +54,7 @@ class UpdateVideoRequest extends FormRequest
      * Converts a value to a boolean.
      * Handles 'true', 'false', 1, 0, '1', '0', true, false.
      *
-     * @param mixed $value
+     * @param  mixed  $value
      * @return bool|mixed
      */
     private function toBoolean($value)

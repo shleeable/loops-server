@@ -2,8 +2,8 @@
 
 namespace App\Rules;
 
-use Closure;
 use App\Services\CaptchaService;
+use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
 class TurnstileRule implements ValidationRule
@@ -19,7 +19,7 @@ class TurnstileRule implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!$this->captchaService->verifyTurnstile($value)) {
+        if (! $this->captchaService->verifyTurnstile($value)) {
             $fail('The :attribute verification failed. Please try again.');
         }
     }
