@@ -70,7 +70,7 @@
                             }"
                         >
                             <SidebarNavItem
-                                iconString="More"
+                                :iconString="t('nav.more')"
                                 sizeString="30"
                                 iconClass="bx bx-dots-vertical-rounded"
                                 :isMobile="isMobile && isOpen"
@@ -93,7 +93,7 @@
                             >
                                 <i class="bx bx-cog mr-3 text-xl"></i>
                                 <span class="text-sm font-medium"
-                                    >Settings</span
+                                    >{{ t('nav.settings') }}</span
                                 >
                             </router-link>
 
@@ -104,7 +104,7 @@
                             >
                                 <i class="bx bx-bell mr-3 text-xl"></i>
                                 <span class="text-sm font-medium"
-                                    >Notifications</span
+                                    >{{ t('nav.notifications') }}</span
                                 >
                             </router-link>
                         </div>
@@ -120,7 +120,7 @@
                         class="w-full flex items-center justify-center bg-[#F02C56] text-white rounded-lg px-4 py-3 font-medium"
                     >
                         <i class="bx bx-upload mr-2 text-xl"></i>
-                        Upload Loop
+                        {{ t('nav.uploadLoop') }}
                     </button>
 
                     <button
@@ -128,7 +128,7 @@
                         @click="handleLoginClick"
                         class="w-full flex items-center justify-center bg-[#F02C56] text-white rounded-lg px-4 py-3 font-medium"
                     >
-                        Log in
+                        {{ t('nav.logIn') }}
                     </button>
 
                     <button
@@ -137,7 +137,7 @@
                         class="w-full flex items-center justify-center border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 rounded-lg px-4 py-3 font-medium hover:bg-gray-50 dark:hover:bg-slate-800"
                     >
                         <i class="ic-outline-login mr-2 text-xl"></i>
-                        Log out
+                        {{ t('nav.logOut') }}
                     </button>
                 </div>
             </template>
@@ -166,7 +166,7 @@
                     <a
                         class="text-[10.5px] text-gray-400 hover:text-red-400"
                         href="https://joinloops.org"
-                        >Powered by Loops</a
+                        >{{ t("nav.poweredBy")}} Loops</a
                     >
                     <a
                         class="text-[8px] text-gray-400 hover:text-red-400"
@@ -187,6 +187,8 @@ import { inject, ref, computed, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import SidebarNavItem from "@/components/Layout/SidebarNavItem.vue";
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const props = defineProps({
     isOpen: {
@@ -239,22 +241,22 @@ const mainLinks = computed(() => {
 
     if (authStore.getUser) {
         links = [
-            { name: "Home", path: "/", icon: "bx bx-home" },
+            { name: t("nav.home"), path: "/", icon: "bx bx-home" },
             {
-                name: "Following",
+                name: t("nav.following"),
                 path: "/feed/following",
                 icon: "bx bx-user-plus",
             },
-            { name: "Explore", path: "/explore", icon: "bx bx-compass" },
+            { name: t("nav.explore"), path: "/explore", icon: "bx bx-compass" },
             {
-                name: "Profile",
+                name: t("nav.profile"),
                 path: `/@${authStore.getUser.username}`,
                 icon: "bx bx-user",
             },
         ];
 
         if (authStore.isAdmin) {
-            links.push({ name: "Admin", path: "/admin", icon: "bx bx-badge" });
+            links.push({ name: t("nav.admin"), path: "/admin", icon: "bx bx-badge" });
         }
 
         const userCustomPages = filterNavItemsByLocation("side_menu_user");
@@ -271,8 +273,8 @@ const mainLinks = computed(() => {
         links.push(...customPages);
     } else {
         links = [
-            { name: "Popular", path: "/", icon: "bx bx-trending-up" },
-            { name: "About", path: "/about", icon: "bx bx-info-circle" },
+            { name: t("nav.popular"), path: "/", icon: "bx bx-trending-up" },
+            { name: t("nav.about"), path: "/about", icon: "bx bx-info-circle" },
         ];
 
         const guestCustomPages = filterNavItemsByLocation("side_menu_guest");
@@ -294,14 +296,14 @@ const mainLinks = computed(() => {
 
 const footerLinks = computed(() => {
     let links = [
-        { name: "About", path: "/about" },
-        { name: "Contact", path: "/contact" },
-        { name: "Community", path: "/community-guidelines" },
-        // { name: "Developers", path: "/platform/developers" },
-        // { name: "Federation", path: "/federation" },
-        // { name: "Help", path: "/help-center" },
-        { name: "Privacy", path: "/privacy" },
-        { name: "Terms", path: "/terms" },
+        { name: t("nav.about"), path: "/about" },
+        { name: t("nav.contact"), path: "/contact" },
+        { name: t("nav.community"), path: "/community-guidelines" },
+        { name: t("nav.developers"), path: "/platform/developers" },
+        { name: t("nav.federation"), path: "/federation" },
+        { name: t("nav.help"), path: "/help-center" },
+        { name: t("nav.privacy"), path: "/privacy" },
+        { name: t("nav.terms"), path: "/terms" },
     ];
 
     let customFooterItems = [];

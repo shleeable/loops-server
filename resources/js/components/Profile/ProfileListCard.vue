@@ -3,7 +3,7 @@ import { computed } from "vue";
 import Avatar from "./Avatar.vue";
 
 interface Props {
-    account: Object;
+    account: object;
 }
 
 const props = withDefaults(defineProps<Props>(), {

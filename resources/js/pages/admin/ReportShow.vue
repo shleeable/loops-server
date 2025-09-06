@@ -758,7 +758,7 @@ const dismissReport = async () => {
 const deleteComment = async () => {
     const result = await confirmModal(
         "Confirm Delete",
-        `Are you sure you want to delete this comment by ${report.content_preview?.account?.username}? This action cannot be undone.`,
+        `Are you sure you want to delete this comment by ${report.value.content_preview?.account?.username}? This action cannot be undone.`,
         "Delete Comment",
         "Cancel",
     );
@@ -774,7 +774,7 @@ const deleteComment = async () => {
 const deleteCommentReply = async () => {
     const result = await confirmModal(
         "Confirm Delete",
-        `Are you sure you want to delete this comment by ${report.content_preview?.account?.username}? This action cannot be undone.`,
+        `Are you sure you want to delete this comment by ${report.value.content_preview?.account?.username}? This action cannot be undone.`,
         "Delete Comment",
         "Cancel",
     );

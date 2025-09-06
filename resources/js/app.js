@@ -18,6 +18,7 @@ import "@mdi/font/css/materialdesignicons.min.css";
 import "boxicons/css/boxicons.min.css";
 import "remixicon/fonts/remixicon.css";
 import "../sass/next.css";
+import i18n from './i18n/locales'
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -42,6 +43,7 @@ app.use(pinia)
     .use(axiosPlugin)
     .use(router)
     .use(storePlugin)
+    .use(i18n)
     .use(AlertModalPlugin)
     .use(VueQueryPlugin, {
         queryClientConfig: {

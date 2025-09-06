@@ -205,12 +205,12 @@ const onCaptchaSuccess = (token) => {
 const onCaptchaError = (error) => {
     console.error("Captcha error:", error);
     captchaToken.value = "";
-    form.captcha_token = "";
+    form.value.captcha_token = "";
 };
 
 const onCaptchaExpired = () => {
     captchaToken.value = "";
-    form.captcha_token = "";
+    form.value.captcha_token = "";
 };
 
 // Form state

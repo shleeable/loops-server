@@ -1,0 +1,48 @@
+{
+    "auth": {
+        "failed": "These credentials do not match our records.",
+        "password": "The provided password is incorrect.",
+        "throttle": "Too many login attempts. Please try again in :seconds seconds."
+    },
+    "nav": {
+        "home": "Home",
+        "following": "Following",
+        "explore": "Explore",
+        "profile": "Profile",
+        "admin": "Admin",
+        "popular": "Popular",
+        "about": "About",
+        "contact": "Contact",
+        "community": "Community",
+        "privacy": "Privacy",
+        "terms": "Terms",
+        "developers": "Developers",
+        "federation": "Federation",
+        "help": "Help",
+        "more": "More",
+        "settings": "Settings",
+        "notifications": "Notifications",
+        "uploadLoop": "Upload Loop",
+        "logIn": "Log in",
+        "join": "Join",
+        "logOut": "Log out",
+        "poweredBy": "Powered by",
+        "search": "Search",
+        "upload": "Upload",
+        "recentSearches": "Recent Searches",
+        "clearAll": "Clear All",
+        "videos": "Videos",
+        "followers": "Followers",
+        "noResultsFound": "No results found",
+        "loginOrRegister": "Login or Register",
+        "loadMore": "Load more",
+        "errorLoadingNotifications": "Error loading notifications"
+    },
+    "pagination": {
+        "previous": "&laquo; Previous",
+        "next": "Next &raquo;"
+    },
+    "profile": {
+        "editProfile": "Edit Profile"
+    }
+}
