@@ -186,6 +186,16 @@
                     <ThemeToggleButton class="mr-1" />
 
                     <button
+                        v-if="
+                            !authStore.isAuthenticated && appConfig.registration
+                        "
+                        @click="authStore.openAuthModal('register')"
+                        class="flex items-center border-[#F02C56] text-[#F02C56] border dark:border-red-400 rounded-md px-3 py-[6px] cursor-pointer mr-3"
+                    >
+                        <span class="mx-4 font-medium text-[15px]">Join</span>
+                    </button>
+
+                    <button
                         v-if="!authStore.isAuthenticated"
                         @click="authStore.openAuthModal('login')"
                         class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 rounded-md px-3 py-[6px] cursor-pointer"
@@ -288,7 +298,7 @@
                     @click="authStore.openAuthModal('login')"
                     class="lg:hidden bg-[#F02C56] text-white rounded-md px-3 py-2 text-sm font-medium"
                 >
-                    Login
+                    Login / Register
                 </button>
             </div>
         </div>
