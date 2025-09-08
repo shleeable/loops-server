@@ -18,12 +18,15 @@ class StoreVideoRequest extends FormRequest
             return false;
         }
 
-        if (
-            Video::whereProfileId($this->user()->profile_id)
-                ->where('created_at', '>', now()->subHours(12))
-                ->count() >= 8
-        ) {
-            return false;
+        if (config('loops.uploads.rate_limits.per_day')) {
+            $limit = (int) config('loops.uploads.rate_limits.per_day');
+            if (
+                Video::whereProfileId($this->user()->profile_id)
+                    ->where('created_at', '>', now()->subHours(24))
+                    ->count() >= $limit
+            ) {
+                return false;
+            }
         }
 
         return true;

@@ -17,4 +17,10 @@ return [
             'monthly' => env('LOOPS_REPORT_MONTHLY_LIMIT', 200),
         ],
     ],
+
+    'uploads' => [
+        'rate_limits' => [
+            'per_day' => env('LOOPS_UPLOADS_MAX_USER_PER_DAY', false),
+        ],
+    ],
 ];
