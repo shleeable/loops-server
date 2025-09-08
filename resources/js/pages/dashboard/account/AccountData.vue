@@ -220,11 +220,10 @@
                                     class="bx bx-folder-open text-gray-300 text-[48px] mb-4"
                                 ></i>
                                 <h3 class="font-medium text-gray-600 mb-2">
-                                    No exports yet
+                                    {{ $t("settings.noExportsYet") }}
                                 </h3>
                                 <p class="text-sm text-gray-500">
-                                    Your data exports will appear here when
-                                    they're ready for download.
+                                    {{ $t("settings.noExportsYetMessage") }}
                                 </p>
                             </div>
                         </div>
@@ -232,7 +231,7 @@
                 </div>
 
                 <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">
-                    Data insights
+                    {{ $t("settings.dataInsights") }}
                 </h2>
                 <div
                     class="bg-white dark:bg-slate-950 rounded-lg shadow-sm mb-6"
@@ -241,7 +240,7 @@
                         <h3
                             class="font-medium text-gray-800 mb-4 dark:text-gray-300"
                         >
-                            Your account statistics
+                            {{ $t("settings.yourAccountStatistics") }}
                         </h3>
 
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -256,7 +255,7 @@
                                 <div
                                     class="text-sm text-gray-600 dark:text-gray-400"
                                 >
-                                    Videos posted
+                                    {{ $t("settings.videosPosted") }}
                                 </div>
                             </div>
                             <div
@@ -270,7 +269,7 @@
                                 <div
                                     class="text-sm text-gray-600 dark:text-gray-400"
                                 >
-                                    Comments made
+                                    {{ $t("settings.commentsMade") }}
                                 </div>
                             </div>
                             <div
@@ -284,7 +283,7 @@
                                 <div
                                     class="text-sm text-gray-600 dark:text-gray-400"
                                 >
-                                    Likes given
+                                    {{ $t("settings.likesGiven") }}
                                 </div>
                             </div>
                             <div
@@ -298,7 +297,7 @@
                                 <div
                                     class="text-sm text-gray-600 dark:text-gray-400"
                                 >
-                                    Hours watched
+                                    {{ $t("settings.hoursWatched") }}
                                 </div>
                             </div>
                         </div>
@@ -312,7 +311,7 @@
                                 ></i>
                                 <span
                                     class="text-sm font-medium text-blue-800 dark:text-blue-200"
-                                    >Total data size:
+                                    >{{ $t("settings.totalDataSize") }}
                                     {{ dataStats.totalSize }}</span
                                 >
                             </div>
@@ -321,7 +320,7 @@
                 </div>
 
                 <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">
-                    Data management
+                    {{ $t("settings.dataManagement") }}
                 </h2>
                 <div class="flex flex-col gap-3 mb-6">
                     <div
@@ -332,15 +331,16 @@
                         >
                             <div class="flex flex-col max-w-[70%]">
                                 <h3 class="font-medium mb-2 dark:text-gray-300">
-                                    Data retention
+                                    {{ $t("settings.dataRetention") }}
                                 </h3>
                                 <p class="text-xs text-gray-500 font-light">
-                                    Choose how long to keep your content and
-                                    activity before automatic deletion.
+                                    {{ $t("settings.dataRetentionMessage") }}
                                     <router-link
                                         to="/site/kb/x34"
                                         class="font-medium text-blue-400"
-                                        >Learn more</router-link
+                                        >{{
+                                            $t("common.learnMore")
+                                        }}</router-link
                                     >
                                 </p>
                             </div>
@@ -364,15 +364,18 @@
                         >
                             <div class="flex flex-col max-w-[80%]">
                                 <h3 class="font-medium mb-2 dark:text-gray-300">
-                                    Analytics tracking
+                                    {{ $t("settings.analyticsTracking") }}
                                 </h3>
                                 <p class="text-xs text-gray-500 font-light">
-                                    Allow Loops to track your usage for
-                                    analytics and improving the service.
+                                    {{
+                                        $t("settings.analyticsTrackingMessage")
+                                    }}
                                     <router-link
                                         to="/privacy"
                                         class="font-medium text-blue-400"
-                                        >Learn more</router-link
+                                        >{{
+                                            $t("common.learnMore")
+                                        }}</router-link
                                     >
                                 </p>
                             </div>
@@ -388,15 +391,21 @@
                         >
                             <div class="flex flex-col max-w-[80%]">
                                 <h3 class="font-medium mb-2 dark:text-gray-300">
-                                    Data sharing for research
+                                    {{ $t("settings.dataSharingForResearch") }}
                                 </h3>
                                 <p class="text-xs text-gray-500 font-light">
-                                    Allow anonymized data to be used for
-                                    academic research and platform improvements.
+                                    {{
+                                        $t(
+                                            "settings.dataSharingForResearchMessage",
+                                        )
+                                    }}
+
                                     <router-link
                                         to="/site/kb/x34"
                                         class="font-medium text-blue-400"
-                                        >Learn more</router-link
+                                        >{{
+                                            $t("common.learnMore")
+                                        }}</router-link
                                     >
                                 </p>
                             </div>

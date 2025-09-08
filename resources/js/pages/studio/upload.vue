@@ -20,20 +20,20 @@
                                 clip-rule="evenodd"
                             />
                         </svg>
-                        A video you were editing wasn't saved. Continue editing?
+                        {{ $t("studio.unsavedWarning") }}
                     </div>
                     <div class="flex space-x-3">
                         <button
                             @click="showWarning = false"
                             class="text-gray-600 hover:text-gray-800"
                         >
-                            Discard
+                            {{ $t("common.discard") }}
                         </button>
                         <button
                             @click="showWarning = false"
                             class="text-gray-900 font-medium hover:text-gray-700"
                         >
-                            Continue
+                            {{ $t("common.continue") }}
                         </button>
                     </div>
                 </div>
@@ -67,17 +67,17 @@
                         </div>
 
                         <h3 class="text-xl font-semibold text-gray-900 mb-2">
-                            Select video to upload
+                            {{ $t("studio.selectVideoToUpload") }}
                         </h3>
                         <p class="text-gray-600 mb-6">
-                            Or drag and drop it here
+                            {{ $t("studio.orDragAndDropItHere") }}
                         </p>
 
                         <button
                             @click="$refs.fileInput.click()"
                             class="bg-[#F02C56] hover:bg-[#F02C56]/80 text-white px-8 py-3 rounded-md font-medium transition-colors"
                         >
-                            Select video
+                            {{ $t("studio.selectVideo") }}
                         </button>
 
                         <input
@@ -107,14 +107,14 @@
                                 </svg>
                             </div>
                             <h4 class="font-medium text-gray-900 mb-2">
-                                Size and duration
+                                {{ $t("studio.sizeAndDuration") }}
                             </h4>
                             <p class="text-sm text-gray-600">
-                                Maximum size:
-                                {{ appConfig.media.max_video_size }} MB, video
-                                duration:
+                                {{ $t("studio.maximumSize") }}
+                                {{ appConfig.media.max_video_size }}
+                                {{ $t("studio.mbVideoDuration") }}
                                 {{ appConfig.media.max_video_duration / 60 }}
-                                minute(s).
+                                {{ $t("studio.minutes") }}
                             </p>
                         </div>
 
@@ -135,14 +135,17 @@
                                 </svg>
                             </div>
                             <h4 class="font-medium text-gray-900 mb-2">
-                                File formats
+                                {{ $t("studio.fileFormats") }}
                             </h4>
                             <p class="text-sm text-gray-600">
-                                Recommended: ".{{
+                                {{ $t("studio.recommended") }}
+                                ".{{
                                     appConfig.media.allowed_video_formats.join(
                                         ", .",
                                     )
-                                }}". Other major formats are supported.
+                                }}"{{
+                                    $t("studio.otherMajorFormatsAreSupported")
+                                }}
                             </p>
                         </div>
 
@@ -163,10 +166,10 @@
                                 </svg>
                             </div>
                             <h4 class="font-medium text-gray-900 mb-2">
-                                Video resolutions
+                                {{ $t("studio.videoResolutions") }}
                             </h4>
                             <p class="text-sm text-gray-600">
-                                High-resolution recommended: 1080p, 1440p, 4K.
+                                {{ $t("studio.videoResolutionsMessage") }}
                             </p>
                         </div>
 
@@ -187,11 +190,10 @@
                                 </svg>
                             </div>
                             <h4 class="font-medium text-gray-900 mb-2">
-                                Aspect ratios
+                                {{ $t("studio.aspectRatios") }}
                             </h4>
                             <p class="text-sm text-gray-600">
-                                Recommended: 16:9 for landscape, 9:16 for
-                                vertical.
+                                {{ $t("studio.aspectRatiosMessage") }}
                             </p>
                         </div>
                     </div>
@@ -219,7 +221,9 @@
                                 <button
                                     class="ml-auto text-gray-400 hover:text-gray-600"
                                 >
-                                    <span class="text-sm">Replace</span>
+                                    <span class="text-sm">{{
+                                        $t("studio.replace")
+                                    }}</span>
                                 </button>
                             </div>
                             <div
@@ -234,12 +238,14 @@
                         <div
                             class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
                         >
-                            <h3 class="text-lg font-medium mb-6">Details</h3>
+                            <h3 class="text-lg font-medium mb-6">
+                                {{ $t("studio.details") }}
+                            </h3>
 
                             <div class="mb-6">
                                 <label
                                     class="block text-sm font-medium text-gray-700 mb-2"
-                                    >Caption</label
+                                    >{{ $t("studio.caption") }}</label
                                 >
                                 <div class="relative">
                                     <textarea
@@ -247,7 +253,11 @@
                                         v-model="description"
                                         @input="handleDescriptionInput"
                                         @keydown="handleKeydown"
-                                        placeholder="Describe your video..."
+                                        :placeholder="
+                                            $t(
+                                                'studio.describeYourVideoDotDotDot',
+                                            )
+                                        "
                                         rows="4"
                                         class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                                         maxlength="2200"
@@ -283,7 +293,11 @@
                                                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                                     ></path>
                                                 </svg>
-                                                Searching...
+                                                {{
+                                                    $t(
+                                                        "studio.searchingDotDotDot",
+                                                    )
+                                                }}
                                             </div>
 
                                             <div
@@ -295,14 +309,14 @@
                                                 "
                                                 class="px-3 py-2 text-gray-500 text-sm"
                                             >
-                                                No
+                                                {{ $t("studio.no") }}
                                                 {{
                                                     autocompleteType ===
                                                     "hashtag"
-                                                        ? "hashtags"
-                                                        : "users"
+                                                        ? $t("studio.hashtags")
+                                                        : $t("studio.users")
                                                 }}
-                                                found
+                                                {{ $t("studio.found") }}
                                             </div>
 
                                             <div
@@ -412,13 +426,13 @@
                                         @click="insertHashtag"
                                         class="text-gray-600 hover:text-gray-700 font-bold text-xs cursor-pointer"
                                     >
-                                        # Hashtags
+                                        # {{ $t("studio.hashtag") }}
                                     </button>
                                     <button
                                         @click="insertMention"
                                         class="text-gray-600 hover:text-gray-700 font-bold text-xs cursor-pointer"
                                     >
-                                        @ Mention
+                                        @ {{ $t("studio.mention") }}
                                     </button>
                                 </div>
                             </div>
@@ -426,7 +440,7 @@
                             <div class="hidden mb-6">
                                 <label
                                     class="block text-sm font-medium text-gray-700 mb-2"
-                                    >Custom Cover</label
+                                    >{{ $t("studio.customCover") }}</label
                                 >
                                 <div class="flex items-center space-x-4">
                                     <div
@@ -496,12 +510,14 @@
                         <div
                             class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6"
                         >
-                            <h3 class="text-lg font-medium mb-6">Settings</h3>
+                            <h3 class="text-lg font-medium mb-6">
+                                {{ $t("studio.settings") }}
+                            </h3>
 
                             <div>
                                 <label
                                     class="block text-sm font-medium text-gray-700 mb-3"
-                                    >Allow others to:</label
+                                    >{{ $t("studio.allowOthersTo") }}:</label
                                 >
                                 <div class="space-y-4">
                                     <div
@@ -510,11 +526,14 @@
                                         <div>
                                             <span
                                                 class="text-sm font-medium text-gray-700"
-                                                >Comment</span
+                                                >{{
+                                                    $t("common.comment")
+                                                }}</span
                                             >
                                             <p class="text-xs text-gray-500">
-                                                Allow others to post comments
-                                                and replies on this post
+                                                {{
+                                                    $t("studio.commentMessage")
+                                                }}
                                             </p>
                                         </div>
                                         <ToggleSwitch
@@ -527,11 +546,14 @@
                                         <div>
                                             <span
                                                 class="text-sm font-medium text-gray-700"
-                                                >Download</span
+                                                >{{
+                                                    $t("studio.download")
+                                                }}</span
                                             >
                                             <p class="text-xs text-gray-500">
-                                                Allow others to download this
-                                                video
+                                                {{
+                                                    $t("studio.downloadMessage")
+                                                }}
                                             </p>
                                         </div>
                                         <ToggleSwitch
@@ -544,11 +566,10 @@
                                         <div>
                                             <span
                                                 class="text-sm font-medium text-gray-700"
-                                                >Duet</span
+                                                >{{ $t("studio.duet") }}</span
                                             >
                                             <p class="text-xs text-gray-500">
-                                                Allow others to duet this video
-                                                with their own
+                                                {{ $t("studio.duetMessage") }}
                                             </p>
                                         </div>
                                         <ToggleSwitch
@@ -561,11 +582,10 @@
                                         <div>
                                             <span
                                                 class="text-sm font-medium text-gray-700"
-                                                >Stitch</span
+                                                >{{ $t("studio.stitch") }}</span
                                             >
                                             <p class="text-xs text-gray-500">
-                                                Allow others to stitch this
-                                                video with their own
+                                                {{ $t("studio.stitchMessage") }}
                                             </p>
                                         </div>
                                         <ToggleSwitch
@@ -582,12 +602,14 @@
                                     <div>
                                         <span
                                             class="text-sm font-medium text-gray-700"
-                                            >Contains NSFW/Sensitive
-                                            content</span
+                                            >{{
+                                                $t("studio.containsNSFW")
+                                            }}</span
                                         >
                                         <p class="text-xs text-gray-500">
-                                            Mark this post as Sensitive to show
-                                            a warning
+                                            {{
+                                                $t("studio.containsNSFWMessage")
+                                            }}
                                         </p>
                                     </div>
                                     <ToggleSwitch v-model="settings.nsfw" />
@@ -635,7 +657,7 @@
                                             ]"
                                             @click="previewMode = 'feed'"
                                         >
-                                            Feed
+                                            {{ $t("studio.feed") }}
                                         </button>
                                         <button
                                             :class="[
@@ -646,7 +668,7 @@
                                             ]"
                                             @click="previewMode = 'profile'"
                                         >
-                                            Profile
+                                            {{ $t("common.profile") }}
                                         </button>
                                     </div>
                                 </div>
@@ -706,7 +728,7 @@
                                     class="w-full border border-gray-300 text-gray-700 py-3 rounded-md font-medium hover:bg-gray-50 transition-colors"
                                     :disabled="isSubmitting"
                                 >
-                                    Discard
+                                    {{ $t("common.discard") }}
                                 </button>
                             </div>
                         </div>

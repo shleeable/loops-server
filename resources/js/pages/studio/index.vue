@@ -29,7 +29,7 @@
                                             formatCount(user.post_count)
                                         }}</span
                                     >
-                                    Posts
+                                    {{ $t("studio.posts") }}
                                 </div>
                                 <div
                                     class="text-sm text-gray-500 dark:text-gray-400"
@@ -45,7 +45,7 @@
                                             formatCount(user.likes_count)
                                         }}</span
                                     >
-                                    Likes
+                                    {{ $t("studio.likes") }}
                                 </div>
                                 <div
                                     class="text-sm text-gray-500 dark:text-gray-400"
@@ -61,7 +61,7 @@
                                             formatCount(user.follower_count)
                                         }}</span
                                     >
-                                    Followers
+                                    {{ $t("studio.followers") }}
                                 </div>
                                 <div
                                     class="text-sm text-gray-500 dark:text-gray-400"
@@ -77,7 +77,7 @@
                                             formatCount(user.following_count)
                                         }}</span
                                     >
-                                    Following
+                                    {{ $t("studio.following") }}
                                 </div>
                             </div>
                         </div>

@@ -6,7 +6,7 @@
                     class="flex items-center text-gray-500 hover:text-gray-400 cursor-pointer"
                     @click="$router.back()"
                 >
-                    <span class="mr-2">←</span> Back
+                    <span class="mr-2">←</span> {{ t("settings.back") }}
                 </button>
             </div>
 
@@ -26,16 +26,19 @@
 <script setup>
 import { ref } from "vue";
 import SidebarItem from "./SidebarItem.vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const menuItems = ref([
     {
-        name: "Manage account",
+        name: t("settings.manageAccount"),
         icon: "bx bx-user",
         path: "/dashboard/account",
         highlight: true,
     },
     {
-        name: "Safety",
+        name: t("settings.safety"),
         icon: "bx bx-lock",
         path: "/dashboard/safety",
     },

@@ -83,7 +83,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, nextTick } from "vue";
 import SettingsLayout from "~/layouts/SettingsLayout.vue";
 import ToggleSwitch from "@/components/Form/ToggleSwitch.vue";
 import axios from "~/plugins/axios";
