@@ -11,7 +11,7 @@
                 <h1
                     class="text-2xl font-semibold tracking-tight dark:text-gray-300"
                 >
-                    Account data
+                    {{ $t("settings.accountData") }}
                 </h1>
             </div>
             <hr class="border-gray-300 dark:border-gray-700" />
@@ -28,19 +28,17 @@
                             <h3
                                 class="font-medium text-blue-800 dark:text-blue-300 mb-1"
                             >
-                                Your data, your control
+                                {{ $t("settings.yourDataYourControl") }}
                             </h3>
                             <p class="text-sm text-blue-700 dark:text-blue-400">
-                                Download or review your account data. All
-                                exports are provided in JSON format for easy
-                                portability.
+                                {{ $t("settings.yourDataYourControlMessage") }}.
                             </p>
                         </div>
                     </div>
                 </div>
 
                 <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">
-                    Data export
+                    {{ $t("settings.dataExport") }}
                 </h2>
                 <div class="flex flex-col gap-3 mb-6">
                     <!-- <div class="bg-white dark:bg-slate-950 rounded-lg shadow-sm">
@@ -98,11 +96,10 @@
                             <h3
                                 class="font-medium text-gray-800 mb-4 dark:text-gray-300"
                             >
-                                Selective data export
+                                {{ $t("settings.selectiveDataExport") }}
                             </h3>
                             <p class="text-sm text-gray-600 mb-4">
-                                Choose specific types of data to export if you
-                                don't need everything.
+                                {{ $t("settings.selectiveDataExportMessage") }}
                             </p>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -139,7 +136,7 @@
                 </div>
 
                 <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">
-                    Export history
+                    {{ $t("settings.exportHistory") }}
                 </h2>
                 <div
                     class="bg-white dark:bg-slate-950 rounded-lg shadow-sm mb-6"
@@ -148,7 +145,7 @@
                         class="p-4 border-b border-gray-200 dark:border-gray-800"
                     >
                         <h3 class="font-medium dark:text-gray-300">
-                            Recent exports
+                            {{ $t("settings.recentExports") }}
                         </h3>
                     </div>
                     <div class="h-96 overflow-y-auto">

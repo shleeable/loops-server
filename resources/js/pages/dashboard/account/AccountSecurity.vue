@@ -11,14 +11,14 @@
                 <h1
                     class="text-2xl font-semibold tracking-tight dark:text-gray-300"
                 >
-                    Security
+                    {{ $t("settings.security") }}
                 </h1>
             </div>
             <hr class="border-gray-300 dark:border-gray-700" />
 
             <section class="my-8">
                 <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">
-                    Password and authentication
+                    {{ $t("settings.passwordAndAuthentication") }}
                 </h2>
                 <div class="flex flex-col gap-3 mb-6">
                     <div
@@ -27,7 +27,7 @@
                         <div class="flex justify-between items-center p-4">
                             <div class="flex items-center gap-5">
                                 <h3 class="font-medium mb-0 dark:text-gray-300">
-                                    Password
+                                    {{ $t("settings.password") }}
                                 </h3>
                             </div>
                             <div class="flex items-center">
@@ -35,7 +35,7 @@
                                     class="text-sm text-blue-500 font-medium cursor-pointer hover:text-blue-400 transition-colors"
                                     @click="showChangePassword = true"
                                 >
-                                    Change
+                                    {{ $t("settings.change") }}
                                 </button>
                             </div>
                         </div>
@@ -49,11 +49,12 @@
                         >
                             <div class="flex flex-col max-w-[60%]">
                                 <h3 class="font-medium mb-2 dark:text-gray-300">
-                                    Two-factor authentication
+                                    {{ $t("settings.twoFactorAuthentication") }}
                                 </h3>
                                 <p class="text-xs text-gray-500 font-light">
-                                    Add an extra layer of security to your
-                                    account with 2FA using an authenticator app.
+                                    {{
+                                        $t("settings.addAnExtraLayerOfSecurity")
+                                    }}
                                 </p>
                             </div>
                             <div class="flex items-center gap-8">
@@ -67,8 +68,8 @@
                                 >
                                     {{
                                         twoFactorEnabled
-                                            ? "Enabled"
-                                            : "Disabled"
+                                            ? $t("common.enabled")
+                                            : $t("common.disabled")
                                     }}
                                 </span>
                                 <button
@@ -81,7 +82,7 @@
                                     "
                                     @click="disableTwoFactor"
                                 >
-                                    Disable
+                                    {{ $t("common.disable") }}
                                 </button>
                                 <button
                                     v-else
@@ -93,7 +94,7 @@
                                     "
                                     @click="enableTwoFactor"
                                 >
-                                    Enable
+                                    {{ $t("common.enable") }}
                                 </button>
                             </div>
                         </div>
@@ -107,7 +108,7 @@
                             <h3
                                 class="text-lg font-semibold mb-4 dark:text-gray-300"
                             >
-                                Setup Two-Factor Authentication
+                                {{ $t("settings.setup2FA") }}
                             </h3>
 
                             <div class="space-y-6">
@@ -115,12 +116,12 @@
                                     <h4
                                         class="font-medium mb-2 dark:text-gray-300"
                                     >
-                                        Step 1: Scan QR Code
+                                        {{ $t("settings.setup2FAStep1") }}
                                     </h4>
                                     <p class="text-sm text-gray-500 mb-4">
-                                        Scan this QR code with your
-                                        authenticator app (Google Authenticator,
-                                        Authy, etc.)
+                                        {{
+                                            $t("settings.setup2FAStep1Message")
+                                        }}
                                     </p>
 
                                     <div class="flex justify-center mb-4">
@@ -139,11 +140,12 @@
                                     <h4
                                         class="font-medium mb-2 dark:text-gray-300"
                                     >
-                                        Step 2: Enter Verification Code
+                                        {{ $t("settings.setup2FAStep2") }}
                                     </h4>
                                     <p class="text-sm text-gray-500 mb-4">
-                                        Enter the 6-digit code from your
-                                        authenticator app
+                                        {{
+                                            $t("settings.setup2FAStep2Message")
+                                        }}
                                     </p>
 
                                     <div class="max-w-xs mx-auto">
@@ -188,7 +190,7 @@
                                         @click="cancel2FASetup"
                                         :disabled="isVerifying"
                                     >
-                                        Cancel
+                                        {{ $t("common.cancel") }}
                                     </button>
                                     <button
                                         class="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -205,8 +207,10 @@
                                         ></div>
                                         {{
                                             isVerifying
-                                                ? "Verifying..."
-                                                : "Verify & Enable"
+                                                ? $t(
+                                                      "settings.verifyingDotDotDot",
+                                                  )
+                                                : $t("settings.verifyAndEnable")
                                         }}
                                     </button>
                                 </div>
@@ -224,11 +228,13 @@
             <div
                 class="bg-white dark:bg-slate-950 rounded-lg p-6 w-full max-w-md mx-4"
             >
-                <h3 class="text-lg font-semibold">Change Password</h3>
+                <h3 class="text-lg font-semibold">
+                    {{ $t("settings.changePassword") }}
+                </h3>
 
                 <div v-if="hasPasswordChangeError" class="my-3">
                     <div class="font-bold text-red-500 text-sm">
-                        Oops, the following error(s) occured:
+                        {{ $t("settings.oopsTheFollowingErrorsOccured") }}
                     </div>
                     <div
                         v-for="error in passwordErrors"
@@ -243,7 +249,7 @@
                     <div>
                         <label
                             class="block text-sm font-medium text-gray-700 mb-1"
-                            >Current password</label
+                            >{{ $t("settings.currentPassword") }}</label
                         >
                         <input
                             type="password"
@@ -255,7 +261,7 @@
                     <div>
                         <label
                             class="block text-sm font-medium text-gray-700 mb-1"
-                            >New password</label
+                            >{{ $t("settings.newPassword") }}</label
                         >
                         <input
                             type="password"
@@ -267,7 +273,7 @@
                     <div>
                         <label
                             class="block text-sm font-medium text-gray-700 mb-1"
-                            >Confirm new password</label
+                            >{{ $t("settings.confirmNewPassword") }}</label
                         >
                         <input
                             type="password"
@@ -282,13 +288,13 @@
                         class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
                         @click="cancelChangePassword"
                     >
-                        Cancel
+                        {{ $t("common.cancel") }}
                     </button>
                     <button
                         class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
                         @click="changePassword"
                     >
-                        Change Password
+                        {{ $t("settings.changePassword") }}
                     </button>
                 </div>
             </div>
@@ -297,11 +303,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, nextTick } from "vue";
 import SettingsLayout from "~/layouts/SettingsLayout.vue";
 import ToggleSwitch from "@/components/Form/ToggleSwitch.vue";
 import axios from "~/plugins/axios";
 import { useAlertModal } from "@/composables/useAlertModal.js";
+import { useI18n } from "vue-i18n";
 
 const twoFactorEnabled = ref(false);
 const axiosInstance = axios.getAxiosInstance();
@@ -318,6 +325,7 @@ const twoFactorVerifyCode = ref("");
 const isVerifying = ref(false);
 const has2FAError = ref(false);
 const twoFactorError = ref("");
+const { t } = useI18n();
 
 const loadSecurityConfig = () => {
     axiosInstance
@@ -329,10 +337,10 @@ const loadSecurityConfig = () => {
 
 const disableTwoFactor = async () => {
     const result = await confirmModal(
-        "Disable Two-Factor Authentication",
-        "Are you sure you want to disable two factor authentication? This will make your account less secure.",
-        "Disable 2FA",
-        "Cancel",
+        t("settings.disableTwoFactor"),
+        t("settings.disableTwoFactorMessage"),
+        t("settings.disable2FAButton"),
+        t("common.cancel"),
     );
 
     if (result) {
@@ -343,8 +351,8 @@ const disableTwoFactor = async () => {
             })
             .finally(() => {
                 alertModal(
-                    "Two-Factor Authentication Disabled",
-                    "Two-factor authentication has been successfully disabled for your account.",
+                    t("settings.twoFactorAuthDisabled"),
+                    t("settings.twoFactorAuthDisabledMessage"),
                 );
             });
     }
@@ -352,10 +360,10 @@ const disableTwoFactor = async () => {
 
 const enableTwoFactor = async () => {
     const result = await confirmModal(
-        "Enable Two-Factor Authentication",
-        "Are you sure you want to enable two-factor authentication?",
-        "Enable",
-        "Cancel",
+        t("settings.enableTwoFactor"),
+        t("settings.enableTwoFactorMessage"),
+        t("common.enable"),
+        t("common.cancel"),
     );
 
     if (result) {
@@ -384,7 +392,7 @@ const handle2FAInput = (event) => {
 const verify2FA = async () => {
     if (!twoFactorVerifyCode.value || twoFactorVerifyCode.value.length !== 6) {
         has2FAError.value = true;
-        twoFactorError.value = "Please enter a 6-digit code";
+        twoFactorError.value = t("settings.pleaseEnterA6DigitCode");
         return;
     }
 
@@ -401,8 +409,8 @@ const verify2FA = async () => {
         isSettingUp2FA.value = false;
 
         await alertModal(
-            "Two-Factor Authentication Enabled",
-            "Two-factor authentication has been successfully enabled for your account.",
+            t("settings.twoFactorEnabled"),
+            t("settings.twoFactorEnabledMessage"),
         );
     } catch (error) {
         has2FAError.value = true;
@@ -411,8 +419,9 @@ const verify2FA = async () => {
         } else if (error.response?.data?.errors?.code) {
             twoFactorError.value = error.response.data.errors.code[0];
         } else {
-            twoFactorError.value =
-                "Invalid verification code. Please try again.";
+            twoFactorError.value = t(
+                "settings.invalidVerificationCodePleaseTryAgain",
+            );
         }
     } finally {
         isVerifying.value = false;
@@ -438,8 +447,8 @@ const changePassword = () => {
             .then((res) => {
                 showChangePassword.value = false;
                 alertModal(
-                    "Success!",
-                    "Your password was successfully updated!",
+                    t("settings.successExclamation"),
+                    t("settings.successPasswordChangedMessage"),
                 );
             })
             .catch((err) => {

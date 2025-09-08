@@ -4,26 +4,26 @@
             <h1
                 class="text-2xl font-semibold tracking-tight mb-6 dark:text-gray-100"
             >
-                Manage Your Loops Account
+                {{ t("settings.manageYourLoopsAccount") }}
             </h1>
             <hr class="border-gray-300 dark:border-gray-700" />
             <!-- <section class="my-8">
-                <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">Account control</h2>
+                <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">{{ t('settings.accountControl') }}</h2>
                 <div class="flex gap-3">
                     <div class="flex w-full justify-between items-center p-4 bg-white dark:bg-slate-950 rounded-lg shadow-sm">
-                    <span class="text-sm text-gray-600 font-light">Deactivate account</span>
-                    <router-link to="/dashboard/account/deactivate" class="font-medium text-sm text-red-500">Deactivate</router-link>
+                    <span class="text-sm text-gray-600 font-light">{{ t('settings.deactivateAccount') }}</span>
+                    <router-link to="/dashboard/account/deactivate" class="font-medium text-sm text-red-500">{{ t('settings.deactivate') }}</router-link>
                     </div>
                     <div class="flex w-full justify-between items-center p-4 bg-white dark:bg-slate-950 rounded-lg shadow-sm">
-                    <span class="text-sm text-gray-600 font-light">Delete account</span>
-                    <router-link to="/dashboard/account/delete" class="font-medium text-sm text-red-500">Delete</router-link>
+                    <span class="text-sm text-gray-600 font-light">{{ t('settings.deleteAccount') }}</span>
+                    <router-link to="/dashboard/account/delete" class="font-medium text-sm text-red-500">{{ t('settings.delete') }}</router-link>
                     </div>
                 </div>
             </section> -->
 
             <section class="my-8">
                 <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">
-                    Account information
+                    {{ t("settings.accountInformation") }}
                 </h2>
                 <div class="flex flex-col gap-3">
                     <router-link
@@ -33,25 +33,24 @@
                         <div class="flex justify-between items-center p-4">
                             <div class="flex items-center gap-5">
                                 <h3 class="font-medium mb-0 dark:text-gray-300">
-                                    Status
+                                    {{ t("settings.status") }}
                                 </h3>
                                 <p
                                     class="text-xs text-gray-500 -mb-1 font-light"
                                 >
-                                    We may restrict accounts that don't comply
-                                    with our Community Guidelines.
+                                    {{ t("settings.weMayRestrictAccounts") }}
                                     <a
                                         href="#"
                                         class="text-blue-500 font-medium text-xs"
-                                        >Learn more</a
+                                        >{{ t("common.learnMore") }}</a
                                     >
                                 </p>
                             </div>
                             <div class="flex items-center">
                                 <span
                                     class="text-green-600 flex items-center text-sm gap-2"
-                                    ><i class="bx bx-check text-[20px]"></i> No
-                                    restrictions</span
+                                    ><i class="bx bx-check text-[20px]"></i>
+                                    {{ t("settings.noRestrictions") }}</span
                                 >
                             </div>
                         </div>
@@ -63,12 +62,12 @@
                         <div class="flex justify-between items-center p-4">
                             <div class="flex items-center gap-5">
                                 <h3 class="font-medium mb-0 dark:text-gray-300">
-                                    Email
+                                    {{ t("settings.email") }}
                                 </h3>
                                 <p
                                     class="text-xs text-gray-500 -mb-1 font-light"
                                 >
-                                    Manage your account email.
+                                    {{ t("settings.manageYourAccountEmail") }}
                                 </p>
                             </div>
                             <div class="flex items-center">
@@ -85,12 +84,16 @@
                         <div class="flex justify-between items-center p-4">
                             <div class="flex items-center gap-5">
                                 <h3 class="font-medium mb-0 dark:text-gray-300">
-                                    Security
+                                    {{ t("settings.security") }}
                                 </h3>
                                 <p
                                     class="text-xs text-gray-500 -mb-1 font-light"
                                 >
-                                    Manage your account security settings.
+                                    {{
+                                        t(
+                                            "settings.manageYourAccountSecuritySettings",
+                                        )
+                                    }}
                                 </p>
                             </div>
                             <div class="flex items-center">
@@ -107,12 +110,16 @@
                         <div class="flex justify-between items-center p-4">
                             <div class="flex items-center gap-5">
                                 <h3 class="font-medium mb-0 dark:text-gray-300">
-                                    Account Data
+                                    {{ t("settings.accountData") }}
                                 </h3>
                                 <p
                                     class="text-xs text-gray-500 -mb-1 font-light"
                                 >
-                                    Download your account data export.
+                                    {{
+                                        t(
+                                            "settings.downloadYourAccountDataExport",
+                                        )
+                                    }}
                                 </p>
                             </div>
                             <div class="flex items-center">
@@ -127,7 +134,7 @@
 
             <section class="hidden mb-8">
                 <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">
-                    Privacy
+                    {{ t("settings.privacy") }}
                 </h2>
                 <div class="flex gap-3">
                     <div
@@ -138,17 +145,16 @@
                         >
                             <div class="flex flex-col max-w-[60%]">
                                 <h3 class="font-medium mb-2 dark:text-gray-300">
-                                    Private account
+                                    {{ t("settings.privateAccount") }}
                                 </h3>
                                 <p class="text-xs text-gray-500 font-light">
-                                    With a private account, only users you
-                                    approve can follow you and watch your
-                                    videos. Your existing followers won't be
-                                    affected.
+                                    {{
+                                        t("settings.withAPrivateAccountMessage")
+                                    }}
                                     <a
                                         href="#"
                                         class="text-blue-500 font-medium text-xs"
-                                        >Learn more</a
+                                        >{{ t("common.learnMore") }}</a
                                     >
                                 </p>
                             </div>
@@ -163,15 +169,18 @@
                         >
                             <div class="flex flex-col max-w-[60%]">
                                 <h3 class="font-medium mb-2 dark:text-gray-300">
-                                    Enable Federation
+                                    {{ t("settings.enableFederation") }}
                                 </h3>
                                 <p class="text-xs text-gray-500 font-light">
-                                    Allow your account and videos to be shared
-                                    with people on other servers.
+                                    {{
+                                        t(
+                                            "settings.allowYourAccountAndVideosToBeShared",
+                                        )
+                                    }}
                                     <a
                                         href="#"
                                         class="text-blue-500 font-medium text-xs"
-                                        >Learn more</a
+                                        >{{ t("settings.learnMore") }}</a
                                     >
                                 </p>
                             </div>
@@ -188,7 +197,9 @@
 import { onMounted, ref } from "vue";
 import SettingsLayout from "~/layouts/SettingsLayout.vue";
 import ToggleSwitch from "@/components/Form/ToggleSwitch.vue";
+import { useI18n } from "vue-i18n";
 
 const isPrivateAccount = ref(false);
 const isFederatedAccount = ref(true);
+const { t } = useI18n();
 </script>

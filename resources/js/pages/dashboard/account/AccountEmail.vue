@@ -11,7 +11,7 @@
                 <h1
                     class="text-2xl font-semibold tracking-tight dark:text-gray-100"
                 >
-                    Email settings
+                    {{ $t("settings.emailSettings") }}
                 </h1>
             </div>
             <hr class="border-gray-300 dark:border-gray-700" />
@@ -21,16 +21,18 @@
                     <div class="flex items-start gap-3">
                         <div>
                             <p class="text-gray-700 dark:text-blue-400">
-                                Your email is used for account recovery,
-                                notifications, and security alerts. We'll verify
-                                any changes to ensure account security.
+                                {{
+                                    $t(
+                                        "settings.yourEmailIsUsedForRecoveryMessage",
+                                    )
+                                }}
                             </p>
                         </div>
                     </div>
                 </div>
 
                 <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">
-                    Current email address
+                    {{ $t("settings.currentEmailAddress") }}
                 </h2>
                 <div
                     class="bg-white dark:bg-slate-950 rounded-lg shadow-sm mb-6"
@@ -70,15 +72,15 @@
                                             ></i>
                                             {{
                                                 emailVerified
-                                                    ? "Verified"
-                                                    : "Unverified"
+                                                    ? $t("settings.verified")
+                                                    : $t("settings.unverified")
                                             }}
                                         </span>
                                         <span class="text-gray-300">•</span>
                                         <span
                                             v-if="emailVerified"
                                             class="text-sm text-gray-500"
-                                            >Added
+                                            >{{ $t("settings.added") }}
                                             {{
                                                 formatDate(emailAddedDate)
                                             }}</span
@@ -94,8 +96,8 @@
                             >
                                 {{
                                     isResending
-                                        ? "Sending..."
-                                        : "Resend verification"
+                                        ? $t("settings.sendingDotDotDot")
+                                        : $t("settings.resendVerification")
                                 }}
                             </button>
                         </div>
@@ -112,13 +114,12 @@
                         ></i>
                         <div class="flex-1">
                             <h3 class="font-medium text-orange-800 mb-1">
-                                Email change pending
+                                {{ $t("settings.emailChangePending") }}
                             </h3>
                             <p class="text-sm text-orange-700 mb-3">
-                                We've sent a verification email to
+                                {{ $t("settings.weveSentAnEmail") }}
                                 <strong>{{ pendingEmail }}</strong
-                                >. Click the link in that email to complete the
-                                change.
+                                >. {{ $t("settings.clickTheLinkInThatEmail") }}
                             </p>
                             <div class="flex space-x-10">
                                 <button
@@ -128,15 +129,15 @@
                                 >
                                     {{
                                         isResending
-                                            ? "Sending..."
-                                            : "Resend verification"
+                                            ? $t("settings.sendingDotDotDot")
+                                            : $t("settings.resendVerification")
                                     }}
                                 </button>
                                 <button
                                     class="text-sm text-red-600 font-medium hover:text-red-700 cursor-pointer"
                                     @click="cancelEmailChange"
                                 >
-                                    Cancel change
+                                    {{ $t("settings.cancelChange") }}
                                 </button>
                             </div>
                         </div>
@@ -144,7 +145,7 @@
                 </div>
 
                 <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">
-                    Change email address
+                    {{ $t("settings.changeEmailAddress") }}
                 </h2>
                 <div
                     class="bg-white dark:bg-slate-950 rounded-lg shadow-sm mb-6"
@@ -155,12 +156,14 @@
                                 <label
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2"
                                 >
-                                    New email address
+                                    {{ $t("settings.newEmailAddress") }}
                                 </label>
                                 <input
                                     type="email"
                                     v-model="newEmail"
-                                    placeholder="Enter your new email address"
+                                    :placeholder="
+                                        $t('settings.enterYourNewEmailAddress')
+                                    "
                                     class="w-full px-3 py-2 border border-gray-300 dark:text-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     :class="{ 'border-red-300': emailError }"
                                     :disabled="
@@ -179,12 +182,14 @@
                                 <label
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2"
                                 >
-                                    Confirm your password
+                                    {{ $t("settings.confirmYourPassword") }}
                                 </label>
                                 <input
                                     type="password"
                                     v-model="passwordConfirm"
-                                    placeholder="Enter your current password"
+                                    :placeholder="
+                                        $t('settings.enterYourCurrentPassword')
+                                    "
                                     class="w-full px-3 py-2 border border-gray-300 dark:text-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     :class="{ 'border-red-300': passwordError }"
                                     :disabled="
@@ -211,8 +216,8 @@
                                 >
                                     {{
                                         isChangingEmail
-                                            ? "Changing..."
-                                            : "Change email"
+                                            ? $t("settings.changingDotDotDot")
+                                            : $t("settings.changeEmail")
                                     }}
                                 </button>
                                 <button
@@ -221,7 +226,7 @@
                                     @click="resetForm"
                                     :disabled="isChangingEmail"
                                 >
-                                    Cancel
+                                    {{ $t("common.cancel") }}
                                 </button>
                             </div>
                         </form>
@@ -295,7 +300,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, nextTick } from "vue";
 import SettingsLayout from "~/layouts/SettingsLayout.vue";
 import ToggleSwitch from "@/components/Form/ToggleSwitch.vue";
 import axios from "~/plugins/axios";
@@ -305,24 +310,20 @@ const { formatDate } = useUtils();
 import { useAlertModal } from "@/composables/useAlertModal.js";
 const { alertModal, confirmModal } = useAlertModal();
 
-// Email data
 const currentEmail = ref();
 const emailVerified = ref();
 const emailAddedDate = ref();
 const pendingEmail = ref("");
 
-// Form data
 const newEmail = ref("");
 const passwordConfirm = ref("");
 const emailError = ref("");
 const passwordError = ref("");
 
-// Loading states
 const isChangingEmail = ref(false);
 const isResending = ref(false);
 const isSendingTest = ref(false);
 
-// Email preferences
 const securityAlerts = ref(true);
 const accountNotifications = ref(true);
 const productUpdates = ref(false);
