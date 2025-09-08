@@ -4,6 +4,7 @@ return [
     'apply' => '应用',
     'avatar' => '头像',
     'cancel' => '取消',
+    'clickToReveal' => 'Click to reveal',
     'close' => '关闭',
     'comment' => 'Comment',
     'delete' => 'Delete',

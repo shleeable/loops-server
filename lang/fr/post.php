@@ -41,6 +41,7 @@ return [
     'reportTextPlaceholder1026' => 'Ajoutez des détails à votre signalement...',
     'reportTextPlaceholderDefault' => 'Ajoutez plus de détails...',
     'saveChanges' => 'Enregistrer',
+    'sensitiveContent' => 'Sensitive Content',
     'showLess' => 'Voir moins',
     'showThisVideoAtTheTopOfYourProfile' => 'Afficher cette vidéo en haut du profil',
     'signInToLeaveAComment' => 'Connectez-vous pour commenter',

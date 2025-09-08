@@ -4,6 +4,7 @@ return [
     'apply' => 'Apply',
     'avatar' => 'Avatar',
     'cancel' => 'Cancel',
+    'clickToReveal' => 'Click to reveal',
     'close' => 'Close',
     'comment' => 'Comment',
     'delete' => 'Delete',

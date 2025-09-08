@@ -1126,6 +1126,7 @@ const handleSubmit = async () => {
         formData.append("description", description.value);
         formData.append("comment_state", settings.allowComments ? 4 : 0);
         formData.append("can_download", settings.allowDownloads);
+        formData.append("is_sensitive", settings.nsfw ? 1 : 0);
 
         if (coverImage.value) {
             formData.append("cover_image", coverImage.value);

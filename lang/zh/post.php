@@ -41,6 +41,7 @@ return [
     'reportTextPlaceholder1026' => '请提供有关你的举报的更多详细信息...',
     'reportTextPlaceholderDefault' => '请提供更多详细信息...',
     'saveChanges' => '保存更改',
+    'sensitiveContent' => 'Sensitive Content',
     'showLess' => '折叠',
     'showThisVideoAtTheTopOfYourProfile' => '将此视频显示在你的账户页顶部',
     'signInToLeaveAComment' => '登录以发表评论',

@@ -52,6 +52,7 @@ class StoreVideoRequest extends FormRequest
             'description' => 'nullable|string|max:200',
             'comment_state' => 'sometimes|string|in:0,4',
             'can_download' => 'sometimes',
+            'is_sensitive' => 'sometimes|boolean',
         ];
     }
 }
