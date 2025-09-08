@@ -58,7 +58,7 @@ class AdminSettingsController extends Controller
 
                 AdminSetting::set(
                     $settingKey,
-                    $value,
+                    $value ?? '',
                     $this->getSettingType($value),
                     $isPublic,
                     $this->getSettingDescription($settingKey)
