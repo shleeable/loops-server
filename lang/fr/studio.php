@@ -51,5 +51,5 @@ return [
     'videoResolutions' => 'Résolutions vidéo',
     'videoResolutionsMessage' => 'Haute résolution recommandée : 1080p, 1440p, 4K.',
     'view' => 'Voir',
-    'yourPostedAndProcessingVideos'=> 'Vos vidéos publiées et en cours de traitement apparaîtront ici',
+    'yourPostedAndProcessingVideos' => 'Vos vidéos publiées et en cours de traitement apparaîtront ici',
 ];
