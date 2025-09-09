@@ -3,7 +3,7 @@
 return [
     'actions' => 'Actions',
     'allowOthersTo' => 'Autoriser les autres à',
-    'aspectRatios' => 'Format d'image',
+    'aspectRatios' => 'Format d\'image',
     'aspectRatiosMessage' => 'Recommandé : 16:9 pour le paysage, 9:16 pour le portrait.',
     'caption' => 'Légende',
     'commentMessage' => 'Autoriser les autres à publier des commentaires et des réponses sur cette publication',
