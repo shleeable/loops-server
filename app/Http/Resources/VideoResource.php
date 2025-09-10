@@ -24,6 +24,7 @@ class VideoResource extends JsonResource
         $mediaUrl = data_get($media, 'media.src_url', null);
 
         $pid = $this->getAuthenticatedProfileId($request);
+        $hasLiked = $pid ? LikeService::hasVideo($this->id, $pid) : false;
 
         $res = [
             'id' => (string) $this->id,
@@ -41,7 +42,7 @@ class VideoResource extends JsonResource
             'likes' => $this->likes,
             'shares' => $this->shares,
             'comments' => $this->comments,
-            'has_liked' => $pid ? LikeService::hasVideo($this->id, $pid) : false,
+            'has_liked' => $hasLiked,
             'permissions' => [
                 'can_comment' => (bool) $this->comment_state == 4,
                 'can_download' => (bool) $this->can_download,

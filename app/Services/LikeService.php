@@ -31,11 +31,11 @@ class LikeService
     /**
      * Check if a profile has liked a video
      */
-    public static function hasVideo($videoId, $profileId)
+    public static function hasVideo(string $videoId, string $profileId)
     {
         $cacheKey = self::VIDEO_LIKES_KEY.$videoId;
 
-        if (Redis::sismember($cacheKey, $profileId)) {
+        if (Redis::sismember($cacheKey, $profileId) == 1) {
             return true;
         }
 
@@ -54,7 +54,7 @@ class LikeService
     /**
      * Add a video like to cache
      */
-    public static function addVideo($videoId, $profileId)
+    public static function addVideo(string $videoId, string $profileId)
     {
         $cacheKey = self::VIDEO_LIKES_KEY.$videoId;
         $timestampKey = self::VIDEO_LIKES_TIMESTAMP_KEY.$videoId;
@@ -74,17 +74,27 @@ class LikeService
     /**
      * Remove a video like from cache
      */
-    public static function remVideo($videoId, $profileId)
+    public static function remVideo(string $videoId, string $profileId)
     {
         $cacheKey = self::VIDEO_LIKES_KEY.$videoId;
 
-        return Redis::srem($cacheKey, $profileId) > 0;
+        return Redis::srem($cacheKey, $profileId);
     }
 
     /**
      * Get video likes from cache
      */
-    public static function getVideo($videoId)
+    public static function getVideoCount(string $videoId)
+    {
+        $cacheKey = self::VIDEO_LIKES_KEY.$videoId;
+
+        return Redis::scard($cacheKey);
+    }
+
+    /**
+     * Get video likes from cache
+     */
+    public static function getVideo(string $videoId)
     {
         $cacheKey = self::VIDEO_LIKES_KEY.$videoId;
 

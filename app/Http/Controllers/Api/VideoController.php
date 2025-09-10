@@ -26,6 +26,7 @@ use App\Models\Profile;
 use App\Models\Video;
 use App\Models\VideoLike;
 use App\Services\AccountService;
+use App\Services\LikeService;
 use App\Services\NotificationService;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
@@ -59,6 +60,7 @@ class VideoController extends Controller
         $model->profile_id = $pid;
         $model->caption = Purify::clean($request->description);
         $model->size_kb = $videoMeta['size'];
+        $model->is_sensitive = $request->filled('is_sensitive') ? (bool) $request->boolean('is_sensitive') : false;
         $model->comment_state = $request->filled('comment_state') ? ($request->input('comment_state') == 4 ? 4 : 0) : 4;
         $model->can_download = $request->filled('can_download') ? $request->boolean('can_download') : false;
         $model->media_metadata = $videoMeta;
@@ -138,22 +140,27 @@ class VideoController extends Controller
             return $this->error('Video not found or is unavailable', 404);
         }
 
-        $res = VideoLike::updateOrCreate([
+        $like = VideoLike::firstOrCreate([
             'profile_id' => $pid,
             'video_id' => $video->id,
         ]);
 
-        if ($pid != $video->profile_id) {
-            NotificationService::newVideoLike(
-                $video->profile_id,
-                $video->id,
-                $pid
-            );
+        if ($like->wasRecentlyCreated) {
+            $video->increment('likes');
+
+            LikeService::addVideo($video->id, $pid);
+
+            if ($pid !== $video->profile_id) {
+                NotificationService::newVideoLike(
+                    $video->profile_id,
+                    $video->id,
+                    $pid
+                );
+            }
         }
 
         $resp = (new VideoResource($video))->toArray($request);
         $resp['has_liked'] = true;
-        $resp['likes'] = $res->wasRecentlyCreated ? $resp['likes'] + 1 : $resp['likes'];
 
         return $resp;
     }
@@ -170,14 +177,23 @@ class VideoController extends Controller
             return $this->error('Video not found or is unavailable', 404);
         }
 
-        $res = VideoLike::whereProfileId($pid)
-            ->whereVideoId($video->id)
+        $res = VideoLike::where('profile_id', $pid)
+            ->where('video_id', $video->id)
             ->first();
+
+        if ($res) {
+            $video->decrement('likes');
+            LikeService::remVideo($video->id, $pid);
+            $res->delete();
+        } else {
+            $resp = (new VideoResource($video))->toArray($request);
+
+            return $resp;
+        }
 
         $resp = (new VideoResource($video))->toArray($request);
 
         if ($res) {
-            $res->delete();
             $resp['has_liked'] = false;
             $resp['likes'] = $resp['likes'] ? $resp['likes'] - 1 : 0;
         }

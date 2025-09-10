@@ -386,6 +386,20 @@
                                             >{{ $t("common.report") }}</span
                                         >
                                     </button>
+                                    <button
+                                        v-if="
+                                            authStore.authenticated &&
+                                            profileId == authStore.user.id
+                                        "
+                                        class="flex w-full items-center justify-start gap-2 py-3 px-4 hover:bg-gray-100 text-red-500 dark:hover:bg-slate-800 cursor-pointer"
+                                        @click="handleVideoDelete"
+                                    >
+                                        <i class="bx bx-trash text-[20px]"></i>
+                                        <span
+                                            class="pl-2 font-semibold text-sm"
+                                            >{{ $t("common.delete") }}</span
+                                        >
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -544,6 +558,8 @@ import "video.js/dist/video-js.css";
 import LoopLink from "../LoopLink.vue";
 import { useReportModal } from "@/composables/useReportModal";
 import { useQueryClient } from "@tanstack/vue-query";
+import { useAlertModal } from "@/composables/useAlertModal.js";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps({
     videoId: { type: String, required: true },
@@ -588,6 +604,8 @@ const isSensitiveRevealed = ref(false);
 const pendingPlay = ref(false);
 const { openReportModal } = useReportModal();
 const queryClient = useQueryClient();
+const { alertModal, confirmModal } = useAlertModal();
+const { t } = useI18n();
 
 const {
     hasInteracted: hasGlobalInteraction,
@@ -732,17 +750,19 @@ const submitComment = async () => {
 
 const toggleLike = async () => {
     const state = videoLiked.value;
-    queryClient.invalidateQueries({ queryKey: ["feed"] });
-    queryClient.invalidateQueries({ queryKey: ["following-feed"] });
-    await videoStore.likeVideo().then((res) => {
-        videoStore.setVideo(res.data);
-    });
+
     if (state) {
-        videoLiked.value = false;
-        likeCount.value = Math.max((likeCount.value ?? 0) - 1, 0);
+        await videoStore.unlikeVideo(props.videoId).then((res) => {
+            videoStore.setVideo(res.data);
+            videoLiked.value = false;
+            likeCount.value = res.data.likes;
+        });
     } else {
-        videoLiked.value = true;
-        likeCount.value = likeCount.value + 1;
+        await videoStore.likeVideo(props.videoId).then((res) => {
+            videoStore.setVideo(res.data);
+            videoLiked.value = true;
+            likeCount.value = res.data.likes;
+        });
     }
 };
 
@@ -949,6 +969,28 @@ const formatCount = (count) => {
     if (count >= 1000000) return (count / 1000000).toFixed(1) + "M";
     if (count >= 1000) return (count / 1000).toFixed(1) + "K";
     return count.toString();
+};
+
+const handleVideoDelete = async () => {
+    showMenu.value = false;
+
+    const result = await confirmModal(
+        t("post.deleteVideo"),
+        t("post.deleteVideoConfirmMessage"),
+        t("common.delete"),
+        t("common.cancel"),
+    );
+    if (result) {
+        try {
+            await videoStore.deleteVideoById(props.videoId);
+            await nextTick();
+            queryClient.invalidateQueries({ queryKey: ["feed"] });
+            queryClient.invalidateQueries({ queryKey: ["following-feed"] });
+            window.location.reload();
+        } catch (error) {
+            console.log(error);
+        }
+    }
 };
 
 defineExpose({
