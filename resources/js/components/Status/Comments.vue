@@ -54,14 +54,16 @@
             v-if="authStore.authenticated && canComment"
             class="p-4 border-t border-gray-200 dark:border-slate-800 flex-shrink-0"
         >
-            <div
+            <form
                 class="relative flex items-center border border-gray-300 rounded-lg bg-gray-50 dark:bg-slate-800 dark:border-slate-700 overflow-hidden"
+                @submit.prevent="handleAddComment"
             >
                 <input
                     v-model="newComment"
                     class="w-full p-3 bg-transparent outline-none dark:text-slate-50 dark:bg-slate-800 border-0"
                     :placeholder="$t('post.addCommentDotDotDot')"
-                    @keydown.enter.prevent="handleAddComment"
+                    :disabled="isSubmitting || !canComment"
+                    aria-busy="isSubmitting"
                 />
 
                 <div class="flex items-center px-3">
@@ -70,19 +72,19 @@
                         @select="onEmojiSelect"
                     >
                         <template #trigger="{ toggle }">
-                            <button @click="toggle">😊</button>
+                            <button type="button" @click="toggle">😊</button>
                         </template>
                     </EmojiPicker>
 
                     <button
-                        @click="handleAddComment"
-                        class="ml-2 text-sm text-gray-400 hover:text-red-500 cursor-pointer font-bold"
-                        :disabled="isSubmitting || !newComment.trim()"
+                        type="submit"
+                        class="ml-2 text-sm text-gray-400 hover:text-red-500 cursor-pointer font-bold disabled:opacity-60 disabled:cursor-not-allowed"
+                        :disabled="isSubmitting || !normalizedComment"
                     >
                         {{ $t("post.post") }}
                     </button>
                 </div>
-            </div>
+            </form>
         </div>
 
         <div
@@ -106,7 +108,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, inject } from "vue";
+import { ref, computed, watch, inject, nextTick } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useCommentStore } from "@/stores/comments";
 import EmojiPicker from "@/components/Form/EmojiPicker.vue";
@@ -138,28 +140,49 @@ const canComment = computed(() => {
     return currentVideo.value?.permissions?.can_comment !== false;
 });
 
+const normalizedComment = computed(() => newComment.value.trim());
+
 const onEmojiSelect = (emoji) => {
     newComment.value += emoji.native;
 };
 
+const pendingKey = ref(null);
+const makeKey = (text, vid) => `${vid}:${text}`;
+const lastSubmitted = ref({ key: null, at: 0 });
+const COOLDOWN_MS = 1500;
+
 const handleAddComment = async () => {
+    const text = normalizedComment.value;
+    const vid = videoId.value;
+
+    if (!text || !vid || isSubmitting.value || !canComment.value) return;
+
+    const key = makeKey(text, vid);
+    const now = Date.now();
+
+    if (pendingKey.value === key) return;
+
     if (
-        !newComment.value.trim() ||
-        !videoId.value ||
-        isSubmitting.value ||
-        !canComment.value
+        lastSubmitted.value.key === key &&
+        now - lastSubmitted.value.at < COOLDOWN_MS
     )
         return;
 
     try {
         isSubmitting.value = true;
-        await commentStore.addComment(videoId.value, newComment.value);
+        pendingKey.value = key;
+
+        await nextTick();
+        await commentStore.addComment(vid, text);
         await videoStore.incrementCommentCount();
+
         newComment.value = "";
+        lastSubmitted.value = { key, at: now };
     } catch (err) {
         error.value = err;
     } finally {
         isSubmitting.value = false;
+        pendingKey.value = null;
     }
 };
 

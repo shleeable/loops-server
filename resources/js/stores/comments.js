@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import axios from "~/plugins/axios";
+import { useAuthStore } from "@/stores/auth";
 
 export const useCommentStore = defineStore("comment", {
     state: () => ({
@@ -12,6 +13,9 @@ export const useCommentStore = defineStore("comment", {
         replyHasMoreMap: new Map(),
         repliesLoadedMap: new Map(),
         likeLoadingStates: new Map(),
+        pendingPosts: new Map(),
+        lastSubmittedKeyAt: new Map(),
+        cooldownMs: 1500,
     }),
 
     getters: {
@@ -67,6 +71,29 @@ export const useCommentStore = defineStore("comment", {
     },
 
     actions: {
+        _unshiftComment(videoId, comment) {
+            const list = this.commentsMap.get(videoId) || [];
+            this.commentsMap.set(videoId, [comment, ...list]);
+        },
+
+        _replaceTemp(videoId, tempId, serverComment) {
+            const list = this.commentsMap.get(videoId) || [];
+            const next = list.map((c) => (c.id === tempId ? serverComment : c));
+            this.commentsMap.set(videoId, next);
+        },
+
+        _removeById(videoId, id) {
+            const list = this.commentsMap.get(videoId) || [];
+            this.commentsMap.set(
+                videoId,
+                list.filter((c) => c.id !== id),
+            );
+        },
+
+        _makeKey(videoId, text) {
+            return `${videoId}:${text}`;
+        },
+
         findCommentById(comments, commentId) {
             if (!Array.isArray(comments)) return null;
 
@@ -244,33 +271,82 @@ export const useCommentStore = defineStore("comment", {
             }
         },
 
-        async addComment(videoId, content) {
-            try {
-                const axiosInstance = axios.getAxiosInstance();
-                const res = await axiosInstance.post(
-                    `/api/v1/video/comments/${videoId.toString()}`,
-                    {
-                        comment: content,
-                    },
-                );
+        async addComment(videoId, rawContent) {
+            const content = String(rawContent ?? "").trim();
+            if (!content) return null;
 
-                const newComment = {
-                    ...res.data.data[0],
-                    children: [],
-                    likes: 0,
-                    dislikes: 0,
-                    liked: false,
-                };
+            const key = this._makeKey(videoId, content);
+            const now = Date.now();
 
-                const existingComments = this.commentsMap.get(videoId) || [];
-                this.commentsMap.set(videoId, [
-                    newComment,
-                    ...existingComments,
-                ]);
-            } catch (error) {
-                console.error("Error adding comment:", error);
-                throw error;
+            const lastAt = this.lastSubmittedKeyAt.get(key);
+
+            if (lastAt && now - lastAt < this.cooldownMs) {
+                return null;
             }
+
+            if (this.pendingPosts.has(key)) {
+                return this.pendingPosts.get(key);
+            }
+
+            const authStore = useAuthStore();
+            const tempId = `temp-${now}-${Math.random().toString(36).slice(2)}`;
+            const tempComment = {
+                id: tempId,
+                account: authStore.getUser,
+                caption: content,
+                created_at: Date.now(),
+                children: [],
+                likes: 0,
+                dislikes: 0,
+                liked: false,
+                pending: true,
+            };
+
+            const existing = this.getComments(videoId);
+            const alreadyTemp = existing.some(
+                (c) => c.pending && c.caption === content,
+            );
+            if (!alreadyTemp) {
+                this._unshiftComment(videoId, tempComment);
+            }
+
+            const promise = (async () => {
+                try {
+                    const axiosInstance = axios.getAxiosInstance();
+                    const res = await axiosInstance.post(
+                        `/api/v1/video/comments/${String(videoId)}`,
+                        { comment: content },
+                        {
+                            // todo: Add idempotency support
+                            // headers: { 'Idempotency-Key': key },
+                        },
+                    );
+
+                    const payload = res?.data?.data?.[0] ?? {};
+                    const serverComment = {
+                        ...payload,
+                        children: [],
+                        likes: payload?.likes ?? 0,
+                        dislikes: payload?.dislikes ?? 0,
+                        liked: payload?.liked ?? false,
+                        pending: false,
+                    };
+
+                    this._replaceTemp(videoId, tempId, serverComment);
+
+                    this.lastSubmittedKeyAt.set(key, Date.now());
+
+                    return serverComment;
+                } catch (err) {
+                    this._removeById(videoId, tempId);
+                    throw err;
+                } finally {
+                    this.pendingPosts.delete(key);
+                }
+            })();
+
+            this.pendingPosts.set(key, promise);
+            return promise;
         },
 
         async addCommentReply(videoId, parentId, content) {
