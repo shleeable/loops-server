@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\VideoResource;
 use App\Models\Video;
 use App\Services\FeedService;
+use App\Services\UserActivityService;
 use Illuminate\Http\Request;
 
 class FeedController extends Controller
@@ -32,6 +33,7 @@ class FeedController extends Controller
         if ($request->user()->cannot('viewAny', [Video::class])) {
             return $this->error('Please finish setting up your account', 403);
         }
+        app(UserActivityService::class)->markActive($request->user());
         FeedService::enforcePaginationLimit($request);
         $feed = FeedService::getVideoFeed($request->user()->profile_id, 5);
 

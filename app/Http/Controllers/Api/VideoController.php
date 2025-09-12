@@ -28,6 +28,7 @@ use App\Models\VideoLike;
 use App\Services\AccountService;
 use App\Services\LikeService;
 use App\Services\NotificationService;
+use App\Services\UserActivityService;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -48,6 +49,7 @@ class VideoController extends Controller
     public function store(StoreVideoRequest $request)
     {
         $pid = $request->user()->profile_id;
+        app(UserActivityService::class)->markActive($request->user());
         $profile = Profile::findOrFail($pid);
         $videoFile = $request->file('video');
         $videoMeta = [

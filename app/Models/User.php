@@ -31,6 +31,7 @@ class User extends Authenticatable
         'can_follow',
         'can_comment',
         'can_like',
+        'last_active_at',
     ];
 
     /**
@@ -46,6 +47,10 @@ class User extends Authenticatable
         'device',
         'push_token_verified_at',
         'admin_note',
+        'two_factor_secret',
+        'two_factor_backups',
+        'email_verification_token',
+        'last_active_at',
     ];
 
     /**

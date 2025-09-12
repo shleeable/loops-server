@@ -14,10 +14,20 @@ use App\Http\Controllers\Api\VideoController;
 use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailChangeController;
+use App\Http\Controllers\NodeInfoController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\UserRegisterVerifyController;
 use App\Http\Middleware\AdminOnlyAccess;
 use Illuminate\Support\Facades\Route;
+
+// NodeInfo endpoints
+Route::group(['prefix' => 'nodeinfo'], function () {
+    Route::get('2.0', [NodeInfoController::class, 'nodeInfo20'])
+        ->name('nodeinfo.2.0');
+
+    Route::get('2.1', [NodeInfoController::class, 'nodeInfo21'])
+        ->name('nodeinfo.2.1');
+});
 
 Route::get('/v1/web/report-rules', [WebPublicController::class, 'reportTypes']);
 

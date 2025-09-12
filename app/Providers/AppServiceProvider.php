@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Services\UserActivityService;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -33,6 +36,10 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(10)->by('minute:'.$request->user()->id),
                 Limit::perDay(200)->by('day:'.$request->user()->id),
             ];
+        });
+
+        Event::listen(Login::class, function ($e) {
+            app(UserActivityService::class)->markActive($e->user);
         });
     }
 }
