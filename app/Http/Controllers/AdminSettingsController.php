@@ -87,6 +87,7 @@ class AdminSettingsController extends Controller
             'branding.primaryColor',
             'branding.secondaryColor',
             'branding.accentColor',
+            'branding.customCSS',
             'media.maxVideoSize',
             'media.maxImageSize',
             'media.maxVideoDuration',

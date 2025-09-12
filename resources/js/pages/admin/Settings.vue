@@ -314,134 +314,6 @@
                     </div>
                 </div>
 
-                <div v-if="activeTab === 'brandingOLD'" class="space-y-8">
-                    <div>
-                        <h3
-                            class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
-                        >
-                            Logo & Brand Assets
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                                    >Logo</label
-                                >
-                                <div
-                                    class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
-                                >
-                                    <div class="space-y-1 text-center">
-                                        <svg
-                                            v-if="!settings.branding.logo"
-                                            class="mx-auto h-12 w-12 text-gray-400"
-                                            stroke="currentColor"
-                                            fill="none"
-                                            viewBox="0 0 48 48"
-                                        >
-                                            <path
-                                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                                stroke-width="2"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            />
-                                        </svg>
-                                        <img
-                                            v-else
-                                            :src="settings.branding.logo"
-                                            alt="Logo"
-                                            class="mx-auto h-20 w-auto"
-                                        />
-                                        <div
-                                            class="flex justify-center text-sm text-gray-600 dark:text-gray-400"
-                                        >
-                                            <label
-                                                class="relative cursor-pointer text-center bg-white dark:bg-gray-700 rounded-md font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-                                            >
-                                                <div>Upload a file</div>
-                                                <input
-                                                    type="file"
-                                                    class="sr-only"
-                                                    @change="
-                                                        handleFileUpload(
-                                                            $event,
-                                                            'logo',
-                                                        )
-                                                    "
-                                                    accept="image/*"
-                                                />
-                                            </label>
-                                        </div>
-                                        <p
-                                            class="text-xs text-gray-500 dark:text-gray-400"
-                                        >
-                                            PNG, or JPG up to 2MB
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                                    >Favicon</label
-                                >
-                                <div
-                                    class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
-                                >
-                                    <div class="space-y-1 text-center">
-                                        <svg
-                                            v-if="!settings.branding.favicon"
-                                            class="mx-auto h-12 w-12 text-gray-400"
-                                            stroke="currentColor"
-                                            fill="none"
-                                            viewBox="0 0 48 48"
-                                        >
-                                            <path
-                                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                                stroke-width="2"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            />
-                                        </svg>
-                                        <img
-                                            v-else
-                                            :src="settings.branding.favicon"
-                                            alt="Favicon"
-                                            class="mx-auto h-8 w-8"
-                                        />
-                                        <div
-                                            class="flex text-sm text-gray-600 dark:text-gray-400"
-                                        >
-                                            <label
-                                                class="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-                                            >
-                                                <span>Upload a file</span>
-                                                <input
-                                                    type="file"
-                                                    class="sr-only"
-                                                    @change="
-                                                        handleFileUpload(
-                                                            $event,
-                                                            'favicon',
-                                                        )
-                                                    "
-                                                    accept="image/*"
-                                                />
-                                            </label>
-                                            <p class="pl-1">or drag and drop</p>
-                                        </div>
-                                        <p
-                                            class="text-xs text-gray-500 dark:text-gray-400"
-                                        >
-                                            ICO, PNG 32x32px
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div v-if="activeTab === 'branding'" class="space-y-8">
                     <div>
                         <h3
@@ -631,6 +503,94 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div>
+                            <h3
+                                class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
+                            >
+                                Custom Styling
+                            </h3>
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                    >Custom CSS</label
+                                >
+                                <textarea
+                                    v-model="settings.branding.customCSS"
+                                    rows="8"
+                                    placeholder="/* Add your custom CSS here */"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm resize-none"
+                                ></textarea>
+                                <p
+                                    class="mt-2 text-sm text-gray-500 dark:text-gray-400"
+                                >
+                                    This CSS will be applied to your instance's
+                                    frontend. Use with caution.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 flex items-center gap-3">
+                            <button
+                                @click="onSaveCSS"
+                                :disabled="saving || cssDeleting"
+                                class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white font-medium shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <svg
+                                    v-if="saving && !cssDeleting"
+                                    class="mr-2 h-4 w-4 animate-spin"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                >
+                                    <circle
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        stroke-width="4"
+                                        opacity=".25"
+                                    />
+                                    <path
+                                        d="M22 12a10 10 0 0 1-10 10"
+                                        stroke="currentColor"
+                                        stroke-width="4"
+                                    />
+                                </svg>
+                                <span>Save changes</span>
+                            </button>
+
+                            <button
+                                @click="onDeleteCSS"
+                                :disabled="
+                                    cssDeleting || !settings.branding.customCSS
+                                "
+                                class="inline-flex items-center rounded-lg border border-red-300 px-4 py-2 text-red-600 hover:bg-red-50 dark:border-red-500/40 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <svg
+                                    v-if="cssDeleting"
+                                    class="mr-2 h-4 w-4 animate-spin"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                >
+                                    <circle
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        stroke-width="4"
+                                        opacity=".25"
+                                    />
+                                    <path
+                                        d="M22 12a10 10 0 0 1-10 10"
+                                        stroke="currentColor"
+                                        stroke-width="4"
+                                    />
+                                </svg>
+                                <span>Delete CSS</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1589,6 +1549,7 @@ const logoDeleting = ref(false);
 const faviconDeleting = ref(false);
 const logoInput = ref(null);
 const faviconInput = ref(null);
+const cssDeleting = ref(null);
 
 const editorTheme = ref(isDark.value ? "dark" : "light");
 const editorToolbars = [
@@ -1983,6 +1944,22 @@ const removeInstance = (type, index) => {
     } else {
         settings.federation.blockedInstances.splice(index, 1);
     }
+};
+
+const onSaveCSS = async () => {
+    cssDeleting.value = null;
+    await saveSettings();
+    await nextTick();
+    window.location.reload();
+};
+
+const onDeleteCSS = async () => {
+    cssDeleting.value = true;
+    await nextTick();
+    settings.branding.customCSS = null;
+    await nextTick();
+    await saveSettings();
+    window.location.reload();
 };
 
 const saveSettings = async () => {

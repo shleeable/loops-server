@@ -14,7 +14,8 @@
     <meta property="og:type" content="website" />
     <meta name="twitter:title" content="{{ $title }}" />
     <meta name="twitter:description" content="{{ $desc }}" />
-    @vite(['resources/js/app.js'])
+    @vite(['resources/js/app.js']){!!App\Services\FrontendService::getCustomCss();!!}
+
     <script type="text/javascript">
     window.appConfig = {!! \App\Services\FrontendService::getAppData() !!};
     window._navi = {!!App\Services\PageService::getActiveSideLinks();!!};

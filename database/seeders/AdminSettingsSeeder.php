@@ -126,7 +126,7 @@ class AdminSettingsSeeder extends Seeder
                 'key' => 'branding.customCSS',
                 'value' => '',
                 'type' => 'string',
-                'is_public' => false,
+                'is_public' => true,
                 'description' => 'Custom CSS to be applied to the frontend',
             ],
 

@@ -64,4 +64,20 @@ class FrontendService
 
         return data_get($res, 'branding.favicon', url('/favicon.png'));
     }
+
+    public static function getCustomCss()
+    {
+        $res = self::getCache();
+
+        $css = ! empty(data_get($res, 'branding.customCSS'));
+
+        if (! $css) {
+            return;
+        }
+
+        $styles = preg_replace('/\R+/', ' ', data_get($res, 'branding.customCSS'));
+
+        return '<style>'.$styles.'</style>';
+
+    }
 }

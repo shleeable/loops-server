@@ -30,6 +30,7 @@ class SettingsFileService
             'branding' => [
                 'logo' => $settings['branding.logo'] ?? '/nav-logo.png',
                 'favicon' => $settings['branding.favicon'] ?? '/favicon.png',
+                'customCSS' => $settings['branding.customCSS'] ?? false,
             ],
             'media' => [
                 'max_video_size' => $settings['media.maxVideoSize'] ?? 100,

@@ -48,7 +48,7 @@
                     <router-link
                         :to="mainLink.path"
                         activeClass="text-[#F02C56] dark:text-slate-300"
-                        class="dark:text-slate-500"
+                        class="dark:text-slate-500 dbi"
                         @click="handleLinkClick"
                     >
                         <SidebarNavItem
@@ -151,6 +151,7 @@
                     <div class="pt-1 pr-4 font-medium flex">
                         <router-link
                             :to="link.path"
+                            class="dfi"
                             activeClass="text-black dark:text-slate-300"
                             >{{ link.name }}</router-link
                         >
@@ -186,17 +187,17 @@
             </div>
 
             <div class="flex justify-between flex-col gap-3 px-3 mt-5">
-                <div class="text-[10.5px] text-gray-400 font-light">
+                <div class="text-[10.5px] text-gray-400 font-light dbi">
                     {{ getCopyright() }}
                 </div>
                 <div class="flex flex-col">
                     <a
-                        class="text-[10.5px] text-gray-400 hover:text-red-400"
+                        class="text-[10.5px] text-gray-400 hover:text-red-400 dbi"
                         href="https://joinloops.org"
                         >{{ t("nav.poweredBy") }} Loops</a
                     >
                     <a
-                        class="text-[8px] text-gray-400 hover:text-red-400"
+                        class="text-[8px] text-gray-400 hover:text-red-400 dbi"
                         href="https://github.com/joinloops/loops-server"
                         target="_blank"
                         >v{{ appVersion() }}</a

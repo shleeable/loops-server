@@ -86,3 +86,11 @@ a {
         @apply mb-8 text-sm text-gray-500 dark:text-gray-400;
     }
 }
+
+.dbi {
+    display: block !important;
+}
+
+.dfi {
+    display: flex !important;
+}
