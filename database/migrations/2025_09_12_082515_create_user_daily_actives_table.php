@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('user_daily_actives', function (Blueprint $table) {
             $table->date('day');
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->primary(['day','user_id']);
-            $table->index(['day','user_id']);
+            $table->primary(['day', 'user_id']);
+            $table->index(['day', 'user_id']);
         });
     }
 
