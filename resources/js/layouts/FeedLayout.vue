@@ -4,7 +4,7 @@
         @openLogin="openLoginModal"
     />
     <div
-        class="flex justify-between mx-auto w-full bg-white dark:bg-slate-950 px-0"
+        class="flex justify-between mx-auto w-full bg-white dark:bg-slate-950 px-0 loops-feed-layout"
     >
         <div class="pt-[80px] lg:px-2.5">
             <Sidebar

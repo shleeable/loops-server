@@ -1,6 +1,6 @@
 <template>
     <div
-        class="fixed bg-white dark:bg-slate-950 flex items-center w-full h-[70px] z-10 border-b border-gray-200 dark:border-slate-800"
+        class="fixed bg-white dark:bg-slate-950 flex items-center w-full h-[70px] z-10 border-b border-gray-200 dark:border-slate-800 loops-layout-header"
     >
         <div
             class="flex items-center justify-between w-full px-4 lg:px-6 mx-auto"

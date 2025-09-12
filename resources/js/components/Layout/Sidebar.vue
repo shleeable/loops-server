@@ -7,7 +7,7 @@
 
     <div
         :class="[
-            'bg-white dark:bg-slate-950 lg:border-r-0 border-r dark:border-r-slate-800 overflow-auto',
+            'bg-white dark:bg-slate-950 lg:border-r-0 border-r dark:border-r-slate-800 overflow-auto loops-layout-sidebar',
             isMobile
                 ? `fixed top-0 left-0 h-screen w-[280px] transition-transform duration-300 ease-in-out z-[60] ${isOpen ? 'translate-x-0' : '-translate-x-full'}`
                 : 'h-full w-[75px] lg:w-[260px]',
