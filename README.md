@@ -1,5 +1,12 @@
 # Loops
 
+<p align="center">
+  <a style="text-decoration:none" href="https://github.com/joinloops/loops-server/releases">
+    <img src="https://img.shields.io/github/release/joinloops/loops-server.svg" alt="Release" /></a>
+  <a style="text-decoration:none" href="https://crowdin.com/project/loops">
+    <img src="https://badges.crowdin.net/loops/localized.svg" alt="Crowdin" /></a>
+</p>
+
 The [federated](https://fediverse.info) short video sharing platform.
 
 <p align="center">
