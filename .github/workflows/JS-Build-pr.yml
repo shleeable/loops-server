@@ -1,4 +1,4 @@
-name: JS - ESLint
+name: JS - Build
 
 on: [pull_request]
 
