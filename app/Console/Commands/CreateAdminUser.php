@@ -62,7 +62,6 @@ class CreateAdminUser extends Command
                         return 'Username already exists.';
                     }
 
-                    return null;
                 }
             );
 
@@ -83,7 +82,6 @@ class CreateAdminUser extends Command
                         return 'Email address already exists.';
                     }
 
-                    return null;
                 }
             );
 
