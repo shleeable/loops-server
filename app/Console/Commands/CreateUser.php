@@ -55,7 +55,6 @@ class CreateUser extends Command
                         return 'Username already exists.';
                     }
 
-                    return null;
                 }
             );
 
@@ -76,7 +75,6 @@ class CreateUser extends Command
                         return 'Email address already exists.';
                     }
 
-                    return null;
                 }
             );
 
