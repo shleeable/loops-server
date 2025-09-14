@@ -43,6 +43,8 @@ class Video extends Model
     /**
      * Get the attributes that should be cast.
      *
+     * @property array<string, mixed>|null $media_metadata
+     *
      * @return array<string, string>
      */
     protected function casts(): array
