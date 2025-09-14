@@ -8,7 +8,7 @@ use Exception;
 
 class FeedService
 {
-    public static function getAccountFeed($profileId, $limit, $sort)
+    public static function getAccountFeed($profileId, $limit = 10, $sort = 'Latest')
     {
         $feed = Video::whereProfileId($profileId)
             ->whereStatus(2)
