@@ -6,6 +6,7 @@ php-version = "8.4.0"
 paths = ["app/", "config/",  "database/", "database/", "tests/"]
 includes = []
 excludes = ["vendor/", "bootstrap/cache/"]
+extensions = ["php"]
 
 [formatter]
 print-width = 320
