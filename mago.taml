@@ -9,6 +9,7 @@ excludes = ["vendor/**", "bootstrap/cache/"]
 extensions = ["php"]
 
 [formatter]
+excludes = ["vendor/**", "bootstrap/cache/"]
 print-width = 320
 tab-width = 4
 use-tabs = false
