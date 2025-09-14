@@ -1,11 +1,11 @@
 # Welcome to Mago!
 # For full documentation, see https://mago.carthage.software/tools/overview
-php-version = "8.3.0"
+php-version = "8.4.0"
 
 [source]
-paths = ["app/", "database/factories/", "database/seeders/", "tests/"]
-includes = ["vendor"]
-excludes = []
+paths = ["app/", "config/",  "database/", "database/", "tests/"]
+includes = []
+excludes = ["vendor/", "bootstrap/cache/"]
 
 [formatter]
 print-width = 320
