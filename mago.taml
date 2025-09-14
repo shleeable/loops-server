@@ -3,9 +3,9 @@
 php-version = "8.4.0"
 
 [source]
-paths = ["app/", "config/",  "database/", "database/", "tests/"]
+paths = ["app", "config",  "database", "database", "tests"]
 includes = []
-excludes = ["vendor/", "bootstrap/cache/"]
+excludes = ["vendor/**", "bootstrap/cache/"]
 extensions = ["php"]
 
 [formatter]
