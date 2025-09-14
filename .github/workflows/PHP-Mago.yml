@@ -31,6 +31,6 @@ jobs:
 
       - name: Run Mago
         run: |
-          ./vendor/bin/mago format --dry-run
-          ./vendor/bin/mago lint --reporting-format=github
-          ./vendor/bin/mago analyze --reporting-format=github
+          mago format --dry-run
+          mago lint --reporting-format=github
+          mago analyze --reporting-format=github
