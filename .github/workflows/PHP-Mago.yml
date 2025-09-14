@@ -31,6 +31,6 @@ jobs:
 
       - name: Run Mago
         run: |
-          mago --config mago.taml format --dry-run .
-          mago --config mago.taml lint --reporting-format=github .
-          mago --config mago.taml analyze --reporting-format=github .
+          mago --config mago.taml format --dry-run
+          mago --config mago.taml lint --reporting-format=github
+          mago --config mago.taml analyze --reporting-format=github
