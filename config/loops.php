@@ -23,4 +23,10 @@ return [
             'per_day' => env('LOOPS_UPLOADS_MAX_USER_PER_DAY', false),
         ],
     ],
+
+    'federation' => [
+        'delivery' => [
+            'timeout' => env('LOOPS_FED_DELIVERY_TIMEOUT', 10),
+        ],
+    ],
 ];
