@@ -17,12 +17,17 @@ class CreateAdminUser extends Command
     /**
      * The name and signature of the console command.
      */
-    protected $signature = 'create-admin-account';
+    protected $signature = 'create-admin-account
+                          {--name= : Full name of the admin user}
+                          {--username= : Username for the admin user}
+                          {--email= : Email address for the admin user}
+                          {--password= : Password for the admin user}
+                          {--force : Skip confirmation prompt}';
 
     /**
      * The console command description.
      */
-    protected $description = 'Create a new admin user for the Loops application';
+    protected $description = 'Create a new admin user with optional CLI arguments';
 
     /**
      * Execute the console command.
@@ -33,7 +38,7 @@ class CreateAdminUser extends Command
         $this->newLine();
 
         try {
-            $name = text(
+            $name = $this->option('name') ?: text(
                 label: 'Full Name',
                 placeholder: 'Enter the admin\'s full name',
                 required: true,
@@ -44,48 +49,52 @@ class CreateAdminUser extends Command
                 }
             );
 
-            $username = text(
+            if ($this->option('name')) {
+                $nameValidation = $this->validateNameForCli($name);
+                if ($nameValidation !== true) {
+                    $this->error($nameValidation);
+
+                    return Command::FAILURE;
+                }
+            }
+
+            $username = $this->option('username') ?: text(
                 label: 'Username',
                 placeholder: 'Enter a unique username',
                 required: true,
                 validate: function (string $value) {
-                    if (strlen($value) < 3) {
-                        return 'Username must be at least 3 characters.';
-                    }
-                    if (strlen($value) > 50) {
-                        return 'Username must not exceed 50 characters.';
-                    }
-                    if (! preg_match('/^[a-zA-Z0-9_-]+$/', $value)) {
-                        return 'Username can only contain letters, numbers, underscores, and hyphens.';
-                    }
-                    if (User::where('username', $value)->exists()) {
-                        return 'Username already exists.';
-                    }
-
+                    return $this->validateUsernameForPrompt($value);
                 }
             );
 
-            $email = text(
+            if ($this->option('username')) {
+                $usernameValidation = $this->validateUsernameForCli($username);
+                if ($usernameValidation !== true) {
+                    $this->error($usernameValidation);
+
+                    return Command::FAILURE;
+                }
+            }
+
+            $email = $this->option('email') ?: text(
                 label: 'Email Address',
                 placeholder: 'admin@example.com',
                 required: true,
                 validate: function (string $value) {
-                    $validator = Validator::make(['email' => $value], [
-                        'email' => 'required|email|max:255',
-                    ]);
-
-                    if ($validator->fails()) {
-                        return 'Please enter a valid email address.';
-                    }
-
-                    if (User::where('email', $value)->exists()) {
-                        return 'Email address already exists.';
-                    }
-
+                    return $this->validateEmailForPrompt($value);
                 }
             );
 
-            $password = password(
+            if ($this->option('email')) {
+                $emailValidation = $this->validateEmailForCli($email);
+                if ($emailValidation !== true) {
+                    $this->error($emailValidation);
+
+                    return Command::FAILURE;
+                }
+            }
+
+            $password = $this->option('password') ?: password(
                 label: 'Password',
                 placeholder: 'Enter a secure password',
                 required: true,
@@ -95,14 +104,25 @@ class CreateAdminUser extends Command
                 }
             );
 
-            $confirmPassword = password(
-                label: 'Confirm Password',
-                placeholder: 'Re-enter the password',
-                required: true,
-                validate: fn (string $value) => $value !== $password
-                    ? 'Password confirmation does not match.'
-                    : null
-            );
+            if ($this->option('password')) {
+                $passwordValidation = $this->validatePasswordForCli($password);
+                if ($passwordValidation !== true) {
+                    $this->error($passwordValidation);
+
+                    return Command::FAILURE;
+                }
+            }
+
+            if (! $this->option('password')) {
+                $confirmPassword = password(
+                    label: 'Confirm Password',
+                    placeholder: 'Re-enter the password',
+                    required: true,
+                    validate: fn (string $value) => $value !== $password
+                        ? 'Password confirmation does not match.'
+                        : null
+                );
+            }
 
             $this->newLine();
             $this->info('Admin User Summary:');
@@ -116,15 +136,17 @@ class CreateAdminUser extends Command
                 ]
             );
 
-            $confirmed = confirm(
-                label: 'Create this admin user?',
-                default: true
-            );
+            if (! $this->option('force')) {
+                $confirmed = confirm(
+                    label: 'Create this admin user?',
+                    default: true
+                );
 
-            if (! $confirmed) {
-                $this->warn('Admin user creation cancelled.');
+                if (! $confirmed) {
+                    $this->warn('Admin user creation cancelled.');
 
-                return Command::FAILURE;
+                    return Command::FAILURE;
+                }
             }
 
             DB::transaction(function () use ($name, $username, $email, $password) {
@@ -157,5 +179,114 @@ class CreateAdminUser extends Command
 
             return Command::FAILURE;
         }
+    }
+
+    /**
+     * Validate the name field for CLI arguments
+     */
+    private function validateNameForCli(string $name): string|bool
+    {
+        if (strlen($name) < 2) {
+            return 'Name must be at least 2 characters.';
+        }
+        if (strlen($name) > 255) {
+            return 'Name must not exceed 255 characters.';
+        }
+
+        return true;
+    }
+
+    /**
+     * Validate the username field for CLI arguments
+     */
+    private function validateUsernameForCli(string $username): string|bool
+    {
+        if (strlen($username) < 3) {
+            return 'Username must be at least 3 characters.';
+        }
+        if (strlen($username) > 50) {
+            return 'Username must not exceed 50 characters.';
+        }
+        if (! preg_match('/^[a-zA-Z0-9_-]+$/', $username)) {
+            return 'Username can only contain letters, numbers, underscores, and hyphens.';
+        }
+        if (User::where('username', $username)->exists()) {
+            return 'Username already exists.';
+        }
+
+        return true;
+    }
+
+    /**
+     * Validate the username field for prompts
+     */
+    private function validateUsernameForPrompt(string $username): ?string
+    {
+        if (strlen($username) < 3) {
+            return 'Username must be at least 3 characters.';
+        }
+        if (strlen($username) > 30) {
+            return 'Username must not exceed 30 characters.';
+        }
+        if (! preg_match('/^[a-zA-Z0-9_-]+$/', $username)) {
+            return 'Username can only contain letters, numbers, underscores, and hyphens.';
+        }
+        if (User::where('username', $username)->exists()) {
+            return 'Username already exists.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Validate the email field for CLI arguments
+     */
+    private function validateEmailForCli(string $email): string|bool
+    {
+        $validator = Validator::make(['email' => $email], [
+            'email' => 'required|email|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return 'Please enter a valid email address.';
+        }
+
+        if (User::where('email', $email)->exists()) {
+            return 'Email address already exists.';
+        }
+
+        return true;
+    }
+
+    /**
+     * Validate the email field for prompts
+     */
+    private function validateEmailForPrompt(string $email): ?string
+    {
+        $validator = Validator::make(['email' => $email], [
+            'email' => 'required|email|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return 'Please enter a valid email address.';
+        }
+
+        if (User::where('email', $email)->exists()) {
+            return 'Email address already exists.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Validate the password field for CLI arguments
+     */
+    private function validatePasswordForCli(string $password): string|bool
+    {
+        if (strlen($password) < 8) {
+            return 'Password must be at least 8 characters.';
+        }
+
+        return true;
     }
 }
