@@ -32,6 +32,16 @@ class Video extends Model
      **/
 
     /**
+     * Visibility Bitmask
+     * 0 = Unused
+     * 1 = Public
+     * 2 = Unused
+     * 3 = Unused
+     * 4 = Unlisted (not in feeds, direct link only)
+     * 5 = Followers only
+     **/
+
+    /**
      * Indicates if the IDs are auto-incrementing.
      *
      * @var bool
@@ -54,6 +64,7 @@ class Video extends Model
             'profile_id' => 'string',
             'is_sensitive' => 'boolean',
             'media_metadata' => 'array',
+            'is_local' => 'boolean',
         ];
     }
 
@@ -87,7 +98,7 @@ class Video extends Model
 
     public function thumb()
     {
-        $thumb = 'https://loopsusercontent.com/videos/video-placeholder.jpg';
+        $thumb = url('/storage/videos/video-placeholder.jpg');
         if ($this->has_thumb) {
             $ext = pathinfo($this->vid, PATHINFO_EXTENSION);
             $url = str_replace('.'.$ext, '.jpg', $this->vid);
@@ -95,6 +106,11 @@ class Video extends Model
         }
 
         return $thumb;
+    }
+
+    public function getObjectUrl()
+    {
+        return url('/ap/users/'.$this->profile_id.'/video/'.$this->id);
     }
 
     public function profile(): BelongsTo
