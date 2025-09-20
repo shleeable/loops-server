@@ -52,12 +52,17 @@ class Comment extends Model
         return $this->belongsTo(Profile::class);
     }
 
+    public function getObjectUrl()
+    {
+        return url('/ap/users/'.$this->profile_id.'/comment/'.$this->id);
+    }
+
     public function shareUrl(): string
     {
         $vid = HashidService::encode($this->video_id);
         $cid = HashidService::encode($this->id);
 
-        return "/v/{$vid}?c={$cid}";
+        return "/v/{$vid}?cid={$cid}";
     }
 
     public function video()
