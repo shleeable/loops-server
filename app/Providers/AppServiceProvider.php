@@ -20,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton('app_version', function () {
             return '1.0.0-alpha.2';
         });
+
+        $this->app->singleton('user_agent', function () {
+            return 'LoopsServer/1.0';
+        });
     }
 
     /**
