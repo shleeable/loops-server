@@ -24,8 +24,8 @@ Disallow: /password/reset/*
 
 Disallow: /api/
 
-Allow: /api/nodeinfo/2.0
-Allow: /api/nodeinfo/2.1
+Allow: /nodeinfo/2.0
+Allow: /nodeinfo/2.1
 Allow: /api/v1/page/content
 Allow: /api/v1/video/
 Allow: /api/v1/account/username/
