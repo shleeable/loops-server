@@ -4,6 +4,7 @@
             v-bind="$attrs"
             :disabled="loading || disabled"
             :class="buttonClasses"
+            :type="buttonType"
             class="relative overflow-hidden transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 cursor-pointer disabled:cursor-not-allowed group"
         >
             <div
@@ -66,6 +67,10 @@ export default {
         disabled: {
             type: Boolean,
             default: false,
+        },
+        buttonType: {
+            type: String,
+            default: "button",
         },
     },
     setup(props) {
