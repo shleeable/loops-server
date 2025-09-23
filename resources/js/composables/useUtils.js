@@ -3,6 +3,39 @@ import { useRouter } from "vue-router";
 export function useUtils() {
     const router = useRouter();
 
+    const normalizeDomain = (input = "") => {
+        let d = String(input).trim().toLowerCase();
+        d = d.replace(/^https?:\/\//i, "");
+        d = d.replace(/^[a-z]+:\/\//i, "");
+        d = d.replace(/@.*/, "");
+        d = d.replace(/\/.*$/, "");
+        d = d.replace(/\?.*$/, "");
+        d = d.replace(/#.*$/, "");
+        d = d.replace(/:\d+$/, "");
+        d = d.replace(/^\.+|\.+$/g, "");
+        return d;
+    };
+
+    const isValidDomain = (domain) => {
+        if (!domain) return false;
+        if (domain.length > 253) return false;
+        if (domain.includes("..")) return false;
+
+        const labels = domain.split(".");
+        if (labels.length < 2) return false;
+
+        const labelRe = /^(?!-)(?:[a-z0-9-]{1,63})(?<!-)$/i;
+
+        for (const label of labels) {
+            if (!labelRe.test(label)) return false;
+            if (label.includes("_")) return false;
+        }
+
+        if (/^\d+$/.test(labels[labels.length - 1])) return false;
+
+        return true;
+    };
+
     const formatNumber = (num) => {
         return new Intl.NumberFormat().format(num);
     };
@@ -55,6 +88,18 @@ export function useUtils() {
         const end = str.substring(str.length - endLen);
 
         return start + separator + end;
+    };
+
+    const textTruncate = (text, maxLength = 50, suffix = "...") => {
+        if (!text) {
+            return "";
+        }
+
+        if (text.length <= maxLength) {
+            return text;
+        }
+
+        return text.slice(0, maxLength) + suffix;
     };
 
     const formatTimeAgo = (dateString, style = "narrow", locale = "en") => {
@@ -189,6 +234,8 @@ export function useUtils() {
     };
 
     return {
+        normalizeDomain,
+        isValidDomain,
         formatNumber,
         formatCount,
         formatDate,
@@ -198,6 +245,7 @@ export function useUtils() {
         formatTimeAgo,
         formatDuration,
         formatBytes,
+        textTruncate,
         goBack,
     };
 }
