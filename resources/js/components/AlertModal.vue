@@ -10,10 +10,9 @@
         >
             <div
                 v-if="isVisible"
-                class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                class="fixed inset-0 z-70 flex items-center justify-center p-4"
                 @click="handleBackdropClick"
             >
-                <!-- Backdrop -->
                 <div
                     class="absolute inset-0 bg-black/50 dark:bg-black/70"
                 ></div>
@@ -35,7 +34,6 @@
                         :aria-describedby="bodyId"
                         @click.stop
                     >
-                        <!-- Close button (only show if persistModal is true) -->
                         <button
                             v-if="persistModal"
                             @click="close"
