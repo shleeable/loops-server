@@ -1,27 +1,69 @@
 <template>
     <button
-        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-        :class="
-            modelValue
-                ? 'bg-[#F02C56] dark:bg-[#E91E63]'
-                : 'bg-gray-200 dark:bg-gray-600'
-        "
-        @click="$emit('update:modelValue', !modelValue)"
+        type="button"
+        :class="[
+            'relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-1 focus:ring-offset-2',
+            toggleClasses,
+            { 'opacity-50 cursor-not-allowed': disabled },
+        ]"
+        :disabled="disabled"
+        @click="toggle"
+        role="switch"
+        :aria-checked="modelValue"
     >
         <span
-            class="inline-block h-4 w-4 transform rounded-full transition-all"
             :class="[
+                'inline-block w-4 h-4 transform bg-white rounded-full transition-transform shadow-lg ring-0',
                 modelValue ? 'translate-x-6' : 'translate-x-1',
-                'bg-white dark:bg-gray-100',
             ]"
         />
     </button>
 </template>
 
 <script setup>
-defineProps({
-    modelValue: Boolean,
+import { computed } from "vue";
+
+const props = defineProps({
+    modelValue: {
+        type: Boolean,
+        default: false,
+    },
+    disabled: {
+        type: Boolean,
+        default: false,
+    },
+    variant: {
+        type: String,
+        default: "default",
+        validator: (value) => ["default", "danger", "warning"].includes(value),
+    },
 });
 
-defineEmits(["update:modelValue"]);
+const emit = defineEmits(["update:modelValue"]);
+
+const toggleClasses = computed(() => {
+    const baseClasses = {
+        default: {
+            enabled: "bg-blue-600 focus:ring-blue-500",
+            disabled: "bg-gray-200 dark:bg-gray-700",
+        },
+        danger: {
+            enabled: "bg-[#F02C56] dark:bg-[#E91E63] focus:ring-red-500",
+            disabled: "bg-gray-200 dark:bg-gray-600",
+        },
+        warning: {
+            enabled: "bg-orange-500 focus:ring-orange-500",
+            disabled: "bg-gray-200 dark:bg-gray-700",
+        },
+    };
+
+    const variantClasses = baseClasses[props.variant];
+    return props.modelValue ? variantClasses.enabled : variantClasses.disabled;
+});
+
+const toggle = () => {
+    if (!props.disabled) {
+        emit("update:modelValue", !props.modelValue);
+    }
+};
 </script>
