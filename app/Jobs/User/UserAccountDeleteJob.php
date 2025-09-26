@@ -61,7 +61,7 @@ class UserAccountDeleteJob implements ShouldQueue
                 return;
             }
 
-            $result = UserDeleteService::delete($this->userId, $this->forceDelete);
+            // $result = UserDeleteService::delete($this->userId, $this->forceDelete);
         } catch (Exception $exception) {
             if (config('logging.dev_log')) {
                 Log::error('User account deletion failed', [
