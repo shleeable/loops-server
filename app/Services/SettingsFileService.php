@@ -24,7 +24,7 @@ class SettingsFileService
         $config = [
             'app' => [
                 'name' => $settings['general.instanceName'] ?? config('app.name'),
-                'url' => $settings['general.instanceUrl'] ?? config('app.url'),
+                'url' => config('app.url'),
                 'description' => $settings['general.instanceDescription'] ?? '',
             ],
             'branding' => [

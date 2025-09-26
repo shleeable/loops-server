@@ -78,8 +78,20 @@
                                 <input
                                     v-model="settings.general.instanceUrl"
                                     type="url"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    disabled
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-200 dark:disabled:bg-gray-900 disabled:opacity-50"
                                 />
+                                <div
+                                    class="flex justify-between items-center mt-1"
+                                >
+                                    <div
+                                        class="text-xs text-gray-600 dark:text-gray-300"
+                                    >
+                                        To change, edit the
+                                        <code>APP_URL</code> in the
+                                        <kbd>.env</kbd> file.
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="mt-4">
@@ -879,13 +891,20 @@
                                     class="w-auto px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 >
                                     <option value="open">
-                                        Open (Allow all instances)
-                                    </option>
-                                    <option value="allowlist">
-                                        Allow List Only
+                                        Open (Allow all, except servers you
+                                        block)
                                     </option>
                                     <option value="blocklist">
-                                        Block List (Allow all except blocked)
+                                        Moderated (New servers must get approval
+                                        before ingesting activities)
+                                    </option>
+                                    <option value="allowlist">
+                                        Trusted (Only joinloops.org + manually
+                                        approved servers)
+                                    </option>
+                                    <option value="allowlist">
+                                        Lockdown (Only explicitly allowed
+                                        servers)
                                     </option>
                                 </select>
                             </div>
@@ -1530,7 +1549,7 @@ const tabs = [
     { id: "branding", name: "Branding", icon: PaintBrushIcon },
     // { id: 'media', name: 'Media', icon: PhotoIcon },
     { id: "pages", name: "Pages", icon: DocumentIcon },
-    // { id: 'federation', name: 'Federation', icon: GlobeAltIcon },
+    // { id: "federation", name: "Federation", icon: GlobeAltIcon },
 ];
 
 const activeTab = ref("general");
@@ -1971,6 +1990,8 @@ const saveSettings = async () => {
         alertModal("Error", error?.response?.data?.message);
     } finally {
         saving.value = false;
+        await nextTick();
+        window.location.reload();
     }
 };
 

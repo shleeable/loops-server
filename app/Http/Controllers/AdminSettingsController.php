@@ -55,7 +55,9 @@ class AdminSettingsController extends Controller
             foreach ($settings as $key => $value) {
                 $settingKey = "{$section}.{$key}";
                 $isPublic = $this->isPublicSetting($settingKey);
-
+                if ($section == 'general' && $key == 'instanceUrl') {
+                    $value = config('app.url');
+                }
                 AdminSetting::set(
                     $settingKey,
                     $value ?? '',
