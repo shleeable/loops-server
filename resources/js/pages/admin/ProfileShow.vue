@@ -1,5 +1,42 @@
 <template>
-    <LoadingSpinner v-if="isLoading || !profile" />
+    <LoadingSpinner v-if="isLoading" />
+
+    <div v-else-if="!isLoading && notFound" class="max-w-2xl mx-auto p-6">
+        <div class="text-center space-y-6">
+            <div class="flex justify-center">
+                <div
+                    class="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center"
+                >
+                    <UserIcon class="w-10 h-10 text-gray-400" />
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <h1
+                    class="text-2xl font-semibold text-gray-900 dark:text-gray-200"
+                >
+                    Profile Not Found
+                </h1>
+                <p class="text-gray-600 dark:text-gray-500 max-w-md mx-auto">
+                    The profile you're looking for doesn't exist or may have
+                    been removed. Please check the URL or search for a different
+                    profile.
+                </p>
+            </div>
+
+            <div
+                class="flex flex-col sm:flex-row gap-3 justify-center items-center"
+            >
+                <button
+                    @click="goBack"
+                    class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 hover:dark:bg-gray-950 transition-colors duration-200 cursor-pointer"
+                >
+                    <ArrowLeftIcon class="w-4 h-4 mr-2" />
+                    Go Back
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div v-else class="max-w-8xl mx-auto p-6 space-y-6">
         <div
@@ -65,6 +102,7 @@
                                 class="flex items-center space-x-3 mt-4 sm:mt-0"
                             >
                                 <button
+                                    v-if="profile.local"
                                     @click="toggleVerification"
                                     :class="[
                                         'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
@@ -79,6 +117,7 @@
                                             : "Verify Email"
                                     }}
                                 </button>
+                                <AnimatedButton> Suspend User </AnimatedButton>
                             </div>
                         </div>
                     </div>
@@ -222,8 +261,9 @@
                             </div>
                             <button
                                 @click="toggleCommentPermission"
+                                :disabled="profile.is_admin"
                                 :class="[
-                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
                                     profile.can_comment
                                         ? 'bg-blue-600'
                                         : 'bg-gray-200 dark:bg-gray-600',
@@ -263,8 +303,9 @@
                             </div>
                             <button
                                 @click="toggleVideoPermission"
+                                :disabled="profile.is_admin"
                                 :class="[
-                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
                                     profile.can_upload
                                         ? 'bg-blue-600'
                                         : 'bg-gray-200 dark:bg-gray-600',
@@ -304,8 +345,9 @@
                             </div>
                             <button
                                 @click="toggleFollowPermission"
+                                :disabled="profile.is_admin"
                                 :class="[
-                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
                                     profile.can_follow
                                         ? 'bg-blue-600'
                                         : 'bg-gray-200 dark:bg-gray-600',
@@ -345,8 +387,9 @@
                             </div>
                             <button
                                 @click="toggleLikePermission"
+                                :disabled="profile.is_admin"
                                 :class="[
-                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
                                     profile.can_like
                                         ? 'bg-blue-600'
                                         : 'bg-gray-200 dark:bg-gray-600',
@@ -505,6 +548,8 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { profilesApi } from "@/services/adminApi";
 import { useUtils } from "@/composables/useUtils";
+import { UserIcon, ArrowLeftIcon } from "@heroicons/vue/24/outline";
+
 const { formatNumber, formatDate } = useUtils();
 
 const router = useRouter();
@@ -512,14 +557,16 @@ const route = useRoute();
 const profile = ref(false);
 const adminNotes = ref();
 const isLoading = ref(false);
+const notFound = ref(false);
 
 const fetchProfile = async (id) => {
     isLoading.value = true;
     try {
         const response = await profilesApi.getProfile(id);
         profile.value = response.data;
-        adminNotes.value = response.data?.admin_note;
+        adminNotes.value = response.data?.admin_notes;
     } catch (error) {
+        notFound.value = true;
         console.error("Error fetching profiles:", error);
     } finally {
         isLoading.value = false;
@@ -528,6 +575,10 @@ const fetchProfile = async (id) => {
 const showDeleteConfirmation = ref(false);
 const deleteConfirmationText = ref("");
 const isDeleting = ref(false);
+
+const goBack = () => {
+    router.replace("/admin/profiles");
+};
 
 const toggleVerification = async () => {
     try {
