@@ -13,7 +13,7 @@ return [
     'reports' => [
         'rate_limits' => [
             'admin_exempt' => env('LOOPS_REPORT_ADMIN_EX_LIMIT', true),
-            'daily' => env('LOOPS_REPORT_DAILY_LIMIT', 5),
+            'daily' => env('LOOPS_REPORT_DAILY_LIMIT', 15),
             'monthly' => env('LOOPS_REPORT_MONTHLY_LIMIT', 200),
         ],
     ],
