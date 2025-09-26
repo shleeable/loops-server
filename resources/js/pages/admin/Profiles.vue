@@ -59,7 +59,7 @@
                         </div>
                         <div
                             v-if="item.bio"
-                            class="truncate text-xs text-gray-400"
+                            class="truncate text-xs text-gray-400 max-w-[300px]"
                         >
                             {{ item.bio }}
                         </div>
