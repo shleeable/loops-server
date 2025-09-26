@@ -8,8 +8,16 @@ use App\Services\VideoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin Notification
+ */
 class NotificationResource extends JsonResource
 {
+    public function __construct(Notification $resource)
+    {
+        parent::__construct($resource);
+    }
+
     /**
      * Transform the resource into an array.
      *

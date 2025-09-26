@@ -2,12 +2,21 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Profile;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Storage;
 
+/**
+ * @mixin Profile
+ */
 class ProfileResource extends JsonResource
 {
+    public function __construct(Profile $resource)
+    {
+        parent::__construct($resource);
+    }
+
     /**
      * Transform the resource into an array.
      *
@@ -23,6 +32,7 @@ class ProfileResource extends JsonResource
             'avatar' => $avatarUrl,
             'username' => $this->username,
             'is_owner' => false,
+            'local' => (bool) $this->local,
             'bio' => $this->bio,
             'post_count' => $this->video_count,
             'follower_count' => $this->followers,

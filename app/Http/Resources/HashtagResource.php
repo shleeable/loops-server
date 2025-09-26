@@ -2,11 +2,20 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Hashtag;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin Hashtag
+ */
 class HashtagResource extends JsonResource
 {
+    public function __construct(Hashtag $resource)
+    {
+        parent::__construct($resource);
+    }
+
     /**
      * Transform the resource into an array.
      *

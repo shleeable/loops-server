@@ -2,13 +2,22 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Comment;
 use App\Services\AccountService;
 use App\Services\LikeService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin Comment
+ */
 class CommentResource extends JsonResource
 {
+    public function __construct(Comment $resource)
+    {
+        parent::__construct($resource);
+    }
+
     /**
      * Transform the resource into an array.
      *

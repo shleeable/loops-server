@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Video;
 use App\Services\AccountService;
 use App\Services\HashidService;
 use App\Services\VideoService;
@@ -9,8 +10,16 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Str;
 
+/**
+ * @mixin Video
+ */
 class StudioVideoResource extends JsonResource
 {
+    public function __construct(Video $resource)
+    {
+        parent::__construct($resource);
+    }
+
     /**
      * Transform the resource into an array.
      *

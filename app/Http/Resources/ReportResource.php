@@ -4,14 +4,23 @@ namespace App\Http\Resources;
 
 use App\Models\Comment;
 use App\Models\CommentReply;
+use App\Models\Report;
 use App\Services\AccountService;
 use App\Services\ReportService;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin Report
+ */
 class ReportResource extends JsonResource
 {
+    public function __construct(Report $resource)
+    {
+        parent::__construct($resource);
+    }
+
     /**
      * Transform the resource into an array.
      *
