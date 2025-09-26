@@ -16,7 +16,6 @@ parameters:
         - tests/
 
     excludePaths:
-        - app/Services/*
         - bootstrap/cache/*
         - storage/
         - vendor/
