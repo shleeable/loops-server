@@ -668,9 +668,13 @@
                             v-model="adminNotes"
                             @blur="saveAdminNotes"
                             rows="4"
+                            :maxlength="1500"
                             placeholder="Add notes about this report, your investigation, or actions taken..."
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                         ></textarea>
+                        <p class="text-sm text-gray-400">
+                            {{ adminNotes?.length ?? 0 }}/1500
+                        </p>
                     </div>
                 </div>
             </div>
@@ -764,6 +768,22 @@ const dismissReport = async () => {
             });
     } else {
         loading.value = false;
+    }
+};
+
+const deleteVideo = async () => {
+    const result = await confirmModal(
+        "Confirm Delete",
+        `Are you sure you want to delete this video by <span class="font-bold">${report.value.content_preview?.account?.username}</span>? This action cannot be undone.`,
+        "Delete Video",
+        "Cancel",
+    );
+
+    if (result) {
+        const id = report.value.id;
+        const response = await reportsApi.deleteVideo(id).finally(() => {
+            router.push("/admin/reports");
+        });
     }
 };
 
