@@ -64,6 +64,53 @@
             </div>
         </div>
 
+        <!-- Sensitive Content Warning -->
+        <div
+            v-else-if="
+                currentVideo &&
+                currentVideo.is_sensitive &&
+                !showSensitiveContent
+            "
+            class="flex items-center justify-center w-full h-full bg-gray-100 dark:bg-gray-900"
+        >
+            <div class="text-center max-w-md px-6">
+                <div class="mx-auto mb-6">
+                    <ExclamationTriangleIcon
+                        class="h-16 w-16 text-orange-500 mx-auto"
+                    />
+                </div>
+
+                <h2
+                    class="text-2xl font-bold text-gray-900 dark:text-white mb-4"
+                >
+                    Sensitive Content
+                </h2>
+                <p class="text-gray-600 dark:text-gray-400 mb-8">
+                    This video may contain sensitive content that some viewers
+                    may find disturbing or inappropriate. Viewer discretion is
+                    advised.
+                </p>
+
+                <div class="space-y-3">
+                    <button
+                        @click="handleViewSensitiveContent"
+                        class="w-full bg-[#F02C56] hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center cursor-pointer"
+                    >
+                        <EyeIcon class="h-5 w-5 mr-2" />
+                        View Content
+                    </button>
+
+                    <button
+                        @click="goBack"
+                        class="w-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center cursor-pointer"
+                    >
+                        <ArrowLeftIcon class="h-5 w-5 mr-2" />
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div
             v-else-if="currentVideo"
             class="lg:w-[calc(100%-540px)] h-full relative"
@@ -114,7 +161,12 @@
         </div>
 
         <div
-            v-if="currentVideo && !isVideoLoading && !error"
+            v-if="
+                currentVideo &&
+                !isVideoLoading &&
+                !error &&
+                (!currentVideo.is_sensitive || showSensitiveContent)
+            "
             class="lg:max-w-[550px] relative w-full h-full bg-white dark:bg-slate-950"
         >
             <div
@@ -206,6 +258,15 @@
                     <p class="text-sm dark:text-slate-300 leading-relaxed">
                         {{ currentVideo.caption }}
                     </p>
+                </div>
+
+                <!-- Sensitive Content Badge -->
+                <div
+                    v-if="currentVideo.is_sensitive"
+                    class="mt-3 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                >
+                    <ExclamationTriangleIcon class="h-3 w-3 mr-1" />
+                    Sensitive Content
                 </div>
 
                 <div
@@ -360,6 +421,8 @@ import {
     BookmarkIcon,
     EllipsisVerticalIcon,
     FlagIcon,
+    EyeIcon,
+    ArrowLeftIcon,
 } from "@heroicons/vue/24/outline";
 import UrlCopyInput from "@/components/Form/UrlCopyInput.vue";
 import Comments from "@/components/Status/Comments.vue";
@@ -382,6 +445,7 @@ const isVideoLoaded = ref(false);
 const isVideoLoading = ref(true);
 const showEditModal = ref(false);
 const showMenu = ref(false);
+const showSensitiveContent = ref(false);
 const error = ref(null);
 
 const currentVideo = computed(() => videoStore.video);
@@ -402,6 +466,14 @@ const retryLoad = async () => {
 
 const goHome = () => {
     router.push("/");
+};
+
+const handleViewSensitiveContent = () => {
+    if (!authStore.isAuthenticated) {
+        authStore.openAuthModal("login");
+        return;
+    }
+    showSensitiveContent.value = true;
 };
 
 const handleGuestFollow = async () => {
@@ -682,7 +754,11 @@ onBeforeUnmount(() => {
 });
 
 watch(isVideoLoaded, (newVal) => {
-    if (newVal && videoRef.value) {
+    if (
+        newVal &&
+        videoRef.value &&
+        (!currentVideo.value?.is_sensitive || showSensitiveContent.value)
+    ) {
         setTimeout(() => videoRef.value.play(), 500);
     }
 });
