@@ -56,7 +56,7 @@ class CommentResource extends JsonResource
             'likes' => $this->likes ?? 0,
             'replies' => $this->replies ?? 0,
             'children' => [],
-            'liked' => $pid ? LikeService::hasCommentLike($this->id, $pid) : false,
+            'liked' => $pid ? app(LikeService::class)->hasLikedComment($this->id, $pid) : false,
             'url' => $this->shareUrl(),
             'tombstone' => false,
             'is_owner' => $pid ? (string) $this->profile_id === (string) $pid : false,

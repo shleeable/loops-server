@@ -67,7 +67,7 @@ class LikeService
             self::COMMENT_REPLY_LIKES_KEY.$replyId,
             self::REPLY_CACHE_LOADED_KEY.$replyId,
             $profileId,
-            fn () => CommentReplyLike::where('reply_id', $replyId)
+            fn () => CommentReplyLike::where('comment_id', $replyId)
                 ->where('profile_id', $profileId)
                 ->exists()
         );
