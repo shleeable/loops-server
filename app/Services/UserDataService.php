@@ -157,7 +157,7 @@ class UserDataService
                     'username' => $acct['username'],
                     'display_name' => $acct['name'],
                     'url' => $acct['url'],
-                    'followed_at' => $follower->created_at->format('F j, Y') ?? null,
+                    'followed_at' => $follower->created_at->format('F j, Y'),
                 ];
             })->filter()->toArray(),
             'following' => $user->following()->get()->map(function ($following) {
@@ -170,7 +170,7 @@ class UserDataService
                     'username' => $acct['username'],
                     'display_name' => $acct['name'],
                     'url' => $acct['url'],
-                    'followed_at' => $following->created_at->format('F j, Y') ?? null,
+                    'followed_at' => $following->created_at->format('F j, Y'),
                 ];
             })->filter()->toArray(),
         ];
