@@ -230,11 +230,11 @@ class AdminSettingsSeeder extends Seeder
                 'description' => 'Automatically accept follow requests from federated users',
             ],
             [
-                'key' => 'federation.shareMedia',
-                'value' => true,
+                'key' => 'federation.authorizedFetch',
+                'value' => false,
                 'type' => 'boolean',
                 'is_public' => false,
-                'description' => 'Allow federated instances to access media files',
+                'description' => 'Enforce http signatures on actor/activity endpoints',
             ],
             [
                 'key' => 'federation.rateLimit',
