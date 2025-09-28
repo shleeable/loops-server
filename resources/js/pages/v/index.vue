@@ -762,6 +762,10 @@ watch(isVideoLoaded, (newVal) => {
 });
 
 const likePost = async () => {
+    if (!authStore.isAuthenticated) {
+        authStore.openAuthModal("login");
+        return;
+    }
     try {
         await videoStore.likeVideo(currentVideo.value?.id);
     } catch (error) {
@@ -770,6 +774,10 @@ const likePost = async () => {
 };
 
 const unlikePost = async () => {
+    if (!authStore.isAuthenticated) {
+        authStore.openAuthModal("login");
+        return;
+    }
     try {
         await videoStore.unlikeVideo(currentVideo.value?.id);
     } catch (error) {
