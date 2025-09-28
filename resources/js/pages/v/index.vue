@@ -284,7 +284,7 @@
             <div class="flex items-center px-8 mt-4 justify-between">
                 <div class="pb-4 text-center flex items-center">
                     <button
-                        @click="isLiked ? unlikePost() : likePost()"
+                        @click="currentVideo.has_liked == true ? unlikePost() : likePost()"
                         class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
                     >
                         <span
@@ -450,8 +450,6 @@ const error = ref(null);
 
 const currentVideo = computed(() => videoStore.video);
 const userId = computed(() => authStore.id);
-
-const isLiked = false;
 
 const setError = (type, title, message) => {
     error.value = { type, title, message };
@@ -765,7 +763,7 @@ watch(isVideoLoaded, (newVal) => {
 
 const likePost = async () => {
     try {
-        await videoStore.likeVideo();
+        await videoStore.likeVideo(currentVideo.value?.id);
     } catch (error) {
         console.log(error);
     }
@@ -773,7 +771,7 @@ const likePost = async () => {
 
 const unlikePost = async () => {
     try {
-        await videoStore.likeVideo();
+        await videoStore.unlikeVideo(currentVideo.value?.id);
     } catch (error) {
         console.log(error);
     }

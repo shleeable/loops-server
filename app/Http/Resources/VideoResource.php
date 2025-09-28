@@ -33,7 +33,7 @@ class VideoResource extends JsonResource
         $mediaUrl = data_get($media, 'media.src_url', null);
 
         $pid = $this->getAuthenticatedProfileId($request);
-        $hasLiked = $pid ? LikeService::hasVideo($this->id, $pid) : false;
+        $hasLiked = $pid ? app(LikeService::class)->hasLikedVideo($this->id, $pid) : false;
 
         $res = [
             'id' => (string) $this->id,

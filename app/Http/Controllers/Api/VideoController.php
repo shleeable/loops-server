@@ -148,9 +148,10 @@ class VideoController extends Controller
         ]);
 
         if ($like->wasRecentlyCreated) {
-            $video->increment('likes');
+            $video->likes = VideoLike::whereVideoId($video->id)->count();
+            $video->saveQuietly();
 
-            LikeService::addVideo($video->id, $pid);
+            app(LikeService::class)->addVideoLike($video->id, $pid);
 
             if ($pid !== $video->profile_id) {
                 NotificationService::newVideoLike(
@@ -163,6 +164,7 @@ class VideoController extends Controller
 
         $resp = (new VideoResource($video))->toArray($request);
         $resp['has_liked'] = true;
+        $resp['likes'] = $video->likes;
 
         return $resp;
     }
@@ -184,9 +186,10 @@ class VideoController extends Controller
             ->first();
 
         if ($res) {
-            $video->decrement('likes');
-            LikeService::remVideo($video->id, $pid);
+            app(LikeService::class)->removeVideoLike($video->id, $pid);
             $res->delete();
+            $video->likes = VideoLike::whereVideoId($video->id)->count();
+            $video->saveQuietly();
         } else {
             $resp = (new VideoResource($video))->toArray($request);
 
@@ -197,7 +200,7 @@ class VideoController extends Controller
 
         if ($res) {
             $resp['has_liked'] = false;
-            $resp['likes'] = $resp['likes'] ? $resp['likes'] - 1 : 0;
+            $resp['likes'] = $video->likes;
         }
 
         return $resp;

@@ -5,213 +5,306 @@ namespace App\Services;
 use App\Models\CommentLike;
 use App\Models\CommentReplyLike;
 use App\Models\VideoLike;
-use Cache;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Redis;
 
 class LikeService
 {
-    const VIDEO_LIKES_KEY = 'api:s:like:video:';
+    private const VIDEO_LIKES_KEY = 'api:s:like:video:';
 
-    const COMMENT_LIKES_KEY = 'api:s:like:comment:';
+    private const COMMENT_LIKES_KEY = 'api:s:like:comment:';
 
-    const COMMENT_REPLY_LIKES_KEY = 'api:s:like:reply:';
+    private const COMMENT_REPLY_LIKES_KEY = 'api:s:like:reply:';
 
-    const VIDEO_LIKES_TIMESTAMP_KEY = 'api:s:like:ts:';
+    private const VIDEO_CACHE_LOADED_KEY = 'api:s:like:loaded:video:';
 
-    const COMMENT_LIKES_TIMESTAMP_KEY = 'api:s:like:ts:';
+    private const COMMENT_CACHE_LOADED_KEY = 'api:s:like:loaded:comment:';
 
-    const COMMENT_REPLY_LIKES_TIMESTAMP_KEY = 'api:s:like:reply:ts:';
+    private const REPLY_CACHE_LOADED_KEY = 'api:s:like:loaded:reply:';
 
-    const CACHE_TTL = 3600;
+    private const CACHE_TTL = 3600;
 
-    const MAX_CACHED_LIKES = 1000;
+    private const MAX_CACHED_LIKES = 5000;
 
-    const RECENT_LIKES_WINDOW = 86400;
+    private const CACHE_WARMING_BATCH_SIZE = 100;
 
     /**
      * Check if a profile has liked a video
      */
-    public static function hasVideo(string $videoId, string $profileId)
+    public function hasLikedVideo(string $videoId, string $profileId): bool
     {
-        $cacheKey = self::VIDEO_LIKES_KEY.$videoId;
-
-        if (Redis::sismember($cacheKey, $profileId) == 1) {
-            return true;
-        }
-
-        $timestampKey = self::VIDEO_LIKES_TIMESTAMP_KEY.$videoId;
-        $cacheTimestamp = Redis::get($timestampKey);
-
-        if ($cacheTimestamp && (time() - $cacheTimestamp) < self::RECENT_LIKES_WINDOW) {
-            return false;
-        }
-
-        return VideoLike::where('video_id', $videoId)
-            ->where('profile_id', $profileId)
-            ->exists();
-    }
-
-    /**
-     * Add a video like to cache
-     */
-    public static function addVideo(string $videoId, string $profileId)
-    {
-        $cacheKey = self::VIDEO_LIKES_KEY.$videoId;
-        $timestampKey = self::VIDEO_LIKES_TIMESTAMP_KEY.$videoId;
-
-        if (Redis::sismember($cacheKey, $profileId)) {
-            return false;
-        }
-
-        Redis::sadd($cacheKey, $profileId);
-        Redis::expire($cacheKey, self::CACHE_TTL);
-
-        Redis::set($timestampKey, time(), ['EX' => self::CACHE_TTL]);
-
-        return true;
-    }
-
-    /**
-     * Remove a video like from cache
-     */
-    public static function remVideo(string $videoId, string $profileId)
-    {
-        $cacheKey = self::VIDEO_LIKES_KEY.$videoId;
-
-        return Redis::srem($cacheKey, $profileId);
-    }
-
-    /**
-     * Get video likes from cache
-     */
-    public static function getVideoCount(string $videoId)
-    {
-        $cacheKey = self::VIDEO_LIKES_KEY.$videoId;
-
-        return Redis::scard($cacheKey);
-    }
-
-    /**
-     * Get video likes from cache
-     */
-    public static function getVideo(string $videoId)
-    {
-        $cacheKey = self::VIDEO_LIKES_KEY.$videoId;
-
-        return Redis::smembers($cacheKey);
+        return $this->hasLiked(
+            self::VIDEO_LIKES_KEY.$videoId,
+            self::VIDEO_CACHE_LOADED_KEY.$videoId,
+            $profileId,
+            fn () => VideoLike::where('video_id', $videoId)
+                ->where('profile_id', $profileId)
+                ->exists()
+        );
     }
 
     /**
      * Check if a profile has liked a comment
      */
-    public static function hasCommentLike($commentId, $profileId)
+    public function hasLikedComment(string $commentId, string $profileId): bool
     {
-        $cacheKey = self::COMMENT_LIKES_KEY.$commentId;
-
-        if (Redis::sismember($cacheKey, $profileId)) {
-            return true;
-        }
-
-        $timestampKey = self::COMMENT_LIKES_TIMESTAMP_KEY.$commentId;
-        $cacheTimestamp = Redis::get($timestampKey);
-
-        if ($cacheTimestamp && (time() - $cacheTimestamp) < self::RECENT_LIKES_WINDOW) {
-            return false;
-        }
-
-        return CommentLike::where('comment_id', $commentId)
-            ->where('profile_id', $profileId)
-            ->exists();
-    }
-
-    /**
-     * Add a comment like to cache
-     */
-    public static function addCommentLike($commentId, $profileId)
-    {
-        $cacheKey = self::COMMENT_LIKES_KEY.$commentId;
-        $timestampKey = self::COMMENT_LIKES_TIMESTAMP_KEY.$commentId;
-
-        if (Redis::sismember($cacheKey, $profileId)) {
-            return false;
-        }
-
-        Redis::sadd($cacheKey, $profileId);
-        Redis::expire($cacheKey, self::CACHE_TTL);
-        Redis::set($timestampKey, time(), ['EX' => self::CACHE_TTL]);
-
-        return true;
-    }
-
-    /**
-     * Remove a comment like from cache
-     */
-    public static function removeCommentLike($commentId, $profileId)
-    {
-        $cacheKey = self::COMMENT_LIKES_KEY.$commentId;
-
-        return Redis::srem($cacheKey, $profileId) > 0;
+        return $this->hasLiked(
+            self::COMMENT_LIKES_KEY.$commentId,
+            self::COMMENT_CACHE_LOADED_KEY.$commentId,
+            $profileId,
+            fn () => CommentLike::where('comment_id', $commentId)
+                ->where('profile_id', $profileId)
+                ->exists()
+        );
     }
 
     /**
      * Check if a profile has liked a comment reply
      */
-    public static function hasCommentReplyLike($parentCommentId, $replyId, $profileId)
+    public function hasLikedReply(string $replyId, string $profileId): bool
     {
-        $cacheKey = self::COMMENT_REPLY_LIKES_KEY.$parentCommentId.':'.$replyId;
-
-        if (Redis::sismember($cacheKey, $profileId)) {
-            return true;
-        }
-
-        $timestampKey = self::COMMENT_REPLY_LIKES_TIMESTAMP_KEY.$parentCommentId.':'.$replyId;
-        $cacheTimestamp = Redis::get($timestampKey);
-
-        if ($cacheTimestamp && (time() - $cacheTimestamp) < self::RECENT_LIKES_WINDOW) {
-            return false;
-        }
-
-        return CommentReplyLike::where('comment_id', $replyId)
-            ->where('profile_id', $profileId)
-            ->exists();
+        return $this->hasLiked(
+            self::COMMENT_REPLY_LIKES_KEY.$replyId,
+            self::REPLY_CACHE_LOADED_KEY.$replyId,
+            $profileId,
+            fn () => CommentReplyLike::where('reply_id', $replyId)
+                ->where('profile_id', $profileId)
+                ->exists()
+        );
     }
 
     /**
-     * Add a comment reply like to cache
+     * Add a video like
      */
-    public static function addCommentReplyLike($parentCommentId, $replyId, $profileId)
+    public function addVideoLike(string $videoId, string $profileId): bool
     {
-        $cacheKey = self::COMMENT_REPLY_LIKES_KEY.$parentCommentId.':'.$replyId;
-        $timestampKey = self::COMMENT_REPLY_LIKES_TIMESTAMP_KEY.$parentCommentId.':'.$replyId;
+        return $this->addLike(
+            self::VIDEO_LIKES_KEY.$videoId,
+            self::VIDEO_CACHE_LOADED_KEY.$videoId,
+            $profileId
+        );
+    }
 
-        if (Redis::sismember($cacheKey, $profileId)) {
-            return false;
+    /**
+     * Add a comment like
+     */
+    public function addCommentLike(string $commentId, string $profileId): bool
+    {
+        return $this->addLike(
+            self::COMMENT_LIKES_KEY.$commentId,
+            self::COMMENT_CACHE_LOADED_KEY.$commentId,
+            $profileId
+        );
+    }
+
+    /**
+     * Add a comment reply like
+     */
+    public function addReplyLike(string $replyId, string $profileId): bool
+    {
+        return $this->addLike(
+            self::COMMENT_REPLY_LIKES_KEY.$replyId,
+            self::REPLY_CACHE_LOADED_KEY.$replyId,
+            $profileId
+        );
+    }
+
+    /**
+     * Remove a video like
+     */
+    public function removeVideoLike(string $videoId, string $profileId): bool
+    {
+        return $this->removeLike(
+            self::VIDEO_LIKES_KEY.$videoId,
+            $profileId
+        );
+    }
+
+    /**
+     * Remove a comment like
+     */
+    public function removeCommentLike(string $commentId, string $profileId): bool
+    {
+        return $this->removeLike(
+            self::COMMENT_LIKES_KEY.$commentId,
+            $profileId
+        );
+    }
+
+    /**
+     * Remove a comment reply like
+     */
+    public function removeReplyLike(string $replyId, string $profileId): bool
+    {
+        return $this->removeLike(
+            self::COMMENT_REPLY_LIKES_KEY.$replyId,
+            $profileId
+        );
+    }
+
+    /**
+     * Get all profiles that liked a video
+     */
+    public function getVideoLikers(string $videoId): array
+    {
+        $cacheKey = self::VIDEO_LIKES_KEY.$videoId;
+        $loadedKey = self::VIDEO_CACHE_LOADED_KEY.$videoId;
+
+        $this->warmCacheIfNeeded(
+            $cacheKey,
+            $loadedKey,
+            fn () => VideoLike::where('video_id', $videoId)
+                ->orderBy('created_at', 'desc')
+                ->limit(self::MAX_CACHED_LIKES)
+                ->pluck('profile_id')
+        );
+
+        return Redis::smembers($cacheKey);
+    }
+
+    /**
+     * Get like count for a video
+     */
+    public function getVideoLikeCount(string $videoId): int
+    {
+        $cacheKey = self::VIDEO_LIKES_KEY.$videoId;
+        $loadedKey = self::VIDEO_CACHE_LOADED_KEY.$videoId;
+
+        if (Redis::exists($loadedKey)) {
+            return Redis::scard($cacheKey);
         }
 
-        Redis::sadd($cacheKey, $profileId);
-        Redis::expire($cacheKey, self::CACHE_TTL);
-        Redis::set($timestampKey, time(), ['EX' => self::CACHE_TTL]);
+        return VideoLike::where('video_id', $videoId)->count();
+    }
+
+    /**
+     * Bulk check if profiles have liked videos
+     */
+    public function bulkHasLikedVideos(array $videoIds, string $profileId): array
+    {
+        $result = [];
+
+        $pipeline = Redis::pipeline();
+        foreach ($videoIds as $videoId) {
+            $pipeline->sismember(self::VIDEO_LIKES_KEY.$videoId, $profileId);
+        }
+        $cached = $pipeline->exec();
+
+        foreach ($videoIds as $index => $videoId) {
+            $cacheKey = self::VIDEO_LIKES_KEY.$videoId;
+            $loadedKey = self::VIDEO_CACHE_LOADED_KEY.$videoId;
+
+            if (Redis::exists($loadedKey)) {
+                $result[$videoId] = (bool) $cached[$index];
+            } else {
+                $result[$videoId] = VideoLike::where('video_id', $videoId)
+                    ->where('profile_id', $profileId)
+                    ->exists();
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Clear cache for a specific video
+     */
+    public function clearVideoCache(string $videoId): void
+    {
+        Redis::del([
+            self::VIDEO_LIKES_KEY.$videoId,
+            self::VIDEO_CACHE_LOADED_KEY.$videoId,
+        ]);
+    }
+
+    /**
+     * Clear cache for a specific comment
+     */
+    public function clearCommentCache(string $commentId): void
+    {
+        Redis::del([
+            self::COMMENT_LIKES_KEY.$commentId,
+            self::COMMENT_CACHE_LOADED_KEY.$commentId,
+        ]);
+    }
+
+    /**
+     * Warm cache for a video
+     */
+    public function warmVideoCache(string $videoId): void
+    {
+        $cacheKey = self::VIDEO_LIKES_KEY.$videoId;
+        $loadedKey = self::VIDEO_CACHE_LOADED_KEY.$videoId;
+
+        $likes = VideoLike::where('video_id', $videoId)
+            ->orderBy('created_at', 'desc')
+            ->limit(self::MAX_CACHED_LIKES)
+            ->pluck('profile_id');
+
+        if ($likes->isNotEmpty()) {
+            Redis::sadd($cacheKey, ...$likes->toArray());
+            Redis::expire($cacheKey, self::CACHE_TTL);
+            Redis::setex($loadedKey, self::CACHE_TTL, 1);
+        }
+    }
+
+    /**
+     * Generic method to check if item is liked
+     */
+    private function hasLiked(string $cacheKey, string $loadedKey, string $profileId, callable $dbCheck): bool
+    {
+        // If cache is loaded, use it
+        if (Redis::exists($loadedKey)) {
+            return Redis::sismember($cacheKey, $profileId) === 1;
+        }
+
+        // Otherwise check database
+        return $dbCheck();
+    }
+
+    /**
+     * Generic method to add a like to cache
+     */
+    private function addLike(string $cacheKey, string $loadedKey, string $profileId): bool
+    {
+        // Only add to cache if cache is already loaded
+        if (Redis::exists($loadedKey)) {
+            if (Redis::sismember($cacheKey, $profileId) === 1) {
+                return false;
+            }
+
+            Redis::sadd($cacheKey, $profileId);
+
+            Redis::expire($cacheKey, self::CACHE_TTL);
+            Redis::expire($loadedKey, self::CACHE_TTL);
+
+            return true;
+        }
 
         return true;
     }
 
     /**
-     * Remove a comment reply like from cache
+     * Generic method to remove a like from cache
      */
-    public static function removeCommentReplyLike($parentCommentId, $replyId, $profileId)
+    private function removeLike(string $cacheKey, string $profileId): bool
     {
-        $cacheKey = self::COMMENT_REPLY_LIKES_KEY.$parentCommentId.':'.$replyId;
-
         return Redis::srem($cacheKey, $profileId) > 0;
     }
 
     /**
-     * Get comment reply likes from cache
+     * Warm cache if needed
      */
-    public static function getCommentReplyLikes($parentCommentId, $replyId)
+    private function warmCacheIfNeeded(string $cacheKey, string $loadedKey, callable $dataFetcher): void
     {
-        $cacheKey = self::COMMENT_REPLY_LIKES_KEY.$parentCommentId.':'.$replyId;
+        if (! Redis::exists($loadedKey)) {
+            $data = $dataFetcher();
 
-        return Redis::smembers($cacheKey);
+            if ($data instanceof Collection && $data->isNotEmpty()) {
+                Redis::sadd($cacheKey, ...$data->toArray());
+                Redis::expire($cacheKey, self::CACHE_TTL);
+                Redis::setex($loadedKey, self::CACHE_TTL, 1);
+            }
+        }
     }
 }

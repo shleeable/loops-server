@@ -93,8 +93,8 @@ class NotificationService
         $n = new Notification;
         $n->user_id = $uid;
         $n->type = $type;
-        $n->item_type = $itemClass;
-        $n->item_id = $itemId;
+        $n->item_type = $itemClass; // @phpstan-ignore-line
+        $n->item_id = $itemId; // @phpstan-ignore-line
 
         if ($meta) {
             $n->meta = $meta;
