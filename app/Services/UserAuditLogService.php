@@ -30,7 +30,7 @@ class UserAuditLogService
             'type' => $type,
             'value' => $value,
             'activity_type' => $activity ? get_class($activity) : null,
-            'activity_id' => $activity?->id,
+            'activity_id' => $activity?->id, // @phpstan-ignore-line
             'ip_address' => $this->getIpAddress(),
             'client_id' => $this->getClientId(),
         ]);
