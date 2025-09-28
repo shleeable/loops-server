@@ -42,4 +42,15 @@ class Hashtag extends Model
         $this->count = $this->videos()->count();
         $this->save();
     }
+
+    public function setIsBannedAttribute($value)
+    {
+        $this->attributes['is_banned'] = $value;
+
+        if ($value === true) {
+            $this->attributes['can_autolink'] = false;
+            $this->attributes['can_search'] = false;
+            $this->attributes['can_trend'] = false;
+        }
+    }
 }
