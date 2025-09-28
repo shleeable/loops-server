@@ -22,7 +22,10 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton('user_agent', function () {
-            return 'LoopsServer/1.0';
+            $version = app('app_version');
+            $url = config('app.url');
+
+            return "Loops/{$version} (Laravel/".app()->version()."; +{$url})";
         });
     }
 
