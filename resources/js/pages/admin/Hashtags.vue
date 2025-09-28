@@ -24,6 +24,15 @@
             @sort="handleSort"
             @next="nextPage"
         >
+            <template #cell-id="{ value, item }">
+                <button
+                    @click="openModal(item)"
+                    class="text-blue-600 hover:text-blue-800 font-medium underline cursor-pointer"
+                >
+                    {{ value }}
+                </button>
+            </template>
+
             <template #cell-user="{ item }">
                 <div class="flex items-center">
                     <img
@@ -59,12 +68,181 @@
                 {{ formatDate(value) }}
             </template>
         </DataTable>
+
+        <div
+            v-if="showModal"
+            class="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+            @click="closeModal"
+        >
+            <div
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4"
+                @click.stop
+            >
+                <div
+                    class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"
+                >
+                    <h3
+                        class="text-lg font-semibold text-gray-900 dark:text-white"
+                    >
+                        Hashtag Settings
+                    </h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        #{{ selectedHashtag?.name }}
+                    </p>
+                </div>
+
+                <div class="px-6 py-4 space-y-6">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1 mr-4">
+                            <label
+                                class="text-sm font-medium text-gray-900 dark:text-white"
+                            >
+                                Auto-link
+                            </label>
+                            <p
+                                class="text-xs text-gray-600 dark:text-gray-400 mt-1"
+                            >
+                                Automatically convert text mentions to clickable
+                                hashtag links
+                            </p>
+                        </div>
+                        <ToggleSwitch
+                            v-model="formData.can_autolink"
+                            :disabled="saving"
+                        />
+                    </div>
+
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1 mr-4">
+                            <label
+                                class="text-sm font-medium text-gray-900 dark:text-white"
+                            >
+                                Searchable
+                            </label>
+                            <p
+                                class="text-xs text-gray-600 dark:text-gray-400 mt-1"
+                            >
+                                Allow users to discover content through hashtag
+                                search
+                            </p>
+                        </div>
+                        <ToggleSwitch
+                            v-model="formData.can_search"
+                            :disabled="saving"
+                        />
+                    </div>
+
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1 mr-4">
+                            <label
+                                class="text-sm font-medium text-gray-900 dark:text-white"
+                            >
+                                Trendable
+                            </label>
+                            <p
+                                class="text-xs text-gray-600 dark:text-gray-400 mt-1"
+                            >
+                                Include in trending hashtags and discovery feeds
+                            </p>
+                        </div>
+                        <ToggleSwitch
+                            v-model="formData.can_trend"
+                            :disabled="saving"
+                        />
+                    </div>
+
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1 mr-4">
+                            <label
+                                class="text-sm font-medium text-red-600 dark:text-red-400"
+                            >
+                                Banned
+                            </label>
+                            <p
+                                class="text-xs text-gray-600 dark:text-gray-400 mt-1"
+                            >
+                                Block this hashtag from being used in new
+                                content
+                            </p>
+                        </div>
+                        <ToggleSwitch
+                            v-model="formData.is_banned"
+                            variant="danger"
+                            :disabled="saving"
+                        />
+                    </div>
+
+                    <!-- NSFW Setting -->
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1 mr-4">
+                            <label
+                                class="text-sm font-medium text-orange-600 dark:text-orange-400"
+                            >
+                                NSFW Content
+                            </label>
+                            <p
+                                class="text-xs text-gray-600 dark:text-gray-400 mt-1"
+                            >
+                                Mark content with this hashtag as not safe for
+                                work
+                            </p>
+                        </div>
+                        <ToggleSwitch
+                            v-model="formData.is_nsfw"
+                            variant="warning"
+                            :disabled="saving"
+                        />
+                    </div>
+                </div>
+
+                <div
+                    class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3"
+                >
+                    <button
+                        @click="closeModal"
+                        :disabled="saving"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        @click="saveSettings"
+                        :disabled="saving"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center"
+                    >
+                        <svg
+                            v-if="saving"
+                            class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                        >
+                            <circle
+                                class="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                stroke-width="4"
+                            ></circle>
+                            <path
+                                class="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                        </svg>
+                        {{ saving ? "Saving..." : "Save Changes" }}
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import DataTable from "@/components/DataTable.vue";
+import ToggleSwitch from "@/components/Form/ToggleSwitch.vue";
 import { hashtagsApi } from "@/services/adminApi";
 import { useUtils } from "@/composables/useUtils";
 const { formatNumber, formatDate } = useUtils();
@@ -75,6 +253,17 @@ const pagination = ref({
     cursor: null,
     prev: false,
     next: false,
+});
+
+const showModal = ref(false);
+const selectedHashtag = ref(null);
+const saving = ref(false);
+const formData = ref({
+    can_autolink: false,
+    can_search: false,
+    can_trend: false,
+    is_banned: false,
+    is_nsfw: false,
 });
 
 const searchQuery = ref("");
@@ -95,6 +284,9 @@ const sortOptions = [
     { name: "Most Used", value: "count_desc" },
     { name: "Newest", value: "created_at_desc" },
     { name: "Oldest", value: "created_at_asc" },
+    { name: "Trendable", value: "can_trend" },
+    { name: "Banned", value: "is_banned" },
+    { name: "NSFW", value: "is_nsfw" },
 ];
 
 const fetchHashtags = async (cursor = null, direction = "next") => {
@@ -114,9 +306,55 @@ const fetchHashtags = async (cursor = null, direction = "next") => {
         hashtags.value = response.data;
         pagination.value = response.meta;
     } catch (error) {
-        console.error("Error fetching likes:", error);
+        console.error("Error fetching hashtags:", error);
     } finally {
         loading.value = false;
+    }
+};
+
+const openModal = (hashtag) => {
+    selectedHashtag.value = hashtag;
+    formData.value = {
+        can_autolink: hashtag.can_autolink || false,
+        can_search: hashtag.can_search || false,
+        can_trend: hashtag.can_trend || false,
+        is_banned: hashtag.is_banned || false,
+        is_nsfw: hashtag.is_nsfw || false,
+    };
+    showModal.value = true;
+};
+
+const closeModal = () => {
+    showModal.value = false;
+    selectedHashtag.value = null;
+    saving.value = false;
+};
+
+const saveSettings = async () => {
+    if (!selectedHashtag.value) return;
+
+    saving.value = true;
+    try {
+        await hashtagsApi.updateHashtag(
+            selectedHashtag.value.id,
+            formData.value,
+        );
+
+        const index = hashtags.value.findIndex(
+            (h) => h.id === selectedHashtag.value.id,
+        );
+        if (index !== -1) {
+            hashtags.value[index] = {
+                ...hashtags.value[index],
+                ...formData.value,
+            };
+        }
+
+        closeModal();
+    } catch (error) {
+        console.error("Error updating hashtag:", error);
+    } finally {
+        saving.value = false;
     }
 };
 
