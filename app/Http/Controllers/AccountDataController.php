@@ -19,7 +19,7 @@ class AccountDataController extends Controller
     use ApiHelpers;
 
     public function __construct(
-        private UserDataService $userDataService,
+        protected UserDataService $userDataService,
         protected UserAuditLogService $auditService
     ) {
         $this->middleware('auth');
@@ -177,7 +177,7 @@ class AccountDataController extends Controller
                     ->orderBy('created_at', 'desc')
                     ->limit(30)
                     ->get()
-                    ->map(function ($export) {
+                    ->map(function (DataExport $export) {
                         return [
                             'id' => $export->id,
                             'type' => $this->getExportTypeName($export->type),
@@ -186,7 +186,9 @@ class AccountDataController extends Controller
                             'size' => $export->formatted_size,
                             'downloadUrl' => $export->download_url,
                         ];
-                    });
+                    })
+                    ->values()
+                    ->toArray();
             });
 
         return $this->data($exports);

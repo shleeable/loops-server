@@ -6,6 +6,37 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $type
+ * @property string $status
+ * @property string|null $file_path
+ * @property string|null $file_size
+ * @property \Illuminate\Support\Carbon|null $expires_at
+ * @property array<array-key, mixed>|null $metadata
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string|null $download_url
+ * @property-read string $formatted_size
+ * @property-read \App\Models\User $user
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DataExport newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DataExport newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DataExport query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DataExport whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DataExport whereExpiresAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DataExport whereFilePath($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DataExport whereFileSize($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DataExport whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DataExport whereMetadata($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DataExport whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DataExport whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DataExport whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DataExport whereUserId($value)
+ *
+ * @mixin \Eloquent
+ */
 class DataExport extends Model
 {
     protected $fillable = [
@@ -56,7 +87,7 @@ class DataExport extends Model
         return route('export.download', $this->id);
     }
 
-    private function formatBytes(int $bytes): string
+    private function formatBytes(int|string $bytes): string
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
 

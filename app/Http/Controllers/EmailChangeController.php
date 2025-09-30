@@ -236,21 +236,21 @@ class EmailChangeController extends Controller
     {
         $user = $request->user();
 
-        $user->update([
-            'email_notifications' => $request->input('account_notifications', true),
-            'product_updates' => $request->input('product_updates', false),
-            'marketing_emails' => $request->input('marketing_emails', false),
-            'email_frequency' => $request->input('email_frequency', 'instant'),
-        ]);
+        // $user->update([
+        //     'email_notifications' => $request->input('account_notifications', true),
+        //     'product_updates' => $request->input('product_updates', false),
+        //     'marketing_emails' => $request->input('marketing_emails', false),
+        //     'email_frequency' => $request->input('email_frequency', 'instant'),
+        // ]);
 
         return response()->json([
             'message' => 'Email preferences updated successfully.',
             'preferences' => [
                 'security_alerts' => true,
-                'account_notifications' => $user->email_notifications,
-                'product_updates' => $user->product_updates,
-                'marketing_emails' => $user->marketing_emails,
-                'email_frequency' => $user->email_frequency,
+                'account_notifications' => true,
+                'product_updates' => false,
+                'marketing_emails' => false,
+                'email_frequency' => false,
             ],
         ]);
     }

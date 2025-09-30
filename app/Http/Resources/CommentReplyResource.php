@@ -52,7 +52,7 @@ class CommentReplyResource extends JsonResource
             'account' => AccountService::compact($this->profile_id),
             'caption' => $this->caption,
             'likes' => $this->likes ?? 0,
-            'liked' => $pid ? app(LikeService::class)->hasLikedReply($this->comment_id, $this->id, $pid) : false,
+            'liked' => $pid ? app(LikeService::class)->hasLikedReply((string) $this->comment_id, (string) $pid) : false,
             'url' => $this->shareUrl(),
             'tombstone' => false,
             'is_owner' => $pid ? (string) $this->profile_id === (string) $pid : false,

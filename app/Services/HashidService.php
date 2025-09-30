@@ -32,7 +32,7 @@ class HashidService
     /**
      * Encode a snowflake ID to a hash string
      */
-    public static function encode(string $snowflakeId): string
+    public static function encode(int|string $snowflakeId): string
     {
         self::init();
 
@@ -124,7 +124,7 @@ class HashidService
     /**
      * Safely encode snowflake ID
      */
-    public static function safeEncode(string $snowflakeId): ?string
+    public static function safeEncode(int|string $snowflakeId): string|int|null
     {
         try {
             return self::encode($snowflakeId);
@@ -136,7 +136,7 @@ class HashidService
     /**
      * Safely decode snowflake ID
      */
-    public static function safeDecode(string $encoded): ?string
+    public static function safeDecode(int|string $encoded): string|int|null
     {
         try {
             return self::decode($encoded);

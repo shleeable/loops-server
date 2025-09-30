@@ -26,8 +26,6 @@ class LikeService
 
     private const MAX_CACHED_LIKES = 5000;
 
-    private const CACHE_WARMING_BATCH_SIZE = 100;
-
     /**
      * Check if a profile has liked a video
      */
@@ -255,7 +253,7 @@ class LikeService
     {
         // If cache is loaded, use it
         if (Redis::exists($loadedKey)) {
-            return Redis::sismember($cacheKey, $profileId) === 1;
+            return Redis::sismember($cacheKey, $profileId) == 1;
         }
 
         // Otherwise check database
@@ -269,7 +267,7 @@ class LikeService
     {
         // Only add to cache if cache is already loaded
         if (Redis::exists($loadedKey)) {
-            if (Redis::sismember($cacheKey, $profileId) === 1) {
+            if (Redis::sismember($cacheKey, $profileId) == 1) {
                 return false;
             }
 

@@ -16,6 +16,105 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Storage;
 
 #[ObservedBy([VideoObserver::class])]
+/**
+ * @property int $id
+ * @property string|null $profile_id
+ * @property string|null $vid
+ * @property string|null $vid_optimized
+ * @property int $status
+ * @property int $visibility
+ * @property int|null $duration
+ * @property int|null $size_kb
+ * @property string|null $caption
+ * @property bool $is_local
+ * @property string|null $uri
+ * @property string|null $remote_media_url
+ * @property string|null $remote_thumb_url
+ * @property string|null $remote_hls_url
+ * @property string|null $tags
+ * @property int $likes
+ * @property int $comments
+ * @property int $shares
+ * @property int $views
+ * @property bool $is_sensitive
+ * @property int $is_adult
+ * @property int $has_audio
+ * @property int $has_thumb
+ * @property int $has_processed
+ * @property int $is_approved
+ * @property string|null $features
+ * @property array<array-key, mixed>|null $media_metadata
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int $comment_state
+ * @property string|null $cw_title
+ * @property string|null $cw_body
+ * @property string|null $sha512_hash
+ * @property int $has_hls
+ * @property int $can_download
+ * @property int $can_duet
+ * @property int $can_stitch
+ * @property int $is_pinned
+ * @property int|null $pinned_order
+ * @property string|null $category
+ * @property string|null $ap_published_at
+ * @property string|null $last_fetched_at
+ * @property int $fetch_failure_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Hashtag> $hashtags
+ * @property-read int|null $hashtags_count
+ * @property-read \App\Models\Profile|null $profile
+ *
+ * @method static Builder<static>|Video canComment()
+ * @method static Builder<static>|Video newModelQuery()
+ * @method static Builder<static>|Video newQuery()
+ * @method static Builder<static>|Video published()
+ * @method static Builder<static>|Video query()
+ * @method static Builder<static>|Video whereApPublishedAt($value)
+ * @method static Builder<static>|Video whereCanDownload($value)
+ * @method static Builder<static>|Video whereCanDuet($value)
+ * @method static Builder<static>|Video whereCanStitch($value)
+ * @method static Builder<static>|Video whereCaption($value)
+ * @method static Builder<static>|Video whereCategory($value)
+ * @method static Builder<static>|Video whereCommentState($value)
+ * @method static Builder<static>|Video whereComments($value)
+ * @method static Builder<static>|Video whereCreatedAt($value)
+ * @method static Builder<static>|Video whereCwBody($value)
+ * @method static Builder<static>|Video whereCwTitle($value)
+ * @method static Builder<static>|Video whereDuration($value)
+ * @method static Builder<static>|Video whereFeatures($value)
+ * @method static Builder<static>|Video whereFetchFailureCount($value)
+ * @method static Builder<static>|Video whereHasAudio($value)
+ * @method static Builder<static>|Video whereHasHls($value)
+ * @method static Builder<static>|Video whereHasProcessed($value)
+ * @method static Builder<static>|Video whereHasThumb($value)
+ * @method static Builder<static>|Video whereId($value)
+ * @method static Builder<static>|Video whereIsAdult($value)
+ * @method static Builder<static>|Video whereIsApproved($value)
+ * @method static Builder<static>|Video whereIsLocal($value)
+ * @method static Builder<static>|Video whereIsPinned($value)
+ * @method static Builder<static>|Video whereIsSensitive($value)
+ * @method static Builder<static>|Video whereLastFetchedAt($value)
+ * @method static Builder<static>|Video whereLikes($value)
+ * @method static Builder<static>|Video whereMediaMetadata($value)
+ * @method static Builder<static>|Video wherePinnedOrder($value)
+ * @method static Builder<static>|Video whereProfileId($value)
+ * @method static Builder<static>|Video whereRemoteHlsUrl($value)
+ * @method static Builder<static>|Video whereRemoteMediaUrl($value)
+ * @method static Builder<static>|Video whereRemoteThumbUrl($value)
+ * @method static Builder<static>|Video whereSha512Hash($value)
+ * @method static Builder<static>|Video whereShares($value)
+ * @method static Builder<static>|Video whereSizeKb($value)
+ * @method static Builder<static>|Video whereStatus($value)
+ * @method static Builder<static>|Video whereTags($value)
+ * @method static Builder<static>|Video whereUpdatedAt($value)
+ * @method static Builder<static>|Video whereUri($value)
+ * @method static Builder<static>|Video whereVid($value)
+ * @method static Builder<static>|Video whereVidOptimized($value)
+ * @method static Builder<static>|Video whereViews($value)
+ * @method static Builder<static>|Video whereVisibility($value)
+ *
+ * @mixin \Eloquent
+ */
 class Video extends Model
 {
     use HasFactory, HasSnowflakePrimary;
@@ -53,8 +152,6 @@ class Video extends Model
     /**
      * Get the attributes that should be cast.
      *
-     * @property array<string, mixed>|null $media_metadata
-     *
      * @return array<string, string>
      */
     protected function casts(): array
@@ -68,10 +165,13 @@ class Video extends Model
         ];
     }
 
-    #[Scope]
-    protected function published(Builder $query): void
+    /**
+     * @param  Builder<Video>  $query
+     * @return Builder<Video>
+     */
+    protected function scopePublished(Builder $query): Builder
     {
-        $query->where('status', 2);
+        return $query->where('status', 2);
     }
 
     #[Scope]

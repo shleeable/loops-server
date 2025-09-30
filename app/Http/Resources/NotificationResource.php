@@ -25,28 +25,17 @@ class NotificationResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        switch ($this->type) {
-            case Notification::VIDEO_LIKE:
-                return $this->newVideoLike();
-                break;
-
-            case Notification::NEW_FOLLOWER:
-                return $this->newFollower();
-                break;
-
-            case Notification::NEW_VIDCOMMENT:
-                return $this->newVideoComment();
-                break;
-
-            default:
-                return [
-                    'id' => (string) $this->id,
-                    'type' => 'internal',
-                    'read_at' => $this->read_at,
-                    'created_at' => $this->created_at,
-                ];
-                break;
-        }
+        return match ($this->type) {
+            Notification::VIDEO_LIKE => $this->newVideoLike(),
+            Notification::NEW_FOLLOWER => $this->newFollower(),
+            Notification::NEW_VIDCOMMENT => $this->newVideoComment(),
+            default => [
+                'id' => (string) $this->id,
+                'type' => 'internal',
+                'read_at' => $this->read_at,
+                'created_at' => $this->created_at,
+            ],
+        };
     }
 
     protected function newVideoLike()

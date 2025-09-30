@@ -5,6 +5,29 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $data_retention_period
+ * @property bool $analytics_tracking
+ * @property bool $research_data_sharing
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\User $user
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDataSettings newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDataSettings newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDataSettings query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDataSettings whereAnalyticsTracking($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDataSettings whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDataSettings whereDataRetentionPeriod($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDataSettings whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDataSettings whereResearchDataSharing($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDataSettings whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDataSettings whereUserId($value)
+ *
+ * @mixin \Eloquent
+ */
 class UserDataSettings extends Model
 {
     protected $fillable = [

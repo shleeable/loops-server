@@ -5,6 +5,35 @@ namespace App\Models;
 use App\Events\SettingsUpdated;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property string $key
+ * @property array<array-key, mixed>|null $value
+ * @property string $type
+ * @property string|null $description
+ * @property bool $is_public
+ * @property int $version
+ * @property int|null $updated_by
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\User|null $updatedBy
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminSetting newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminSetting newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminSetting query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminSetting whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminSetting whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminSetting whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminSetting whereIsPublic($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminSetting whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminSetting whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminSetting whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminSetting whereUpdatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminSetting whereValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AdminSetting whereVersion($value)
+ *
+ * @mixin \Eloquent
+ */
 class AdminSetting extends Model
 {
     protected $fillable = [

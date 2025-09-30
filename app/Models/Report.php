@@ -8,6 +8,53 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @property int $id
+ * @property int|null $reporter_profile_id
+ * @property int|null $reported_profile_id
+ * @property int|null $reported_video_id
+ * @property int|null $reported_comment_id
+ * @property int|null $reported_comment_reply_id
+ * @property string $report_type
+ * @property array<array-key, mixed>|null $metadata
+ * @property int $admin_seen
+ * @property int $handled
+ * @property int $is_remote
+ * @property string|null $user_message
+ * @property string|null $admin_notes
+ * @property string|null $admin_remind_after
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $domain
+ * @property-read \App\Models\Video|null $video
+ *
+ * @method static Builder<static>|Report againstProfile(string|int $profileId)
+ * @method static Builder<static>|Report filterByStatus(?string $sort)
+ * @method static Builder<static>|Report newModelQuery()
+ * @method static Builder<static>|Report newQuery()
+ * @method static Builder<static>|Report paginated(int $perPage = 10)
+ * @method static Builder<static>|Report query()
+ * @method static Builder<static>|Report search(?string $search)
+ * @method static Builder<static>|Report whereAdminNotes($value)
+ * @method static Builder<static>|Report whereAdminRemindAfter($value)
+ * @method static Builder<static>|Report whereAdminSeen($value)
+ * @method static Builder<static>|Report whereCreatedAt($value)
+ * @method static Builder<static>|Report whereDomain($value)
+ * @method static Builder<static>|Report whereHandled($value)
+ * @method static Builder<static>|Report whereId($value)
+ * @method static Builder<static>|Report whereIsRemote($value)
+ * @method static Builder<static>|Report whereMetadata($value)
+ * @method static Builder<static>|Report whereReportType($value)
+ * @method static Builder<static>|Report whereReportedCommentId($value)
+ * @method static Builder<static>|Report whereReportedCommentReplyId($value)
+ * @method static Builder<static>|Report whereReportedProfileId($value)
+ * @method static Builder<static>|Report whereReportedVideoId($value)
+ * @method static Builder<static>|Report whereReporterProfileId($value)
+ * @method static Builder<static>|Report whereUpdatedAt($value)
+ * @method static Builder<static>|Report whereUserMessage($value)
+ *
+ * @mixin \Eloquent
+ */
 class Report extends Model
 {
     use HasFactory;

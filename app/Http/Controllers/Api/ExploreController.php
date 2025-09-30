@@ -105,13 +105,6 @@ class ExploreController extends Controller
         return $processedVideos;
     }
 
-    private function batchProcessVideoDataAlternative($videos)
-    {
-        $videoIds = $videos->pluck('id')->take(15)->toArray();
-
-        return $this->batchProcessVideoData($videos);
-    }
-
     public function clearTagCache($tagName)
     {
         $cacheKey = "tag_feed_{$tagName}";

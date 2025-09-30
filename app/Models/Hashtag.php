@@ -5,6 +5,38 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $name_normalized
+ * @property int $can_trend
+ * @property int $can_search
+ * @property int $can_autolink
+ * @property int $is_nsfw
+ * @property int $is_banned
+ * @property int $count
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Video> $videos
+ * @property-read int|null $videos_count
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Hashtag newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Hashtag newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Hashtag query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Hashtag whereCanAutolink($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Hashtag whereCanSearch($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Hashtag whereCanTrend($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Hashtag whereCount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Hashtag whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Hashtag whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Hashtag whereIsBanned($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Hashtag whereIsNsfw($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Hashtag whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Hashtag whereNameNormalized($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Hashtag whereUpdatedAt($value)
+ *
+ * @mixin \Eloquent
+ */
 class Hashtag extends Model
 {
     protected $fillable = [

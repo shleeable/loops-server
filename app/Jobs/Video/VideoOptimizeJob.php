@@ -86,6 +86,7 @@ class VideoOptimizeJob implements ShouldQueue
                 '-pix_fmt', 'yuv420p',
             ]);
 
+        // @phpstan-ignore-next-line
         $media = FFMpeg::fromDisk('s3')
             ->open($video->vid)
             ->addFilter(['-vf', "scale={$width}:-2"])
@@ -94,6 +95,7 @@ class VideoOptimizeJob implements ShouldQueue
             ->inFormat($format)
             ->withVisibility('public')
             ->save($name);
+
         $media->cleanupTemporaryFiles();
 
         $video->vid_optimized = $name;

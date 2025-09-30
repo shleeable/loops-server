@@ -7,6 +7,41 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string|null $type
+ * @property array<array-key, mixed>|null $value
+ * @property string|null $activity_type
+ * @property int|null $activity_id
+ * @property string|null $ip_address
+ * @property string|null $client_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Model|\Eloquent|null $activity
+ * @property-read string $description
+ * @property-read \App\Models\User $user
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog forUser($userId)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog fromIp(string $ipAddress)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog ofType(string $type)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog recent(int $days = 30)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog whereActivityId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog whereActivityType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog whereClientId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog whereIpAddress($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserAuditLog whereValue($value)
+ *
+ * @mixin \Eloquent
+ */
 class UserAuditLog extends Model
 {
     use HasFactory;

@@ -18,6 +18,7 @@ use App\Models\Hashtag;
 use App\Models\Instance;
 use App\Models\Profile;
 use App\Models\Report;
+use App\Models\User;
 use App\Models\Video;
 use App\Services\AccountService;
 use App\Services\AdminAuditLogService;
@@ -183,7 +184,7 @@ class AdminController extends Controller
         $res = (new ProfileResource($profile))->toArray($request);
 
         if ($profile->local) {
-            $user = $profile->user;
+            $user = User::whereProfileId($id)->firstOrFail();
             $res['is_admin'] = (bool) $user->is_admin;
             $res['email'] = $user->email;
             $res['email_verified'] = (bool) $user->email_verified_at;
@@ -865,11 +866,8 @@ class AdminController extends Controller
 
         if ($sort && isset($sortOptions[$sort])) {
             [$column, $direction] = $sortOptions[$sort];
-            $query->orderBy($column, $direction);
-
-            if ($column !== 'id') {
-                $query->orderBy('id', 'desc');
-            }
+            $query->orderBy($column, $direction)
+                ->orderByDesc('id');
         } else {
             if (request()->query('q')) {
                 $query->orderBy('id', 'desc')->orderBy('id', 'desc');
@@ -916,16 +914,12 @@ class AdminController extends Controller
         if ($sort && isset($sortOptions[$sort])) {
             [$column, $direction] = $sortOptions[$sort];
 
-            // Get the appropriate table for this column
-            $tablePrefix = isset($columnTableMap[$column]) ? $columnTableMap[$column].'.' : '';
+            $tablePrefix = $columnTableMap[$column].'.';
             $qualifiedColumn = $tablePrefix.$column;
 
             $query->orderBy($qualifiedColumn, $direction);
 
-            if ($column !== 'id') {
-                $idTable = $tableName ?? 'videos';
-                $query->orderBy($idTable.'.id', 'desc');
-            }
+            $query->orderByDesc(($tableName ?? 'videos').'.id');
         } else {
             if (request()->query('q')) {
                 $query->orderBy('profiles.followers', 'desc')

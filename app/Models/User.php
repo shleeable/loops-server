@@ -12,16 +12,93 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+/**
+ * @property-read Profile|null $profile
+ * @property-read Video|null $video
+ * @property int $id
+ * @property string $name
+ * @property int|null $profile_id
+ * @property string $username
+ * @property string $email
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string $password
+ * @property bool $is_admin
+ * @property int $can_upload
+ * @property int $can_comment
+ * @property int $can_like
+ * @property int $can_follow
+ * @property string|null $remember_token
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $push_token
+ * @property array<array-key, mixed>|null $device
+ * @property \Illuminate\Support\Carbon|null $push_token_verified_at
+ * @property string|null $admin_note
+ * @property int|null $trust_level
+ * @property int $has_2fa
+ * @property string|null $two_factor_secret
+ * @property string|null $two_factor_backups
+ * @property string|null $delete_after
+ * @property string|null $email_verification_token
+ * @property string|null $last_active_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $comments
+ * @property-read int|null $comments_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\DataExport> $dataExports
+ * @property-read int|null $data_exports_count
+ * @property-read \App\Models\UserDataSettings|null $dataSettings
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Follower> $followers
+ * @property-read int|null $followers_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Follower> $following
+ * @property-read int|null $following_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\VideoLike> $likes
+ * @property-read int|null $likes_count
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read int|null $notifications_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Laravel\Sanctum\PersonalAccessToken> $tokens
+ * @property-read int|null $tokens_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\UserVideoView> $videoViews
+ * @property-read int|null $video_views_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Video> $videos
+ * @property-read int|null $videos_count
+ *
+ * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereAdminNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCanComment($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCanFollow($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCanLike($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCanUpload($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereDeleteAfter($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereDevice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmailVerificationToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmailVerifiedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereHas2fa($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereIsAdmin($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastActiveAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePassword($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereProfileId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePushToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePushTokenVerifiedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTrustLevel($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTwoFactorBackups($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTwoFactorSecret($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUsername($value)
+ *
+ * @mixin \Eloquent
+ */
 #[ObservedBy([UserObserver::class])]
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'username',
@@ -34,11 +111,6 @@ class User extends Authenticatable
         'last_active_at',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'email',
         'password',
@@ -53,11 +125,6 @@ class User extends Authenticatable
         'last_active_at',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -79,26 +146,33 @@ class User extends Authenticatable
         return $this->hasOne(Profile::class);
     }
 
+    /**
+     * @return HasMany<Video, $this>
+     */
     public function videos(): HasMany
     {
         return $this->hasMany(Video::class, 'profile_id');
     }
 
+    /** @return HasMany<Comment, $this> */
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class, 'profile_id');
     }
 
+    /** @return HasMany<VideoLike, $this> */
     public function likes(): HasMany
     {
         return $this->hasMany(VideoLike::class, 'profile_id');
     }
 
+    /** @return HasMany<Follower, $this> */
     public function followers(): HasMany
     {
         return $this->hasMany(Follower::class, 'following_id', 'profile_id');
     }
 
+    /** @return HasMany<Follower, $this> */
     public function following(): HasMany
     {
         return $this->hasMany(Follower::class, 'profile_id', 'profile_id');
@@ -109,11 +183,15 @@ class User extends Authenticatable
         return $this->hasMany(UserVideoView::class);
     }
 
+    /** @return HasMany<DataExport, $this> */
     public function dataExports(): HasMany
     {
         return $this->hasMany(DataExport::class);
     }
 
+    /**
+     * @return HasOne<UserDataSettings, $this>
+     */
     public function dataSettings(): HasOne
     {
         return $this->hasOne(UserDataSettings::class);
@@ -135,7 +213,7 @@ class User extends Authenticatable
     {
         $totalBytes = 0;
 
-        $totalBytes += $this->videos()->sum('size_kb') ?? 0;
+        $totalBytes += $this->videos()->sum('size_kb');
 
         if ($totalBytes) {
             $totalBytes = $totalBytes * 1024;

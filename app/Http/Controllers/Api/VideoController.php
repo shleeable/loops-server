@@ -61,10 +61,11 @@ class VideoController extends Controller
         $model = new Video;
         $model->profile_id = $pid;
         $model->caption = Purify::clean($request->description);
-        $model->size_kb = $videoMeta['size'];
+        $model->size_kb = intval($videoMeta['size']);
         $model->is_sensitive = $request->filled('is_sensitive') ? (bool) $request->boolean('is_sensitive') : false;
         $model->comment_state = $request->filled('comment_state') ? ($request->input('comment_state') == 4 ? 4 : 0) : 4;
         $model->can_download = $request->filled('can_download') ? $request->boolean('can_download') : false;
+        // @phpstan-ignore-next-line
         $model->media_metadata = $videoMeta;
         $model->save();
         $path = $request->video->store('videos/'.$pid.'/'.$model->id, 's3');
@@ -151,7 +152,7 @@ class VideoController extends Controller
             $video->likes = VideoLike::whereVideoId($video->id)->count();
             $video->saveQuietly();
 
-            app(LikeService::class)->addVideoLike($video->id, $pid);
+            app(LikeService::class)->addVideoLike((string) $video->id, (string) $pid);
 
             if ($pid !== $video->profile_id) {
                 NotificationService::newVideoLike(
@@ -186,7 +187,7 @@ class VideoController extends Controller
             ->first();
 
         if ($res) {
-            app(LikeService::class)->removeVideoLike($video->id, $pid);
+            app(LikeService::class)->removeVideoLike((string) $video->id, (string) $pid);
             $res->delete();
             $video->likes = VideoLike::whereVideoId($video->id)->count();
             $video->saveQuietly();
@@ -197,11 +198,8 @@ class VideoController extends Controller
         }
 
         $resp = (new VideoResource($video))->toArray($request);
-
-        if ($res) {
-            $resp['has_liked'] = false;
-            $resp['likes'] = $video->likes;
-        }
+        $resp['has_liked'] = false;
+        $resp['likes'] = $video->likes;
 
         return $resp;
     }

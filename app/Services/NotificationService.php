@@ -87,21 +87,4 @@ class NotificationService
             'comment_reply_id' => $crid,
         ]);
     }
-
-    public static function create($uid, $type, $itemClass, $itemId, $meta = false)
-    {
-        $n = new Notification;
-        $n->user_id = $uid;
-        $n->type = $type;
-        $n->item_type = $itemClass;
-        $n->item_id = $itemId;
-
-        if ($meta) {
-            $n->meta = $meta;
-        }
-
-        $n->save();
-
-        return $n;
-    }
 }

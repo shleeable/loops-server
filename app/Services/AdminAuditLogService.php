@@ -22,7 +22,7 @@ class AdminAuditLogService
         array|string|null $value = null,
         ?Model $activity = null,
         ?string $actionMsg = null,
-        ?string $visibility = '1'
+        string|int $visibility = '1'
     ): AdminAuditLog {
         $userId = $user instanceof User ? $user->id : $user;
 
@@ -31,7 +31,7 @@ class AdminAuditLogService
             'type' => $type,
             'value' => $value,
             'activity_type' => $activity ? get_class($activity) : null,
-            'activity_id' => $activity?->id,
+            'activity_id' => $activity?->getKey(),
             'action_msg' => $actionMsg,
             'visibility' => $visibility,
         ]);

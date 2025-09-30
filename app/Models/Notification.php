@@ -5,6 +5,37 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property int $type
+ * @property int $user_id
+ * @property int|null $profile_id
+ * @property int|null $video_id
+ * @property int|null $comment_id
+ * @property int|null $comment_reply_id
+ * @property array<array-key, mixed>|null $meta
+ * @property \Illuminate\Support\Carbon|null $read_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Profile|null $profile
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereCommentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereCommentReplyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereMeta($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereProfileId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereReadAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereVideoId($value)
+ *
+ * @mixin \Eloquent
+ */
 class Notification extends Model
 {
     use HasFactory;
@@ -38,18 +69,8 @@ class Notification extends Model
 
     public const VIDEO_COMMENT_REPLY_LIKE = 23;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = ['user_id', 'type', 'video_id', 'read_at', 'profile_id', 'comment_id', 'comment_reply_id'];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [

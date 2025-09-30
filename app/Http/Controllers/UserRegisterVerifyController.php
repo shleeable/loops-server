@@ -25,7 +25,7 @@ class UserRegisterVerifyController extends Controller
         $reg = new UserRegisterVerify;
         $reg->session_key = $sessionKey;
         $reg->email = $request->input('email');
-        $reg->verify_code = random_int(111111, 999999);
+        $reg->verify_code = (string) random_int(111111, 999999);
         $reg->ip_address = $request->ip();
         $reg->user_agent = $request->userAgent();
         $reg->email_last_sent_at = now();

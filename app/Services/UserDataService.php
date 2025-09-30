@@ -2,7 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Comment;
+use App\Models\Follower;
 use App\Models\User;
+use App\Models\Video;
+use App\Models\VideoLike;
 
 class UserDataService
 {
@@ -100,7 +104,7 @@ class UserDataService
     private function generateVideosExport(User $user): array
     {
         return [
-            'videos' => $user->videos()->published()->get()->map(function ($video) {
+            'videos' => $user->videos()->published()->get()->map(function (Video $video) {
                 $cached = VideoService::getMediaData($video->id);
 
                 return $cached ? [
@@ -127,7 +131,7 @@ class UserDataService
     private function generateInteractionsExport(User $user): array
     {
         return [
-            'comments' => $user->comments()->get()->map(function ($comment) {
+            'comments' => $user->comments()->get()->map(function (Comment $comment) {
                 return [
                     'id' => $comment->id,
                     'content' => $comment->caption,
@@ -135,7 +139,7 @@ class UserDataService
                     'created_at' => $comment->created_at->format('F j, Y'),
                 ];
             })->toArray(),
-            'likes' => $user->likes()->get()->map(function ($like) {
+            'likes' => $user->likes()->get()->map(function (VideoLike $like) {
                 return [
                     'video_id' => $like->video_id,
                     'liked_at' => $like->created_at->format('F j, Y'),
@@ -147,7 +151,7 @@ class UserDataService
     private function generateFollowersExport(User $user): array
     {
         return [
-            'followers' => $user->followers()->get()->map(function ($follower) {
+            'followers' => $user->followers()->get()->map(function (Follower $follower) {
                 $acct = AccountService::get($follower->profile_id);
                 if (! $acct) {
                     return;
@@ -160,7 +164,7 @@ class UserDataService
                     'followed_at' => $follower->created_at->format('F j, Y'),
                 ];
             })->filter()->toArray(),
-            'following' => $user->following()->get()->map(function ($following) {
+            'following' => $user->following()->get()->map(function (Follower $following) {
                 $acct = AccountService::get($following->following_id);
                 if (! $acct) {
                     return;
