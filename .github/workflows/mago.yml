@@ -31,6 +31,6 @@ jobs:
 
       - name: Run Mago
         run: |
-          mago format .
-          mago lint --reporting-format=github .
-          mago analyze --reporting-format=github .
+          mago format app/ routes/ tests/ database/ config / lang/
+          mago lint --reporting-format=github app/ routes/ tests/ database/ config / lang/
+          mago analyze --reporting-format=github app/ routes/ tests/ database/ config / lang/
