@@ -29,6 +29,6 @@ jobs:
 
       - name: Run Mago
         run: |
-          mago format --dry-run
-          mago lint --reporting-format=github
-          mago analyze --reporting-format=github
+          mago format --dry-run .
+          mago lint --reporting-format=github .
+          mago analyze --reporting-format=github .
