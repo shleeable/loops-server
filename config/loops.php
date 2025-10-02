@@ -29,4 +29,14 @@ return [
             'timeout' => env('LOOPS_FED_DELIVERY_TIMEOUT', 10),
         ],
     ],
+
+    'autolinker' => [
+        'mentions' => [
+            // If true, remove_domain takes precidence over hide_domain
+            'remove_domain' => env('LOOPS_AL_MEN_REMOVE_DOMAINS', true),
+            'hide_domain' => env('LOOPS_AL_MEN_HIDE_DOMAINS', false),
+            'target_blank' => env('LOOPS_AL_MEN_TARGET_BLANK', false),
+            'max_length' => env('LOOPS_AL_MEN_MAX_LENGTH', 64),
+        ],
+    ]
 ];
