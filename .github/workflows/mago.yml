@@ -27,7 +27,7 @@ jobs:
       - name: Setup Mago CLI
         uses: nhedger/setup-mago@v1
         with:
-          version: latest
+          version: 1.0.0-beta.25
 
       - name: Run Mago
         run: |
