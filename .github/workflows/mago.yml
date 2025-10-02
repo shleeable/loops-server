@@ -24,11 +24,13 @@ jobs:
       - name: Install Composer Dependencies
         run: composer install --prefer-dist --no-progress
 
-      - name: Setup Mago
+      - name: Setup Mago CLI
         uses: nhedger/setup-mago@v1
+        with:
+          version: latest
 
       - name: Run Mago
         run: |
-          mago format --dry-run .
-          mago lint --reporting-format=github .
-          mago analyze --reporting-format=github .
+          mago format --dry-run
+          mago lint --reporting-format=github
+          mago analyze --reporting-format=github
