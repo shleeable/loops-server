@@ -26,6 +26,10 @@ const route = useRoute();
 const router = useRouter();
 
 onMounted(() => {
-    authStore.openAuthModal("login");
+    if (authStore.authenticated) {
+        router.push("/");
+    } else {
+        authStore.openAuthModal("login");
+    }
 });
 </script>
