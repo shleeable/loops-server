@@ -26,3 +26,4 @@ yarn-error.log
 /app/Console/Commands/FindDuplicateLangKeys.php
 /app/Console/Commands/SortLangFiles.php
 _ide_helper.php
+_ide_helper_models.php
