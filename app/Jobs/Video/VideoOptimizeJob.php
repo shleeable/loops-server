@@ -4,6 +4,7 @@ namespace App\Jobs\Video;
 
 use App\Services\VideoService;
 use FFMpeg\Format\Video\X264;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -15,7 +16,7 @@ use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 
 class VideoOptimizeJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $video;
 
@@ -48,7 +49,7 @@ class VideoOptimizeJob implements ShouldQueue
      */
     public function middleware(): array
     {
-        return [(new WithoutOverlapping('video-processing'))->expireAfter(420)];
+        return [(new WithoutOverlapping('video-processing:'.$this->video->id))->expireAfter(420)];
     }
 
     /**
@@ -56,6 +57,10 @@ class VideoOptimizeJob implements ShouldQueue
      */
     public function handle(): void
     {
+        if ($this->batch()->cancelled()) {
+            return;
+        }
+
         $video = $this->video;
 
         if (str_starts_with($video->vid, 'https://')) {
