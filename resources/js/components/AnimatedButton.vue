@@ -90,6 +90,14 @@ export default {
                     ].join(" ");
                 case "secondary":
                     return `${baseClasses} bg-gray-600 dark:bg-gray-500 text-white hover:bg-gray-700 dark:hover:bg-gray-600 focus:ring-gray-500 dark:focus:ring-gray-400 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:opacity-50`;
+                case "light":
+                    return `${baseClasses}
+                        bg-gray-100 dark:bg-gray-800
+                        text-gray-900 dark:text-white
+                        hover:bg-gray-200 dark:hover:bg-gray-700
+                        active:bg-gray-300 dark:active:bg-gray-600
+                        focus:ring-gray-300 dark:focus:ring-gray-600
+                        disabled:opacity-50`;
                 case "outline":
                     return `${baseClasses} border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-gray-500 dark:focus:ring-gray-400 disabled:opacity-50`;
                 case "ghost":
