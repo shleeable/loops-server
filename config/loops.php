@@ -30,6 +30,10 @@ return [
         ],
     ],
 
+    'registration' => [
+        'max_resend_email_verify' => (int) env('LOOPS_REG_MAX_RESEND_EMAIL_VERIFY', 2),
+    ],
+
     'autolinker' => [
         'mentions' => [
             // If true, remove_domain takes precidence over hide_domain
