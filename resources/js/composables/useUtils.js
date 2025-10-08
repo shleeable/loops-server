@@ -1,4 +1,5 @@
-import { useRouter } from "vue-router";
+import { useRouter, RouterLink } from "vue-router";
+import { h } from "vue";
 
 export function useUtils() {
     const router = useRouter();
@@ -49,6 +50,33 @@ export function useUtils() {
         });
 
         return formatter.format(count);
+    };
+
+    const formatRecentDate = (isoTimestamp) => {
+        const date = new Date(isoTimestamp);
+        if (!date || isNaN(date.getTime())) {
+            return "Invalid date";
+        }
+
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+
+        if (diffInSeconds < 60) {
+            return "just now";
+        }
+
+        if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            return `${minutes}m ago`;
+        }
+
+        if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            return `${hours}h ago`;
+        }
+
+        const options = { month: "short", day: "numeric", year: "numeric" };
+        return date.toLocaleDateString("en-US", options);
     };
 
     const formatDate = (date) => {
@@ -233,11 +261,168 @@ export function useUtils() {
         }
     };
 
+    const parseCaption = (caption, mentions = [], tags = []) => {
+        const entities = [];
+
+        mentions.forEach((mention) => {
+            let start = mention.start_index;
+            let end = mention.end_index;
+
+            if (start > 0 && caption[start - 1] === "@") {
+                start = start - 1;
+            }
+
+            entities.push({
+                type: "mention",
+                start: start,
+                end: end,
+                data: mention,
+            });
+        });
+
+        entities.sort((a, b) => a.start - b.start);
+
+        const mentionPositions = new Set();
+        entities.forEach((entity) => {
+            for (let i = entity.start; i < entity.end; i++) {
+                mentionPositions.add(i);
+            }
+        });
+
+        const hashtagRegex = /#(\w+)/g;
+        const tagsLower = tags.map((t) => t.toLowerCase());
+        let match;
+
+        while ((match = hashtagRegex.exec(caption)) !== null) {
+            const tag = match[1].toLowerCase();
+            const hashtagStart = match.index;
+            const hashtagEnd = match.index + match[0].length;
+
+            if (!tagsLower.includes(tag)) continue;
+
+            let overlaps = false;
+            for (let i = hashtagStart; i < hashtagEnd; i++) {
+                if (mentionPositions.has(i)) {
+                    overlaps = true;
+                    break;
+                }
+            }
+
+            if (!overlaps) {
+                entities.push({
+                    type: "hashtag",
+                    start: hashtagStart,
+                    end: hashtagEnd,
+                    data: { tag: match[1] },
+                });
+            }
+        }
+
+        entities.sort((a, b) => a.start - b.start);
+
+        const segments = [];
+        let currentPos = 0;
+
+        entities.forEach((entity) => {
+            if (currentPos < entity.start) {
+                const text = caption.substring(currentPos, entity.start);
+                if (text) {
+                    segments.push({
+                        type: "text",
+                        content: text,
+                    });
+                }
+            }
+
+            segments.push({
+                type: entity.type,
+                content: caption.substring(entity.start, entity.end),
+                data: entity.data,
+            });
+
+            currentPos = entity.end;
+        });
+
+        if (currentPos < caption.length) {
+            const text = caption.substring(currentPos);
+            if (text) {
+                segments.push({
+                    type: "text",
+                    content: text,
+                });
+            }
+        }
+
+        return segments;
+    };
+
+    const renderCaption = (segments, options = {}) => {
+        const {
+            mentionClass = "text-blue-500 hover:underline font-medium",
+            hashtagClass = "text-blue-500 hover:underline font-medium",
+            mentionPath = (mention) => `/@${mention.username}`,
+            hashtagPath = (tag) => `/tag/${tag.toLowerCase()}`,
+        } = options;
+
+        const vnodes = segments.map((segment, index) => {
+            switch (segment.type) {
+                case "text":
+                    return h("span", { key: `text-${index}` }, segment.content);
+
+                case "mention": {
+                    const mention = segment.data;
+                    return h(
+                        RouterLink,
+                        {
+                            key: `mention-${index}-${mention.profile_id}`,
+                            to: mentionPath(mention),
+                            class: mentionClass,
+                        },
+                        () => segment.content,
+                    );
+                }
+
+                case "hashtag": {
+                    const tag = segment.data.tag;
+                    return h(
+                        RouterLink,
+                        {
+                            key: `hashtag-${index}-${tag}`,
+                            to: hashtagPath(tag),
+                            class: hashtagClass,
+                        },
+                        () => segment.content,
+                    );
+                }
+
+                default:
+                    return h(
+                        "span",
+                        { key: `default-${index}` },
+                        segment.content,
+                    );
+            }
+        });
+
+        return h("span", {}, vnodes);
+    };
+
+    const autolinkCaption = (
+        caption,
+        mentions = [],
+        tags = [],
+        options = {},
+    ) => {
+        const segments = parseCaption(caption, mentions, tags);
+        return renderCaption(segments, options);
+    };
+
     return {
         normalizeDomain,
         isValidDomain,
         formatNumber,
         formatCount,
+        formatRecentDate,
         formatDate,
         formatContentDate,
         formatDateTime,
@@ -246,6 +431,9 @@ export function useUtils() {
         formatDuration,
         formatBytes,
         textTruncate,
+        parseCaption,
+        renderCaption,
+        autolinkCaption,
         goBack,
     };
 }
