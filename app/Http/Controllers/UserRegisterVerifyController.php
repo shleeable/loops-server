@@ -39,6 +39,28 @@ class UserRegisterVerifyController extends Controller
         return $this->success();
     }
 
+    public function resendEmailVerification(Request $request)
+    {
+        $request->validate([
+            'email' => [
+                'required',
+                'email:rfc,dns,spoof,strict',
+            ],
+        ]);
+        $sEmail = $request->session()->get('user:reg:email');
+        $email = $request->input('email');
+        abort_if($sEmail != $email, 400, 'Invalid request');
+        $sKey = $request->session()->get('user:reg:session_key');
+        $res = UserRegisterVerify::whereEmail($email)->where('session_key', $sKey)->firstOrFail();
+        abort_if($res->resend_attempts >= config('loops.registration.max_resend_email_verify'), 400, __('common.maxResendLimitReachedPleaseContactSupport'));
+        $res->update(['verify_code' => (string) random_int(111111, 999999), 'resend_attempts' => $res->resend_attempts + 1, 'email_last_sent_at' => now()]);
+        $request->session()->increment('user:reg:verify_attempts');
+
+        NewAccountEmailVerifyJob::dispatch($res);
+
+        return $this->success();
+    }
+
     public function verifyEmailVerification(Request $request)
     {
         $this->preflightCheck($request);
@@ -55,15 +77,21 @@ class UserRegisterVerifyController extends Controller
         $request->session()->increment('user:reg:verify_attempts');
 
         if ($request->session()->get('user:reg:verify_attempts') >= 10) {
-            return $this->error('Too many invalid attempts, please try again later.');
+            return $this->error(__('common.tooManyFailedAttemptsPleaseTryAgainLater'));
         }
 
-        $email = $request->email;
-        $code = $request->code;
+        $sEmail = $request->session()->get('user:reg:email');
+        $email = $request->input('email');
+        abort_if($sEmail != $email, 400, 'Invalid request');
+        $sKey = $request->session()->get('user:reg:session_key');
+        abort_if(! $sKey, 400, 'Invalid request');
+
+        $code = $request->input('code');
         $reg = UserRegisterVerify::whereEmail($request->email)->whereVerifyCode($code)->first();
+        abort_if(! hash_equals($reg->session_key, $sKey), 400, 'Invalid request');
 
         if (! $reg || $reg->verified_at !== null || $reg->email_last_sent_at === null) {
-            return $this->error('Invalid or expired code');
+            return $this->error(__('common.invalidOrExpiredCode'));
         }
 
         $reg->verified_at = now();
@@ -113,7 +141,7 @@ class UserRegisterVerifyController extends Controller
             return $this->error('You are already logged in, you must logout before registering a new account.');
         }
 
-        if (config('mail.default') == 'log') {
+        if (config('mail.default') == 'log' && app()->environment() === 'production') {
             return $this->error('Mail service not configured, please contact support for assistance.');
         }
 
