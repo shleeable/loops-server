@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Hashtag;
 use App\Models\Video;
 use App\Services\AccountService;
 use App\Services\LikeService;
@@ -52,6 +53,9 @@ class VideoResource extends JsonResource
             'shares' => $this->shares,
             'comments' => $this->comments,
             'has_liked' => $hasLiked,
+            'is_edited' => $this->is_edited,
+            'tags' => $this->hashtags->map(fn (Hashtag $tag) => $tag->name),
+            'mentions' => $this->mentions,
             'permissions' => [
                 'can_comment' => (bool) $this->comment_state == 4,
                 'can_download' => (bool) $this->can_download,
