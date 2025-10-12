@@ -66,7 +66,14 @@ class Hashtag extends Model
 
     public function videos(): BelongsToMany
     {
-        return $this->belongsToMany(Video::class, 'video_hashtags');
+        return $this->belongsToMany(Video::class, 'video_hashtags')
+            ->using(VideoHashtag::class);
+    }
+
+    public function comments(): BelongsToMany
+    {
+        return $this->belongsToMany(Comment::class, 'comment_hashtags')
+            ->using(CommentHashtag::class);
     }
 
     public function updateCount(): void
