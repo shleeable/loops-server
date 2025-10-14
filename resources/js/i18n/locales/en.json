@@ -162,6 +162,7 @@
         "visitForum": "Visit Forum"
     },
     "explore": {
+        "discoverTrendingContent": "Discover trending content",
         "noVideosFoundForThisHashtag": "No videos found for this hashtag"
     },
     "language": {
