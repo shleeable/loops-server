@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, ref } from "vue";
+import { computed, onMounted, onBeforeUnmount, ref, inject } from "vue";
 import {
     ShareIcon,
     EllipsisHorizontalIcon,
@@ -108,6 +108,7 @@ interface Props {
 const props = defineProps<Props>();
 const { formatNumber } = useUtils();
 const { openReportModal } = useReportModal();
+const authStore = inject("authStore");
 
 const compactCount = computed(() => formatNumber(props.totalResults));
 
@@ -142,7 +143,11 @@ function onShare() {
 }
 
 const handleReport = async () => {
-    await openReportModal("hashtag", props.id, window.location.href);
+    if (authStore.isAuthenticated) {
+        await openReportModal("hashtag", props.id, window.location.href);
+    } else {
+        authStore.openAuthModal("login");
+    }
     closeMenu();
 };
 </script>
