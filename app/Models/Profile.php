@@ -232,7 +232,7 @@ class Profile extends Model
             'type' => 'Person',
             'preferredUsername' => $this->username,
             'name' => $this->name,
-            'summary' => $this->bio ? AutoLinkerService::link($this->bio) : "",
+            'summary' => $this->bio ? AutoLinkerService::link($this->bio) : '',
             'inbox' => $this->getActorId('/inbox'),
             'outbox' => $this->getActorId('/outbox'),
             'followers' => $this->getActorId('/followers'),

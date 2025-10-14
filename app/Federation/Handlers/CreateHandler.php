@@ -212,10 +212,10 @@ class CreateHandler extends BaseHandler
         $to = $object['to'] ?? [];
         $cc = $object['cc'] ?? [];
 
-        if (!is_array($to)) {
+        if (! is_array($to)) {
             $to = [$to];
         }
-        if (!is_array($cc)) {
+        if (! is_array($cc)) {
             $cc = [$cc];
         }
 
