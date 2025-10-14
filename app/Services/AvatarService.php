@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\Profile;
+use App\Models\ProfileAvatar;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
@@ -12,11 +14,31 @@ class AvatarService
 {
     const CACHE_KEY = 'api:s:avatar:';
 
+    const CACHE_REMOTE_KEY = 'api:s:avatar:remote:';
+
     public static function get($id)
     {
         $acct = AccountService::compact($id);
 
         return $acct['avatar'] ?? url('/storage/avatars/default.jpg');
+    }
+
+    public static function remote($id, $clear = false)
+    {
+        $key = self::CACHE_REMOTE_KEY.$id;
+
+        if ($clear) {
+            Cache::forget($key);
+        }
+
+        return Cache::remember($key, now()->addDays(7), function () use ($id) {
+            $profileAvatar = ProfileAvatar::whereProfileId($id)->first();
+            if (! $profileAvatar) {
+                return url('/storage/avatars/default.jpg');
+            }
+
+            return Storage::disk('s3')->url($profileAvatar->path);
+        });
     }
 
     public static function updateAvatar(Profile $profile, $avatarFile): string

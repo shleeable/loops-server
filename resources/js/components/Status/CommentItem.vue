@@ -1,5 +1,14 @@
 <template>
-    <div class="group/comment-root pb-3">
+    <div
+        class="group/comment-root pb-3"
+        :class="[
+            'comment-item',
+            {
+                'highlighted-comment': isHighlighted && !highlightedReplyId,
+                'highlighted-parent': isHighlighted && highlightedReplyId,
+            },
+        ]"
+    >
         <div class="flex space-x-3 px-4 pt-3">
             <div v-if="comment.tombstone">
                 <img
@@ -47,32 +56,92 @@
                     </router-link>
                 </div>
 
-                <div class="mb-2">
+                <div v-if="isEditing" class="mb-2">
+                    <MentionHashtagInput
+                        v-model="editedCaption"
+                        :placeholder="$t('post.editYourComment')"
+                        :disabled="isSavingEdit"
+                        :fetch-mentions="fetchMentions"
+                        :fetch-hashtags="fetchHashtags"
+                        :validate-mentions="true"
+                        :validate-hashtags="true"
+                        :initial-validated-mentions="initialValidatedMentions"
+                        :initial-validated-hashtags="initialValidatedHashtags"
+                        min-height="80px"
+                        max-height="400px"
+                    />
+                    <div class="flex items-center justify-between mt-2">
+                        <div
+                            class="text-xs"
+                            :class="[
+                                editedCaption.length > MAX_EDIT_CHAR_LIMIT
+                                    ? 'text-red-500'
+                                    : 'text-gray-400 dark:text-gray-500',
+                            ]"
+                        >
+                            {{ editedCaption.length }} /
+                            {{ MAX_EDIT_CHAR_LIMIT }}
+                        </div>
+                        <div class="flex space-x-2">
+                            <button
+                                @click="cancelEdit"
+                                class="px-4 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors cursor-pointer"
+                                :disabled="isSavingEdit"
+                            >
+                                {{ $t("common.cancel") }}
+                            </button>
+                            <button
+                                @click="saveEdit"
+                                class="px-4 py-1.5 bg-[#F02C56] hover:bg-[#F02C56]/70 text-white text-sm font-medium rounded-lg disabled:opacity-50 transition-colors cursor-pointer flex items-center space-x-2 disabled:pointer-events-none"
+                                :disabled="
+                                    isSavingEdit ||
+                                    !editedCaption.trim() ||
+                                    editedCaption.length > MAX_EDIT_CHAR_LIMIT
+                                "
+                            >
+                                <Spinner
+                                    v-if="isSavingEdit"
+                                    size="xs"
+                                    theme="brand"
+                                />
+                                <span v-else>{{ $t("common.save") }}</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div
+                        v-if="isSavingEdit"
+                        class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                    >
+                        {{ $t("common.savingDotDotDot") }}
+                    </div>
+                </div>
+
+                <div v-else class="mb-2">
                     <p
-                        class="text-[16px] leading-relaxed"
+                        class="text-[16px] leading-relaxed break-all"
                         :class="[
                             comment.tombstone
                                 ? 'italic text-gray-500 dark:text-gray-500'
                                 : 'text-[#161823] dark:text-gray-100',
                         ]"
                     >
-                        {{ isExpanded ? comment.caption : truncatedText }}
-                        <button
-                            v-if="comment.caption.length > MAX_CHAR_LIMIT"
-                            @click="isExpanded = !isExpanded"
-                            class="text-gray-500 hover:text-gray-600 text-sm ml-1 cursor-pointer"
-                        >
-                            {{
-                                isExpanded
-                                    ? $t("post.showLess")
-                                    : $t("post.dotDotDotMore")
-                            }}
-                        </button>
+                        <AutolinkedText
+                            :caption="comment?.caption"
+                            :mentions="comment?.mentions"
+                            :tags="comment?.tags"
+                            text-size="text-[16px]"
+                            :root-class="
+                                comment.tombstone
+                                    ? 'text-gray-500'
+                                    : 'text-gray-800 dark:text-slate-300 whitespace-pre-wrap leading-relaxed'
+                            "
+                            :max-char-limit="80"
+                        />
                     </p>
                 </div>
 
                 <div
-                    v-if="!comment.tombstone"
+                    v-if="!comment.tombstone && !isEditing"
                     class="flex items-center justify-between"
                 >
                     <div
@@ -80,10 +149,49 @@
                     >
                         <span>{{ formatContentDate(comment.created_at) }}</span>
                         <button
+                            v-if="comment.is_edited"
+                            class="cursor-pointer text-gray-400 hover:text-gray-500 flex items-center gap-1"
+                            @click="
+                                openCommentHistory(comment.v_id, comment.id)
+                            "
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                                class="size-4"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                                />
+                            </svg>
+
+                            {{ $t("common.edited") }}
+                        </button>
+                        <button
                             v-if="authStore.isAuthenticated"
                             @click="showReplyInput = !showReplyInput"
-                            class="hover:text-gray-700 font-medium cursor-pointer"
+                            class="cursor-pointer text-gray-400 hover:text-gray-500 flex items-center gap-1"
                         >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                                class="size-4"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z"
+                                />
+                            </svg>
+
                             {{ $t("post.reply") }}
                         </button>
                     </div>
@@ -129,12 +237,12 @@
                     </div>
                 </div>
 
+                <!-- Initial load replies button - only show when NOT highlighting a specific reply -->
                 <div
-                    v-if="totalRepliesCount > 0"
+                    v-if="shouldShowInitialLoadButton"
                     :class="[comment.tombstone ? 'pt-0' : 'pt-4']"
                 >
                     <button
-                        v-if="!repliesLoaded && !isLoadingReplies"
                         @click="loadReplies"
                         class="text-sm text-gray-400 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors flex items-center space-x-2 cursor-pointer"
                     >
@@ -152,7 +260,7 @@
 
                     <div
                         v-if="isLoadingReplies"
-                        class="text-sm text-gray-500 dark:text-gray-400 mb-3"
+                        class="text-sm text-gray-500 dark:text-gray-400 mt-2"
                     >
                         <Spinner />
                     </div>
@@ -178,12 +286,20 @@
                         class="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-900 rounded-lg shadow-lg z-10 border border-gray-200 dark:border-gray-700"
                         @click.stop
                     >
-                        <router-link
-                            :to="comment.url"
+                        <a
+                            :href="comment.url"
                             class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                         >
                             {{ $t("post.permalink") }}
-                        </router-link>
+                        </a>
+
+                        <button
+                            v-if="comment.is_owner"
+                            @click="startEdit"
+                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        >
+                            {{ $t("common.edit") }}
+                        </button>
 
                         <button
                             v-if="comment.is_owner"
@@ -208,7 +324,7 @@
                 </div>
 
                 <div
-                    v-if="!comment.tombstone"
+                    v-if="!comment.tombstone && !isEditing"
                     class="relative flex justify-center items-center space-x-1"
                 >
                     <button
@@ -228,10 +344,42 @@
             </div>
         </div>
 
-        <div v-if="repliesLoaded" class="relative px-4 pb-2 ml-[35px]">
+        <div v-if="shouldShowToggleButton" class="mt-2 ml-[52px] pl-3">
+            <button
+                @click="toggleReplies"
+                class="text-sm text-gray-400 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors flex items-center space-x-2 cursor-pointer"
+            >
+                <template v-if="showReplies">
+                    <div class="flex mb-3 items-center space-x-2">
+                        <div
+                            class="flex w-8 bg-gray-300 dark:bg-gray-700 h-[1px]"
+                        ></div>
+                        {{ $t("post.hide") }}
+                        <i class="bx bx-chevron-up text-lg" />
+                    </div>
+                </template>
+
+                <template v-else>
+                    <div
+                        class="flex w-8 bg-gray-300 dark:bg-gray-700 h-[1px]"
+                    ></div>
+                    {{ $t("post.view") }} {{ comment.children?.length || 0 }}
+                    {{
+                        comment.children?.length === 1
+                            ? $t("post.reply")
+                            : $t("post.replies")
+                    }}
+                    <i class="bx bx-chevron-down text-lg" />
+                </template>
+            </button>
+        </div>
+
+        <div v-if="shouldShowReplies" class="relative px-4 pb-2 ml-[52px] pl-3">
+            <div v-if="highlightedReplyId" class="mt-3"></div>
+
             <div class="space-y-5">
                 <NestedCommentItem
-                    v-for="reply in loadedReplies"
+                    v-for="reply in visibleReplies"
                     :key="reply.id"
                     :comment="reply"
                     :video-id="videoId"
@@ -239,32 +387,18 @@
                 />
             </div>
 
-            <div
-                class="flex justify-content-between items-center w-full pl-4 mt-5"
-            >
+            <div v-if="!highlightedReplyId && hasMoreReplies" class="mt-3">
                 <button
-                    v-if="hasMoreReplies && !isLoadingReplies"
                     @click="loadMoreReplies"
-                    class="text-sm text-gray-400 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors cursor-pointer flex items-center space-x-2"
+                    class="text-sm text-[#F02C56] hover:text-[#F02C56]/70 font-medium cursor-pointer"
+                    :disabled="isLoadingMoreReplies"
                 >
-                    <div
-                        class="flex w-8 bg-gray-300 dark:bg-gray-700 h-[1px]"
-                    ></div>
-                    <span class="flex">
-                        {{ $t("post.loadMoreReplies") }}
-                        <i class="bx bx-chevron-down text-lg" />
-                    </span>
+                    {{
+                        isLoadingMoreReplies
+                            ? $t("common.loading")
+                            : $t("post.loadMoreReplies")
+                    }}
                 </button>
-
-                <div class="flex flex-1 justify-end">
-                    <button
-                        @click="hideReplies"
-                        class="flex items-center space-x-1 text-sm text-gray-400 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors cursor-pointer"
-                    >
-                        <span>{{ $t("post.hide") }}</span>
-                        <i class="bx bx-chevron-up text-lg"></i>
-                    </button>
-                </div>
             </div>
         </div>
     </div>
@@ -278,6 +412,9 @@ import { useReportModal } from "@/composables/useReportModal";
 import NestedCommentItem from "./NestedCommentItem.vue";
 import { useAlertModal } from "@/composables/useAlertModal.js";
 import { useUtils } from "@/composables/useUtils";
+import { useI18n } from "vue-i18n";
+import { useEditHistory } from "@/composables/useEditHistory";
+import MentionHashtagInput from "@/components/Status/MentionHashtagInput.vue";
 
 const props = defineProps({
     comment: {
@@ -292,9 +429,18 @@ const props = defineProps({
         type: String,
         default: null,
     },
+    isHighlighted: {
+        type: Boolean,
+        default: false,
+    },
+    highlightedReplyId: {
+        type: [String, Number],
+        default: null,
+    },
 });
 
 const MAX_CHAR_LIMIT = 150;
+const MAX_EDIT_CHAR_LIMIT = 500;
 
 const appStore = inject("appStore");
 const authStore = useAuthStore();
@@ -303,30 +449,32 @@ const commentStore = useCommentStore();
 const { formatContentDate } = useUtils();
 const { alertModal, confirmModal } = useAlertModal();
 const { openReportModal } = useReportModal();
+const { t } = useI18n();
+const { openCommentHistory } = useEditHistory();
 
 const showReplyInput = ref(false);
 const replyText = ref("");
 const showDropdown = ref(false);
-const isExpanded = ref(false);
 const isSubmittingReply = ref(false);
 const isDeletingComment = ref(false);
 
-const truncatedText = computed(() => {
-    if (props.comment.caption.length <= MAX_CHAR_LIMIT) {
-        return props.comment.caption;
-    }
-    return props.comment.caption.slice(0, MAX_CHAR_LIMIT);
-});
+// Edit state
+const isEditing = ref(false);
+const editedCaption = ref("");
+const isSavingEdit = ref(false);
+const initialValidatedMentions = ref([]);
+const initialValidatedHashtags = ref([]);
+const showReplies = ref(false);
 
 const activePost = computed(() => {
     return videoStore.currentVideo;
 });
 
-const loadedReplies = computed(() => {
-    return commentStore.getReplies(props.videoId, props.comment.id) || [];
+const isLoadingReplies = computed(() => {
+    return commentStore.isLoadingReplies(props.videoId, props.comment.id);
 });
 
-const isLoadingReplies = computed(() => {
+const isLoadingMoreReplies = computed(() => {
     return commentStore.isLoadingReplies(props.videoId, props.comment.id);
 });
 
@@ -356,6 +504,65 @@ const heartIconClass = computed(() => {
         : "bx bx-heart text-gray-400 hover:text-red-500";
 });
 
+// Button visibility logic
+const shouldShowInitialLoadButton = computed(() => {
+    // Don't show if we're highlighting a specific reply
+    if (props.highlightedReplyId) {
+        return false;
+    }
+
+    // Show only if there are replies and they haven't been loaded yet
+    return (
+        totalRepliesCount.value > 0 &&
+        !repliesLoaded.value &&
+        !isLoadingReplies.value
+    );
+});
+
+const shouldShowToggleButton = computed(() => {
+    if (props.highlightedReplyId) {
+        return false;
+    }
+
+    // Show if replies have been loaded and there are children
+    return (
+        repliesLoaded.value &&
+        props.comment.children &&
+        props.comment.children.length > 0
+    );
+});
+
+const shouldShowReplies = computed(() => {
+    // Always show if we're highlighting a specific reply
+    if (props.highlightedReplyId) {
+        return true;
+    }
+
+    // Otherwise show based on toggle state
+    return showReplies.value;
+});
+
+const visibleReplies = computed(() => {
+    if (!props.comment.children || props.comment.children.length === 0) {
+        return [];
+    }
+
+    // If highlighting a specific reply, only show that reply
+    if (props.highlightedReplyId) {
+        return props.comment.children.filter(
+            (reply) =>
+                reply.id.toString() === props.highlightedReplyId.toString(),
+        );
+    }
+
+    // Otherwise show all loaded replies
+    return props.comment.children;
+});
+
+const toggleReplies = () => {
+    showReplies.value = !showReplies.value;
+};
+
 const toggleDropdown = () => {
     showDropdown.value = !showDropdown.value;
 };
@@ -374,6 +581,70 @@ onUnmounted(() => {
     document.removeEventListener("click", handleClickOutside);
 });
 
+const startEdit = () => {
+    isEditing.value = true;
+    editedCaption.value = props.comment.caption || "";
+    showDropdown.value = false;
+    showReplyInput.value = false;
+
+    const mentionRegex = /@([\w._-]+(?:@[\w.-]+\.\w+)?)/g;
+    const mentions = [...props.comment.caption.matchAll(mentionRegex)].map(
+        (m) => m[1],
+    );
+    initialValidatedMentions.value = mentions;
+
+    const hashtagRegex = /#([\w_]+)/g;
+    const hashtags = [...props.comment.caption.matchAll(hashtagRegex)].map(
+        (m) => m[1],
+    );
+    initialValidatedHashtags.value = hashtags;
+};
+
+const cancelEdit = async () => {
+    const result = await confirmModal(
+        t("common.confirmCancel"),
+        t("post.confirmCancelEdit"),
+        t("common.yes"),
+        t("common.no"),
+    );
+
+    if (!result) {
+        return;
+    }
+
+    isEditing.value = false;
+    editedCaption.value = "";
+};
+
+const saveEdit = async () => {
+    if (!editedCaption.value.trim() || isSavingEdit.value) return;
+    if (editedCaption.value.length > MAX_EDIT_CHAR_LIMIT) return;
+
+    try {
+        isSavingEdit.value = true;
+
+        await handleCaptionUpdate(
+            props.videoId,
+            props.comment.id,
+            editedCaption.value,
+        );
+
+        isEditing.value = false;
+    } catch (error) {
+        await alertModal(
+            "⚠️ " + t("common.somethingWentWrong"),
+            error || t("common.unexpectedError"),
+        );
+        console.error("Failed to update comment:", error);
+    } finally {
+        isSavingEdit.value = false;
+    }
+};
+
+const handleCaptionUpdate = async (videoId, commentId, newCaption) => {
+    await commentStore.updateComment(videoId, commentId, newCaption);
+};
+
 const handleReply = async () => {
     if (!replyText.value.trim() || isSubmittingReply.value) return;
 
@@ -391,6 +662,10 @@ const handleReply = async () => {
         replyText.value = "";
         showReplyInput.value = false;
     } catch (error) {
+        await alertModal(
+            t("common.error"),
+            error?.response?.data?.message || t("common.unexpectedError"),
+        );
         console.error("Failed to add reply:", error);
     } finally {
         isSubmittingReply.value = false;
@@ -399,6 +674,8 @@ const handleReply = async () => {
 
 const loadReplies = async () => {
     if (isLoadingReplies.value) return;
+
+    showReplies.value = true;
 
     try {
         await commentStore.fetchReplies(props.videoId, props.comment.id, true);
@@ -417,18 +694,14 @@ const loadMoreReplies = async () => {
     }
 };
 
-const hideReplies = () => {
-    commentStore.clearReplies(props.videoId, props.comment.id);
-};
-
 const handleDelete = async () => {
     if (isDeletingComment.value) return;
 
     const result = await confirmModal(
-        "Confirm",
-        `Are you sure you want to delete this comment?`,
-        "Delete",
-        "Cancel",
+        t("common.confirm"),
+        t("post.confirmDeleteComment"),
+        t("post.delete"),
+        t("common.cancel"),
     );
 
     if (!result) {
@@ -485,4 +758,117 @@ const handleLike = async () => {
         console.error("Failed to toggle like:", error);
     }
 };
+
+const fetchMentions = async (query) => {
+    try {
+        const response = await videoStore.autocompleteAccount(
+            encodeURIComponent(query),
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching mentions:", error);
+        return [];
+    }
+};
+
+const fetchHashtags = async (query) => {
+    try {
+        const response = await videoStore.autocompleteHashtag(
+            encodeURIComponent(query),
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching hashtags:", error);
+        return [];
+    }
+};
 </script>
+
+<style scoped>
+@keyframes highlight-pulse {
+    0% {
+        background-color: rgba(240, 44, 86, 0.15);
+        box-shadow: 0 0 0 0 rgba(240, 44, 86, 0.4);
+    }
+    50% {
+        background-color: rgba(240, 44, 86, 0.25);
+        box-shadow: 0 0 0 8px rgba(240, 44, 86, 0);
+    }
+    100% {
+        background-color: rgba(240, 44, 86, 0.1);
+        box-shadow: 0 0 0 0 rgba(240, 44, 86, 0);
+    }
+}
+
+@keyframes highlight-fade {
+    0% {
+        background-color: rgba(240, 44, 86, 0.1);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+.highlighted-comment,
+.highlighted-reply {
+    animation:
+        highlight-pulse 1.5s ease-out,
+        highlight-fade 2s ease-out 1.5s forwards;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin: -0.75rem;
+    position: relative;
+}
+
+.highlighted-parent {
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin: -0.75rem;
+    background-color: rgba(240, 44, 86, 0.05);
+    border: 2px solid rgba(240, 44, 86, 0.2);
+    position: relative;
+}
+
+/* Dark mode adjustments */
+.dark .highlighted-comment,
+.dark .highlighted-reply {
+    animation:
+        highlight-pulse-dark 1.5s ease-out,
+        highlight-fade-dark 2s ease-out 1.5s forwards;
+}
+
+@keyframes highlight-pulse-dark {
+    0% {
+        background-color: rgba(240, 44, 86, 0.25);
+        box-shadow: 0 0 0 0 rgba(240, 44, 86, 0.5);
+    }
+    50% {
+        background-color: rgba(240, 44, 86, 0.35);
+        box-shadow: 0 0 0 8px rgba(240, 44, 86, 0);
+    }
+    100% {
+        background-color: rgba(240, 44, 86, 0.15);
+        box-shadow: 0 0 0 0 rgba(240, 44, 86, 0);
+    }
+}
+
+@keyframes highlight-fade-dark {
+    0% {
+        background-color: rgba(240, 44, 86, 0.15);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+.dark .highlighted-parent {
+    background-color: rgba(240, 44, 86, 0.1);
+    border-color: rgba(240, 44, 86, 0.3);
+}
+
+.highlighted-comment,
+.highlighted-reply,
+.highlighted-parent {
+    scroll-margin-top: 1rem;
+}
+</style>

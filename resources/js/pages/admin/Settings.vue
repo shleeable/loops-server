@@ -894,15 +894,15 @@
                                         Open (Allow all, except servers you
                                         block)
                                     </option>
-                                    <option value="blocklist">
+                                    <!-- <option value="blocklist">
                                         Moderated (New servers must get approval
                                         before ingesting activities)
                                     </option>
                                     <option value="allowlist">
                                         Trusted (Only joinloops.org + manually
                                         approved servers)
-                                    </option>
-                                    <option value="allowlist">
+                                    </option> -->
+                                    <option value="lockdown">
                                         Lockdown (Only explicitly allowed
                                         servers)
                                     </option>
@@ -915,13 +915,49 @@
                         v-if="settings.federation.enableFederation"
                         class="flex gap-10"
                     >
-                        <div class="flex-1">
-                            <h3
-                                class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
-                            >
-                                Instance Management
-                            </h3>
+                        <div
+                            class="flex-1"
+                            v-if="settings.federation.federationMode != 'open'"
+                        >
+                            <div class="flex items-center justify-between mb-4">
+                                <h3
+                                    class="text-lg font-semibold text-gray-900 dark:text-white"
+                                >
+                                    Instance Management
+                                </h3>
+                                <!-- Toggle Switch -->
+                                <div class="flex items-center gap-3">
+                                    <span
+                                        class="text-sm text-gray-600 dark:text-gray-400"
+                                        >Individual</span
+                                    >
+                                    <button
+                                        @click="toggleBulkView"
+                                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                        :class="
+                                            isBulkView
+                                                ? 'bg-blue-600'
+                                                : 'bg-gray-200 dark:bg-gray-700'
+                                        "
+                                    >
+                                        <span
+                                            class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                                            :class="
+                                                isBulkView
+                                                    ? 'translate-x-6'
+                                                    : 'translate-x-1'
+                                            "
+                                        ></span>
+                                    </button>
+                                    <span
+                                        class="text-sm text-gray-600 dark:text-gray-400"
+                                        >Bulk CSV</span
+                                    >
+                                </div>
+                            </div>
+
                             <div class="space-y-6">
+                                <!-- Allowlist Mode -->
                                 <div
                                     v-if="
                                         settings.federation.federationMode ===
@@ -930,9 +966,12 @@
                                 >
                                     <label
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                                        >Allowed Instances</label
                                     >
-                                    <div class="space-y-2">
+                                        Allowed Instances
+                                    </label>
+
+                                    <!-- Individual Input View -->
+                                    <div v-if="!isBulkView" class="space-y-2">
                                         <div
                                             v-for="(instance, index) in settings
                                                 .federation.allowedInstances"
@@ -979,8 +1018,49 @@
                                             + Add Instance
                                         </button>
                                     </div>
+
+                                    <!-- Bulk CSV View -->
+                                    <div v-else class="space-y-3">
+                                        <div
+                                            class="text-sm text-gray-600 dark:text-gray-400 mb-2"
+                                        >
+                                            Enter instance domains, one per line
+                                            or comma-separated:
+                                        </div>
+                                        <textarea
+                                            v-model="allowedInstancesBulk"
+                                            @input="
+                                                updateInstancesFromBulk(
+                                                    'allowed',
+                                                )
+                                            "
+                                            placeholder="example.social&#10;another.instance&#10;third.domain"
+                                            rows="6"
+                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                                        ></textarea>
+                                        <div class="flex gap-2">
+                                            <button
+                                                @click="
+                                                    clearInstances('allowed')
+                                                "
+                                                class="px-3 py-1 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                                            >
+                                                Clear All
+                                            </button>
+                                            <div
+                                                class="text-sm text-gray-500 dark:text-gray-400 ml-auto"
+                                            >
+                                                {{
+                                                    settings.federation
+                                                        .allowedInstances.length
+                                                }}
+                                                instance(s)
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
+                                <!-- Blocklist Mode -->
                                 <div
                                     v-if="
                                         settings.federation.federationMode ===
@@ -989,9 +1069,12 @@
                                 >
                                     <label
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                                        >Blocked Instances</label
                                     >
-                                    <div class="space-y-2">
+                                        Blocked Instances
+                                    </label>
+
+                                    <!-- Individual Input View -->
+                                    <div v-if="!isBulkView" class="space-y-2">
                                         <div
                                             v-for="(instance, index) in settings
                                                 .federation.blockedInstances"
@@ -1038,6 +1121,149 @@
                                             + Add Instance
                                         </button>
                                     </div>
+
+                                    <!-- Bulk CSV View -->
+                                    <div v-else class="space-y-3">
+                                        <div
+                                            class="text-sm text-gray-600 dark:text-gray-400 mb-2"
+                                        >
+                                            Enter instance domains to block, one
+                                            per line or comma-separated:
+                                        </div>
+                                        <textarea
+                                            v-model="blockedInstancesBulk"
+                                            @input="
+                                                updateInstancesFromBulk(
+                                                    'blocked',
+                                                )
+                                            "
+                                            placeholder="bad.example&#10;spam.domain&#10;harmful.site"
+                                            rows="6"
+                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                                        ></textarea>
+                                        <div class="flex gap-2">
+                                            <button
+                                                @click="
+                                                    clearInstances('blocked')
+                                                "
+                                                class="px-3 py-1 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                                            >
+                                                Clear All
+                                            </button>
+                                            <div
+                                                class="text-sm text-gray-500 dark:text-gray-400 ml-auto"
+                                            >
+                                                {{
+                                                    settings.federation
+                                                        .blockedInstances.length
+                                                }}
+                                                instance(s)
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Lockdown Mode -->
+                                <div
+                                    v-if="
+                                        settings.federation.federationMode ===
+                                        'lockdown'
+                                    "
+                                >
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                    >
+                                        Allowed Instances
+                                    </label>
+
+                                    <!-- Individual Input View -->
+                                    <div v-if="!isBulkView" class="space-y-2">
+                                        <div
+                                            v-for="(instance, index) in settings
+                                                .federation.allowedInstances"
+                                            :key="index"
+                                            class="flex items-center gap-2"
+                                        >
+                                            <input
+                                                v-model="
+                                                    settings.federation
+                                                        .allowedInstances[index]
+                                                "
+                                                type="text"
+                                                placeholder="example.social"
+                                                class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                            <button
+                                                @click="
+                                                    removeInstance(
+                                                        'allowed',
+                                                        index,
+                                                    )
+                                                "
+                                                class="p-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                                            >
+                                                <svg
+                                                    class="w-5 h-5"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                    ></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <button
+                                            @click="addInstance('allowed')"
+                                            class="w-full px-3 py-2 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                                        >
+                                            + Add Instance
+                                        </button>
+                                    </div>
+
+                                    <!-- Bulk CSV View -->
+                                    <div v-else class="space-y-3">
+                                        <div
+                                            class="text-sm text-gray-600 dark:text-gray-400 mb-2"
+                                        >
+                                            Enter instance domains, one per line
+                                            or comma-separated:
+                                        </div>
+                                        <textarea
+                                            v-model="allowedInstancesBulk"
+                                            @input="
+                                                updateInstancesFromBulk(
+                                                    'allowed',
+                                                )
+                                            "
+                                            placeholder="example.social&#10;trusted.instance&#10;partner.domain"
+                                            rows="6"
+                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                                        ></textarea>
+                                        <div class="flex gap-2">
+                                            <button
+                                                @click="
+                                                    clearInstances('allowed')
+                                                "
+                                                class="px-3 py-1 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                                            >
+                                                Clear All
+                                            </button>
+                                            <div
+                                                class="text-sm text-gray-500 dark:text-gray-400 ml-auto"
+                                            >
+                                                {{
+                                                    settings.federation
+                                                        .allowedInstances.length
+                                                }}
+                                                instance(s)
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1069,12 +1295,13 @@
                                                     .autoAcceptFollows
                                         "
                                         :class="[
-                                            'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                                            'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none',
                                             settings.federation
                                                 .autoAcceptFollows
                                                 ? 'bg-blue-600'
                                                 : 'bg-gray-200 dark:bg-gray-600',
                                         ]"
+                                        disabled
                                     >
                                         <span
                                             :class="[
@@ -1103,20 +1330,26 @@
                                     </div>
                                     <button
                                         @click="
-                                            settings.federation.shareMedia =
-                                                !settings.federation.shareMedia
+                                            settings.federation.authorizedFetch =
+                                                !settings.federation
+                                                    .authorizedFetch
                                         "
                                         :class="[
-                                            'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
-                                            settings.federation.shareMedia
+                                            'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none',
+                                            settings.federation.authorizedFetch
                                                 ? 'bg-blue-600'
                                                 : 'bg-gray-200 dark:bg-gray-600',
                                         ]"
+                                        :disabled="
+                                            settings.federation
+                                                .federationMode !== 'open'
+                                        "
                                     >
                                         <span
                                             :class="[
                                                 'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                                                settings.federation.shareMedia
+                                                settings.federation
+                                                    .authorizedFetch
                                                     ? 'translate-x-5'
                                                     : 'translate-x-0',
                                             ]"
@@ -1549,7 +1782,7 @@ const tabs = [
     { id: "branding", name: "Branding", icon: PaintBrushIcon },
     // { id: 'media', name: 'Media', icon: PhotoIcon },
     { id: "pages", name: "Pages", icon: DocumentIcon },
-    // { id: "federation", name: "Federation", icon: GlobeAltIcon },
+    { id: "federation", name: "Federation", icon: GlobeAltIcon },
 ];
 
 const activeTab = ref("general");
@@ -1569,6 +1802,9 @@ const faviconDeleting = ref(false);
 const logoInput = ref(null);
 const faviconInput = ref(null);
 const cssDeleting = ref(null);
+const isBulkView = ref(true);
+const allowedInstancesBulk = ref("");
+const blockedInstancesBulk = ref("");
 
 const editorTheme = ref(isDark.value ? "dark" : "light");
 const editorToolbars = [
@@ -1642,7 +1878,7 @@ const settings = reactive({
         allowedInstances: [""],
         blockedInstances: [""],
         autoAcceptFollows: true,
-        shareMedia: true,
+        authorizedFetch: true,
         rateLimit: 1000,
     },
 });
@@ -1854,7 +2090,6 @@ const saveFavicon = async () => {
         const formData = new FormData();
         formData.append("favicon", pendingFavicon.value);
 
-        // Replace with your actual API endpoint
         const response = await fetch("/api/settings/branding/favicon", {
             method: "POST",
             body: formData,
@@ -1886,7 +2121,6 @@ const clearPendingFavicon = () => {
     faviconInput.value.value = "";
 };
 
-// Delete functions
 const deleteLogo = async () => {
     const confirm = await confirmModal(
         "Confirm Delete",
@@ -2138,7 +2372,91 @@ const deletePage = async (pageId) => {
     }
 };
 
-// Load settings from API on component mount
+const toggleBulkView = () => {
+    isBulkView.value = !isBulkView.value;
+
+    if (isBulkView.value) {
+        if (
+            settings.federation.federationMode === "allowlist" ||
+            settings.federation.federationMode === "lockdown"
+        ) {
+            allowedInstancesBulk.value = settings.federation.allowedInstances
+                .filter((instance) => instance.trim())
+                .join(",");
+        } else if (settings.federation.federationMode === "blocklist") {
+            blockedInstancesBulk.value = settings.federation.blockedInstances
+                .filter((instance) => instance.trim())
+                .join(",");
+        }
+    }
+};
+
+const updateInstancesFromBulk = (type) => {
+    const bulkValue =
+        type === "allowed"
+            ? allowedInstancesBulk.value
+            : blockedInstancesBulk.value;
+
+    const instances = bulkValue
+        .split(",")
+        .map((instance) => instance.trim())
+        .filter((instance) => instance.length > 0)
+        .filter((instance, index, arr) => arr.indexOf(instance) === index);
+
+    if (type === "allowed") {
+        settings.federation.allowedInstances = instances;
+    } else if (type === "blocked") {
+        settings.federation.blockedInstances = instances;
+    }
+};
+
+const clearInstances = (type) => {
+    if (confirm(`Are you sure you want to clear all ${type} instances?`)) {
+        if (type === "allowed") {
+            settings.federation.allowedInstances = [];
+            allowedInstancesBulk.value = "";
+        } else if (type === "blocked") {
+            settings.federation.blockedInstances = [];
+            blockedInstancesBulk.value = "";
+        }
+    }
+};
+
+watch(
+    () => settings.federation.allowedInstances,
+    (newVal) => {
+        if (
+            isBulkView.value &&
+            (settings.federation.federationMode === "allowlist" ||
+                settings.federation.federationMode === "lockdown")
+        ) {
+            if (document.activeElement?.tagName !== "TEXTAREA") {
+                allowedInstancesBulk.value = newVal
+                    .filter((i) => i.trim())
+                    .join(",");
+            }
+        }
+    },
+    { deep: true },
+);
+
+watch(
+    () => settings.federation.blockedInstances,
+    (newVal) => {
+        if (
+            isBulkView.value &&
+            settings.federation.federationMode === "blocklist"
+        ) {
+            if (document.activeElement?.tagName !== "TEXTAREA") {
+                blockedInstancesBulk.value = newVal
+                    .filter((i) => i.trim())
+                    .join(",");
+            }
+        }
+    },
+    { deep: true },
+);
+
 const loadSettings = async () => {
     try {
         const response = await settingsApi.getSettings();
@@ -2161,7 +2479,6 @@ const loadSettings = async () => {
         });
     } catch (error) {
         console.error("Error loading settings:", error);
-        // Use default values if loading fails
     }
 };
 
@@ -2179,7 +2496,6 @@ onMounted(async () => {
     }
 });
 
-// Export functions for template access
 defineExpose({
     setActiveTab,
     selectPage,

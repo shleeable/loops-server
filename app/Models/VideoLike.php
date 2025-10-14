@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
+use App\Observers\VideoLikeObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy([VideoLikeObserver::class])]
 /**
  * @property int $id
  * @property int $profile_id
@@ -12,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Video|null $video
+ * @property-read \App\Models\Profile|null $profile
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VideoLike newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VideoLike newQuery()
@@ -33,8 +38,14 @@ class VideoLike extends Model
         'video_id',
     ];
 
-    public function video()
+    /** @return BelongsTo<Video, $this> */
+    public function video(): BelongsTo
     {
         return $this->belongsTo(Video::class);
+    }
+
+    public function profile()
+    {
+        return $this->belongsTo(Profile::class);
     }
 }

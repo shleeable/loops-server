@@ -314,7 +314,11 @@ const mainLinks = computed(() => {
     } else {
         links = [
             { name: t("nav.popular"), path: "/", icon: "bx bx-trending-up" },
-            { name: t("nav.about"), path: "/about", icon: "bx bx-info-circle" },
+            {
+                name: t("common.explore"),
+                path: "/explore",
+                icon: "bx bx-compass",
+            },
         ];
 
         const guestCustomPages = filterNavItemsByLocation("side_menu_guest");

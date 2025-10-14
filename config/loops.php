@@ -42,5 +42,5 @@ return [
             'target_blank' => env('LOOPS_AL_MEN_TARGET_BLANK', false),
             'max_length' => env('LOOPS_AL_MEN_MAX_LENGTH', 64),
         ],
-    ]
+    ],
 ];

@@ -23,7 +23,7 @@ const router = createRouter({
             path: "/explore",
             name: "explorePage",
             component: () => import("~/pages/explore.vue"),
-            meta: { requiresAuth: true },
+            meta: { requiresAuth: false },
         },
         {
             path: "/notifications",
@@ -35,6 +35,12 @@ const router = createRouter({
             path: "/v/:id",
             name: "videoPage",
             component: () => import("~/pages/v/index.vue"),
+            meta: { requiresAuth: false, params: true },
+        },
+        {
+            path: "/tag/:id",
+            name: "tagPage",
+            component: () => import("~/pages/tag/index.vue"),
             meta: { requiresAuth: false, params: true },
         },
         {
@@ -320,6 +326,18 @@ const router = createRouter({
                     name: "VideoShow",
                     component: () => import("~/pages/admin/VideoShow.vue"),
                     params: true,
+                    meta: { requiresAdmin: true },
+                },
+                {
+                    path: "instances",
+                    name: "instances",
+                    component: () => import("~/pages/admin/Instances.vue"),
+                    meta: { requiresAdmin: true },
+                },
+                {
+                    path: "instances/:id",
+                    name: "InstancesShow",
+                    component: () => import("~/pages/admin/InstanceShow.vue"),
                     meta: { requiresAdmin: true },
                 },
                 {

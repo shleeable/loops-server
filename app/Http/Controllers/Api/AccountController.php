@@ -6,7 +6,10 @@ use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\NotificationResource;
 use App\Http\Resources\ProfileResource;
+use App\Jobs\Federation\DeliverFollowRequest;
+use App\Jobs\Federation\DeliverUndoFollowActivity;
 use App\Models\Follower;
+use App\Models\FollowRequest;
 use App\Models\Notification;
 use App\Models\Profile;
 use App\Models\UserFilter;
@@ -60,7 +63,7 @@ class AccountController extends Controller
 
         return NotificationResource::collection(
             Notification::whereUserId($pid)
-                ->whereIn('type', [11, 15, 21])
+                ->whereIn('type', [11, 15, 16, 21, 22, 23])
                 ->orderByDesc('id')
                 ->cursorPaginate(20)
         );
@@ -145,19 +148,35 @@ class AccountController extends Controller
 
         $profile = Profile::findOrFail($id);
 
-        if (! $profile || $request->user()->cannot('view', $profile)) {
+        if ($request->user()->cannot('view', $profile)) {
             return $this->error('Account not found or is unavailable', 404);
         }
 
-        $res = Follower::updateOrCreate([
-            'profile_id' => $pid,
-            'following_id' => $id,
-        ], [
-            'following_is_local' => (bool) $profile->local,
-        ]);
+        if ($profile->local) {
+            $res = Follower::updateOrCreate([
+                'profile_id' => $pid,
+                'following_id' => $id,
+            ], [
+                'following_is_local' => (bool) $profile->local,
+            ]);
 
-        if ($res->wasRecentlyCreated) {
-            NotificationService::newFollower($id, $pid);
+            if ($res->wasRecentlyCreated) {
+                NotificationService::newFollower($id, $pid);
+            }
+        } else {
+            if (FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->exists()) {
+                return $this->data(AccountService::get($id));
+            }
+
+            $res = FollowRequest::firstOrCreate([
+                'profile_id' => $pid,
+                'following_id' => $profile->id,
+                'profile_is_local' => true,
+                'following_is_local' => false,
+                'following_state' => 0,
+            ]);
+
+            DeliverFollowRequest::dispatch($res)->onQueue('activitypub-out');
         }
 
         return $this->data(AccountService::get($id));
@@ -173,17 +192,46 @@ class AccountController extends Controller
 
         $profile = Profile::findOrFail($id);
 
-        $res = Follower::where([
-            'profile_id' => $pid,
-            'following_id' => $id,
-        ])->first();
+        if ($profile->local) {
+            $res = Follower::where([
+                'profile_id' => $pid,
+                'following_id' => $id,
+            ])->first();
 
-        if (! $res) {
-            return $this->data(AccountService::get($id));
+            if (! $res) {
+                return $this->data(AccountService::get($id));
+            }
+            $res->delete();
+            NotificationService::unFollow($id, $pid);
+        } else {
+            $followRequest = FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->first();
+            if ($followRequest) {
+                DeliverUndoFollowActivity::dispatch($followRequest)->onQueue('activitypub-out');
+            }
         }
-        $res->delete();
 
-        NotificationService::unFollow($id, $pid);
+        return $this->data(AccountService::get($id));
+    }
+
+    public function undoFollowRequest(Request $request, $id)
+    {
+        $pid = $request->user()->profile_id;
+
+        if ($pid == $id) {
+            return $this->error('You cannot unfollow your own account', 422);
+        }
+
+        $profile = Profile::findOrFail($id);
+        $followRequest = FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->firstOrFail();
+
+        if ($profile->local) {
+            $followRequest->delete();
+
+            return $this->data(AccountService::get($id));
+        } else {
+            $followRequest->update(['following_state' => 5]);
+            DeliverUndoFollowActivity::dispatch($followRequest)->onQueue('activitypub-out');
+        }
 
         return $this->data(AccountService::get($id));
     }
@@ -203,9 +251,14 @@ class AccountController extends Controller
             $this->error('Record not found');
         }
         $res = [
+            'pending_follow_request' => false,
             'following' => (bool) FollowerService::follows($pid, $id),
             'blocking' => (bool) UserFilterService::isBlocking($pid, $id),
         ];
+
+        if (! $account['local']) {
+            $res['pending_follow_request'] = FollowRequest::whereProfileId($pid)->whereFollowingId($id)->whereFollowingState(0)->exists();
+        }
 
         return $this->data($res);
     }

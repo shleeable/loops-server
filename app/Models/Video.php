@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Concerns\HasSnowflakePrimary;
+use App\Concerns\HasSyncHashtagsFromCaption;
+use App\Concerns\HasSyncMentionsFromCaption;
 use App\Observers\VideoObserver;
 use App\Services\HashidService;
 use DB;
@@ -12,7 +14,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Storage;
 
 #[ObservedBy([VideoObserver::class])]
@@ -60,7 +63,8 @@ use Storage;
  * @property string|null $ap_published_at
  * @property string|null $last_fetched_at
  * @property int $fetch_failure_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Hashtag> $hashtags
+ * @property int $is_edited
+ * @property-read \Illuminate\Database\Eloquent\Relations\BelongsToMany<Hashtag, $this, VideoHashtag, 'pivot'> $hashtags
  * @property-read int|null $hashtags_count
  * @property-read \App\Models\Profile|null $profile
  *
@@ -117,7 +121,7 @@ use Storage;
  */
 class Video extends Model
 {
-    use HasFactory, HasSnowflakePrimary;
+    use HasFactory, HasSnowflakePrimary, HasSyncHashtagsFromCaption, HasSyncMentionsFromCaption;
 
     /**
      * Status Bitmask
@@ -134,10 +138,10 @@ class Video extends Model
      * Visibility Bitmask
      * 0 = Unused
      * 1 = Public
-     * 2 = Unused
-     * 3 = Unused
-     * 4 = Unlisted (not in feeds, direct link only)
-     * 5 = Followers only
+     * 2 = Local
+     * 3 = Unlisted
+     * 4 = Followers only
+     * 5 = Mentioned users only
      **/
 
     /**
@@ -162,6 +166,7 @@ class Video extends Model
             'is_sensitive' => 'boolean',
             'media_metadata' => 'array',
             'is_local' => 'boolean',
+            'is_edited' => 'boolean',
         ];
     }
 
@@ -208,11 +213,14 @@ class Video extends Model
         return $thumb;
     }
 
-    public function getObjectUrl()
+    public function getObjectUrl($suffix = null): string
     {
-        return url('/ap/users/'.$this->profile_id.'/video/'.$this->id);
+        return $this->is_local ?
+            url('/ap/users/'.$this->profile_id.'/video/'.$this->id.$suffix) :
+            $this->uri;
     }
 
+    /** @return BelongsTo<Profile, $this> */
     public function profile(): BelongsTo
     {
         return $this->belongsTo(Profile::class);
@@ -220,7 +228,7 @@ class Video extends Model
 
     public function shareUrl(): string
     {
-        return url('/v/'.HashidService::encode($this->id));
+        return url('/v/'.HashidService::encode((string) $this->id));
     }
 
     public function mediaUrl(): string
@@ -250,25 +258,24 @@ class Video extends Model
         return $actualCount;
     }
 
-    public function hashtags(): BelongsToMany
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<Hashtag, $this, VideoHashtag, 'pivot'>
+     */
+    public function hashtags()
     {
-        return $this->belongsToMany(Hashtag::class, 'video_hashtags');
+        return $this->belongsToMany(Hashtag::class, 'video_hashtags')
+            ->using(VideoHashtag::class);
     }
 
-    public function syncHashtagsFromCaption()
+    /** @return MorphMany<Mention, $this> */
+    public function mentions(): MorphMany
     {
-        preg_match_all('/#([A-Za-z0-9_-]{1,30})/', $this->caption, $matches);
-        $hashtags = [];
+        return $this->morphMany(Mention::class, 'mentionable');
+    }
 
-        foreach ($matches[1] as $tag) {
-            $hashtag = Hashtag::firstOrCreate([
-                'name' => $tag,
-            ]);
-            if ($hashtag->can_autolink) {
-                $hashtags[] = $hashtag->id;
-            }
-        }
-
-        $this->hashtags()->sync($hashtags);
+    /** @return HasMany<VideoCaptionEdit, $this> */
+    public function edits(): HasMany
+    {
+        return $this->hasMany(VideoCaptionEdit::class);
     }
 }

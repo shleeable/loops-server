@@ -197,6 +197,29 @@ export const useAuthStore = defineStore("auth", {
             }
         },
 
+        async registerResendEmailVerification(data) {
+            const axiosInstance = axios.getAxiosInstance();
+            try {
+                this.loading = true;
+                this.error = null;
+
+                await axiosInstance.get("/sanctum/csrf-cookie");
+                const response = await axiosInstance.post(
+                    "/api/v1/auth/register/email/resend",
+                    data,
+                );
+
+                return response;
+            } catch (error) {
+                this.error =
+                    error.response?.data?.message ||
+                    "An error occurred during registration";
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
         async verifyEmailVerification(email, code) {
             const axiosInstance = axios.getAxiosInstance();
             try {

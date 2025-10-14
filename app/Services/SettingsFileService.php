@@ -12,6 +12,10 @@ class SettingsFileService
     {
         $this->generatePublicConfig();
         $this->generateAdminConfig();
+        app(ConfigService::class)->federation(true);
+        app(ConfigService::class)->federationMode(true);
+        app(ConfigService::class)->federationAllowedServers(true);
+        app(ConfigService::class)->federationAuthorizedFetch(true);
     }
 
     /**

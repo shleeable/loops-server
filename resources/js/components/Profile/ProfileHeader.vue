@@ -49,7 +49,13 @@
                                     class="flex item-center rounded-md py-[4px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-[#F02C56] cursor-pointer"
                                 >
                                     {{ t("profile.blocked") }}
-                                    {{ t("profile.") }}
+                                </button>
+                                <button
+                                    v-else-if="isFollowingRequestPending"
+                                    @click="handleUndoFollowRequest"
+                                    class="flex item-center rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-border-[#F02C56] cursor-pointer"
+                                >
+                                    {{ t("profile.followRequestPending") }}
                                 </button>
                                 <button
                                     v-else-if="!profile.isFollowing"
@@ -256,6 +262,9 @@ const showEditModal = ref(false);
 const showMenu = ref(false);
 const menuRef = ref(null);
 const isFollowing = computed(() => profile.isFollowing);
+const isFollowingRequestPending = computed(
+    () => profile.isFollowingRequestPending,
+);
 
 const handleToggleFollow = async () => {
     const state = isFollowing.value;
@@ -279,10 +288,7 @@ const gotoProfile = (id) => {
 };
 
 const handleShare = () => {
-    // Placeholder for share functionality
     console.log("Share profile:", profile.username);
-    // You can implement actual share functionality here
-    // For example: navigator.share() or copy to clipboard
 };
 
 const toggleMenu = () => {
@@ -290,10 +296,21 @@ const toggleMenu = () => {
 };
 
 const handleReport = () => {
-    // Placeholder for report functionality
     openReportModal("profile", profile.id, window.location.href);
     showMenu.value = false;
-    // Implement report functionality here
+};
+
+const handleUndoFollowRequest = async () => {
+    const result = await confirmModal(
+        "Confirm Cancel Follow Request",
+        `Are you sure you cancel your follow request to <strong>${profile.username}</strong>?`,
+        "Confirm Cancel",
+        "Close",
+    );
+
+    if (result) {
+        await profile.undoFollowRequest();
+    }
 };
 
 const handleBlock = async () => {
@@ -328,7 +345,6 @@ const handleUnblock = async () => {
     }
 };
 
-// Close menu when clicking outside
 const handleClickOutside = (event) => {
     if (menuRef.value && !menuRef.value.contains(event.target)) {
         showMenu.value = false;

@@ -9,13 +9,16 @@ use App\Http\Resources\CommentResource;
 use App\Http\Resources\FollowerResource;
 use App\Http\Resources\FollowingResource;
 use App\Http\Resources\ProfileResource;
+use App\Http\Resources\VideoHashtagResource;
 use App\Http\Resources\VideoResource;
 use App\Models\Comment;
 use App\Models\CommentReply;
 use App\Models\Follower;
+use App\Models\Hashtag;
 use App\Models\Page;
 use App\Models\Profile;
 use App\Models\Video;
+use App\Models\VideoHashtag;
 use App\Services\AccountService;
 use App\Services\FeedService;
 use App\Services\ReportService;
@@ -83,6 +86,49 @@ class WebPublicController extends Controller
             ->cursorPaginate(10);
 
         return CommentResource::collection($comments);
+    }
+
+    public function getCommentById(Request $request, $videoId, $commentId)
+    {
+        $video = Video::published()->canComment()->find($videoId);
+        $comment = Comment::withTrashed()
+            ->whereVideoId($video->id)
+            ->findOrFail($commentId);
+
+        return new CommentResource($comment);
+    }
+
+    public function getReplyById(Request $request, $videoId, $replyId)
+    {
+        $video = Video::published()->canComment()->find($videoId);
+
+        if (! $video) {
+            return response()->json([
+                'error' => 'Video not found or comments are disabled',
+            ], 404);
+        }
+
+        $reply = CommentReply::withTrashed()
+            ->with(['profile', 'parent'])
+            ->whereVideoId($video->id)
+            ->findOrFail($replyId);
+
+        $parentComment = $reply->parent;
+
+        if (! $parentComment) {
+            return response()->json([
+                'error' => 'Parent comment not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'data' => new CommentReplyResource($reply),
+            'meta' => [
+                'type' => 'reply',
+                'video_id' => $video->id,
+                'parent_comment' => new CommentResource($parentComment),
+            ],
+        ]);
     }
 
     /**
@@ -212,5 +258,34 @@ class WebPublicController extends Controller
         ];
 
         return $this->data($res);
+    }
+
+    public function getVideoTags(Request $request, $id)
+    {
+        $tag = Hashtag::where('name', $id)->firstOrFail();
+        abort_if((bool) $tag->is_banned, 404);
+        $guest = auth()->guest();
+
+        if ($guest && $tag->is_nsfw) {
+            return $this->defaultCollection(['is_nsfw' => true, 'is_guest' => true]);
+        }
+
+        if ($guest) {
+
+            $tags = VideoHashtag::whereHashtagId($tag->id)->orderByDesc('id')->limit(30)->get();
+        } else {
+            $tags = VideoHashtag::whereHashtagId($tag->id)->orderByDesc('id')->cursorPaginate(10);
+        }
+
+        return VideoHashtagResource::collection($tags)->additional(['meta' => ['total_results' => $tag->count]]);
+    }
+
+    private function defaultCollection($meta = [])
+    {
+        return [
+            'data' => [],
+            'links' => [],
+            'meta' => $meta,
+        ];
     }
 }

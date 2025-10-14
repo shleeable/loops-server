@@ -102,6 +102,32 @@ export const useVideoStore = defineStore("video", {
                 throw error;
             }
         },
+
+        async autocompleteHashtag(tag) {
+            const axiosInstance = axios.getAxiosInstance();
+            try {
+                const res = await axiosInstance.get(
+                    `/api/v1/autocomplete/tags?q=${tag}`,
+                );
+                return res.data;
+            } catch (error) {
+                console.error("Error fetching autocomplete:", error);
+                throw error;
+            }
+        },
+
+        async autocompleteAccount(tag) {
+            const axiosInstance = axios.getAxiosInstance();
+            try {
+                const res = await axiosInstance.get(
+                    `/api/v1/autocomplete/accounts?q=${tag}`,
+                );
+                return res.data;
+            } catch (error) {
+                console.error("Error fetching autocomplete:", error);
+                throw error;
+            }
+        },
     },
 
     getters: {

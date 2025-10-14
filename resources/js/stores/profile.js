@@ -24,6 +24,7 @@ export const useProfileStore = defineStore("profile", {
         followersNextCursor: null,
         followingNextCursor: null,
         isFollowing: null,
+        isFollowingRequestPending: null,
         isSelf: null,
         isBlocking: null,
         relationship: {
@@ -128,6 +129,8 @@ export const useProfileStore = defineStore("profile", {
                 );
                 this.id = id;
                 this.relationship = relationship.data.data;
+                this.isFollowingRequestPending =
+                    relationship.data.data.pending_follow_request;
                 this.isFollowing = relationship.data.data.following;
                 this.isBlocking = relationship.data.data.blocking;
             } catch (error) {
@@ -263,11 +266,27 @@ export const useProfileStore = defineStore("profile", {
                 this.url = res.url;
                 this.postCount = res.post_count;
                 this.allLikes = res.likes_count;
-                this.isFollowing = !prevState;
                 this.followingCount = res.following_count;
                 this.followerCount = res.follower_count;
+                await nextTick();
+                await this.getProfileState(this.id);
             } catch (error) {
                 console.error("Error toggling follow:", error);
+            }
+        },
+
+        async undoFollowRequest() {
+            const axiosInstance = axios.getAxiosInstance();
+
+            try {
+                await axiosInstance
+                    .post(`/api/v1/account/undo-follow-request/${this.id}`)
+                    .finally(async () => {
+                        await nextTick();
+                        await this.getProfileState(this.id);
+                    });
+            } catch (error) {
+                console.error("Error toggling undoFollowRequest:", error);
             }
         },
 
@@ -323,6 +342,7 @@ export const useProfileStore = defineStore("profile", {
             this.followersNextCursor = [];
             this.followingNextCursor = [];
             this.isSelf = null;
+            this.isFollowingRequestPending = null;
             this.relationship = {
                 blocking: false,
             };

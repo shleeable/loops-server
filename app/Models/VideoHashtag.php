@@ -4,13 +4,14 @@ namespace App\Models;
 
 use App\Observers\VideoHashtagObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
 #[ObservedBy([VideoHashtagObserver::class])]
 /**
  * @property int $id
  * @property int $video_id
  * @property int $hashtag_id
+ * @property int $visibility
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VideoHashtag newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VideoHashtag newQuery()
@@ -21,7 +22,13 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @mixin \Eloquent
  */
-class VideoHashtag extends Model
+class VideoHashtag extends Pivot
 {
-    //
+    protected $table = 'video_hashtags';
+
+    public $incrementing = true;
+
+    protected $fillable = ['video_id', 'hashtag_id', 'visibility'];
+
+    public $timestamps = false;
 }

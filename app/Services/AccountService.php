@@ -29,6 +29,18 @@ class AccountService
         return $res ? $res : [];
     }
 
+    public static function getActorId($id)
+    {
+        return Cache::remember(self::CACHE_KEY.'actorid:'.$id, now()->addHours(12), function () use ($id) {
+            $profile = Profile::find($id);
+            if (! $profile) {
+                return;
+            }
+
+            return $profile->getActorId();
+        });
+    }
+
     public static function compact($id)
     {
         $res = self::get($id);

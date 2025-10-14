@@ -22,6 +22,7 @@ use App\Models\User;
 use App\Models\Video;
 use App\Services\AccountService;
 use App\Services\AdminAuditLogService;
+use App\Services\ExploreService;
 use App\Services\NodeinfoCrawlerService;
 use App\Services\SanitizeService;
 use App\Services\VideoService;
@@ -474,6 +475,8 @@ class AdminController extends Controller
         $hashtag->update($validated);
 
         app(AdminAuditLogService::class)->logHashtagUpdate($request->user(), $hashtag, ['old' => $oldValues, 'new' => $validated]);
+
+        app(ExploreService::class)->getTrendingTags(true);
 
         return $this->success();
     }

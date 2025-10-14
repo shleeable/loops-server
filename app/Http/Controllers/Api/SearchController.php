@@ -8,15 +8,20 @@ use App\Http\Requests\SearchRequest;
 use App\Http\Resources\ProfileResource;
 use App\Models\Profile;
 use App\Models\UserFilter;
+use App\Services\WebfingerService;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class SearchController extends Controller
 {
     use ApiHelpers;
 
-    public function __construct()
+    protected WebfingerService $webfingerService;
+
+    public function __construct(WebfingerService $webfingerService)
     {
         $this->middleware('auth');
+        $this->webfingerService = $webfingerService;
     }
 
     public function get(SearchRequest $request)
@@ -31,14 +36,35 @@ class SearchController extends Controller
 
         $blocked[] = $currentUserId;
 
-        $res = Profile::select([
+        $res = $this->searchLocal($cleanQuery, $blocked, $currentUserId);
+
+        if ($res->isEmpty() && $this->isRemoteQuery($cleanQuery)) {
+            $remoteProfile = $this->searchRemote($cleanQuery, $currentUserId, $blocked);
+
+            if ($remoteProfile) {
+                // Convert single profile to collection for consistent response format
+                return ProfileResource::collection(collect([$remoteProfile]));
+            }
+        }
+
+        return ProfileResource::collection($res);
+    }
+
+    /**
+     * Search local profiles
+     */
+    protected function searchLocal(string $cleanQuery, array $blocked, int $currentUserId)
+    {
+        return Profile::select([
             'profiles.id',
+            'profiles.local',
             'profiles.name',
             'profiles.avatar',
             'profiles.username',
             'profiles.following',
             'profiles.followers',
             'profiles.video_count',
+            'profiles.domain',
             'profiles.status',
             'profiles.created_at',
         ])
@@ -57,7 +83,62 @@ class SearchController extends Controller
             ->orderByDesc('profiles.followers')
             ->cursorPaginate(10)
             ->withQueryString();
+    }
 
-        return ProfileResource::collection($res);
+    /**
+     * Search for remote profile via webfinger
+     */
+    protected function searchRemote(string $query, int $currentUserId, array $blocked): ?Profile
+    {
+        try {
+            if (filter_var($query, FILTER_VALIDATE_URL)) {
+                return $this->lookupByUrl($query, $blocked);
+            }
+
+            $profile = $this->webfingerService->findOrCreateRemoteActor($query);
+
+            if (! $profile || in_array($profile->id, $blocked)) {
+                return null;
+            }
+
+            return $profile;
+        } catch (\Exception $e) {
+            Log::warning('Remote profile lookup failed', [
+                'query' => $query,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
+     * Lookup a profile by ActivityPub URL
+     */
+    protected function lookupByUrl(string $url, array $blocked): ?Profile
+    {
+        $existing = Profile::where('uri', $url)->first();
+
+        if ($existing) {
+            return in_array($existing->id, $blocked) ? null : $existing;
+        }
+
+        return Profile::findOrCreateFromUrl($url, null, true);
+    }
+
+    /**
+     * Check if query looks like a remote mention
+     */
+    protected function isRemoteQuery(string $query): bool
+    {
+        if (preg_match('/^@?[a-zA-Z0-9_]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $query)) {
+            return true;
+        }
+
+        if (filter_var($query, FILTER_VALIDATE_URL)) {
+            return true;
+        }
+
+        return false;
     }
 }

@@ -64,7 +64,6 @@
             </div>
         </div>
 
-        <!-- Sensitive Content Warning -->
         <div
             v-else-if="
                 currentVideo &&
@@ -212,9 +211,24 @@
                                     class="dark:text-slate-400 whitespace-nowrap"
                                 >
                                     {{
-                                        formatTimestamp(currentVideo.created_at)
+                                        formatRecentDate(
+                                            currentVideo.created_at,
+                                        )
                                     }}
                                 </div>
+                                <div
+                                    v-if="currentVideo.is_edited"
+                                    class="text-slate-400 dark:text-slate-500 leading-none"
+                                >
+                                    ·
+                                </div>
+                                <button
+                                    v-if="currentVideo?.is_edited"
+                                    @click="openVideoHistory(currentVideo?.id)"
+                                    class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer"
+                                >
+                                    Edited
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -255,12 +269,14 @@
                 </div>
 
                 <div class="mt-3 sm:mt-3">
-                    <p class="text-sm dark:text-slate-300 leading-relaxed">
-                        {{ currentVideo.caption }}
-                    </p>
+                    <AutolinkedText
+                        :caption="currentVideo?.caption"
+                        :mentions="currentVideo?.mentions"
+                        :tags="currentVideo?.tags"
+                        :max-char-limit="140"
+                    />
                 </div>
 
-                <!-- Sensitive Content Badge -->
                 <div
                     v-if="currentVideo.is_sensitive"
                     class="mt-3 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
@@ -284,7 +300,11 @@
             <div class="flex items-center px-8 mt-4 justify-between">
                 <div class="pb-4 text-center flex items-center">
                     <button
-                        @click="currentVideo.has_liked == true ? unlikePost() : likePost()"
+                        @click="
+                            currentVideo.has_liked == true
+                                ? unlikePost()
+                                : likePost()
+                        "
                         class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
                     >
                         <span
@@ -394,6 +414,8 @@
             @save="handleSaveVideo"
             @delete="handleDeleteVideo"
         />
+
+        <EditHistoryModal />
     </div>
 </template>
 
@@ -407,6 +429,7 @@ import { useProfileStore } from "~/stores/profile";
 import { useHashids } from "@/composables/useHashids";
 import { useAlertModal } from "@/composables/useAlertModal.js";
 import { useUtils } from "@/composables/useUtils";
+import { useEditHistory } from "@/composables/useEditHistory";
 import {
     ArrowPathIcon,
     VideoCameraSlashIcon,
@@ -427,7 +450,9 @@ import {
 import UrlCopyInput from "@/components/Form/UrlCopyInput.vue";
 import Comments from "@/components/Status/Comments.vue";
 import ReportModal from "@/components/ReportModal.vue";
+import EditHistoryModal from "@/components/Status/EditHistoryModal.vue";
 import { useReportModal } from "@/composables/useReportModal";
+const { openVideoHistory } = useEditHistory();
 
 const router = useRouter();
 const route = useRoute();
@@ -436,7 +461,7 @@ const authStore = useAuthStore();
 const profileStore = useProfileStore();
 const videoStore = useVideoStore();
 const { openReportModal } = useReportModal();
-const { formatNumber, formatDate, goBack } = useUtils();
+const { formatNumber, formatRecentDate, goBack, formatCount } = useUtils();
 const { alertModal, confirmModal, persistentModal } = useAlertModal();
 const appConfig = inject("appConfig");
 
@@ -757,7 +782,7 @@ watch(isVideoLoaded, (newVal) => {
         videoRef.value &&
         (!currentVideo.value?.is_sensitive || showSensitiveContent.value)
     ) {
-        setTimeout(() => videoRef.value.play(), 500);
+        // setTimeout(() => videoRef.value.play(), 500);
     }
 });
 
@@ -803,42 +828,4 @@ const handleSaveVideo = async (data) => {
 };
 
 const handleDeleteVideo = async () => {};
-
-const formatCount = (count) => {
-    if (!count) return "0";
-
-    const formatter = Intl.NumberFormat("en", {
-        notation: "compact",
-        maximumFractionDigits: 1,
-    });
-
-    return formatter.format(count);
-};
-
-const formatTimestamp = (isoTimestamp) => {
-    const date = new Date(isoTimestamp);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
-
-    if (isNaN(date.getTime())) {
-        return "Invalid date";
-    }
-
-    if (diffInSeconds < 60) {
-        return "just now";
-    }
-
-    if (diffInSeconds < 3600) {
-        const minutes = Math.floor(diffInSeconds / 60);
-        return `${minutes}m ago`;
-    }
-
-    if (diffInSeconds < 86400) {
-        const hours = Math.floor(diffInSeconds / 3600);
-        return `${hours}h ago`;
-    }
-
-    const options = { month: "short", day: "numeric", year: "numeric" };
-    return date.toLocaleDateString("en-US", options);
-};
 </script>

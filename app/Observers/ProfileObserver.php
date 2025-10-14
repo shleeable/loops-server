@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Jobs\Federation\FetchRemoteAvatarJob;
 use App\Models\Profile;
 use App\Services\AccountService;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
@@ -14,6 +15,10 @@ class ProfileObserver implements ShouldHandleEventsAfterCommit
     public function created(Profile $profile): void
     {
         AccountService::del($profile->id);
+
+        if (! $profile->local && $profile->uri && $profile->avatar) {
+            FetchRemoteAvatarJob::dispatch($profile)->onQueue('actor-update');
+        }
     }
 
     /**
@@ -22,6 +27,10 @@ class ProfileObserver implements ShouldHandleEventsAfterCommit
     public function updated(Profile $profile): void
     {
         AccountService::del($profile->id);
+
+        if (! $profile->local && $profile->uri && $profile->avatar) {
+            FetchRemoteAvatarJob::dispatch($profile)->onQueue('actor-update');
+        }
     }
 
     /**
