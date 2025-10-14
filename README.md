@@ -17,6 +17,10 @@ The [federated](https://fediverse.info) short video sharing platform.
 
 See the [installation guide](INSTALLATION.md)
 
+## API Documentation
+
+View our official [API Documentation](https://joinloops.org/docs/api/v1)
+
 ## Translations
 
 Want to help make Loops accessible in more languages? Check out the 
