@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use PragmaRX\Google2FA\Google2FA;
+use Laravel\Passport\Passport;
+use Laravel\Passport\ClientRepository;
 
 class AuthController extends Controller
 {
@@ -34,5 +37,38 @@ class AuthController extends Controller
         }
 
         return response()->json(['success' => false, 'error' => 'Invalid code, please try again.', 'force_relogin' => false]);
+    }
+
+
+    public function registerApp(Request $request)
+    {
+        $data = $request->validate([
+            'client_name'    => ['required', 'string'],
+            'redirect_uris'  => ['required', 'array', 'min:1'],
+            'redirect_uris.*'=> ['required', 'string'],
+        ]);
+
+        $uris = collect($data['redirect_uris'])
+            ->map('urldecode')
+            ->filter()
+            ->join(',');
+
+        $client = Passport::client()->forceFill([
+            'name' => e($request->client_name),
+            'secret' => Str::random(40),
+            'grant_types' => ['authorization_code', 'refresh_token'],
+            'redirect_uris' => [$uris],
+            'revoked' => false,
+        ]);
+
+        $client->save();
+
+        return response()->json([
+            'client_id'      => (string) $client->id,
+            'client_name'    => $client->name,
+            'client_secret'  => $client->plainSecret ?? null,
+            'redirect_uris'  => $data['redirect_uris'],
+            'vapid_key' => null,
+        ]);
     }
 }

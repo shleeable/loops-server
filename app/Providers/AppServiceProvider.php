@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Passport;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -50,7 +51,16 @@ class AppServiceProvider extends ServiceProvider
             app(UserActivityService::class)->markActive($e->user);
         });
 
+        Passport::authorizationView('auth.oauth.authorize');
+        Passport::tokensCan([
+            'user:read' => 'Retrieve the user info',
+            'user:write' => 'Update the user info',
+            'video:create' => 'Create video',
+            'video:read' => 'Retrieve video',
+        ]);
+
         $this->configureSecureUrls();
+
     }
 
     protected function configureSecureUrls()

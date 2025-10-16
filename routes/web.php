@@ -3,6 +3,7 @@
 use App\Http\Controllers\ObjectController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 Route::get('v/{hashId}', [ObjectController::class, 'showVideo']);
 Route::get('@{username}', [ObjectController::class, 'showProfile']);
