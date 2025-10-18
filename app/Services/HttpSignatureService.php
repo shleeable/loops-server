@@ -20,7 +20,7 @@ class HttpSignatureService
     public function sign(
         string $keyId,
         string $privateKey,
-        array $headers,
+        array &$headers,
         string $method,
         string $path,
         ?string $body = null
@@ -55,7 +55,7 @@ class HttpSignatureService
     }
 
     public function instanceSign(
-        array $headers,
+        array &$headers,
         string $method,
         string $path,
         ?string $body = null
