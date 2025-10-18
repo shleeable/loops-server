@@ -152,6 +152,12 @@ php artisan create-admin-account
 
 Follow the prompts to set up your admin credentials.
 
+### 4. Generate Passport Keys
+
+```bash
+php artisan passport:keys
+```
+
 ## Queue Configuration
 
 Loops uses Redis-backed queues with Horizon for queue management.
