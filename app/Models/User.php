@@ -110,6 +110,7 @@ class User extends Authenticatable implements OAuthenticatable
         'can_comment',
         'can_like',
         'last_active_at',
+        'birth_date',
     ];
 
     protected $hidden = [
@@ -124,6 +125,7 @@ class User extends Authenticatable implements OAuthenticatable
         'two_factor_backups',
         'email_verification_token',
         'last_active_at',
+        'birth_date',
     ];
 
     protected function casts(): array
@@ -134,6 +136,7 @@ class User extends Authenticatable implements OAuthenticatable
             'is_admin' => 'boolean',
             'device' => 'json',
             'push_token_verified_at' => 'datetime',
+            'birth_date' => 'date',
         ];
     }
 
