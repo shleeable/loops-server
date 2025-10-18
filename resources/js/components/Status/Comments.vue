@@ -133,33 +133,55 @@
             class="p-4 border-t border-gray-200 dark:border-slate-800 flex-shrink-0"
         >
             <form
-                class="relative flex items-center border border-gray-300 rounded-lg bg-gray-50 dark:bg-slate-800 dark:border-slate-700 overflow-hidden"
+                class="relative flex items-start space-x-2"
                 @submit.prevent="handleAddComment"
             >
-                <input
-                    v-model="newComment"
-                    class="w-full p-3 bg-transparent outline-none dark:text-slate-50 dark:bg-slate-800 border-0"
-                    :placeholder="$t('post.addCommentDotDotDot')"
-                    :disabled="isSubmitting || !canComment"
-                    aria-busy="isSubmitting"
-                />
+                <div class="flex-1">
+                    <MentionHashtagInput
+                        ref="commentInputRef"
+                        v-model="newComment"
+                        :placeholder="$t('post.addCommentDotDotDot')"
+                        :disabled="isSubmitting || !canComment"
+                        :fetch-mentions="fetchMentions"
+                        :fetch-hashtags="fetchHashtags"
+                        :validate-mentions="true"
+                        :validate-hashtags="true"
+                        :initial-validated-mentions="initialValidatedMentions"
+                        :initial-validated-hashtags="initialValidatedHashtags"
+                        border-class="border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 dark:text-slate-50 focus:border-[#F02C56]"
+                        min-height="42px"
+                        max-height="120px"
+                        @focus="handleInputFocus"
+                    />
+                </div>
 
-                <div class="flex items-center px-3">
+                <div class="flex items-center space-x-2 pt-2">
                     <EmojiPicker
                         v-model="selectedEmoji"
                         @select="onEmojiSelect"
                     >
                         <template #trigger="{ toggle }">
-                            <button type="button" @click="toggle">😊</button>
+                            <button
+                                type="button"
+                                @click="toggle"
+                                class="text-xl hover:scale-110 transition-transform"
+                                :disabled="isSubmitting"
+                            >
+                                😊
+                            </button>
                         </template>
                     </EmojiPicker>
 
                     <button
                         type="submit"
-                        class="ml-2 text-sm text-gray-400 hover:text-red-500 cursor-pointer font-bold disabled:opacity-60 disabled:cursor-not-allowed"
+                        class="px-3 py-1.5 bg-[#F02C56] hover:bg-[#F02C56]/80 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                         :disabled="isSubmitting || !normalizedComment"
                     >
-                        {{ $t("post.post") }}
+                        {{
+                            isSubmitting
+                                ? $t("post.postingDotDotDot")
+                                : $t("post.post")
+                        }}
                     </button>
                 </div>
             </form>
@@ -210,6 +232,40 @@ const error = ref(null);
 const isLoadingHighlightedComment = ref(false);
 const highlightError = ref(null);
 const showBlurredPreview = ref(true);
+const commentInputRef = ref(null);
+const initialValidatedMentions = ref([]);
+const initialValidatedHashtags = ref([]);
+const hasAutoMentioned = ref(new Set());
+
+const handleInputFocus = async () => {
+    const vid = currentVideo.value?.id;
+
+    if (
+        vid &&
+        !hasAutoMentioned.value.has(vid) &&
+        !newComment.value.trim() &&
+        currentVideo.value?.account
+    ) {
+        hasAutoMentioned.value.add(vid);
+
+        const username = currentVideo.value.account.username;
+
+        newComment.value = `@${username} `;
+
+        await nextTick();
+
+        if (commentInputRef.value) {
+            commentInputRef.value.addValidatedMention(username);
+        }
+
+        await nextTick();
+
+        if (commentInputRef.value) {
+            commentInputRef.value.focus();
+            commentInputRef.value.moveCursorToEnd();
+        }
+    }
+};
 
 const currentVideo = computed(() => videoStore.currentVideo);
 const videoId = computed(() => currentVideo.value?.id);
@@ -245,7 +301,59 @@ const canComment = computed(() => {
 const normalizedComment = computed(() => newComment.value.trim());
 
 const onEmojiSelect = (emoji) => {
-    newComment.value += emoji.native;
+    // Insert emoji at cursor position
+    if (commentInputRef.value) {
+        commentInputRef.value.insertAtCursor(emoji.native);
+        commentInputRef.value.focus();
+    } else {
+        newComment.value += emoji.native;
+    }
+};
+
+// Mention the video account
+const mentionCreator = async () => {
+    if (!currentVideo.value?.account) return;
+
+    const username = currentVideo.value.account.username;
+    newComment.value = `@${username} `;
+
+    await nextTick();
+
+    if (commentInputRef.value) {
+        commentInputRef.value.addValidatedMention(username);
+    }
+
+    await nextTick();
+
+    if (commentInputRef.value) {
+        commentInputRef.value.focus();
+        commentInputRef.value.moveCursorToEnd();
+    }
+};
+
+const fetchMentions = async (query) => {
+    try {
+        const response = await videoStore.autocompleteAccount(
+            encodeURIComponent(query),
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching mentions:", error);
+        return [];
+    }
+};
+
+// Fetch hashtags for autocomplete
+const fetchHashtags = async (query) => {
+    try {
+        const response = await videoStore.autocompleteHashtag(
+            encodeURIComponent(query),
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching hashtags:", error);
+        return [];
+    }
 };
 
 const pendingKey = ref(null);
@@ -279,6 +387,16 @@ const handleAddComment = async () => {
         await videoStore.incrementCommentCount();
 
         newComment.value = "";
+        initialValidatedMentions.value = [];
+        initialValidatedHashtags.value = [];
+
+        // Clear the input component
+        if (commentInputRef.value) {
+            commentInputRef.value.clear();
+        }
+
+        hasAutoMentioned.value.delete(vid);
+
         lastSubmitted.value = { key, at: now };
     } catch (err) {
         error.value = err;

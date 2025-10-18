@@ -7,6 +7,7 @@
             @keydown="handleKeyDown"
             @click="handleClick"
             @blur="handleBlur"
+            @focus="handleFocus"
             :class="[
                 'w-full p-2 border rounded-lg resize-none text-sm focus:outline-none overflow-y-auto whitespace-pre-wrap',
                 disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-text',
@@ -153,7 +154,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(["update:modelValue", "focus", "blur"]);
 
 const editorRef = ref(null);
 const dropdownRef = ref(null);
@@ -170,6 +171,18 @@ const validatedHashtags = ref(new Set());
 let debounceTimer = null;
 
 const filteredResults = computed(() => results.value);
+
+const handleFocus = (e) => {
+    emit("focus", e);
+    checkForAutocomplete();
+};
+
+const handleBlur = (e) => {
+    emit("blur", e);
+    setTimeout(() => {
+        hideDropdown();
+    }, 200);
+};
 
 const getPlainText = () => {
     if (!editorRef.value) return "";
@@ -623,14 +636,6 @@ const handleClick = () => {
     checkForAutocomplete();
 };
 
-// Handle blur
-const handleBlur = () => {
-    // Delay to allow click on dropdown
-    setTimeout(() => {
-        hideDropdown();
-    }, 200);
-};
-
 // Get initials for avatar
 const getInitials = (name) => {
     if (!name) return "?";
@@ -641,11 +646,25 @@ const getInitials = (name) => {
 watch(
     () => props.modelValue,
     (newValue) => {
+        if (newValue && props.validateMentions) {
+            // Extract mentions from initial value
+            const mentionRegex = /@([\w._-]+(?:@[\w.-]+\.\w+)?)/g;
+            const matches = [...newValue.matchAll(mentionRegex)];
+
+            matches.forEach((match) => {
+                const username = match[1];
+                if (!props.initialValidatedMentions.includes(username)) {
+                    validatedMentions.value.add(username);
+                }
+            });
+        }
+
         const currentText = getPlainText();
         if (newValue !== currentText && !isUpdatingContent.value) {
             setContent(newValue);
         }
     },
+    { immediate: true },
 );
 
 // Reposition dropdown when it becomes visible or results change
@@ -697,9 +716,36 @@ onBeforeUnmount(() => {
     clearTimeout(debounceTimer);
 });
 
+const insertAtCursor = (text) => {
+    if (!editorRef.value) return;
+
+    const currentText = getPlainText();
+    const cursorPos = saveCursorPosition();
+
+    if (cursorPos === null) {
+        // If no cursor position, append to end
+        const newText = currentText + text;
+        emit("update:modelValue", newText);
+        setContent(newText);
+        moveCursorToEnd();
+        return;
+    }
+
+    // Insert at cursor position
+    const before = currentText.substring(0, cursorPos);
+    const after = currentText.substring(cursorPos);
+    const newText = before + text + after;
+    const newCursorPos = cursorPos + text.length;
+
+    emit("update:modelValue", newText);
+    setContent(newText, newCursorPos);
+};
+
 // Expose methods for parent component
 defineExpose({
     focus: () => editorRef.value?.focus(),
+    moveCursorToEnd,
+    insertAtCursor,
     clear: () => {
         if (editorRef.value) {
             editorRef.value.innerHTML = "";

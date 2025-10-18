@@ -58,6 +58,7 @@
 
                 <div v-if="isEditing" class="mb-2">
                     <MentionHashtagInput
+                        ref="replyEditInputRef"
                         v-model="editedCaption"
                         :placeholder="$t('post.editYourComment')"
                         :disabled="isSavingEdit"
@@ -174,7 +175,7 @@
                         </button>
                         <button
                             v-if="authStore.isAuthenticated"
-                            @click="showReplyInput = !showReplyInput"
+                            @click="startReply"
                             class="cursor-pointer text-gray-400 hover:text-gray-500 flex items-center gap-1"
                         >
                             <svg
@@ -212,12 +213,25 @@
                             "
                         />
                         <div class="flex-1">
-                            <textarea
+                            <MentionHashtagInput
+                                ref="replyInputRef"
                                 v-model="replyText"
-                                class="w-full p-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-300 rounded-lg resize-none text-sm focus:border-[#F02C56] focus:outline-[#F02C56] dark:focus:outline-[#F02C56]"
                                 :placeholder="$t('post.writeAReplyDotDotDot')"
-                                rows="2"
-                            ></textarea>
+                                :disabled="isSavingEdit"
+                                :fetch-mentions="fetchMentions"
+                                :fetch-hashtags="fetchHashtags"
+                                :validate-mentions="true"
+                                :validate-hashtags="true"
+                                :initial-validated-mentions="
+                                    initialValidatedMentions
+                                "
+                                :initial-validated-hashtags="
+                                    initialValidatedHashtags
+                                "
+                                min-height="80px"
+                                max-height="400px"
+                            />
+
                             <div class="flex justify-end mt-2">
                                 <button
                                     @click="handleReply"
@@ -405,7 +419,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed, inject } from "vue";
+import { ref, onMounted, onUnmounted, computed, inject, nextTick } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useCommentStore } from "@/stores/comments";
 import { useReportModal } from "@/composables/useReportModal";
@@ -457,6 +471,8 @@ const replyText = ref("");
 const showDropdown = ref(false);
 const isSubmittingReply = ref(false);
 const isDeletingComment = ref(false);
+const replyInputRef = ref();
+const replyEditInputRef = ref();
 
 // Edit state
 const isEditing = ref(false);
@@ -504,7 +520,29 @@ const heartIconClass = computed(() => {
         : "bx bx-heart text-gray-400 hover:text-red-500";
 });
 
-// Button visibility logic
+const startReply = async () => {
+    if (showReplyInput.value) {
+        showReplyInput.value = false;
+        return;
+    }
+    showReplyInput.value = true;
+
+    const username = props.comment.account.username;
+    replyText.value = `@${username} `;
+
+    await nextTick();
+
+    setTimeout(() => {
+        if (replyInputRef.value) {
+            console.log("Focusing input...", replyInputRef.value);
+            replyInputRef.value.focus();
+            replyInputRef.value.moveCursorToEnd();
+        } else {
+            console.log("replyInputRef is null");
+        }
+    }, 50);
+};
+
 const shouldShowInitialLoadButton = computed(() => {
     // Don't show if we're highlighting a specific reply
     if (props.highlightedReplyId) {
@@ -581,7 +619,7 @@ onUnmounted(() => {
     document.removeEventListener("click", handleClickOutside);
 });
 
-const startEdit = () => {
+const startEdit = async () => {
     isEditing.value = true;
     editedCaption.value = props.comment.caption || "";
     showDropdown.value = false;
@@ -598,6 +636,18 @@ const startEdit = () => {
         (m) => m[1],
     );
     initialValidatedHashtags.value = hashtags;
+
+    await nextTick();
+
+    setTimeout(() => {
+        if (replyEditInputRef.value) {
+            console.log("Focusing input...", replyEditInputRef.value);
+            replyEditInputRef.value.focus();
+            replyEditInputRef.value.moveCursorToEnd();
+        } else {
+            console.log("replyInputRef is null");
+        }
+    }, 50);
 };
 
 const cancelEdit = async () => {
