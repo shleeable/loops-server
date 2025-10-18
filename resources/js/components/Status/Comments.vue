@@ -1,7 +1,5 @@
 <template>
-    <div
-        class="bg-white dark:bg-slate-900 rounded-lg shadow flex flex-col h-full md:max-h-[calc(100%-320px)]"
-    >
+    <div class="h-full flex flex-col bg-white dark:bg-slate-900">
         <div class="flex-1 overflow-y-auto p-3">
             <!-- Loading State -->
             <div v-if="isLoadingHighlightedComment" class="p-4 text-center">

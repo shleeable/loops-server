@@ -166,240 +166,253 @@
                 !error &&
                 (!currentVideo.is_sensitive || showSensitiveContent)
             "
-            class="lg:max-w-[550px] relative w-full h-full bg-white dark:bg-slate-950"
+            class="lg:max-w-[550px] relative w-full h-full bg-white dark:bg-slate-950 flex flex-col"
         >
-            <div
-                class="p-3 sm:p-5 m-2 sm:m-8 mb-0 rounded-lg bg-gray-100 dark:bg-slate-900"
-            >
+            <div class="flex-shrink-0">
                 <div
-                    class="flex items-start sm:items-center justify-between gap-3"
+                    class="p-3 sm:p-5 m-2 sm:m-8 mb-0 rounded-lg bg-gray-100 dark:bg-slate-900"
                 >
-                    <div class="flex items-center flex-1 min-w-0">
-                        <router-link :to="`/@${currentVideo.account.username}`">
-                            <img
-                                class="rounded-full flex-shrink-0"
-                                :class="{
-                                    'w-10 h-10': true,
-                                    'sm:w-12 sm:h-12': true,
-                                }"
-                                :src="currentVideo.account.avatar"
-                                :alt="currentVideo.account.username"
-                                @error="
-                                    $event.target.src =
-                                        '/storage/avatars/default.jpg'
-                                "
-                            />
-                        </router-link>
-                        <div class="ml-3 pt-0.5 min-w-0 flex-1 items-center">
-                            <div
-                                class="text-base sm:text-[17px] font-semibold dark:text-slate-50 mt-2 -mb-1 truncate"
+                    <div
+                        class="flex items-start sm:items-center justify-between gap-3"
+                    >
+                        <div class="flex items-center flex-1 min-w-0">
+                            <router-link
+                                :to="`/@${currentVideo.account.username}`"
                             >
-                                {{ currentVideo.account.username }}
-                            </div>
+                                <img
+                                    class="rounded-full flex-shrink-0"
+                                    :class="{
+                                        'w-10 h-10': true,
+                                        'sm:w-12 sm:h-12': true,
+                                    }"
+                                    :src="currentVideo.account.avatar"
+                                    :alt="currentVideo.account.username"
+                                    @error="
+                                        $event.target.src =
+                                            '/storage/avatars/default.jpg'
+                                    "
+                                />
+                            </router-link>
                             <div
-                                class="text-xs sm:text-[13px] font-light flex gap-1 items-center"
+                                class="ml-3 pt-0.5 min-w-0 flex-1 items-center"
                             >
-                                <div class="dark:text-slate-400 truncate">
-                                    {{ currentVideo.account.name }}
+                                <div
+                                    class="text-base sm:text-[17px] font-semibold dark:text-slate-50 mt-2 -mb-1 truncate"
+                                >
+                                    {{ currentVideo.account.username }}
                                 </div>
                                 <div
-                                    class="text-slate-400 dark:text-slate-500 leading-none"
+                                    class="text-xs sm:text-[13px] font-light flex gap-1 items-center"
                                 >
-                                    ·
+                                    <div class="dark:text-slate-400 truncate">
+                                        {{ currentVideo.account.name }}
+                                    </div>
+                                    <div
+                                        class="text-slate-400 dark:text-slate-500 leading-none"
+                                    >
+                                        ·
+                                    </div>
+                                    <div
+                                        class="dark:text-slate-400 whitespace-nowrap"
+                                    >
+                                        {{
+                                            formatRecentDate(
+                                                currentVideo.created_at,
+                                            )
+                                        }}
+                                    </div>
+                                    <div
+                                        v-if="currentVideo.is_edited"
+                                        class="text-slate-400 dark:text-slate-500 leading-none"
+                                    >
+                                        ·
+                                    </div>
+                                    <button
+                                        v-if="currentVideo?.is_edited"
+                                        @click="
+                                            openVideoHistory(currentVideo?.id)
+                                        "
+                                        class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer"
+                                    >
+                                        Edited
+                                    </button>
                                 </div>
-                                <div
-                                    class="dark:text-slate-400 whitespace-nowrap"
-                                >
-                                    {{
-                                        formatRecentDate(
-                                            currentVideo.created_at,
-                                        )
-                                    }}
-                                </div>
-                                <div
-                                    v-if="currentVideo.is_edited"
-                                    class="text-slate-400 dark:text-slate-500 leading-none"
-                                >
-                                    ·
-                                </div>
-                                <button
-                                    v-if="currentVideo?.is_edited"
-                                    @click="openVideoHistory(currentVideo?.id)"
-                                    class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer"
-                                >
-                                    Edited
-                                </button>
                             </div>
                         </div>
-                    </div>
 
-                    <template v-if="authStore.isAuthenticated">
-                        <button
-                            v-if="userId === currentVideo.account.id"
-                            @click="showEditModal = true"
-                            class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-[#F02C56]/70 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer"
-                        >
-                            {{ $t("post.edit") }}
-                        </button>
+                        <template v-if="authStore.isAuthenticated">
+                            <button
+                                v-if="userId === currentVideo.account.id"
+                                @click="showEditModal = true"
+                                class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-[#F02C56]/70 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer"
+                            >
+                                {{ $t("post.edit") }}
+                            </button>
+                            <template v-else>
+                                <button
+                                    v-if="!profileStore.isFollowing"
+                                    @click="profileStore.follow()"
+                                    class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-red-600 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer"
+                                >
+                                    {{ $t("common.follow") }}
+                                </button>
+                                <button
+                                    v-else
+                                    @click="profileStore.unfollow()"
+                                    class="flex items-center border-[#F02C56] text-[#F02C56] border rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer hover:opacity-60"
+                                >
+                                    {{ $t("common.unfollow") }}
+                                </button>
+                            </template>
+                        </template>
                         <template v-else>
                             <button
-                                v-if="!profileStore.isFollowing"
-                                @click="profileStore.follow()"
-                                class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-red-600 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer"
+                                @click="handleGuestFollow"
+                                class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-red-600 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0"
                             >
                                 {{ $t("common.follow") }}
                             </button>
-                            <button
-                                v-else
-                                @click="profileStore.unfollow()"
-                                class="flex items-center border-[#F02C56] text-[#F02C56] border rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer hover:opacity-60"
-                            >
-                                {{ $t("common.unfollow") }}
-                            </button>
                         </template>
-                    </template>
-                    <template v-else>
-                        <button
-                            @click="handleGuestFollow"
-                            class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-red-600 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0"
-                        >
-                            {{ $t("common.follow") }}
-                        </button>
-                    </template>
-                </div>
+                    </div>
 
-                <div class="mt-3 sm:mt-3">
-                    <AutolinkedText
-                        :caption="currentVideo?.caption"
-                        :mentions="currentVideo?.mentions"
-                        :tags="currentVideo?.tags"
-                        :max-char-limit="140"
-                    />
-                </div>
+                    <div class="mt-3 sm:mt-3">
+                        <AutolinkedText
+                            :caption="currentVideo?.caption"
+                            :mentions="currentVideo?.mentions"
+                            :tags="currentVideo?.tags"
+                            :max-char-limit="140"
+                        />
+                    </div>
 
-                <div
-                    v-if="currentVideo.is_sensitive"
-                    class="mt-3 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-                >
-                    <ExclamationTriangleIcon class="h-3 w-3 mr-1" />
-                    Sensitive Content
-                </div>
-
-                <div
-                    class="mt-3 text-xs sm:text-sm font-medium dark:text-slate-500 flex items-center"
-                >
-                    <MusicalNoteIcon
-                        class="inline h-4 w-4 mr-1 flex-shrink-0"
-                    />
-                    <span class="truncate"
-                        >original sound - {{ currentVideo.account.name }}</span
+                    <div
+                        v-if="currentVideo.is_sensitive"
+                        class="mt-3 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
                     >
+                        <ExclamationTriangleIcon class="h-3 w-3 mr-1" />
+                        Sensitive Content
+                    </div>
+
+                    <div
+                        class="mt-3 text-xs sm:text-sm font-medium dark:text-slate-500 flex items-center"
+                    >
+                        <MusicalNoteIcon
+                            class="inline h-4 w-4 mr-1 flex-shrink-0"
+                        />
+                        <span class="truncate"
+                            >original sound -
+                            {{ currentVideo.account.name }}</span
+                        >
+                    </div>
                 </div>
             </div>
 
-            <div class="flex items-center px-8 mt-4 justify-between">
-                <div class="pb-4 text-center flex items-center">
-                    <button
-                        @click="
-                            currentVideo.has_liked == true
-                                ? unlikePost()
-                                : likePost()
-                        "
-                        class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
-                    >
-                        <span
-                            class="text-[20px]"
-                            :class="
-                                currentVideo.has_liked
-                                    ? 'bx bxs-heart text-red-500'
-                                    : 'bx bx-heart text-gray-400 hover:text-red-500'
+            <div class="flex-shrink-0">
+                <div class="flex items-center px-8 mt-4 justify-between">
+                    <div class="pb-4 text-center flex items-center">
+                        <button
+                            @click="
+                                currentVideo.has_liked == true
+                                    ? unlikePost()
+                                    : likePost()
                             "
-                        ></span>
-                    </button>
-                    <span
-                        class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
-                    >
-                        {{ formatCount(currentVideo.likes) }}
-                    </span>
-                </div>
-
-                <div class="pb-4 text-center flex items-center">
-                    <div
-                        class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
-                    >
-                        <ChatBubbleOvalLeftIcon class="h-4 w-4 text-gray-400" />
-                    </div>
-                    <span
-                        class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
-                    >
-                        {{ formatCount(currentVideo.comments) }}
-                    </span>
-                </div>
-
-                <div class="pb-4 text-center flex items-center">
-                    <button
-                        class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
-                        @click="handleShare"
-                    >
-                        <ShareIcon class="h-4 w-4 text-gray-400" />
-                    </button>
-                    <span
-                        class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
-                    >
-                        {{ formatCount(0) }}
-                    </span>
-                </div>
-
-                <div class="pb-4 text-center flex items-center">
-                    <div
-                        class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
-                    >
-                        <BookmarkIcon class="h-4 w-4 text-gray-400" />
-                    </div>
-                    <span
-                        class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
-                    >
-                        {{ formatCount(0) }}
-                    </span>
-                </div>
-
-                <div
-                    v-if="userId != currentVideo.account.id"
-                    class="pb-4 text-center flex items-center"
-                >
-                    <div class="relative">
-                        <button @click="showMenu = !showMenu">
-                            <div
-                                class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
-                            >
-                                <EllipsisVerticalIcon class="h-5 w-5" />
-                            </div>
-                        </button>
-
-                        <div
-                            v-if="showMenu"
-                            class="absolute bg-white dark:bg-slate-900 rounded-lg w-[200px] shadow-xl overflow-hidden border border-gray-200 dark:border-slate-700 top-[43px] -right-2"
+                            class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
                         >
+                            <span
+                                class="text-[20px]"
+                                :class="
+                                    currentVideo.has_liked
+                                        ? 'bx bxs-heart text-red-500'
+                                        : 'bx bx-heart text-gray-400 hover:text-red-500'
+                                "
+                            ></span>
+                        </button>
+                        <span
+                            class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
+                        >
+                            {{ formatCount(currentVideo.likes) }}
+                        </span>
+                    </div>
+
+                    <div class="pb-4 text-center flex items-center">
+                        <div
+                            class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
+                        >
+                            <ChatBubbleOvalLeftIcon
+                                class="h-4 w-4 text-gray-400"
+                            />
+                        </div>
+                        <span
+                            class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
+                        >
+                            {{ formatCount(currentVideo.comments) }}
+                        </span>
+                    </div>
+
+                    <div class="pb-4 text-center flex items-center">
+                        <button
+                            class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
+                            @click="handleShare"
+                        >
+                            <ShareIcon class="h-4 w-4 text-gray-400" />
+                        </button>
+                        <span
+                            class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
+                        >
+                            {{ formatCount(0) }}
+                        </span>
+                    </div>
+
+                    <div class="pb-4 text-center flex items-center">
+                        <div
+                            class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
+                        >
+                            <BookmarkIcon class="h-4 w-4 text-gray-400" />
+                        </div>
+                        <span
+                            class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
+                        >
+                            {{ formatCount(0) }}
+                        </span>
+                    </div>
+
+                    <div
+                        v-if="userId != currentVideo.account.id"
+                        class="pb-4 text-center flex items-center"
+                    >
+                        <div class="relative">
+                            <button @click="showMenu = !showMenu">
+                                <div
+                                    class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
+                                >
+                                    <EllipsisVerticalIcon class="h-5 w-5" />
+                                </div>
+                            </button>
+
                             <div
-                                @click="handleReport"
-                                class="flex items-center justify-start py-3 px-4 hover:bg-gray-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+                                v-if="showMenu"
+                                class="absolute bg-white dark:bg-slate-900 rounded-lg w-[200px] shadow-xl overflow-hidden border border-gray-200 dark:border-slate-700 top-[43px] -right-2"
                             >
-                                <FlagIcon class="h-4 w-4" />
-                                <span class="pl-2 font-semibold text-sm">{{
-                                    $t("common.report")
-                                }}</span>
+                                <div
+                                    @click="handleReport"
+                                    class="flex items-center justify-start py-3 px-4 hover:bg-gray-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+                                >
+                                    <FlagIcon class="h-4 w-4" />
+                                    <span class="pl-2 font-semibold text-sm">{{
+                                        $t("common.report")
+                                    }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="flex justify-center px-8 mb-3">
-                <UrlCopyInput :url="`${currentVideo.url}`" />
+                <div class="flex justify-center px-8 mb-3">
+                    <UrlCopyInput :url="`${currentVideo.url}`" />
+                </div>
             </div>
 
             <div
-                class="bg-[#F8F8F8] dark:bg-slate-900 z-0 w-full h-[calc(100%-10px)] border-t-2 border-gray-100 dark:border-slate-800 overflow-auto"
+                class="flex-1 min-h-0 border-t-2 border-gray-100 dark:border-slate-800 bg-[#F8F8F8] dark:bg-slate-900"
             >
                 <Comments />
             </div>
