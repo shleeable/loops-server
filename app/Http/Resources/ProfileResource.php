@@ -25,8 +25,7 @@ class ProfileResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        // $avatarUrl = $this->avatar ? str_starts_with($this->avatar, 'https://') ? $this->avatar : Storage::disk('s3')->url($this->avatar) : url('/storage/avatars/default.jpg');
-        $avatarUrl = $this->avatar;
+        $avatarUrl = $this->avatar ?? url('/storage/avatars/default.jpg');
 
         if ($this->uri || $this->domain) {
             $avatarUrl = AvatarService::remote($this->id);
