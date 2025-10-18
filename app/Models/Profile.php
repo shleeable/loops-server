@@ -133,6 +133,7 @@ class Profile extends Model
         'public_key',
         'last_fetched_at',
         'local',
+        'discoverable',
     ];
 
     protected $guarded = [];
@@ -140,6 +141,7 @@ class Profile extends Model
     protected $casts = [
         'links' => 'array',
         'local' => 'boolean',
+        'discoverable' => 'boolean',
         'manuallyApprovesFollowers' => 'boolean',
     ];
 
