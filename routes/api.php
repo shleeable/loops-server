@@ -90,6 +90,10 @@ Route::prefix('api')->group(function () {
     Route::get('/v0/feed/for-you', [FeedController::class, 'getForYouFeed'])->middleware('auth:web,api');
     Route::get('/web/feed', [WebPublicController::class, 'getFeed']);
 
+    // Web Accounts
+    Route::get('/v1/web/account/followers/{id}', [WebPublicController::class, 'accountFollowers']);
+    Route::get('/v1/web/account/following/{id}', [WebPublicController::class, 'accountFollowing']);
+
     // Accounts
     Route::get('/v1/account/info/self', [AccountController::class, 'selfAccountInfo'])->middleware('auth:web,api');
     Route::get('/v1/account/info/{id}', [AccountController::class, 'getAccountInfo'])->middleware('auth:web,api');
@@ -97,8 +101,8 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/account/username/{id}', [WebPublicController::class, 'getAccountInfoByUsername']);
     Route::post('/v1/account/block/{id}', [AccountController::class, 'accountBlock'])->middleware('auth:web,api');
     Route::post('/v1/account/unblock/{id}', [AccountController::class, 'accountUnblock'])->middleware('auth:web,api');
-    Route::get('/v1/account/followers/{id}', [WebPublicController::class, 'accountFollowers']);
-    Route::get('/v1/account/following/{id}', [WebPublicController::class, 'accountFollowing']);
+    Route::get('/v1/account/followers/{id}', [AccountController::class, 'accountFollowers'])->middleware('auth:web,api');
+    Route::get('/v1/account/following/{id}', [AccountController::class, 'accountFollowing'])->middleware('auth:web,api');
     Route::post('/v1/account/follow/{id}', [AccountController::class, 'follow'])->middleware('auth:web,api');
     Route::post('/v1/account/unfollow/{id}', [AccountController::class, 'unfollow'])->middleware('auth:web,api');
     Route::post('/v1/account/undo-follow-request/{id}', [AccountController::class, 'undoFollowRequest'])->middleware('auth:web,api');

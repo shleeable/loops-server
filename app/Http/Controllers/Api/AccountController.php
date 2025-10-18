@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\NotificationResource;
 use App\Http\Resources\ProfileResource;
+use App\Http\Resources\FollowerResource;
+use App\Http\Resources\FollowingResource;
 use App\Jobs\Federation\DeliverFollowRequest;
 use App\Jobs\Federation\DeliverUndoFollowActivity;
 use App\Models\Follower;
@@ -289,5 +291,31 @@ class AccountController extends Controller
         })->shuffle()->toArray();
 
         return $this->data($res);
+    }
+
+    public function accountFollowers(Request $request, $id)
+    {
+        $profile = Profile::findOrFail($id);
+
+        if ($request->user() && $request->user()->cannot('viewAny', [Profile::class])) {
+            return $this->error('Unavailable', 403);
+        }
+
+        $followers = Follower::whereFollowingId($id)->orderByDesc('id')->cursorPaginate(15);
+
+        return FollowerResource::collection($followers);
+    }
+
+    public function accountFollowing(Request $request, $id)
+    {
+        $profile = Profile::findOrFail($id);
+
+        if ($request->user() && $request->user()->cannot('viewAny', [Profile::class])) {
+            return $this->error('Unavailable', 403);
+        }
+
+        $followers = Follower::whereProfileId($id)->orderByDesc('id')->cursorPaginate(15);
+
+        return FollowingResource::collection($followers);
     }
 }

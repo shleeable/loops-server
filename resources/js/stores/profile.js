@@ -175,14 +175,17 @@ export const useProfileStore = defineStore("profile", {
         },
 
         async getFollowers(id, cursor = null) {
+            const authStore = useAuthStore();
             const axiosInstance = axios.getAxiosInstance();
+
+            const baseUrl = authStore.isAuthenticated
+                ? `/api/v1/account/followers/${id}`
+                : `/api/v1/web/account/followers/${id}`;
+
             try {
-                const response = await axiosInstance.get(
-                    `/api/v1/account/followers/${id}`,
-                    {
-                        params: cursor ? { cursor } : {},
-                    },
-                );
+                const response = await axiosInstance.get(baseUrl, {
+                    params: cursor ? { cursor } : {},
+                });
                 if (!cursor) {
                     this.followers = response.data.data;
                 } else {
@@ -199,14 +202,16 @@ export const useProfileStore = defineStore("profile", {
         },
 
         async getFollowing(id, cursor = null) {
+            const authStore = useAuthStore();
             const axiosInstance = axios.getAxiosInstance();
+
+            const baseUrl = authStore.isAuthenticated
+                ? `/api/v1/account/following/${id}`
+                : `/api/v1/web/account/following/${id}`;
             try {
-                const response = await axiosInstance.get(
-                    `/api/v1/account/following/${id}`,
-                    {
-                        params: cursor ? { cursor } : {},
-                    },
-                );
+                const response = await axiosInstance.get(baseUrl, {
+                    params: cursor ? { cursor } : {},
+                });
                 if (!cursor) {
                     this.following = response.data.data;
                 } else {
