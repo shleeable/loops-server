@@ -9,11 +9,11 @@ use App\Jobs\Auth\NewAccountEmailVerifyJob;
 use App\Models\AdminSetting;
 use App\Models\User;
 use App\Models\UserRegisterVerify;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class UserRegisterVerifyController extends Controller
 {
@@ -141,7 +141,7 @@ class UserRegisterVerifyController extends Controller
     public function verifyAge(Request $request)
     {
         $data = $request->validate([
-            'birthdate' => 'required|date|before:today'
+            'birthdate' => 'required|date|before:today',
         ]);
 
         $minAge = config('loops.registration.min_years_old', 16);
@@ -154,8 +154,8 @@ class UserRegisterVerifyController extends Controller
                 'minAge' => $minAge,
                 'message' => $allowed
                     ? __('common.birthdateVerified')
-                    : __('common.youMustBeAtLeastXYearsOld', ['years' => $minAge])
-            ]
+                    : __('common.youMustBeAtLeastXYearsOld', ['years' => $minAge]),
+            ],
         ]);
     }
 

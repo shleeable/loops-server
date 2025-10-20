@@ -33,7 +33,7 @@ class AvatarService
 
         return Cache::remember($key, now()->addDays(7), function () use ($id) {
             $profileAvatar = ProfileAvatar::whereProfileId($id)->first();
-            if (! $profileAvatar || !$profileAvatar->path) {
+            if (! $profileAvatar || ! $profileAvatar->path) {
                 return url('/storage/avatars/default.jpg');
             }
 

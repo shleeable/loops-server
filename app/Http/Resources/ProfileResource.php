@@ -6,7 +6,6 @@ use App\Models\Profile;
 use App\Services\AvatarService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Storage;
 
 /**
  * @mixin Profile

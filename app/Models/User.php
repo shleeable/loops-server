@@ -98,7 +98,7 @@ use Laravel\Passport\HasApiTokens;
 #[ObservedBy([UserObserver::class])]
 class User extends Authenticatable implements OAuthenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'name',

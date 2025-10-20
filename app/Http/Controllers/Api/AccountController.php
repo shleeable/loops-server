@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\NotificationResource;
-use App\Http\Resources\ProfileResource;
 use App\Http\Resources\FollowerResource;
 use App\Http\Resources\FollowingResource;
+use App\Http\Resources\NotificationResource;
+use App\Http\Resources\ProfileResource;
 use App\Jobs\Federation\DeliverFollowRequest;
 use App\Jobs\Federation\DeliverUndoFollowActivity;
 use App\Models\Follower;
