@@ -8,7 +8,6 @@ use App\Http\Requests\UpdateAccountPassword;
 use App\Http\Requests\UpdateAvatarRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Resources\BlockedAccountResource;
-use App\Http\Resources\ProfileResource;
 use App\Models\Profile;
 use App\Models\UserFilter;
 use App\Services\AccountService;
@@ -229,7 +228,7 @@ class SettingsController extends Controller
                 ->orderBy('username', 'asc')
                 ->get();
 
-            return ProfileResource::collection($profiles);
+            return BlockedAccountResource::collection($profiles);
         } catch (\Exception $e) {
             return $this->error('Search temporarily unavailable. Please try again.');
         }
