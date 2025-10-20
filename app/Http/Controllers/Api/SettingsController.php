@@ -262,4 +262,28 @@ class SettingsController extends Controller
 
         return $this->success();
     }
+
+    public function getPrivacy(Request $request)
+    {
+        $profile = $request->user()->profile;
+
+        return $this->data([
+            'discoverable' => $profile->discoverable,
+        ]);
+    }
+
+    public function updatePrivacy(Request $request)
+    {
+        $profile = $request->user()->profile;
+
+        $data = $request->validate([
+            'discoverable' => 'required|boolean',
+        ]);
+
+        $profile->update($data);
+
+        return $this->data([
+            'discoverable' => $profile->discoverable,
+        ]);
+    }
 }

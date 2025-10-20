@@ -115,6 +115,8 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/account/notifications/{id}/read', [AccountController::class, 'markNotificationAsRead'])->middleware('auth:web,api');
 
     // Settings
+    Route::get('/v1/account/settings/privacy', [SettingsController::class, 'getPrivacy'])->middleware('auth:web,api');
+    Route::post('/v1/account/settings/privacy', [SettingsController::class, 'updatePrivacy'])->middleware('auth:web,api');
     Route::get('/v1/account/settings/birthdate', [SettingsController::class, 'checkBirthdate'])->middleware('auth:web,api');
     Route::post('/v1/account/settings/birthdate', [SettingsController::class, 'setBirthdate'])->middleware('auth:web,api');
     Route::post('/v1/account/settings/bio', [SettingsController::class, 'storeBio'])->middleware('auth:web,api');
