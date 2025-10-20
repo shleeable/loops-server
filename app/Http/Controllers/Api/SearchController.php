@@ -28,21 +28,14 @@ class SearchController extends Controller
     {
         $q = $request->input('q');
         $cleanQuery = Str::of($q)->startsWith('@') ? Str::substr($q, 1) : $q;
-
         $currentUserId = $request->user()->profile_id;
-        $blocked = UserFilter::whereProfileId($currentUserId)
-            ->pluck('account_id')
-            ->toArray();
 
-        $blocked[] = $currentUserId;
-
-        $res = $this->searchLocal($cleanQuery, $blocked, $currentUserId);
+        $res = $this->searchLocal($cleanQuery, $currentUserId);
 
         if ($res->isEmpty() && $this->isRemoteQuery($cleanQuery)) {
-            $remoteProfile = $this->searchRemote($cleanQuery, $currentUserId, $blocked);
+            $remoteProfile = $this->searchRemote($cleanQuery, $currentUserId);
 
             if ($remoteProfile) {
-                // Convert single profile to collection for consistent response format
                 return ProfileResource::collection(collect([$remoteProfile]));
             }
         }
@@ -50,11 +43,10 @@ class SearchController extends Controller
         return ProfileResource::collection($res);
     }
 
-    /**
-     * Search local profiles
-     */
-    protected function searchLocal(string $cleanQuery, array $blocked, int $currentUserId)
+    protected function searchLocal(string $cleanQuery, int $currentUserId)
     {
+        $escapedQuery = str_replace(['%', '_'], ['\%', '\_'], $cleanQuery);
+
         return Profile::select([
             'profiles.id',
             'profiles.local',
@@ -73,31 +65,32 @@ class SearchController extends Controller
                 $join->on('followers.following_id', '=', 'profiles.id')
                     ->where('followers.profile_id', '=', $currentUserId);
             })
-            ->whereNotIn('profiles.id', $blocked)
-            ->where(function ($query) use ($cleanQuery) {
-                $query->where('profiles.username', 'like', $cleanQuery.'%');
+            ->where('profiles.id', '!=', $currentUserId)
+            ->whereNotExists(function ($query) use ($currentUserId) {
+                $query->select('id')
+                    ->from('user_filters')
+                    ->whereColumn('user_filters.account_id', 'profiles.id')
+                    ->where('user_filters.profile_id', $currentUserId);
             })
+            ->where('profiles.username', 'like', $escapedQuery.'%')
+            ->where('profiles.status', 1)
             ->groupBy('profiles.id', 'profiles.username', 'profiles.followers')
-            ->whereStatus(1)
             ->orderByDesc('is_followed')
             ->orderByDesc('profiles.followers')
             ->cursorPaginate(10)
             ->withQueryString();
     }
 
-    /**
-     * Search for remote profile via webfinger
-     */
-    protected function searchRemote(string $query, int $currentUserId, array $blocked): ?Profile
+    protected function searchRemote(string $query, int $currentUserId): ?Profile
     {
         try {
             if (filter_var($query, FILTER_VALIDATE_URL)) {
-                return $this->lookupByUrl($query, $blocked);
+                return $this->lookupByUrl($query, $currentUserId);
             }
 
             $profile = $this->webfingerService->findOrCreateRemoteActor($query);
 
-            if (! $profile || in_array($profile->id, $blocked)) {
+            if (! $profile || $this->isBlocked($profile->id, $currentUserId)) {
                 return null;
             }
 
@@ -112,18 +105,22 @@ class SearchController extends Controller
         }
     }
 
-    /**
-     * Lookup a profile by ActivityPub URL
-     */
-    protected function lookupByUrl(string $url, array $blocked): ?Profile
+    protected function lookupByUrl(string $url, int $currentUserId): ?Profile
     {
         $existing = Profile::where('uri', $url)->first();
 
         if ($existing) {
-            return in_array($existing->id, $blocked) ? null : $existing;
+            return $this->isBlocked($existing->id, $currentUserId) ? null : $existing;
         }
 
         return Profile::findOrCreateFromUrl($url, null, true);
+    }
+
+    protected function isBlocked(int $profileId, int $currentUserId): bool
+    {
+        return UserFilter::where('profile_id', $currentUserId)
+            ->where('account_id', $profileId)
+            ->exists();
     }
 
     /**
