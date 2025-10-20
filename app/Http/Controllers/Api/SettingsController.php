@@ -175,12 +175,16 @@ class SettingsController extends Controller
 
         $search = $request->input('q');
 
+        if ($request->filled('q')) {
+            $search = str_replace(['%', '_'], ['\%', '\_'], $search);
+        }
+
         $res = UserFilter::whereProfileId($request->user()->profile_id)
             ->when($search, function ($query, $search) {
                 $query->join('profiles', 'user_filters.account_id', '=', 'profiles.id')
                     ->where('profiles.username', 'like', $search.'%')
                     ->select('user_filters.*');
-            })->orderByDesc('id')->cursorPaginate(10);
+            })->orderByDesc('user_filters.id')->cursorPaginate(10)->withQueryString();
 
         return BlockedAccountResource::collection($res);
     }
@@ -197,7 +201,7 @@ class SettingsController extends Controller
                 'required',
                 'string',
                 'min:1',
-                'max:30',
+                'max:80',
                 'regex:/^[a-zA-Z0-9_\.@]+$/',
             ],
         ], [
