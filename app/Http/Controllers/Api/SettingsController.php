@@ -17,6 +17,7 @@ use App\Services\TwoFactorService;
 use App\Services\UserAuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use PragmaRX\Google2FA\Google2FA;
 
 class SettingsController extends Controller
@@ -232,5 +233,33 @@ class SettingsController extends Controller
         } catch (\Exception $e) {
             return $this->error('Search temporarily unavailable. Please try again.');
         }
+    }
+
+    public function checkBirthdate(Request $request)
+    {
+        return $this->data([
+            'has_birthdate' => $request->user()->birth_date != null,
+        ]);
+    }
+
+    public function setBirthdate(Request $request)
+    {
+        if ($request->user()->birth_date) {
+            return $this->error('You already have set your birthdate', 400);
+        }
+
+        $minAge = config('loops.registration.min_years_old', 16);
+
+        $data = $request->validate([
+            'birth_date' => [
+                'required',
+                Rule::date()->before(today()->subYears($minAge)),
+            ],
+        ]);
+        $user = $request->user();
+        $user->birth_date = $data['birth_date'];
+        $user->save();
+
+        return $this->success();
     }
 }
