@@ -31,6 +31,7 @@ return [
     ],
 
     'registration' => [
+        'min_years_old' => env('LOOPS_REG_MIN_YEARS_OLD', 16),
         'max_resend_email_verify' => (int) env('LOOPS_REG_MAX_RESEND_EMAIL_VERIFY', 2),
     ],
 

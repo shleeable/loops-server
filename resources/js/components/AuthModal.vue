@@ -231,13 +231,13 @@
                                     >
                                         <span
                                             >Step {{ registrationStep }} of
-                                            4</span
+                                            5</span
                                         >
                                         <span
                                             >{{
                                                 Math.round(
                                                     ((registrationStep - 1) /
-                                                        4) *
+                                                        5) *
                                                         100,
                                                 )
                                             }}% complete</span
@@ -401,6 +401,135 @@
 
                                 <form
                                     v-if="registrationStep === 3"
+                                    @submit.prevent="handleBirthdateNext"
+                                    class="space-y-6"
+                                >
+                                    <div>
+                                        <label
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                        >
+                                            {{
+                                                t("common.birthdate") ||
+                                                "Birth date"
+                                            }}
+                                        </label>
+
+                                        <div class="grid grid-cols-3 gap-3">
+                                            <div>
+                                                <select
+                                                    v-model="birth.month"
+                                                    required
+                                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
+                                                >
+                                                    <option value="" disabled>
+                                                        {{
+                                                            t("common.month") ||
+                                                            "Month"
+                                                        }}
+                                                    </option>
+                                                    <option
+                                                        v-for="m in months"
+                                                        :key="m.value"
+                                                        :value="m.value"
+                                                    >
+                                                        {{ m.label }}
+                                                    </option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <select
+                                                    v-model="birth.day"
+                                                    required
+                                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
+                                                >
+                                                    <option value="" disabled>
+                                                        {{
+                                                            t("common.day") ||
+                                                            "Day"
+                                                        }}
+                                                    </option>
+                                                    <option
+                                                        v-for="d in days"
+                                                        :key="d"
+                                                        :value="d"
+                                                    >
+                                                        {{ d }}
+                                                    </option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <select
+                                                    v-model="birth.year"
+                                                    required
+                                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
+                                                >
+                                                    <option value="" disabled>
+                                                        {{
+                                                            t("common.year") ||
+                                                            "Year"
+                                                        }}
+                                                    </option>
+                                                    <option
+                                                        v-for="y in years"
+                                                        :key="y"
+                                                        :value="y"
+                                                    >
+                                                        {{ y }}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            class="mt-3 text-sm text-gray-600 dark:text-gray-400"
+                                        >
+                                            {{
+                                                t(
+                                                    "common.weUseThisToVerifyAge",
+                                                ) ||
+                                                "We use this to verify your age. It won’t be public."
+                                            }}
+                                        </div>
+
+                                        <div
+                                            v-if="birthdateFormatted"
+                                            class="mt-2 text-xs text-gray-500 dark:text-gray-400"
+                                        >
+                                            {{
+                                                t("common.formattedAs") ||
+                                                "Formatted as"
+                                            }}:
+                                            <code
+                                                class="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded"
+                                                >{{ birthdateFormatted }}</code
+                                            >
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-3">
+                                        <AnimatedButton
+                                            type="button"
+                                            @click="goBackStep"
+                                            variant="outline"
+                                            class="flex-1"
+                                        >
+                                            {{ t("settings.back") }}
+                                        </AnimatedButton>
+                                        <AnimatedButton
+                                            type="submit"
+                                            :loading="loading"
+                                            class="flex-1"
+                                            variant="primary"
+                                        >
+                                            {{ t("common.continue") }}
+                                        </AnimatedButton>
+                                    </div>
+                                </form>
+
+                                <form
+                                    v-if="registrationStep === 4"
                                     @submit.prevent="handleSetProfile"
                                     class="space-y-6"
                                 >
@@ -559,7 +688,7 @@
                                 </form>
 
                                 <div
-                                    v-if="registrationStep === 4"
+                                    v-if="registrationStep === 5"
                                     class="space-y-6"
                                 >
                                     <div
@@ -915,6 +1044,7 @@ const hasOtpError = ref(false);
 const otpErrorMessage = ref("");
 const success = ref("");
 const showPassword = ref(false);
+const minimumAge = ref(13);
 
 const registrationStep = ref(1);
 const resendCooldown = ref(0);
@@ -928,6 +1058,23 @@ const captchaType = ref(appCaptcha.provider);
 const captchaToken = ref("");
 const turnstileRef = ref(null);
 const hcaptchaRef = ref(null);
+const birth = ref({ day: "", month: "", year: "" });
+const registrationBirthdate = ref("");
+
+const months = [
+    { value: 1, label: t("common.months.jan") || "January" },
+    { value: 2, label: t("common.months.feb") || "February" },
+    { value: 3, label: t("common.months.mar") || "March" },
+    { value: 4, label: t("common.months.apr") || "April" },
+    { value: 5, label: t("common.months.may") || "May" },
+    { value: 6, label: t("common.months.jun") || "June" },
+    { value: 7, label: t("common.months.jul") || "July" },
+    { value: 8, label: t("common.months.aug") || "August" },
+    { value: 9, label: t("common.months.sep") || "September" },
+    { value: 10, label: t("common.months.oct") || "October" },
+    { value: 11, label: t("common.months.nov") || "November" },
+    { value: 12, label: t("common.months.dec") || "December" },
+];
 
 const onCaptchaSuccess = (token) => {
     captchaToken.value = token;
@@ -966,6 +1113,7 @@ const form = ref({
     verificationCode: "",
     avatar: null,
     selectedAvatarUrl: "",
+    birthdate: "",
 });
 
 const registrationData = ref({
@@ -991,8 +1139,10 @@ const getTitle = () => {
                 case 2:
                     return t("common.verifyYourEmail");
                 case 3:
-                    return t("common.setUpYourProfile");
+                    return t("common.confirmYourBirthdate");
                 case 4:
+                    return t("common.setUpYourProfile");
+                case 5:
                     return t("common.chooseYourAvatar");
                 default:
                     return t("common.createAccount");
@@ -1019,8 +1169,10 @@ const getSubtitle = () => {
                 case 2:
                     return t("common.weSentAVerificationCodeToYourEmail");
                 case 3:
-                    return t("common.chooseAUsernameAndSecurePassword");
+                    return t("common.weNeedYourBirthdateToVerifyAge");
                 case 4:
+                    return t("common.chooseAUsernameAndSecurePassword");
+                case 5:
                     return t("common.uploadAnAvatarToPersonalizeYourProfile");
                 default:
                     return t("common.createANewAccountToGetStarted");
@@ -1035,6 +1187,42 @@ const getSubtitle = () => {
             return "";
     }
 };
+
+const years = computed(() => {
+    const now = new Date().getFullYear();
+    const span = 120;
+    return Array.from({ length: span }, (_, i) => now - i);
+});
+
+function daysInMonth(y, m) {
+    if (!y || !m) return 31;
+    return new Date(y, m, 0).getDate();
+}
+const days = computed(() => {
+    const y = Number(birth.value.year) || 2000;
+    const m = Number(birth.value.month) || 1;
+    const max = daysInMonth(y, m);
+    return Array.from({ length: max }, (_, i) => i + 1);
+});
+
+const birthdateFormatted = computed(() => {
+    const y = birth.value.year;
+    const m = birth.value.month;
+    const d = birth.value.day;
+    if (!y || !m || !d) return "";
+    const mm = String(m).padStart(2, "0");
+    const dd = String(d).padStart(2, "0");
+    return `${y}-${mm}-${dd}`;
+});
+
+function isOldEnough(ymd, minYears) {
+    const [y, m, d] = ymd.split("-").map(Number);
+    const today = new Date();
+    let age = today.getFullYear() - y;
+    const mdiff = today.getMonth() + 1 - m;
+    if (mdiff < 0 || (mdiff === 0 && today.getDate() < d)) age--;
+    return age >= minYears;
+}
 
 const passwordStrength = computed(() => {
     const password = form.value.password;
@@ -1057,6 +1245,23 @@ const passwordStrength = computed(() => {
     return { score, text: "Strong", color: "green" };
 });
 
+async function verifyAgeApi(ymd) {
+    try {
+        const res = await axios.post("/api/v1/auth/register/verify-age", {
+            birthdate: ymd,
+            minAge: minimumAge.value,
+        });
+        if (typeof res?.data?.data?.allowed === "boolean") {
+            minimumAge.value = res.data.data.minAge;
+            await nextTick();
+            return res.data.data.allowed;
+        }
+        return isOldEnough(ymd, minimumAge.value);
+    } catch (e) {
+        return isOldEnough(ymd, minimumAge.value);
+    }
+}
+
 const closeModal = () => {
     authStore.closeAuthModal();
     clearForm();
@@ -1078,7 +1283,10 @@ const clearForm = () => {
         verificationCode: "",
         avatar: null,
         selectedAvatarUrl: "",
+        birthdate: "",
     };
+    birth.value = { day: "", month: "", year: "" };
+    registrationBirthdate.value = "";
 };
 
 const clearMessages = () => {
@@ -1203,6 +1411,40 @@ const handleResendCode = async () => {
     }
 };
 
+const handleBirthdateNext = async () => {
+    clearMessages();
+    loading.value = true;
+
+    try {
+        if (!birthdateFormatted.value) {
+            setError(t("common.pleaseSelectYourBirthdate"));
+            return;
+        }
+
+        const ok = await verifyAgeApi(birthdateFormatted.value);
+        if (!ok) {
+            errorPreventsRegistration.value = true;
+            setError(
+                t("common.youMustBeAtLeastXYearsOld", {
+                    years: minimumAge.value,
+                }),
+            );
+            return;
+        }
+
+        registrationBirthdate.value = birthdateFormatted.value;
+        registrationData.value.birthdate = registrationBirthdate.value;
+        form.value.birthdate = registrationBirthdate.value;
+
+        setSuccess(t("common.birthdateVerified") || "Birthdate verified!");
+        registrationStep.value = 4;
+    } catch (err) {
+        setError(err?.message || t("common.failedToVerifyAgePleaseTryAgain"));
+    } finally {
+        loading.value = false;
+    }
+};
+
 const handleSetProfile = async () => {
     clearMessages();
     loading.value = true;
@@ -1225,11 +1467,12 @@ const handleSetProfile = async () => {
                 form.value.username,
                 form.value.password,
                 form.value.confirmPassword,
+                birthdateFormatted.value,
             )
             .then((res) => {
                 registrationData.value.username = form.value.username;
                 registrationData.value.password = form.value.password;
-                registrationStep.value = 4;
+                registrationStep.value = 5;
                 setSuccess(t("common.profileInformationSaved"));
             });
     } catch (err) {

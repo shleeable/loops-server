@@ -75,6 +75,7 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/auth/register/email/resend', [UserRegisterVerifyController::class, 'resendEmailVerification']);
     Route::post('/v1/auth/register/email/verify', [UserRegisterVerifyController::class, 'verifyEmailVerification']);
     Route::post('/v1/auth/register/username', [UserRegisterVerifyController::class, 'claimUsername']);
+    Route::post('/v1/auth/register/verify-age', [UserRegisterVerifyController::class, 'verifyAge']);
 
     // Studio
     Route::get('/v1/upload/autocomplete/hashtag', [VideoController::class, 'getAutocompleteHashtag'])->middleware('auth:web,api');

@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class UserRegisterVerifyController extends Controller
 {
@@ -115,6 +116,7 @@ class UserRegisterVerifyController extends Controller
 
         $username = $request->username;
         $password = $request->password;
+        $birthDate = $request->birth_date;
 
         $user = new User;
         $user->name = $username;
@@ -122,6 +124,7 @@ class UserRegisterVerifyController extends Controller
         $user->email = $reg->email;
         $user->password = Hash::make($password);
         $user->email_verified_at = now();
+        $user->birth_date = $birthDate;
         $user->save();
 
         sleep(1);
@@ -133,6 +136,27 @@ class UserRegisterVerifyController extends Controller
         $reg->delete();
 
         return $this->success();
+    }
+
+    public function verifyAge(Request $request)
+    {
+        $data = $request->validate([
+            'birthdate' => 'required|date|before:today'
+        ]);
+
+        $minAge = config('loops.registration.min_years_old', 16);
+        $age = Carbon::parse($data['birthdate'])->diffInYears(now());
+        $allowed = $age >= $minAge;
+
+        return response()->json([
+            'data' => [
+                'allowed' => $allowed,
+                'minAge' => $minAge,
+                'message' => $allowed
+                    ? __('common.birthdateVerified')
+                    : __('common.youMustBeAtLeastXYearsOld', ['years' => $minAge])
+            ]
+        ]);
     }
 
     public function preflightCheck($request)

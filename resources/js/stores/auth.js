@@ -245,7 +245,12 @@ export const useAuthStore = defineStore("auth", {
             }
         },
 
-        async registerUsername(username, password, passwordConfirmation) {
+        async registerUsername(
+            username,
+            password,
+            passwordConfirmation,
+            birthDate,
+        ) {
             const axiosInstance = axios.getAxiosInstance();
             try {
                 this.loading = true;
@@ -257,6 +262,7 @@ export const useAuthStore = defineStore("auth", {
                         username: username,
                         password: password,
                         password_confirmation: passwordConfirmation,
+                        birth_date: birthDate,
                     },
                 );
 

@@ -47,6 +47,7 @@ class StoreRegisterUsernameRequest extends FormRequest
             ],
             'password' => 'required|min:8',
             'password_confirmation' => 'required|confirmed:password',
+            'birth_date' => 'required|date|before:today',
         ];
     }
 }
