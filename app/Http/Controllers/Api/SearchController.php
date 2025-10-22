@@ -76,7 +76,7 @@ class SearchController extends Controller
                 })
                 ->where('status', 1)
                 ->orderByDesc('followers')
-                ->limit(5)
+                ->limit(2)
                 ->get();
         }
 
