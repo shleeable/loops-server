@@ -54,7 +54,7 @@ class SearchController extends Controller
                 ->select(['id', 'profile_id', 'caption', 'likes', 'status', 'visibility', 'created_at'])
                 ->where('status', 2)
                 ->where('visibility', 1)
-                ->where('caption', 'like', $like)
+                ->where('caption', 'like', '%'.$like)
                 ->orderByDesc('likes')
                 ->orderByDesc('id')
                 ->cursorPaginate(
@@ -85,7 +85,7 @@ class SearchController extends Controller
                 ->select(['id', 'profile_id', 'caption', 'likes', 'status', 'visibility', 'created_at'])
                 ->where('status', 2)
                 ->where('visibility', 1)
-                ->where('caption', 'like', $like)
+                ->where('caption', 'like', '%'.$like)
                 ->orderByDesc('likes')
                 ->orderByDesc('id')
                 ->cursorPaginate(
