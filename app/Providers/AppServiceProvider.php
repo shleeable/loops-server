@@ -37,13 +37,55 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            $user = $request->user();
+            $actor = $user
+                ? "u:{$user->id}"
+                : 'ip:'.$request->ip();
+
+            $tooMany = fn ($req, array $headers) => response()->json([
+                'message' => 'Too many requests',
+                'retry_after' => $headers['Retry-After'] ?? null,
+            ], 429)->withHeaders($headers);
+
+            $limits = function (int $perMinute, int $perHour) use ($actor, $tooMany) {
+                return [
+                    Limit::perMinute($perMinute)->by("m:$actor")->response($tooMany),
+                    Limit::perHour($perHour)->by("h:$actor")->response($tooMany),
+                ];
+            };
+
+            if ($user?->is_admin) {
+                return [Limit::perMinute(1000)->by("m:$actor"), Limit::perHour(20000)->by("h:$actor")];
+            }
+
+            if ($user) {
+                return $limits(perMinute: 120, perHour: 3000);
+            }
+
+            return $limits(perMinute: 20, perHour: 200);
         });
 
         RateLimiter::for('autocomplete', function (Request $request) {
+            $user = $request->user();
+            if ($user->is_admin) {
+                return;
+            }
+
             return [
-                Limit::perMinute(10)->by('minute:'.$request->user()->id),
-                Limit::perDay(200)->by('day:'.$request->user()->id),
+                Limit::perMinute(30)->by('minute:'.$user->id),
+                Limit::perDay(300)->by('day:'.$user->id),
+            ];
+        });
+
+        RateLimiter::for('searchV1', function (Request $request) {
+            $user = $request->user();
+            if ($user->is_admin) {
+                return;
+            }
+
+            return [
+                Limit::perMinute(30)->by('minute:'.$user->id),
+                Limit::perDay(500)->by('day:'.$user->id),
             ];
         });
 

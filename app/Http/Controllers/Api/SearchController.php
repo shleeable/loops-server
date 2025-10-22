@@ -6,9 +6,13 @@ use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\ProfileResource;
+use App\Http\Resources\SearchResultResource;
+use App\Models\Hashtag;
 use App\Models\Profile;
 use App\Models\UserFilter;
+use App\Models\Video;
 use App\Services\WebfingerService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -24,7 +28,127 @@ class SearchController extends Controller
         $this->webfingerService = $webfingerService;
     }
 
-    public function get(SearchRequest $request)
+    public function search(Request $request)
+    {
+        $validated = $request->validate([
+            'query' => 'required|string|min:2|max:100',
+            'type' => 'sometimes|in:all,videos,users,hashtags',
+            'limit' => 'sometimes|integer|min:1|max:20',
+            'cursor' => 'sometimes|string',
+        ]);
+
+        $type = $validated['type'] ?? 'all';
+        $limit = $validated['limit'] ?? 10;
+        $query = trim($validated['query']);
+
+        $esc = str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $query);
+        $like = "{$esc}%";
+
+        $hashtagsData = collect();
+        $usersData = collect();
+        $videosData = collect();
+        $pager = null;
+
+        if ($type === 'all') {
+            $videos = Video::query()
+                ->select(['id', 'profile_id', 'caption', 'likes', 'status', 'visibility', 'created_at'])
+                ->where('status', 2)
+                ->where('visibility', 1)
+                ->where('caption', 'like', $like)
+                ->orderByDesc('likes')
+                ->orderByDesc('id')
+                ->cursorPaginate(
+                    perPage: $limit,
+                    columns: ['*'],
+                    cursorName: 'cursor',
+                    cursor: $request->input('cursor')
+                )
+                ->withQueryString();
+
+            $videosData = $videos->getCollection();
+            $pager = $videos;
+
+            $usersData = Profile::query()
+                ->select(['id', 'username', 'name', 'followers', 'status'])
+                ->where(function ($q) use ($like) {
+                    $q->where('username', 'like', $like)
+                        ->orWhere('name', 'like', $like);
+                })
+                ->where('status', 1)
+                ->orderByDesc('followers')
+                ->limit(5)
+                ->get();
+        }
+
+        if ($type === 'videos') {
+            $videos = Video::query()
+                ->select(['id', 'profile_id', 'caption', 'likes', 'status', 'visibility', 'created_at'])
+                ->where('status', 2)
+                ->where('visibility', 1)
+                ->where('caption', 'like', $like)
+                ->orderByDesc('likes')
+                ->orderByDesc('id')
+                ->cursorPaginate(
+                    perPage: $limit,
+                    columns: ['*'],
+                    cursorName: 'cursor',
+                    cursor: $request->input('cursor')
+                )
+                ->withQueryString();
+
+            $videosData = $videos->getCollection();
+            $pager = $videos;
+        }
+
+        if ($type === 'users') {
+            $users = Profile::query()
+                ->select(['id', 'username', 'name', 'followers', 'status'])
+                ->where(function ($q) use ($like) {
+                    $q->where('username', 'like', $like)
+                        ->orWhere('name', 'like', $like);
+                })
+                ->where('status', 1)
+                ->orderByDesc('followers')
+                ->orderByDesc('id')
+                ->cursorPaginate(
+                    perPage: $limit,
+                    columns: ['*'],
+                    cursorName: 'cursor',
+                    cursor: $request->input('cursor')
+                )
+                ->withQueryString();
+
+            $usersData = $users->getCollection();
+            $pager = $users;
+        }
+
+        if ($type === 'hashtags') {
+            $hashtags = Hashtag::query()
+                ->select(['id', 'name', 'name_normalized', 'count', 'can_search', 'created_at'])
+                ->where('can_search', true)
+                ->where('name', 'like', $like)
+                ->orderByDesc('count')
+                ->cursorPaginate(
+                    perPage: $limit,
+                    columns: ['*'],
+                    cursorName: 'cursor',
+                    cursor: $request->input('cursor')
+                )
+                ->withQueryString();
+
+            $hashtagsData = $hashtags->getCollection();
+            $pager = $hashtags;
+        }
+
+        return new SearchResultResource([
+            'hashtags' => $hashtagsData,
+            'users' => $usersData,
+            'videos' => $videosData,
+            'pager' => $pager,
+        ]);
+    }
+
+    public function getUsers(SearchRequest $request)
     {
         $q = $request->input('q');
         $cleanQuery = Str::of($q)->startsWith('@') ? Str::substr($q, 1) : $q;

@@ -78,28 +78,29 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/auth/register/verify-age', [UserRegisterVerifyController::class, 'verifyAge']);
 
     // Studio
-    Route::get('/v1/upload/autocomplete/hashtag', [VideoController::class, 'getAutocompleteHashtag'])->middleware('auth:web,api');
-    Route::get('/v1/upload/autocomplete/mention', [VideoController::class, 'getAutocompleteMention'])->middleware('auth:web,api');
+    Route::get('/v1/upload/autocomplete/hashtag', [VideoController::class, 'getAutocompleteHashtag'])->middleware(['auth:web,api', 'throttle:autocomplete']);
+    Route::get('/v1/upload/autocomplete/mention', [VideoController::class, 'getAutocompleteMention'])->middleware(['auth:web,api', 'throttle:autocomplete']);
     Route::get('/v1/studio/posts', [StudioController::class, 'getPosts'])->middleware('auth:web,api');
     Route::post('/v1/studio/upload', [VideoController::class, 'store'])->middleware('auth:web,api');
 
     // Search
-    Route::post('/v1/search/users', [SearchController::class, 'get'])->middleware('auth:web,api');
+    Route::get('/v1/search', [SearchController::class, 'search'])->middleware(['auth:web,api', 'throttle:searchV1']);
+    Route::post('/v1/search/users', [SearchController::class, 'getUsers'])->middleware(['auth:web,api', 'throttle:autocomplete']);
 
     // Feeds
     Route::get('/v0/user/self', [AccountController::class, 'selfAccountInfo'])->middleware('auth:web,api');
     Route::get('/v0/feed/for-you', [FeedController::class, 'getForYouFeed'])->middleware('auth:web,api');
-    Route::get('/web/feed', [WebPublicController::class, 'getFeed']);
+    Route::get('/web/feed', [WebPublicController::class, 'getFeed'])->middleware('throttle:api');
 
     // Web Accounts
-    Route::get('/v1/web/account/followers/{id}', [WebPublicController::class, 'accountFollowers']);
-    Route::get('/v1/web/account/following/{id}', [WebPublicController::class, 'accountFollowing']);
+    Route::get('/v1/web/account/followers/{id}', [WebPublicController::class, 'accountFollowers'])->middleware('throttle:api');
+    Route::get('/v1/web/account/following/{id}', [WebPublicController::class, 'accountFollowing'])->middleware('throttle:api');
 
     // Accounts
     Route::get('/v1/account/info/self', [AccountController::class, 'selfAccountInfo'])->middleware('auth:web,api');
-    Route::get('/v1/account/info/{id}', [AccountController::class, 'getAccountInfo'])->middleware('auth:web,api');
-    Route::get('/v1/account/state/{id}', [AccountController::class, 'getRelationshipState'])->middleware('auth:web,api');
-    Route::get('/v1/account/username/{id}', [WebPublicController::class, 'getAccountInfoByUsername']);
+    Route::get('/v1/account/info/{id}', [AccountController::class, 'getAccountInfo'])->middleware(['auth:web,api', 'throttle:api']);
+    Route::get('/v1/account/state/{id}', [AccountController::class, 'getRelationshipState'])->middleware(['auth:web,api', 'throttle:api']);
+    Route::get('/v1/account/username/{id}', [WebPublicController::class, 'getAccountInfoByUsername'])->middleware('throttle:api');
     Route::post('/v1/account/block/{id}', [AccountController::class, 'accountBlock'])->middleware('auth:web,api');
     Route::post('/v1/account/unblock/{id}', [AccountController::class, 'accountUnblock'])->middleware('auth:web,api');
     Route::get('/v1/account/followers/{id}', [AccountController::class, 'accountFollowers'])->middleware('auth:web,api');
@@ -147,13 +148,13 @@ Route::prefix('api')->group(function () {
 
     // Account Feeds
     Route::get('/v1/feed/account/self', [FeedController::class, 'selfAccountFeed'])->middleware('auth:web,api');
-    Route::get('/v1/feed/account/{id}', [WebPublicController::class, 'getAccountFeed']);
+    Route::get('/v1/feed/account/{id}', [WebPublicController::class, 'getAccountFeed'])->middleware('throttle:api');
 
     // Explore Feed
-    Route::get('/v1/explore/tags', [ExploreController::class, 'getTrendingTags']);
-    Route::get('/v1/explore/tag-feed/{id}', [ExploreController::class, 'getTagFeed']);
+    Route::get('/v1/explore/tags', [ExploreController::class, 'getTrendingTags'])->middleware('throttle:api');
+    Route::get('/v1/explore/tag-feed/{id}', [ExploreController::class, 'getTagFeed'])->middleware('throttle:api');
 
-    Route::get('/v1/tags/video/{id}', [WebPublicController::class, 'getVideoTags']);
+    Route::get('/v1/tags/video/{id}', [WebPublicController::class, 'getVideoTags'])->middleware('throttle:api');
 
     // Global Feeds
     Route::get('/v1/feed/for-you', [FeedController::class, 'getForYouFeed'])->middleware('auth:web,api');
@@ -169,27 +170,27 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/video/comments/reply/edit/{id}', [VideoController::class, 'storeCommentReplyUpdate'])->middleware('auth:web,api');
     Route::post('/v1/video/comments/edit/{id}', [VideoController::class, 'storeCommentUpdate'])->middleware('auth:web,api');
     Route::post('/v1/video/comments/{id}', [VideoController::class, 'storeComment'])->middleware('auth:web,api');
-    Route::get('/v1/video/comments/{id}', [WebPublicController::class, 'comments']);
-    Route::get('/v1/video/comments/{vid}/replies', [WebPublicController::class, 'commentsThread']);
+    Route::get('/v1/video/comments/{id}', [WebPublicController::class, 'comments'])->middleware('throttle:api');
+    Route::get('/v1/video/comments/{vid}/replies', [WebPublicController::class, 'commentsThread'])->middleware('throttle:api');
     Route::get('/v1/comments/history/{vid}/{cid}', [VideoController::class, 'showCommentsHistory']);
     Route::get('/v1/comments/history/{vid}/{cid}/{id}', [VideoController::class, 'showCommentReplyHistory']);
-    Route::get('/v1/video/comments/{videoId}/comment/{commentId}', [WebPublicController::class, 'getCommentById']);
-    Route::get('/v1/video/comments/{videoId}/reply/{replyId}', [WebPublicController::class, 'getReplyById']);
+    Route::get('/v1/video/comments/{videoId}/comment/{commentId}', [WebPublicController::class, 'getCommentById'])->middleware('throttle:api');
+    Route::get('/v1/video/comments/{videoId}/reply/{replyId}', [WebPublicController::class, 'getReplyById'])->middleware('throttle:api');
 
     // Videos
     Route::post('/v1/video/edit/{id}', [VideoController::class, 'update'])->middleware('auth:web,api');
     Route::post('/v1/video/delete/{id}', [VideoController::class, 'destroy'])->middleware('auth:web,api');
     Route::post('/v1/video/like/{id}', [VideoController::class, 'like'])->middleware('auth:web,api');
     Route::post('/v1/video/unlike/{id}', [VideoController::class, 'unlike'])->middleware('auth:web,api');
-    Route::get('/v1/video/history/{id}', [VideoController::class, 'showVideoHistory']);
-    Route::get('/v1/video/{id}', [WebPublicController::class, 'showVideo']);
+    Route::get('/v1/video/history/{id}', [VideoController::class, 'showVideoHistory'])->middleware('throttle:api');
+    Route::get('/v1/video/{id}', [WebPublicController::class, 'showVideo'])->middleware('throttle:api');
 
     // Autocomplete
-    Route::get('/v1/autocomplete/tags', [VideoController::class, 'showAutocompleteTags'])->middleware('auth:web,api');
-    Route::get('/v1/autocomplete/accounts', [VideoController::class, 'showAutocompleteAccounts'])->middleware('auth:web,api');
+    Route::get('/v1/autocomplete/tags', [VideoController::class, 'showAutocompleteTags'])->middleware(['auth:web,api', 'throttle:autocomplete']);
+    Route::get('/v1/autocomplete/accounts', [VideoController::class, 'showAutocompleteAccounts'])->middleware(['auth:web,api', 'throttle:autocomplete']);
 
     // Reports
-    Route::post('/v1/report', [ReportController::class, 'store'])->middleware('auth:web,api');
+    Route::post('/v1/report', [ReportController::class, 'store'])->middleware(['auth:web,api', 'throttle:api']);
 
     // Admin
     Route::prefix('/v1/admin')->middleware(['auth:web,api', AdminOnlyAccess::class])->group(function () {
