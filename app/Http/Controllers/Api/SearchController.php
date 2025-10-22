@@ -31,7 +31,7 @@ class SearchController extends Controller
     public function search(Request $request)
     {
         $validated = $request->validate([
-            'query' => 'required|string|min:2|max:100',
+            'query' => 'required|string|min:1|max:100',
             'type' => 'sometimes|in:all,videos,users,hashtags',
             'limit' => 'sometimes|integer|min:1|max:20',
             'cursor' => 'sometimes|string',
