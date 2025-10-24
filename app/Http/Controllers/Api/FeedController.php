@@ -45,11 +45,21 @@ class FeedController extends Controller
         if ($request->user()->cannot('viewAny', [Video::class])) {
             return $this->error('Please finish setting up your account', 403);
         }
-        FeedService::enforcePaginationLimit($request);
 
-        $feed = Video::join('followers', 'videos.profile_id', '=', 'followers.following_id')
-            ->where('followers.profile_id', $request->user()->profile_id)
-            ->select('videos.*')
+        FeedService::enforceFollowingPaginationLimit($request);
+
+        $me = $request->user()->profile_id;
+
+        $feed = Video::query()
+            ->where(function ($q) use ($me) {
+                $q->where('videos.profile_id', $me)
+                    ->orWhereExists(function ($sub) use ($me) {
+                        $sub->selectRaw(1)
+                            ->from('followers')
+                            ->whereColumn('followers.following_id', 'videos.profile_id')
+                            ->where('followers.profile_id', $me);
+                    });
+            })
             ->orderBy('videos.id', 'desc')
             ->cursorPaginate(5)
             ->withQueryString();

@@ -8,6 +8,12 @@ return [
                 'max_days' => env('LOOPS_FEED_FYP_MAXP_MAX_DAYS', 7),
             ],
         ],
+        'following' => [
+            'max_page' => [
+                'enabled' => env('LOOPS_FEED_FOLLOWING_MAXP_ENABLED', true),
+                'max_days' => env('LOOPS_FEED_FOLLOWING_MAXP_MAX_DAYS', 31),
+            ],
+        ],
     ],
 
     'reports' => [

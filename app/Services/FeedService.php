@@ -96,4 +96,27 @@ class FeedService
             }
         }
     }
+
+    public static function enforceFollowingPaginationLimit($request)
+    {
+        if (config('loops.feed.following.max_page.enabled') && $request->filled('cursor')) {
+            $preCursor = base64_decode($request->input('cursor'));
+            if (! $preCursor) {
+                return self::emptyCursor($request);
+            }
+            try {
+                $cursorId = json_decode($preCursor, true);
+                if (! $cursorId || ! isset($cursorId['videos.id'])) {
+                    throw new Exception('Invalid parameters');
+                }
+                $cursor = $cursorId['videos.id'];
+            } catch (Exception $e) {
+                return self::emptyCursor($request);
+            }
+            $maxId = SnowflakeService::byDate(now()->subDays(config('loops.feed.following.max_page.max_days')));
+            if ($cursor < $maxId) {
+                return self::emptyCursor($request);
+            }
+        }
+    }
 }
