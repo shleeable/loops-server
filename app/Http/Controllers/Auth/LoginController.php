@@ -45,26 +45,6 @@ class LoginController extends Controller
     }
 
     /**
-     * Show the application's login form.
-     * Override to capture OAuth parameters.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function showLoginForm(Request $request)
-    {
-        if ($request->has(['client_id', 'redirect_uri', 'response_type'])) {
-            Session::put('oauth_request', [
-                'client_id' => $request->input('client_id'),
-                'redirect_uri' => $request->input('redirect_uri'),
-                'response_type' => $request->input('response_type'),
-                'scope' => $request->input('scope', ''),
-            ]);
-        }
-
-        return view('auth.login');
-    }
-
-    /**
      * Log the user out of the application.
      *
      * @return \Illuminate\Http\RedirectResponse
@@ -135,13 +115,7 @@ class LoginController extends Controller
 
     protected function sendLoginResponse(Request $request)
     {
-        $oauthRequest = Session::get('oauth_request');
-
         $request->session()->regenerate();
-
-        if ($oauthRequest) {
-            Session::put('oauth_request', $oauthRequest);
-        }
 
         $this->clearLoginAttempts($request);
 
@@ -169,17 +143,18 @@ class LoginController extends Controller
      */
     protected function authenticated(Request $request, $user)
     {
-        if (Session::has('oauth_request')) {
-            $oauthParams = Session::pull('oauth_request');
-            $redirectUrl = url('/oauth/authorize?'.http_build_query(array_filter($oauthParams)));
+        $intendedUrl = session('url.intended');
+
+        if ($intendedUrl && str_contains($intendedUrl, '/oauth/authorize')) {
+            session()->forget('url.intended');
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
-                    'redirect' => $redirectUrl,
+                    'redirect' => $intendedUrl,
                 ]);
             }
 
-            return redirect($redirectUrl);
+            return redirect($intendedUrl);
         }
 
         if ($request->expectsJson() || $request->ajax()) {

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Laravel\Passport\Passport;
 use PragmaRX\Google2FA\Google2FA;
@@ -28,7 +27,7 @@ class AuthController extends Controller
         if ($attempts >= 3) {
             session()->forget('2fa:user:id');
             session()->forget('2fa:user:attempts');
-            session()->forget('oauth_request');
+            session()->forget('url.intended');
 
             return response()->json(['success' => false, 'error' => 'Too many attempts', 'force_relogin' => true]);
         }
@@ -36,24 +35,20 @@ class AuthController extends Controller
         $request->session()->increment('2fa:user:attempts');
 
         if ($google2fa->verifyKey($secret, $request->otp_code)) {
-            $oauthRequest = Session::get('oauth_request');
-
             Auth::login($user, session()->pull('2fa:remember', false));
-
-            if ($oauthRequest) {
-                Session::put('oauth_request', $oauthRequest);
-            }
 
             session()->forget('2fa:user:id');
             session()->forget('2fa:user:attempts');
 
-            if (Session::has('oauth_request')) {
-                $oauthParams = Session::pull('oauth_request');
+            $intendedUrl = session('url.intended');
+
+            if ($intendedUrl && str_contains($intendedUrl, '/oauth/authorize')) {
+                session()->forget('url.intended');
 
                 return response()->json([
                     'success' => true,
                     'error' => null,
-                    'redirect' => url('/oauth/authorize?'.http_build_query(array_filter($oauthParams))),
+                    'redirect' => $intendedUrl,
                 ]);
             }
 
