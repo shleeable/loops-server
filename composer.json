@@ -1,12 +1,23 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "pixelfed/loops-server",
+    "name": "joinloops/loops-server",
     "type": "project",
-    "description": "The loops.video backend server.",
-    "keywords": ["laravel", "framework"],
-    "license": "MIT",
+    "description": "The federated short video sharing platform.",
+    "keywords": ["laravel", "framework", "loops", "tiktok", "activitypub", "fediverse", "reels"],
+    "license": "AGPL-3.0-only",
+    "homepage": "https://joinloops.org",
+    "support": {
+        "issues": "https://github.com/joinloops/loops-server/issues",
+        "source": "https://github.com/joinloops/loops-server"
+    },
+    "authors": [
+        {
+            "name": "Daniel Supernault",
+            "email": "hello@pixelfed.org"
+        }
+    ],
     "require": {
-        "php": "^8.3",
+        "php": "^8.3|^8.4",
         "bacon/bacon-qr-code": "^3.0",
         "intervention/image-laravel": "^1.5",
         "laravel/framework": "^12.0",
