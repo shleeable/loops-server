@@ -22,9 +22,25 @@
             </div>
 
             <div class="px-6 py-6">
-                <div class="bg-gray-50 rounded-lg px-4 py-3 mb-6">
-                    <p class="text-sm text-gray-600 mb-1">Signed in as</p>
-                    <p class="font-medium text-gray-900">{{ $user->email }}</p>
+                <div class="bg-gray-50 rounded-lg px-4 py-3 mb-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Signed in as</p>
+                            <p class="font-medium text-gray-900">{{ $user->username }}</p>
+                        </div>
+                        <form method="post" action="{{ route('logout') }}" class="inline">
+                            @csrf
+                            <input type="hidden" name="oauth_redirect" value="true">
+                            <input type="hidden" name="client_id" value="{{ $request->client_id }}">
+                            <input type="hidden" name="redirect_uri" value="{{ $request->redirect_uri }}">
+                            <input type="hidden" name="response_type" value="{{ $request->response_type }}">
+                            <input type="hidden" name="scope" value="{{ $request->scope }}">
+                            <input type="hidden" name="state" value="{{ $request->state }}">
+                            <button type="submit" class="text-xs text-blue-600 hover:text-blue-800 font-medium focus:outline-none focus:underline">
+                                Switch account
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 @if(count($scopes))

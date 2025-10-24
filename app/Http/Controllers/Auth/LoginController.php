@@ -7,6 +7,7 @@ use App\Rules\HCaptchaRule;
 use App\Rules\TurnstileRule;
 use App\Services\CaptchaService;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -62,6 +63,39 @@ class LoginController extends Controller
         }
 
         return view('auth.login');
+    }
+
+    /**
+     * Log the user out of the application.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function logout(Request $request)
+    {
+        $isOAuthRedirect = $request->input('oauth_redirect') === 'true';
+
+        if ($isOAuthRedirect) {
+            $oauthParams = [
+                'client_id' => $request->input('client_id'),
+                'redirect_uri' => $request->input('redirect_uri'),
+                'response_type' => $request->input('response_type'),
+                'scope' => $request->input('scope'),
+                'state' => $request->input('state'),
+            ];
+        }
+
+        $this->guard()->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        if ($isOAuthRedirect) {
+            return redirect()->route('login', array_filter($oauthParams));
+        }
+
+        return $request->wantsJson()
+            ? new JsonResponse([], 204)
+            : redirect('/');
     }
 
     /**
