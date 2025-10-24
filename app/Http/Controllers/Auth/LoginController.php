@@ -54,12 +54,15 @@ class LoginController extends Controller
         $isOAuthRedirect = $request->input('oauth_redirect') === 'true';
 
         if ($isOAuthRedirect) {
-            $oauthParams = [
+            $oauthParams = array_filter([
                 'client_id' => $request->input('client_id'),
                 'redirect_uri' => $request->input('redirect_uri'),
                 'response_type' => $request->input('response_type'),
                 'scope' => $request->input('scope'),
-            ];
+                'state' => $request->input('state'),
+            ]);
+
+            $oauthAuthorizeUrl = url('/oauth/authorize?'.http_build_query($oauthParams));
         }
 
         $this->guard()->logout();
@@ -68,7 +71,7 @@ class LoginController extends Controller
         $request->session()->regenerateToken();
 
         if ($isOAuthRedirect) {
-            return redirect()->route('login', array_filter($oauthParams));
+            return redirect($oauthAuthorizeUrl);
         }
 
         return $request->wantsJson()
