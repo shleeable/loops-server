@@ -1,23 +1,30 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import Avatar from "./Avatar.vue";
 
+interface Account {
+    username: string;
+    name: string;
+    avatar: string;
+}
+
 interface Props {
-    account: object;
+    account: Account;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    account: {
+    account: () => ({
         username: "Username",
         name: "name",
         avatar: "",
-    },
+    }),
 });
+
+const { account } = props;
 </script>
 
 <template>
     <div class="flex items-center space-x-3">
-        <Avatar :src="account.avatar" width="40" />
+        <Avatar :src="account.avatar" :width="40" />
         <div>
             <div class="font-medium text-[15px] dark:text-slate-200">
                 {{ account.name }}

@@ -46,7 +46,7 @@
                             type="button"
                             class="inline-flex items-center justify-center rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-300 dark:focus-visible:ring-gray-700 dark:focus-visible:ring-offset-gray-950"
                             aria-haspopup="menu"
-                            aria-expanded="menuOpen ? 'true' : 'false'"
+                            :aria-expanded="menuOpen"
                             aria-label="More"
                             @click="toggleMenu"
                             @keydown.down.prevent="openMenu"
@@ -105,10 +105,16 @@ interface Props {
     nsfw: boolean;
 }
 
+interface AuthStore {
+    isAuthenticated: boolean;
+    openAuthModal: (mode: string) => void;
+}
+
 const props = defineProps<Props>();
 const { formatNumber } = useUtils();
 const { openReportModal } = useReportModal();
-const authStore = inject("authStore");
+
+const authStore = inject<AuthStore>("authStore")!;
 
 const compactCount = computed(() => formatNumber(props.totalResults));
 
