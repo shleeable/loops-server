@@ -161,7 +161,6 @@ export const profilesApi = {
     },
 
     async updateProfile(id, data) {
-        await delay(200);
         return { success: true, data: { id, ...data } };
     },
 
@@ -180,7 +179,6 @@ export const profilesApi = {
     },
 
     async deleteProfile(id) {
-        await delay(200);
         return { success: true };
     },
 };
@@ -228,7 +226,6 @@ export const videosApi = {
     },
 
     async deleteVideo(id) {
-        await delay(200);
         return { success: true };
     },
 };

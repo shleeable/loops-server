@@ -63,8 +63,6 @@ export default {
                         return "The content you're looking for could not be found";
                     case 403:
                         return "You don't have permission to access this content";
-                    case 401:
-                        return "Please log in to continue";
                     case 429:
                         return "Too many requests. Please try again later";
                     case 500:

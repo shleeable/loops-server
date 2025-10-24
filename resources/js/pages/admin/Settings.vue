@@ -2472,7 +2472,7 @@ const loadSettings = async () => {
             const [section, setting] = key.split(".");
             if (
                 settings[section] &&
-                settings[section].hasOwnProperty(setting)
+                Object.prototype.hasOwnProperty.call(settings[section], setting)
             ) {
                 settings[section][setting] = loadedSettings[key];
             }

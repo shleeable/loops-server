@@ -225,7 +225,7 @@ const restoreCursorPosition = (position) => {
     const range = document.createRange();
 
     let charCount = 0;
-    let nodeStack = [editorRef.value];
+    const nodeStack = [editorRef.value];
     let node, foundNode, foundOffset;
 
     while (!foundNode && (node = nodeStack.pop())) {

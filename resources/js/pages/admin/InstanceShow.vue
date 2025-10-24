@@ -521,7 +521,7 @@
                         @previous="previousUsersPage"
                         @next="nextUsersPage"
                     >
-                        <template #cell-id="{ value, row }">
+                        <template #cell-id="{ value }">
                             <router-link
                                 :to="`/admin/profiles/${value}`"
                                 class="text-blue-500 hover:text-blue-300 font-medium"
@@ -574,7 +574,7 @@
                             </router-link>
                         </template>
 
-                        <template #cell-caption="{ value, item }">
+                        <template #cell-caption="{ value }">
                             <div
                                 class="max-w-[300px] whitespace-break-spaces break-all"
                                 :title="value"
@@ -583,7 +583,7 @@
                             </div>
                         </template>
 
-                        <template #cell-username="{ value, item }">
+                        <template #cell-username="{ item }">
                             <router-link
                                 :to="`/admin/profiles/${item.account.id}`"
                                 class="text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-gray-200"
@@ -632,7 +632,7 @@
                             </router-link>
                         </template>
 
-                        <template #cell-caption="{ value, item }">
+                        <template #cell-caption="{ value }">
                             <div
                                 class="max-w-[300px] whitespace-break-spaces break-all"
                                 :title="value"
@@ -641,7 +641,7 @@
                             </div>
                         </template>
 
-                        <template #cell-username="{ value, item }">
+                        <template #cell-username="{ item }">
                             <router-link
                                 :to="`/admin/profiles/${item.account.id}`"
                                 class="text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-gray-200"
@@ -672,7 +672,7 @@
                         @previous="previousReportsPage"
                         @next="nextReportsPage"
                     >
-                        <template #cell-id="{ value, item }">
+                        <template #cell-id="{ value }">
                             <router-link
                                 :to="`/admin/reports/${value}`"
                                 class="text-blue-500 hover:text-blue-300 font-medium truncate"
@@ -705,7 +705,7 @@
                             </span>
                         </template>
 
-                        <template #cell-reporter="{ value, item }">
+                        <template #cell-reporter="{ item }">
                             <router-link
                                 :to="`/admin/profiles/${item.reporter.id}`"
                                 class="text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-gray-200 flex items-center gap-2"
