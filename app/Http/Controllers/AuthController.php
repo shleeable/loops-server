@@ -45,7 +45,7 @@ class AuthController extends Controller
                 return response()->json([
                     'success' => true,
                     'error' => null,
-                    'redirect' => '/oauth/authorize?'.http_build_query(array_filter($oauthParams)),
+                    'redirect' => url('/oauth/authorize?'.http_build_query(array_filter($oauthParams))),
                 ]);
             }
 

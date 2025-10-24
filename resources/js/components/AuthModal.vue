@@ -1552,6 +1552,8 @@ const handleLogin = async () => {
         if (res.data.has_2fa) {
             currentMode.value = "two-factor";
             setSuccess(t("common.pleaseEnterYour2FACode"));
+        } else if (res.data.redirect) {
+            window.location.href = res.data.redirect;
         } else {
             closeModal();
         }

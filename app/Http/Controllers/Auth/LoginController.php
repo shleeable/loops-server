@@ -167,8 +167,15 @@ class LoginController extends Controller
     {
         if (Session::has('oauth_request')) {
             $oauthParams = Session::pull('oauth_request');
+            $redirectUrl = url('/oauth/authorize?'.http_build_query(array_filter($oauthParams)));
 
-            return redirect('/oauth/authorize?'.http_build_query(array_filter($oauthParams)));
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'redirect' => $redirectUrl,
+                ]);
+            }
+
+            return redirect($redirectUrl);
         }
 
     }
