@@ -27,6 +27,7 @@ class AuthController extends Controller
 
         if ($attempts >= 3) {
             session()->forget('2fa:user:id');
+            session()->forget('2fa:user:attempts');
             session()->forget('oauth_request');
 
             return response()->json(['success' => false, 'error' => 'Too many attempts', 'force_relogin' => true]);
@@ -35,7 +36,14 @@ class AuthController extends Controller
         $request->session()->increment('2fa:user:attempts');
 
         if ($google2fa->verifyKey($secret, $request->otp_code)) {
+            $oauthRequest = Session::get('oauth_request');
+
             Auth::login($user, session()->pull('2fa:remember', false));
+
+            if ($oauthRequest) {
+                Session::put('oauth_request', $oauthRequest);
+            }
+
             session()->forget('2fa:user:id');
             session()->forget('2fa:user:attempts');
 
@@ -49,7 +57,11 @@ class AuthController extends Controller
                 ]);
             }
 
-            return response()->json(['success' => true, 'error' => null]);
+            return response()->json([
+                'success' => true,
+                'error' => null,
+                'redirect' => url('/'),
+            ]);
         }
 
         return response()->json(['success' => false, 'error' => 'Invalid code, please try again.', 'force_relogin' => false]);

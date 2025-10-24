@@ -135,7 +135,13 @@ class LoginController extends Controller
 
     protected function sendLoginResponse(Request $request)
     {
+        $oauthRequest = Session::get('oauth_request');
+
         $request->session()->regenerate();
+
+        if ($oauthRequest) {
+            Session::put('oauth_request', $oauthRequest);
+        }
 
         $this->clearLoginAttempts($request);
 
@@ -167,8 +173,18 @@ class LoginController extends Controller
             $oauthParams = Session::pull('oauth_request');
             $redirectUrl = url('/oauth/authorize?'.http_build_query(array_filter($oauthParams)));
 
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'redirect' => $redirectUrl,
+                ]);
+            }
+
+            return redirect($redirectUrl);
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
-                'redirect' => $redirectUrl,
+                'redirect' => url('/'),
             ]);
         }
 
