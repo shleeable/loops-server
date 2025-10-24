@@ -1622,9 +1622,13 @@ const handleTwoFactor = async () => {
         otpAttempts.value++;
         if (res.data.success) {
             setSuccess(t("common.authenticationSuccessful"));
-            setTimeout(() => {
-                window.location.reload();
-            }, 500);
+            if (res.data.redirect) {
+                window.location.href = res.data.redirect;
+            } else {
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            }
         } else if (res.data.force_relogin) {
             setError(t("common.tooManyFailedAttemptsPleaseTryAgainLater"));
             clearForm();

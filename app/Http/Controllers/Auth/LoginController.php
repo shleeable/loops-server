@@ -44,6 +44,27 @@ class LoginController extends Controller
     }
 
     /**
+     * Show the application's login form.
+     * Override to capture OAuth parameters.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showLoginForm(Request $request)
+    {
+        if ($request->has(['client_id', 'redirect_uri', 'response_type'])) {
+            Session::put('oauth_request', [
+                'client_id' => $request->input('client_id'),
+                'redirect_uri' => $request->input('redirect_uri'),
+                'response_type' => $request->input('response_type'),
+                'scope' => $request->input('scope', ''),
+                'state' => $request->input('state', ''),
+            ]);
+        }
+
+        return view('auth.login');
+    }
+
+    /**
      * Validate the user login request.
      *
      * @return void
@@ -91,6 +112,7 @@ class LoginController extends Controller
         if ($user->has_2fa) {
             Session::put('2fa:user:id', $user->id);
             Session::put('2fa:user:attempts', 0);
+
             $this->guard()->logout();
 
             return response()->json(['has_2fa' => true]);
@@ -98,5 +120,22 @@ class LoginController extends Controller
 
         return $this->authenticated($request, $user)
                 ?: redirect()->intended($this->redirectPath());
+    }
+
+    /**
+     * The user has been authenticated.
+     * Override to handle OAuth authorization flow.
+     *
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function authenticated(Request $request, $user)
+    {
+        if (Session::has('oauth_request')) {
+            $oauthParams = Session::pull('oauth_request');
+
+            return redirect('/oauth/authorize?'.http_build_query(array_filter($oauthParams)));
+        }
+
     }
 }
