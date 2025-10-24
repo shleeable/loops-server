@@ -58,7 +58,6 @@ class LoginController extends Controller
                 'redirect_uri' => $request->input('redirect_uri'),
                 'response_type' => $request->input('response_type'),
                 'scope' => $request->input('scope', ''),
-                'state' => $request->input('state', ''),
             ]);
         }
 
@@ -80,7 +79,6 @@ class LoginController extends Controller
                 'redirect_uri' => $request->input('redirect_uri'),
                 'response_type' => $request->input('response_type'),
                 'scope' => $request->input('scope'),
-                'state' => $request->input('state'),
             ];
         }
 
@@ -169,13 +167,9 @@ class LoginController extends Controller
             $oauthParams = Session::pull('oauth_request');
             $redirectUrl = url('/oauth/authorize?'.http_build_query(array_filter($oauthParams)));
 
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'redirect' => $redirectUrl,
-                ]);
-            }
-
-            return redirect($redirectUrl);
+            return response()->json([
+                'redirect' => $redirectUrl,
+            ]);
         }
 
     }
