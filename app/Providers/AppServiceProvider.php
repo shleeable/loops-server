@@ -20,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton('app_version', function () {
-            return '1.0.0-beta.1';
+            return '1.0.0-beta.2';
         });
 
         $this->app->singleton('user_agent', function () {
@@ -107,11 +107,6 @@ class AppServiceProvider extends ServiceProvider
 
     protected function configureSecureUrls()
     {
-        // Determine if HTTPS should be enforced
-        $enforceHttps = $this->app->environment(['production', 'staging'])
-            && ! $this->app->runningUnitTests();
-
-        // Force HTTPS for all generated URLs
-        URL::forceHttps($enforceHttps);
+        URL::forceHttps(true);
     }
 }
