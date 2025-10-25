@@ -13,9 +13,9 @@ echo "Now setting up loops itself..."
 docker compose run --rm loops php artisan key:generate
 docker compose run --rm loops php artisan storage:link
 docker compose run -it --rm loops php artisan migrate
-docker compose run -it --rm loops php artisan create-admin-account
 docker compose run -it --rm loops php artisan passport:keys
 docker compose run -it --rm loops php artisan vendor:publish --provider="Laravel\Horizon\HorizonServiceProvider"
+docker compose run -it --rm loops php artisan optimize
 
 docker create --name loops_temp loops.org
 docker cp loops_temp:/app/public ./app_public

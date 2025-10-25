@@ -1,6 +1,6 @@
 FROM debian:13 as builder
 ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=America/New_York
+ENV TZ=UTC
 
 #installing some addl tools during development, those will come in handy
 RUN apt-get update && apt-get install -y sudo nano git wget curl \
