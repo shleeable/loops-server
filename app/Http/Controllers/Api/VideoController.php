@@ -654,7 +654,7 @@ class VideoController extends Controller
             $video->saveQuietly();
         }
 
-        return $this->success();
+        return (new CommentReplyResource($comment))->toArray($request);
     }
 
     public function storeCommentLike(Request $request, $vid, $id)
@@ -745,7 +745,7 @@ class VideoController extends Controller
             $video->saveQuietly();
         }
 
-        return $this->success();
+        return (new CommentResource($comment))->toArray($request);
     }
 
     public function getAutocompleteMention(GetMentionAutocomplete $request)
