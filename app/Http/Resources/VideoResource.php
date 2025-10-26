@@ -83,6 +83,12 @@ class VideoResource extends JsonResource
      */
     private function getAuthenticatedProfileId(Request $request): ?int
     {
-        return $request->user()?->profile_id;
+        $pid = false;
+        $user = auth('web')->user() ?? auth('api')->user();
+        if ($user) {
+            $pid = $user->profile_id;
+        }
+
+        return $pid;
     }
 }

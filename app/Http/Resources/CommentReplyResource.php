@@ -26,7 +26,11 @@ class CommentReplyResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $pid = $request->user() ? $request->user()->profile_id : false;
+        $pid = false;
+        $user = auth('web')->user() ?? auth('api')->user();
+        if ($user) {
+            $pid = $user->profile_id;
+        }
 
         if ($this->deleted_at && $this->status != 'active') {
             $msg = $this->status === 'deleted_by_user' ?
