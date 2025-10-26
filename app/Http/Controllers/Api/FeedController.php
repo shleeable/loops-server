@@ -71,9 +71,11 @@ class FeedController extends Controller
     {
         $request->validate([
             'id' => 'required|integer|min:1',
+            'limit' => 'sometimes|integer|min:1|max:20',
         ]);
 
         $videoId = $request->input('id');
+        $limit = $request->input('limit', 10);
 
         $video = Video::where('profile_id', $profileId)
             ->where('id', $videoId)
@@ -88,7 +90,7 @@ class FeedController extends Controller
             ->published()
             ->where('id', '<=', $videoId)
             ->orderByDesc('id')
-            ->cursorPaginate(10)
+            ->cursorPaginate($limit)
             ->withQueryString();
 
         return VideoResource::collection($feed);
