@@ -64,7 +64,7 @@ class CommentReplyResource extends JsonResource
             'likes' => $this->likes ?? 0,
             'tags' => $this->hashtags->map(fn (Hashtag $tag) => $tag->name),
             'mentions' => $this->mentions,
-            'liked' => $pid ? app(LikeService::class)->hasLikedReply((string) $this->comment_id, (string) $pid) : false,
+            'liked' => $pid ? app(LikeService::class)->hasLikedReply((string) $this->id, (string) $pid) : false,
             'url' => $this->shareUrl(),
             'tombstone' => false,
             'is_edited' => $this->is_edited,
