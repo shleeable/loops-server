@@ -276,27 +276,36 @@ class Profile extends Model
             return null;
         }
 
-        $actor = static::firstOrNew([
-            'uri' => $url,
-            'local' => false,
-        ]);
+        $actor = static::where('uri', $url)->where('local', false)->first();
 
-        if ($actor->wasRecentlyCreated || $forceRefresh) {
-            $actorData = app(ActivityService::class)->fetchRemoteActor($url);
+        if (! $actor || $forceRefresh) {
+            $actorData = $actorData ?? app(ActivityService::class)->fetchRemoteActor($url);
 
             if (! $actorData || ! isset($actorData['id'], $actorData['preferredUsername'], $actorData['inbox'], $actorData['type'])) {
-                return null;
+                return $actor;
             }
 
             if (! $actorData['type'] || $actorData['type'] !== 'Person') {
-                return null;
+                return $actor;
             }
 
-            $domain = parse_url($url, PHP_URL_HOST);
+            $domain = parse_url($actorData['id'], PHP_URL_HOST);
             $username = $actorData['preferredUsername'];
             $acct = $username.'@'.$domain;
             $sharedInbox = data_get($actorData, 'endpoints.sharedInbox');
             $avatar = data_get($actorData, 'icon.url');
+
+            if (! $actor) {
+                $actor = static::where('username', $acct)->where('local', false)->first();
+            }
+
+            if (! $actor) {
+                /** @phpstan-ignore-next-line new.static */
+                $actor = new static([
+                    'local' => false,
+                ]);
+            }
+
             $actor->forceFill([
                 'username' => $acct,
                 'name' => Purify::clean($actorData['name'] ?? $username),
