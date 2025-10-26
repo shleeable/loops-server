@@ -37,6 +37,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         RateLimiter::for('api', function (Request $request) {
+            $enabled = config('loops.api.rate_limits.enabled');
+            if (! $enabled) {
+                return;
+            }
+
             $user = $request->user();
             $actor = $user
                 ? "u:{$user->id}"
@@ -55,14 +60,14 @@ class AppServiceProvider extends ServiceProvider
             };
 
             if ($user?->is_admin) {
-                return [Limit::perMinute(1000)->by("m:$actor"), Limit::perHour(20000)->by("h:$actor")];
+                return;
             }
 
             if ($user) {
-                return $limits(perMinute: 120, perHour: 3000);
+                return $limits(perMinute: config('loops.api.rate_limits.users.per_minute'), perHour: config('loops.api.rate_limits.users.per_hour'));
             }
 
-            return $limits(perMinute: 60, perHour: 700);
+            return $limits(perMinute: config('loops.api.rate_limits.guests.per_minute'), perHour: config('loops.api.rate_limits.guests.per_hour'));
         });
 
         RateLimiter::for('autocomplete', function (Request $request) {

@@ -1,6 +1,20 @@
 <?php
 
 return [
+    'api' => [
+        'rate_limits' => [
+            'enabled' => (bool) env('LOOPS_API_RATE_LIMITS_ENABLED', true),
+            'guests' => [
+                'per_minute' => (int) env('LOOPS_API_RATE_LIMITS_GUEST_PER_MIN', 60),
+                'per_hour' => (int) env('LOOPS_API_RATE_LIMITS_GUEST_PER_HOUR', 700),
+            ],
+            'users' => [
+                'per_minute' => (int) env('LOOPS_API_RATE_LIMITS_USER_PER_MIN', 120),
+                'per_hour' => (int) env('LOOPS_API_RATE_LIMITS_USER_PER_HOUR', 3000),
+            ],
+        ],
+    ],
+
     'feed' => [
         'fyp' => [
             'max_page' => [
