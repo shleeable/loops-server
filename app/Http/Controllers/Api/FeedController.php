@@ -16,7 +16,7 @@ class FeedController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth:api');
+        $this->middleware('auth:web,api');
     }
 
     public function selfAccountFeed(Request $request)
