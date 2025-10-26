@@ -20,7 +20,8 @@ class FeedService
                     default => $query->orderByDesc('id')
                 };
             })
-            ->cursorPaginate(10);
+            ->cursorPaginate(10)
+            ->withQueryString();
 
         return VideoResource::collection($feed);
     }

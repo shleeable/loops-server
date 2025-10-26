@@ -16,7 +16,7 @@ class FeedController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware('auth:api');
     }
 
     public function selfAccountFeed(Request $request)
@@ -62,6 +62,33 @@ class FeedController extends Controller
             })
             ->orderBy('videos.id', 'desc')
             ->cursorPaginate(5)
+            ->withQueryString();
+
+        return VideoResource::collection($feed);
+    }
+
+    public function getAccountFeedWithCursor(Request $request, $profileId)
+    {
+        $request->validate([
+            'id' => 'required|integer|min:1',
+        ]);
+
+        $videoId = $request->input('id');
+
+        $video = Video::where('profile_id', $profileId)
+            ->where('id', $videoId)
+            ->published()
+            ->firstOrFail();
+
+        if ($request->user() && $request->user()->cannot('view', $video->profile)) {
+            return $this->error('Cannot access this profile', 403);
+        }
+
+        $feed = Video::whereProfileId($profileId)
+            ->published()
+            ->where('id', '<=', $videoId)
+            ->orderByDesc('id')
+            ->cursorPaginate(10)
             ->withQueryString();
 
         return VideoResource::collection($feed);

@@ -148,6 +148,7 @@ Route::prefix('api')->group(function () {
 
     // Account Feeds
     Route::get('/v1/feed/account/self', [FeedController::class, 'selfAccountFeed'])->middleware('auth:web,api');
+    Route::get('/v1/feed/account/{id}/cursor', [FeedController::class, 'getAccountFeedWithCursor'])->middleware('throttle:api');
     Route::get('/v1/feed/account/{id}', [WebPublicController::class, 'getAccountFeed'])->middleware('throttle:api');
 
     // Explore Feed
