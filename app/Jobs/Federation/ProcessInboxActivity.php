@@ -89,7 +89,7 @@ class ProcessInboxActivity implements ShouldQueue
      */
     public function retryUntil()
     {
-        return now()->addHours(2);
+        return now()->addMinutes(5);
     }
 
     /**
