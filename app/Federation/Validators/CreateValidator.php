@@ -6,6 +6,7 @@ use App\Models\Comment;
 use App\Models\CommentReply;
 use App\Models\Video;
 use App\Services\ActivityPubService;
+use App\Services\HashidService;
 use App\Services\SanitizeService;
 use Illuminate\Support\Facades\Log;
 
@@ -66,6 +67,20 @@ class CreateValidator extends BaseValidator
         $isLocal = $this->isLocalObject($inReplyToUrl);
 
         if ($isLocal) {
+            $videoHashIdMatch = app(SanitizeService::class)->matchUrlTemplate(
+                url: $inReplyToUrl,
+                templates: '/v/{hashId}',
+                useAppHost: true,
+                constraints: ['hashId' => '[0-9a-zA-Z_-]{1,11}']
+            );
+
+            if ($videoHashIdMatch && isset($videoHashIdMatch['hashId'])) {
+                $decodedId = HashidService::safeDecode($videoHashIdMatch['hashId']);
+                if ($decodedId !== null) {
+                    return Video::where('id', $decodedId)->exists();
+                }
+            }
+
             $videoMatch = app(SanitizeService::class)->matchUrlTemplate(
                 url: $inReplyToUrl,
                 templates: '/ap/users/{profileId}/video/{videoId}',

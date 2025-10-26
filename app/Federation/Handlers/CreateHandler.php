@@ -8,6 +8,7 @@ use App\Models\CommentReply;
 use App\Models\Profile;
 use App\Models\UserFilter;
 use App\Models\Video;
+use App\Services\HashidService;
 use App\Services\SanitizeService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -75,6 +76,23 @@ class CreateHandler extends BaseHandler
 
         if (isset($replyUrl['host']) && $replyUrl['host'] == $baseDomain) {
             $isLocal = true;
+
+            $videoHashIdMatch = app(SanitizeService::class)->matchUrlTemplate(
+                url: $inReplyToUrl,
+                templates: ['/v/{hashId}'],
+                useAppHost: true,
+                constraints: ['hashId' => '[0-9a-zA-Z_-]{1,11}']
+            );
+
+            if ($videoHashIdMatch && isset($videoHashIdMatch['hashId'])) {
+                $decodedId = HashidService::safeDecode($videoHashIdMatch['hashId']);
+                if ($decodedId !== null) {
+                    $video = Video::whereStatus(2)->whereKey($decodedId)->first();
+                    if ($video) {
+                        return $this->createComment($object, $actor, $video);
+                    }
+                }
+            }
 
             $videoMatch = app(SanitizeService::class)->matchUrlTemplate(
                 url: $inReplyToUrl,
