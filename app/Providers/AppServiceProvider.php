@@ -62,7 +62,7 @@ class AppServiceProvider extends ServiceProvider
                 return $limits(perMinute: 120, perHour: 3000);
             }
 
-            return $limits(perMinute: 20, perHour: 200);
+            return $limits(perMinute: 60, perHour: 700);
         });
 
         RateLimiter::for('autocomplete', function (Request $request) {
