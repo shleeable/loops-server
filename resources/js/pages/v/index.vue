@@ -358,7 +358,7 @@
                         <span
                             class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
                         >
-                            {{ formatCount(0) }}
+                            {{ formatCount(currentVideo.shares) }}
                         </span>
                     </div>
 
