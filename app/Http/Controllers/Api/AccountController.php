@@ -38,7 +38,7 @@ class AccountController extends Controller
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_admin'] = (bool) $user->is_admin;
         $res['is_owner'] = true;
-        $res['likes_count'] = AccountService::getAccountLikesCount($pid);
+        $res['likes_count'] = (int) AccountService::getAccountLikesCount($pid);
 
         return response()->json(['data' => $res]);
     }
@@ -54,7 +54,7 @@ class AccountController extends Controller
 
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_owner'] = false;
-        $res['likes_count'] = AccountService::getAccountLikesCount($id);
+        $res['likes_count'] = (int) AccountService::getAccountLikesCount($id);
 
         return response()->json(['data' => $res]);
     }
