@@ -147,8 +147,13 @@ class AdminController extends Controller
     {
         $search = $request->query('q');
         $sort = $request->query('sort');
+        $local = $request->query('local');
 
         $query = Profile::query();
+
+        if ($local) {
+            $query->where('local', true);
+        }
 
         if (! empty($search)) {
             if (str_starts_with($search, 'bio:')) {

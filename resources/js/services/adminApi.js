@@ -147,13 +147,20 @@ export const profilesApi = {
         search = "",
         limit = 15,
         sort = null,
+        local = false,
     } = {}) {
-        return await apiClient.get("/api/v1/admin/profiles", {
+        const params = {
             cursor: cursor,
             limit: limit,
             q: search,
             sort: sort,
-        });
+        };
+
+        if (local) {
+            params.local = 1;
+        }
+
+        return await apiClient.get("/api/v1/admin/profiles", params);
     },
 
     async getProfile(id) {
