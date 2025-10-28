@@ -43,12 +43,18 @@ export const commentsApi = {
         direction = "next",
         search = "",
         limit = 15,
+        local = false,
     } = {}) {
-        return await apiClient.get("/api/v1/admin/comments", {
+        const params = {
             cursor: cursor,
             limit: limit,
             q: search,
-        });
+        };
+
+        if (local) {
+            params.local = 1;
+        }
+        return await apiClient.get("/api/v1/admin/comments", params);
     },
 
     async deleteComment(id) {

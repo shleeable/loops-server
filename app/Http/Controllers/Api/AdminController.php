@@ -418,7 +418,13 @@ class AdminController extends Controller
 
     public function comments(Request $request)
     {
+        $local = $request->query('local');
+
         $query = Comment::query();
+
+        if ($local) {
+            $query->whereNull('ap_id');
+        }
 
         $search = $request->get('q');
 
