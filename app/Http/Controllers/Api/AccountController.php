@@ -45,7 +45,11 @@ class AccountController extends Controller
 
     public function getAccountInfo(Request $request, $id)
     {
-        $pid = $request->user()->profile_id;
+        $pid = false;
+        $user = auth('web')->user() ?? auth('api')->user();
+        if ($user) {
+            $pid = $user->profile_id;
+        }
         $profile = Profile::find($id);
 
         if (! $profile || $request->user()->cannot('view', $profile)) {
@@ -53,7 +57,7 @@ class AccountController extends Controller
         }
 
         $res = (new ProfileResource($profile))->toArray($request);
-        $res['is_owner'] = false;
+        $res['is_owner'] = $pid ? $pid == $profile->id : false;
         $res['likes_count'] = (int) AccountService::getAccountLikesCount($id);
 
         return response()->json(['data' => $res]);
