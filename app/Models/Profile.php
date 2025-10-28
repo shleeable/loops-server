@@ -271,8 +271,9 @@ class Profile extends Model
     public static function findOrCreateFromUrl(string $url, ?array $actorData = null, $forceRefresh = false): ?self
     {
         $validUrl = app(SanitizeService::class)->url($url, true);
+        $localUrl = app(SanitizeService::class)->isLocalObject($url);
 
-        if (! $validUrl) {
+        if (! $validUrl || $localUrl) {
             return null;
         }
 
