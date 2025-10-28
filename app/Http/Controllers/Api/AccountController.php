@@ -54,7 +54,7 @@ class AccountController extends Controller
 
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_owner'] = false;
-        $res['likes_count'] = AccountService::getAccountLikesCount($pid);
+        $res['likes_count'] = AccountService::getAccountLikesCount($id);
 
         return response()->json(['data' => $res]);
     }
