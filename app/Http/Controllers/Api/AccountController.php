@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SearchFollowersRequest;
+use App\Http\Resources\AccountCompactResource;
 use App\Http\Resources\FollowerResource;
 use App\Http\Resources\FollowingResource;
 use App\Http\Resources\NotificationResource;
@@ -21,6 +22,7 @@ use App\Services\FollowerService;
 use App\Services\NotificationService;
 use App\Services\UserFilterService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AccountController extends Controller
 {
@@ -328,7 +330,7 @@ class AccountController extends Controller
             })
                 ->addSelect([
                     'followers.*',
-                    \DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
+                    DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
                 ]);
         }
 
@@ -367,7 +369,7 @@ class AccountController extends Controller
             })
                 ->addSelect([
                     'followers.*',
-                    \DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
+                    DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
                 ]);
         } else {
             $query->select('followers.*');
@@ -408,11 +410,101 @@ class AccountController extends Controller
             ->where('f2.profile_id', $id);
 
         $query->addSelect([
-            \DB::raw('1 as is_following'),
+            DB::raw('1 as is_following'),
         ]);
 
         $mutualFollows = $query->orderByDesc('f1.id')->cursorPaginate(15);
 
         return FollowingResource::collection($mutualFollows);
+    }
+
+    public function accountSuggestedFollows(Request $request, $id)
+    {
+        $profile = Profile::findOrFail($id);
+
+        $authProfileId = $request->user()->profile_id;
+
+        if ($authProfileId == $id) {
+            return $this->error('Cannot get suggestions for own profile', 400);
+        }
+
+        $limit = 15;
+
+        $targetFollows = Profile::select([
+            'profiles.*',
+            \DB::raw('COUNT(f_count.id) as followers_count'),
+            \DB::raw('1 as suggestion_type'),
+            \DB::raw('0 as is_following'),
+        ])
+            ->join('followers as f_target', 'f_target.following_id', '=', 'profiles.id')
+            ->leftJoin('followers as f_count', 'f_count.following_id', '=', 'profiles.id')
+            ->where('f_target.profile_id', $id)
+            ->whereNotExists(function ($query) use ($authProfileId) {
+                $query->select(\DB::raw(1))
+                    ->from('followers')
+                    ->whereColumn('followers.following_id', 'profiles.id')
+                    ->where('followers.profile_id', $authProfileId);
+            })
+            ->whereNotExists(function ($query) use ($authProfileId) {
+                $query->select(\DB::raw(1))
+                    ->from('user_filters')
+                    ->whereColumn('user_filters.account_id', 'profiles.id')
+                    ->where('user_filters.profile_id', $authProfileId);
+            })
+            ->whereNotExists(function ($query) use ($authProfileId) {
+                $query->select(\DB::raw(1))
+                    ->from('user_filters')
+                    ->whereColumn('user_filters.profile_id', 'profiles.id')
+                    ->where('user_filters.account_id', $authProfileId);
+            })
+            ->where('profiles.id', '!=', $authProfileId)
+            ->groupBy('profiles.id')
+            ->orderByDesc('followers_count')
+            ->limit($limit)
+            ->get();
+
+        if ($targetFollows->count() < $limit) {
+            $needed = $limit - $targetFollows->count();
+
+            $followersOfTarget = Profile::select([
+                'profiles.*',
+                \DB::raw('COUNT(f_count.id) as followers_count'),
+                \DB::raw('2 as suggestion_type'),
+                \DB::raw('0 as is_following'),
+            ])
+                ->join('followers as f_follower', 'f_follower.profile_id', '=', 'profiles.id')
+                ->leftJoin('followers as f_count', 'f_count.following_id', '=', 'profiles.id')
+                ->where('f_follower.following_id', $id)
+                ->whereNotExists(function ($query) use ($authProfileId) {
+                    $query->select(\DB::raw(1))
+                        ->from('followers')
+                        ->whereColumn('followers.following_id', 'profiles.id')
+                        ->where('followers.profile_id', $authProfileId);
+                })
+                ->whereNotExists(function ($query) use ($authProfileId) {
+                    $query->select(\DB::raw(1))
+                        ->from('user_filters')
+                        ->whereColumn('user_filters.account_id', 'profiles.id')
+                        ->where('user_filters.profile_id', $authProfileId);
+                })
+                ->whereNotExists(function ($query) use ($authProfileId) {
+                    $query->select(\DB::raw(1))
+                        ->from('user_filters')
+                        ->whereColumn('user_filters.profile_id', 'profiles.id')
+                        ->where('user_filters.account_id', $authProfileId);
+                })
+                ->where('profiles.id', '!=', $authProfileId)
+                ->whereNotIn('profiles.id', $targetFollows->pluck('id'))
+                ->groupBy('profiles.id')
+                ->orderByDesc('followers_count')
+                ->limit($needed)
+                ->get();
+
+            $suggestions = $targetFollows->concat($followersOfTarget);
+        } else {
+            $suggestions = $targetFollows;
+        }
+
+        return AccountCompactResource::collection($suggestions);
     }
 }

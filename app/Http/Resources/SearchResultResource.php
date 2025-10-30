@@ -26,7 +26,7 @@ class SearchResultResource extends JsonResource
         return [
             'data' => [
                 'hashtags' => HashtagResource::collection($hashtags),
-                'users' => AccountCompactResource::collection($users),
+                'users' => AccountResource::collection($users),
                 'videos' => VideoCompactResource::collection($videos),
             ],
             'links' => [

@@ -106,6 +106,7 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/account/followers/{id}', [AccountController::class, 'accountFollowers'])->middleware('auth:web,api');
     Route::get('/v1/account/following/{id}', [AccountController::class, 'accountFollowing'])->middleware('auth:web,api');
     Route::get('/v1/account/friends/{id}', [AccountController::class, 'accountFriends'])->middleware('auth:web,api');
+    Route::get('/v1/account/suggested/{id}', [AccountController::class, 'accountSuggestedFollows'])->middleware('auth:web,api');
     Route::post('/v1/account/follow/{id}', [AccountController::class, 'follow'])->middleware('auth:web,api');
     Route::post('/v1/account/unfollow/{id}', [AccountController::class, 'unfollow'])->middleware('auth:web,api');
     Route::post('/v1/account/undo-follow-request/{id}', [AccountController::class, 'undoFollowRequest'])->middleware('auth:web,api');

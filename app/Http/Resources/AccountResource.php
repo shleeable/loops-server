@@ -10,7 +10,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * @mixin Profile
  */
-class AccountCompactResource extends JsonResource
+class AccountResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -19,12 +19,6 @@ class AccountCompactResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $account = AccountService::compact($this->id);
-
-        if (isset($this->is_following)) {
-            $account['is_following'] = (bool) $this->is_following;
-        }
-
-        return $account;
+        return AccountService::get($this->id);
     }
 }
