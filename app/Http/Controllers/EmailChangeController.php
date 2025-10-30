@@ -36,11 +36,47 @@ class EmailChangeController extends Controller
             ->first();
 
         return $this->data([
-            'current_email' => $user->email,
+            'current_email' => $this->maskEmail($user->email),
             'email_verified' => $user->email_verified_at !== null,
             'email_added_date' => $user->created_at->format('F j, Y'),
             'pending_email' => $pendingChange ? $pendingChange->new_email : null,
         ]);
+    }
+
+    private function maskEmail($email)
+    {
+        [$local, $domain] = explode('@', $email);
+        $localLength = strlen($local);
+
+        if ($localLength <= 3) {
+            $maskedLocal = substr($local, 0, 1).str_repeat('*', $localLength - 1);
+        } elseif ($localLength <= 6) {
+            $maskedLocal = substr($local, 0, 2).str_repeat('*', $localLength - 3).substr($local, -1);
+        } else {
+            $maskedLocal = substr($local, 0, 3).str_repeat('*', max(3, $localLength - 5)).substr($local, -2);
+        }
+
+        $domainParts = explode('.', $domain);
+        $tld = array_pop($domainParts);
+
+        if (count($domainParts) === 0) {
+            $maskedDomain = $tld;
+        } else {
+            $domainName = implode('.', $domainParts);
+            $domainLength = strlen($domainName);
+
+            if ($domainLength <= 3) {
+                $maskedDomainName = substr($domainName, 0, 1).str_repeat('*', $domainLength - 1);
+            } elseif ($domainLength <= 6) {
+                $maskedDomainName = substr($domainName, 0, 2).str_repeat('*', $domainLength - 2);
+            } else {
+                $maskedDomainName = substr($domainName, 0, 3).str_repeat('*', $domainLength - 3);
+            }
+
+            $maskedDomain = $maskedDomainName.'.'.$tld;
+        }
+
+        return $maskedLocal.'@'.$maskedDomain;
     }
 
     public function changeEmail(ChangeEmailRequest $request)
