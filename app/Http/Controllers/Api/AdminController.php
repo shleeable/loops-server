@@ -220,7 +220,15 @@ class AdminController extends Controller
             'can_share' => 'sometimes|boolean',
         ]);
 
+        $userValidated = $request->validate([
+            'can_upload' => 'sometimes|boolean',
+            'can_follow' => 'sometimes|boolean',
+            'can_comment' => 'sometimes|boolean',
+            'can_like' => 'sometimes|boolean',
+        ]);
+
         $profile = Profile::find($id);
+        $user = User::whereProfileId($id)->firstOrFail();
 
         if (! $profile) {
             return $this->error('Ooops!');
@@ -233,6 +241,7 @@ class AdminController extends Controller
         $oldValues = $profile->only(['can_upload', 'can_follow', 'can_comment', 'can_like', 'can_share']);
 
         $profile->update($validated);
+        $user->update($userValidated);
 
         app(AdminAuditLogService::class)->logProfileAdminPermissionUpdate($request->user(), $profile, ['old' => $oldValues, 'new' => $validated]);
 
