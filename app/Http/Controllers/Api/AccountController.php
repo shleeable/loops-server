@@ -334,7 +334,10 @@ class AccountController extends Controller
                 ]);
         }
 
-        $followers = $query->orderByDesc('followers.id')->cursorPaginate(15);
+        $followers = $query
+            ->orderByDesc('followers.id')
+            ->cursorPaginate(15)
+            ->withQueryString();
 
         return FollowerResource::collection($followers);
     }
@@ -375,7 +378,10 @@ class AccountController extends Controller
             $query->select('followers.*');
         }
 
-        $followers = $query->orderByDesc('followers.id')->cursorPaginate(15);
+        $followers = $query
+            ->orderByDesc('followers.id')
+            ->cursorPaginate(15)
+            ->withQueryString();
 
         return FollowingResource::collection($followers);
     }
