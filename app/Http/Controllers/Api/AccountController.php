@@ -310,7 +310,7 @@ class AccountController extends Controller
             return $this->error('You do not have permission to view this.', 403);
         }
 
-        $query = Follower::whereFollowingId($id)
+        $query = Follower::where('followers.following_id', $id)
             ->join('profiles', 'followers.profile_id', '=', 'profiles.id');
 
         if ($request->filled('search')) {
@@ -349,7 +349,7 @@ class AccountController extends Controller
             return $this->error('You do not have permission to view this.', 403);
         }
 
-        $query = Follower::whereProfileId($id)
+        $query = Follower::where('followers.profile_id', $id)
             ->join('profiles', 'followers.following_id', '=', 'profiles.id');
 
         if ($request->filled('search')) {
