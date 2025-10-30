@@ -23,7 +23,9 @@ class VideoThumbnailJob implements ShouldQueue
      *
      * @var int
      */
-    public $timeout = 200;
+    public $timeout = 120;
+
+    public $tries = 3;
 
     /**
      * The maximum number of unhandled exceptions to allow before failing.
@@ -39,7 +41,7 @@ class VideoThumbnailJob implements ShouldQueue
      */
     public function middleware(): array
     {
-        return [(new WithoutOverlapping('video-thumb'.$this->video->id))->expireAfter(220)];
+        return [(new WithoutOverlapping('video-thumb:'.$this->video->id))->expireAfter(180)];
     }
 
     /**
@@ -84,8 +86,6 @@ class VideoThumbnailJob implements ShouldQueue
 
         $video->has_thumb = true;
         $video->save();
-
-        sleep(6);
 
         VideoService::deleteMediaData($video->id);
     }

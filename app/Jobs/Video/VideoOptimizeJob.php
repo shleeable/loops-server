@@ -25,7 +25,9 @@ class VideoOptimizeJob implements ShouldQueue
      *
      * @var int
      */
-    public $timeout = 400;
+    public $timeout = 300;
+
+    public $tries = 3;
 
     /**
      * The maximum number of unhandled exceptions to allow before failing.
@@ -107,8 +109,6 @@ class VideoOptimizeJob implements ShouldQueue
         $video->has_processed = true;
         $video->status = 2;
         $video->save();
-
-        sleep(6);
 
         VideoService::deleteMediaData($video->id);
     }
