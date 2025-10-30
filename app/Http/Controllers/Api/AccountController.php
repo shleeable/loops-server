@@ -377,4 +377,42 @@ class AccountController extends Controller
 
         return FollowingResource::collection($followers);
     }
+
+    public function accountFriends(SearchFollowersRequest $request, $id)
+    {
+        $profile = Profile::findOrFail($id);
+        $authProfileId = $request->user()->profile_id;
+
+        if ($authProfileId == $id) {
+            return $this->error('Cannot get mutual following with yourself', 400);
+        }
+
+        if (! $request->user()->can_follow || $request->user()->cannot('viewAny', [Profile::class])) {
+            return $this->error('Unavailable', 403);
+        }
+
+        if ($profile->manuallyApprovesFollowers && $id != $authProfileId) {
+            $isFollowing = Follower::where('profile_id', $authProfileId)
+                ->where('following_id', $id)
+                ->exists();
+
+            if (! $isFollowing) {
+                return $this->error('You do not have permission to view this.', 403);
+            }
+        }
+
+        $query = Follower::select('f1.*')
+            ->from('followers as f1')
+            ->join('followers as f2', 'f1.following_id', '=', 'f2.following_id')
+            ->where('f1.profile_id', $authProfileId)
+            ->where('f2.profile_id', $id);
+
+        $query->addSelect([
+            \DB::raw('1 as is_following'),
+        ]);
+
+        $mutualFollows = $query->orderByDesc('f1.id')->cursorPaginate(15);
+
+        return FollowingResource::collection($mutualFollows);
+    }
 }
