@@ -312,18 +312,19 @@ class AccountController extends Controller
             return $this->error('You do not have permission to view this.', 403);
         }
 
+        $authProfileId = $request->user()?->profile_id;
+        $isOwner = $authProfileId && ((int) $authProfileId === (int) $profile->id || $request->user()->is_admin);
+        $hasSearch = $request->filled('search');
+
         $query = Follower::where('followers.following_id', $id)
             ->join('profiles', 'followers.profile_id', '=', 'profiles.id');
 
         if ($request->filled('search')) {
             $search = $request->validated()['search'];
-
             $query->where('profiles.username', 'like', $search.'%');
         }
 
-        if ($request->user()) {
-            $authProfileId = $request->user()->profile_id;
-
+        if ($authProfileId) {
             $query->leftJoin('followers as auth_following', function ($join) use ($authProfileId) {
                 $join->on('auth_following.following_id', '=', 'followers.profile_id')
                     ->where('auth_following.profile_id', '=', $authProfileId);
@@ -336,8 +337,21 @@ class AccountController extends Controller
 
         $followers = $query
             ->orderByDesc('followers.id')
-            ->cursorPaginate(15)
+            ->cursorPaginate($isOwner ? 15 : ($hasSearch ? 10 : 30))
             ->withQueryString();
+
+        if (! $isOwner) {
+            $followers->setCollection($followers->getCollection());
+            $followers = new \Illuminate\Pagination\CursorPaginator(
+                $followers->items(),
+                $followers->perPage(),
+                $followers->cursor(),
+                [
+                    'path' => $followers->path(),
+                    'cursorName' => $followers->getCursorName(),
+                ]
+            );
+        }
 
         return FollowerResource::collection($followers);
     }
@@ -354,6 +368,10 @@ class AccountController extends Controller
             return $this->error('You do not have permission to view this.', 403);
         }
 
+        $authProfileId = $request->user()?->profile_id;
+        $isOwner = $authProfileId && ((int) $authProfileId === (int) $profile->id || $request->user()->is_admin);
+        $hasSearch = $request->filled('search');
+
         $query = Follower::where('followers.profile_id', $id)
             ->join('profiles', 'followers.following_id', '=', 'profiles.id');
 
@@ -363,9 +381,7 @@ class AccountController extends Controller
             $query->where('profiles.username', 'like', $search.'%');
         }
 
-        if ($request->user()) {
-            $authProfileId = $request->user()->profile_id;
-
+        if ($authProfileId) {
             $query->leftJoin('followers as auth_following', function ($join) use ($authProfileId) {
                 $join->on('auth_following.following_id', '=', 'followers.following_id')
                     ->where('auth_following.profile_id', '=', $authProfileId);
@@ -380,8 +396,21 @@ class AccountController extends Controller
 
         $followers = $query
             ->orderByDesc('followers.id')
-            ->cursorPaginate(15)
+            ->cursorPaginate($isOwner ? 15 : ($hasSearch ? 10 : 30))
             ->withQueryString();
+
+        if (! $isOwner) {
+            $followers->setCollection($followers->getCollection());
+            $followers = new \Illuminate\Pagination\CursorPaginator(
+                $followers->items(),
+                $followers->perPage(),
+                $followers->cursor(),
+                [
+                    'path' => $followers->path(),
+                    'cursorName' => $followers->getCursorName(),
+                ]
+            );
+        }
 
         return FollowingResource::collection($followers);
     }

@@ -183,9 +183,7 @@ class WebPublicController extends Controller
             return $this->error('Unavailable', 403);
         }
 
-        $followers = $request->user() ?
-            Follower::whereFollowingId($id)->orderByDesc('id')->cursorPaginate(15) :
-            Follower::whereFollowingId($id)->orderBy('id')->limit(15)->get();
+        $followers = Follower::whereFollowingId($id)->orderBy('id')->limit(15)->get();
 
         return FollowerResource::collection($followers);
     }
@@ -198,9 +196,7 @@ class WebPublicController extends Controller
             return $this->error('Unavailable', 403);
         }
 
-        $followers = $request->user() ?
-            Follower::whereProfileId($id)->orderByDesc('id')->cursorPaginate(15) :
-            Follower::whereProfileId($id)->orderBy('id')->limit(15)->get();
+        $followers = Follower::whereProfileId($id)->orderBy('id')->limit(15)->get();
 
         return FollowingResource::collection($followers);
     }
