@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Stevebauman\Purify\Facades\Purify;
 
 #[ObservedBy([ProfileObserver::class])]
@@ -263,6 +264,23 @@ class Profile extends Model
         }
 
         return $res;
+    }
+
+    public function scopeWithFollowingStatus($query, $authProfileId = null)
+    {
+        if (! $authProfileId) {
+            return $query->addSelect([
+                DB::raw('0 as is_following'),
+            ]);
+        }
+
+        return $query->leftJoin('followers as auth_following', function ($join) use ($authProfileId) {
+            $join->on('auth_following.following_id', '=', 'profiles.id')
+                ->where('auth_following.profile_id', '=', $authProfileId);
+        })
+            ->addSelect([
+                DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
+            ]);
     }
 
     /**

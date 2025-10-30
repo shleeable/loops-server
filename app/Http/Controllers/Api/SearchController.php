@@ -41,6 +41,8 @@ class SearchController extends Controller
         $limit = $validated['limit'] ?? 10;
         $query = trim($validated['query']);
 
+        $authProfileId = $request->user()?->profile_id;
+
         $esc = str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $query);
         $like = "{$esc}%";
 
@@ -69,7 +71,8 @@ class SearchController extends Controller
             $pager = $videos;
 
             $usersData = Profile::query()
-                ->select(['id', 'username', 'name', 'followers', 'status'])
+                ->select(['profiles.id', 'profiles.username', 'profiles.name', 'profiles.followers', 'profiles.status'])
+                ->withFollowingStatus($authProfileId)
                 ->where(function ($q) use ($like) {
                     $q->where('username', 'like', $like)
                         ->orWhere('name', 'like', $like);
@@ -102,7 +105,8 @@ class SearchController extends Controller
 
         if ($type === 'users') {
             $users = Profile::query()
-                ->select(['id', 'username', 'name', 'followers', 'status'])
+                ->select(['profiles.id', 'profiles.username', 'profiles.name', 'profiles.followers', 'profiles.status'])
+                ->withFollowingStatus($authProfileId)
                 ->where(function ($q) use ($like) {
                     $q->where('username', 'like', $like)
                         ->orWhere('name', 'like', $like);
