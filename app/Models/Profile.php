@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
-use Stevebauman\Purify\Facades\Purify;
 
 #[ObservedBy([ProfileObserver::class])]
 /**
@@ -327,7 +326,7 @@ class Profile extends Model
 
             $actor->forceFill([
                 'username' => $acct,
-                'name' => Purify::clean($actorData['name'] ?? $username),
+                'name' => app(SanitizeService::class)->cleanPlainText($actorData['name'] ?? $username),
                 'bio' => app(SanitizeService::class)->cleanHtmlWithSpacing($actorData['summary'] ?? null),
                 'inbox_url' => $actorData['inbox'],
                 'avatar' => $avatar,

@@ -42,13 +42,13 @@ use App\Services\AccountService;
 use App\Services\ConfigService;
 use App\Services\FederationDispatcher;
 use App\Services\LikeService;
+use App\Services\SanitizeService;
 use App\Services\UserActivityService;
 use App\Services\VideoService;
 use Illuminate\Bus\Batch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
-use Stevebauman\Purify\Facades\Purify;
 
 class VideoController extends Controller
 {
@@ -94,7 +94,7 @@ class VideoController extends Controller
 
         $model = new Video;
         $model->profile_id = $pid;
-        $model->caption = Purify::clean($request->description);
+        $model->caption = app(SanitizeService::class)->cleanPlainText($request->description);
         $model->size_kb = intval($videoMeta['size']);
         $model->is_sensitive = $request->filled('is_sensitive') ? (bool) $request->boolean('is_sensitive') : false;
         $model->comment_state = $request->filled('comment_state') ? ($request->input('comment_state') == 4 ? 4 : 0) : 4;
@@ -139,7 +139,7 @@ class VideoController extends Controller
     public function update(UpdateVideoRequest $request, $id)
     {
         $pid = $request->user()->profile_id;
-        $updatedCaption = $this->purify($request->caption);
+        $updatedCaption = $this->purifyText($request->caption);
         $video = Video::published()->findOrFail($id);
         if ($video->caption !== $updatedCaption) {
             VideoCaptionEdit::create([
@@ -395,7 +395,7 @@ class VideoController extends Controller
     public function storeComment(StoreCommentRequest $request, $vid)
     {
         $pid = $request->user()->profile_id;
-        $body = $this->purify($request->comment);
+        $body = $this->purifyText($request->comment);
 
         $parentId = $request->filled('parent_id') ? $request->parent_id : false;
         $video = Video::published()->canComment()->find($vid);
@@ -447,7 +447,7 @@ class VideoController extends Controller
     public function storeCommentUpdate(StoreCommentUpdateRequest $request, $vid)
     {
         $pid = $request->user()->profile_id;
-        $body = $this->purify($request->comment);
+        $body = $this->purifyText($request->comment);
 
         $video = Video::published()->canComment()->find($vid);
         if (! $video || $request->user()->cannot('view', [Video::class, $video])) {
@@ -478,7 +478,7 @@ class VideoController extends Controller
     public function storeCommentReplyUpdate(StoreCommentReplyUpdateRequest $request, $vid)
     {
         $pid = $request->user()->profile_id;
-        $body = $this->purify($request->comment);
+        $body = $this->purifyText($request->comment);
 
         $video = Video::published()->canComment()->find($vid);
         if (! $video || $request->user()->cannot('view', [Video::class, $video])) {

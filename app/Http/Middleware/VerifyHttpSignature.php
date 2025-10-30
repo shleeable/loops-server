@@ -15,7 +15,6 @@ use Closure;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Stevebauman\Purify\Facades\Purify;
 
 class VerifyHttpSignature
 {
@@ -397,7 +396,7 @@ class VerifyHttpSignature
         if (strtolower($domain) === strtolower($appDomain)) {
             return false;
         }
-        $username = Purify::clean($actorData['preferredUsername']);
+        $username = app(SanitizeService::class)->cleanPlainText($actorData['preferredUsername']);
         $acct = $username.'@'.$domain;
 
         $res = Profile::updateOrCreate(
@@ -406,7 +405,7 @@ class VerifyHttpSignature
             ],
             [
                 'username' => $acct,
-                'name' => Purify::clean($actorData['name'] ?? $username),
+                'name' => app(SanitizeService::class)->cleanPlainText($actorData['name'] ?? $username),
                 'bio' => app(SanitizeService::class)->cleanHtmlWithSpacing($actorData['summary'] ?? null),
                 'inbox_url' => $actorData['inbox'] ?? null,
                 'avatar' => data_get($actorData, 'icon.url'),

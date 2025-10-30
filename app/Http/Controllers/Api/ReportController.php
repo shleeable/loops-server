@@ -40,7 +40,7 @@ class ReportController extends Controller
         ];
 
         if ($request->filled('comment')) {
-            $extra['user_message'] = $this->purify($request->input('comment'));
+            $extra['user_message'] = $this->purifyText($request->input('comment'));
         }
 
         if ($type === 'video') {
