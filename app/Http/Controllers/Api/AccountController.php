@@ -432,27 +432,27 @@ class AccountController extends Controller
 
         $targetFollows = Profile::select([
             'profiles.*',
-            \DB::raw('COUNT(f_count.id) as followers_count'),
-            \DB::raw('1 as suggestion_type'),
-            \DB::raw('0 as is_following'),
+            DB::raw('COUNT(f_count.id) as followers_count'),
+            DB::raw('1 as suggestion_type'),
+            DB::raw('0 as is_following'),
         ])
             ->join('followers as f_target', 'f_target.following_id', '=', 'profiles.id')
             ->leftJoin('followers as f_count', 'f_count.following_id', '=', 'profiles.id')
             ->where('f_target.profile_id', $id)
             ->whereNotExists(function ($query) use ($authProfileId) {
-                $query->select(\DB::raw(1))
+                $query->select(DB::raw(1))
                     ->from('followers')
                     ->whereColumn('followers.following_id', 'profiles.id')
                     ->where('followers.profile_id', $authProfileId);
             })
             ->whereNotExists(function ($query) use ($authProfileId) {
-                $query->select(\DB::raw(1))
+                $query->select(DB::raw(1))
                     ->from('user_filters')
                     ->whereColumn('user_filters.account_id', 'profiles.id')
                     ->where('user_filters.profile_id', $authProfileId);
             })
             ->whereNotExists(function ($query) use ($authProfileId) {
-                $query->select(\DB::raw(1))
+                $query->select(DB::raw(1))
                     ->from('user_filters')
                     ->whereColumn('user_filters.profile_id', 'profiles.id')
                     ->where('user_filters.account_id', $authProfileId);
@@ -463,46 +463,84 @@ class AccountController extends Controller
             ->limit($limit)
             ->get();
 
-        if ($targetFollows->count() < $limit) {
-            $needed = $limit - $targetFollows->count();
+        $suggestions = $targetFollows;
+
+        if ($suggestions->count() < $limit) {
+            $needed = $limit - $suggestions->count();
 
             $followersOfTarget = Profile::select([
                 'profiles.*',
-                \DB::raw('COUNT(f_count.id) as followers_count'),
-                \DB::raw('2 as suggestion_type'),
-                \DB::raw('0 as is_following'),
+                DB::raw('COUNT(f_count.id) as followers_count'),
+                DB::raw('2 as suggestion_type'),
+                DB::raw('0 as is_following'),
             ])
                 ->join('followers as f_follower', 'f_follower.profile_id', '=', 'profiles.id')
                 ->leftJoin('followers as f_count', 'f_count.following_id', '=', 'profiles.id')
                 ->where('f_follower.following_id', $id)
                 ->whereNotExists(function ($query) use ($authProfileId) {
-                    $query->select(\DB::raw(1))
+                    $query->select(DB::raw(1))
                         ->from('followers')
                         ->whereColumn('followers.following_id', 'profiles.id')
                         ->where('followers.profile_id', $authProfileId);
                 })
                 ->whereNotExists(function ($query) use ($authProfileId) {
-                    $query->select(\DB::raw(1))
+                    $query->select(DB::raw(1))
                         ->from('user_filters')
                         ->whereColumn('user_filters.account_id', 'profiles.id')
                         ->where('user_filters.profile_id', $authProfileId);
                 })
                 ->whereNotExists(function ($query) use ($authProfileId) {
-                    $query->select(\DB::raw(1))
+                    $query->select(DB::raw(1))
                         ->from('user_filters')
                         ->whereColumn('user_filters.profile_id', 'profiles.id')
                         ->where('user_filters.account_id', $authProfileId);
                 })
                 ->where('profiles.id', '!=', $authProfileId)
-                ->whereNotIn('profiles.id', $targetFollows->pluck('id'))
+                ->whereNotIn('profiles.id', $suggestions->pluck('id'))
                 ->groupBy('profiles.id')
                 ->orderByDesc('followers_count')
                 ->limit($needed)
                 ->get();
 
-            $suggestions = $targetFollows->concat($followersOfTarget);
-        } else {
-            $suggestions = $targetFollows;
+            $suggestions = $suggestions->concat($followersOfTarget);
+        }
+
+        if ($suggestions->count() < $limit) {
+            $needed = $limit - $suggestions->count();
+
+            $popularAccounts = Profile::select([
+                'profiles.*',
+                DB::raw('COUNT(f_count.id) as followers_count'),
+                DB::raw('3 as suggestion_type'),
+                DB::raw('0 as is_following'),
+            ])
+                ->leftJoin('followers as f_count', 'f_count.following_id', '=', 'profiles.id')
+                ->whereNotExists(function ($query) use ($authProfileId) {
+                    $query->select(DB::raw(1))
+                        ->from('followers')
+                        ->whereColumn('followers.following_id', 'profiles.id')
+                        ->where('followers.profile_id', $authProfileId);
+                })
+                ->whereNotExists(function ($query) use ($authProfileId) {
+                    $query->select(DB::raw(1))
+                        ->from('user_filters')
+                        ->whereColumn('user_filters.account_id', 'profiles.id')
+                        ->where('user_filters.profile_id', $authProfileId);
+                })
+                ->whereNotExists(function ($query) use ($authProfileId) {
+                    $query->select(DB::raw(1))
+                        ->from('user_filters')
+                        ->whereColumn('user_filters.profile_id', 'profiles.id')
+                        ->where('user_filters.account_id', $authProfileId);
+                })
+                ->where('profiles.id', '!=', $authProfileId)
+                ->whereNotIn('profiles.id', $suggestions->pluck('id'))
+                ->groupBy('profiles.id')
+                ->orderByDesc('followers_count')
+                ->limit($needed)
+                ->get();
+
+            $suggestions = $suggestions->concat($popularAccounts);
         }
 
         return AccountCompactResource::collection($suggestions);
