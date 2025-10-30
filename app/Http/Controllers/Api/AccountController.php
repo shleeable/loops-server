@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SearchFollowersRequest;
 use App\Http\Resources\FollowerResource;
 use App\Http\Resources\FollowingResource;
 use App\Http\Resources\NotificationResource;
@@ -297,7 +298,7 @@ class AccountController extends Controller
         return $this->data($res);
     }
 
-    public function accountFollowers(Request $request, $id)
+    public function accountFollowers(SearchFollowersRequest $request, $id)
     {
         $profile = Profile::findOrFail($id);
 
@@ -305,12 +306,38 @@ class AccountController extends Controller
             return $this->error('Unavailable', 403);
         }
 
-        $followers = Follower::whereFollowingId($id)->orderByDesc('id')->cursorPaginate(15);
+        if ($profile->manuallyApprovesFollowers && $id != $request->user()->profile_id) {
+            return $this->error('You do not have permission to view this.', 403);
+        }
+
+        $query = Follower::whereFollowingId($id)
+            ->join('profiles', 'followers.profile_id', '=', 'profiles.id');
+
+        if ($request->filled('search')) {
+            $search = $request->validated()['search'];
+
+            $query->where('profiles.username', 'like', $search.'%');
+        }
+
+        if ($request->user()) {
+            $authProfileId = $request->user()->profile_id;
+
+            $query->leftJoin('followers as auth_following', function ($join) use ($authProfileId) {
+                $join->on('auth_following.following_id', '=', 'followers.profile_id')
+                    ->where('auth_following.profile_id', '=', $authProfileId);
+            })
+                ->addSelect([
+                    'followers.*',
+                    \DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
+                ]);
+        }
+
+        $followers = $query->orderByDesc('followers.id')->cursorPaginate(15);
 
         return FollowerResource::collection($followers);
     }
 
-    public function accountFollowing(Request $request, $id)
+    public function accountFollowing(SearchFollowersRequest $request, $id)
     {
         $profile = Profile::findOrFail($id);
 
@@ -318,7 +345,35 @@ class AccountController extends Controller
             return $this->error('Unavailable', 403);
         }
 
-        $followers = Follower::whereProfileId($id)->orderByDesc('id')->cursorPaginate(15);
+        if ($profile->manuallyApprovesFollowers && $id != $request->user()->profile_id) {
+            return $this->error('You do not have permission to view this.', 403);
+        }
+
+        $query = Follower::whereProfileId($id)
+            ->join('profiles', 'followers.following_id', '=', 'profiles.id');
+
+        if ($request->filled('search')) {
+            $search = $request->validated()['search'];
+
+            $query->where('profiles.username', 'like', $search.'%');
+        }
+
+        if ($request->user()) {
+            $authProfileId = $request->user()->profile_id;
+
+            $query->leftJoin('followers as auth_following', function ($join) use ($authProfileId) {
+                $join->on('auth_following.following_id', '=', 'followers.following_id')
+                    ->where('auth_following.profile_id', '=', $authProfileId);
+            })
+                ->addSelect([
+                    'followers.*',
+                    \DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
+                ]);
+        } else {
+            $query->select('followers.*');
+        }
+
+        $followers = $query->orderByDesc('followers.id')->cursorPaginate(15);
 
         return FollowingResource::collection($followers);
     }
