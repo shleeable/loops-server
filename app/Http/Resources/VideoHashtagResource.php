@@ -24,10 +24,17 @@ class VideoHashtagResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $res = VideoService::getMediaData($this->video_id);
-        if ($res) {
-            unset($res['media']['src_url']);
+        if (! $this->video_id) {
+            return [];
         }
+
+        $res = VideoService::getMediaData($this->video_id);
+
+        if (! $res) {
+            return [];
+        }
+
+        unset($res['media']['src_url']);
 
         return $res;
     }
