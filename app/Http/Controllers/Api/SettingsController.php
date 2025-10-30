@@ -63,7 +63,10 @@ class SettingsController extends Controller
 
         AccountService::del($pid);
 
-        return $this->data(AccountService::get($pid));
+        $res = AccountService::get($pid);
+        $res['is_owner'] = true;
+
+        return $this->data($res);
     }
 
     public function updateAvatar(UpdateAvatarRequest $request)
@@ -74,7 +77,10 @@ class SettingsController extends Controller
         AvatarService::updateAvatar($profile, $request->file('avatar'));
         $this->auditService->logProfileAvatarUpdated($user);
 
-        return $this->data(AccountService::get($profile->id));
+        $res = AccountService::get($profile->id);
+        $res['is_owner'] = true;
+
+        return $this->data($res);
     }
 
     public function deleteAvatar(Request $request)
@@ -85,7 +91,10 @@ class SettingsController extends Controller
         AvatarService::deleteAvatar($profile);
         $this->auditService->logProfileAvatarDeleted($user);
 
-        return $this->data(AccountService::get($profile->id));
+        $res = AccountService::get($profile->id);
+        $res['is_owner'] = true;
+
+        return $this->data($res);
     }
 
     public function securityConfig(Request $request)
