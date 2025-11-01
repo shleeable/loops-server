@@ -12,7 +12,6 @@ use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\StoreCommentUpdateRequest;
 use App\Http\Requests\StoreVideoRequest;
 use App\Http\Requests\UpdateVideoRequest;
-use App\Http\Resources\AccountCompactResource;
 use App\Http\Resources\CommentCaptionEditResource;
 use App\Http\Resources\CommentReplyCaptionEditResource;
 use App\Http\Resources\CommentReplyResource;
