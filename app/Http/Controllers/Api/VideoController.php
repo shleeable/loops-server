@@ -11,6 +11,7 @@ use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\StoreCommentUpdateRequest;
 use App\Http\Requests\StoreVideoRequest;
 use App\Http\Requests\UpdateVideoRequest;
+use App\Http\Resources\AccountCompactResource;
 use App\Http\Resources\CommentCaptionEditResource;
 use App\Http\Resources\CommentReplyCaptionEditResource;
 use App\Http\Resources\CommentReplyResource;
@@ -61,20 +62,36 @@ class VideoController extends Controller
 
     public function showAutocompleteTags(Request $request)
     {
-        $request->validate(['q' => 'required|string|min:2|max:60']);
+        $validated = $request->validate(['q' => 'required|alpha_dash|min:2|max:60']);
 
-        $hashtags = Hashtag::where('name', 'like', $request->input('q').'%')->whereCanSearch(true)->limit(10)->get();
+        $q = trim($validated['q']);
+
+        $escaped = $this->escapeLike($q);
+
+        $hashtags = Hashtag::where('name', 'like', $escaped.'%')->whereCanSearch(true)->limit(10)->get();
 
         return HashtagResource::collection($hashtags);
     }
 
     public function showAutocompleteAccounts(Request $request)
     {
-        $request->validate(['q' => 'required|string|min:2|max:90']);
+        $validated = $request->validate([
+            'q' => [
+                'required',
+                'string',
+                'min:2',
+                'max:90',
+                'regex:/^[A-Za-z0-9.\-_@]+$/',
+            ],
+        ]);
 
-        $profiles = Profile::where('username', 'like', $request->input('q').'%')->where('is_hidden', false)->limit(10)->get();
+        $q = trim($validated['q']);
 
-        return ProfileResource::collection($profiles);
+        $escaped = $this->escapeLike($q);
+
+        $profiles = Profile::where('username', 'like', $escaped.'%')->where('is_hidden', false)->limit(10)->get();
+
+        return AccountCompactResource::collection($profiles);
     }
 
     /**
@@ -766,5 +783,14 @@ class VideoController extends Controller
         $res = Hashtag::where('name', 'like', $query.'%')->limit($limit)->get();
 
         return HashtagResource::collection($res);
+    }
+
+    private function escapeLike(string $value): string
+    {
+        return str_replace(
+            ['\\', '%', '_'],
+            ['\\\\', '\\%', '\\_'],
+            $value
+        );
     }
 }
