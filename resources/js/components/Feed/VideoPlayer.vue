@@ -579,6 +579,7 @@ const props = defineProps({
     commentCount: { type: Number, default: 0 },
     index: { type: Number, default: 0 },
     isSensitive: { type: Boolean, default: false },
+    altText: { type: String, default: "" },
 });
 
 const emit = defineEmits(["interaction"]);
@@ -808,6 +809,14 @@ onMounted(async () => {
         });
         player.on("ready", () => {
             playerReady.value = true;
+
+            if (props.altText) {
+                const el = player.el().querySelector("video");
+
+                if (el) {
+                    el.setAttribute("aria-label", props.altText);
+                }
+            }
         });
         player.on("play", function () {
             isPaused.value = false;

@@ -152,6 +152,7 @@
                     loop
                     controls
                     class="h-screen mx-auto"
+                    :aria-label="currentVideo.media.alt_text"
                     :src="currentVideo.media.src_url"
                     @loadeddata="onVideoLoaded"
                     @error="onVideoError"

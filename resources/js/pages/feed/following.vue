@@ -109,12 +109,15 @@ const getVideoProps = (post, index) => ({
     caption: post.caption,
     hashtags: [],
     likes: post.likes,
+    hasLiked: post.has_liked,
     bookmarks: 0,
     shares: 0,
     comments: [],
+    canComment: post.permissions?.can_comment,
     "comment-count": post.comments,
     index: index,
     isSensitive: post?.is_sensitive,
+    altText: post?.media.alt_text,
 });
 
 const getVideoKey = (post) => post.id;

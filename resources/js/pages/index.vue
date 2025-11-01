@@ -62,6 +62,7 @@ const getVideoProps = (post, index) => ({
     "comment-count": post.comments,
     index: index,
     isSensitive: post?.is_sensitive,
+    altText: post?.media.alt_text,
 });
 
 const getVideoKey = (post) => post.id;
