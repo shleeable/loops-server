@@ -49,6 +49,8 @@ use App\Services\VideoService;
 use Illuminate\Bus\Batch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class VideoController extends Controller
@@ -99,55 +101,139 @@ class VideoController extends Controller
      */
     public function store(StoreVideoRequest $request)
     {
+        set_time_limit(300);
+        ini_set('max_execution_time', '300');
+
         $pid = $request->user()->profile_id;
         app(UserActivityService::class)->markActive($request->user());
         $profile = Profile::findOrFail($pid);
         $videoFile = $request->file('video');
+
         $videoMeta = [
             'size' => ceil($videoFile->getSize() / 1024),
             'name' => $videoFile->getClientOriginalName(),
             'mime' => $videoFile->getMimeType(),
         ];
 
-        $model = new Video;
-        $model->profile_id = $pid;
-        $model->caption = app(SanitizeService::class)->cleanPlainText($request->description);
-        $model->size_kb = intval($videoMeta['size']);
-        $model->is_sensitive = $request->filled('is_sensitive') ? (bool) $request->boolean('is_sensitive') : false;
-        $model->comment_state = $request->filled('comment_state') ? ($request->input('comment_state') == 4 ? 4 : 0) : 4;
-        $model->can_download = $request->filled('can_download') ? $request->boolean('can_download') : false;
-        // @phpstan-ignore-next-line
-        $model->media_metadata = $videoMeta;
-        $model->save();
-        $path = $request->video->store('videos/'.$pid.'/'.$model->id, 's3');
-        $model->vid = $path;
-        $model->save();
+        $model = null;
+        $s3Path = null;
 
-        if ($request->filled('description')) {
-            $model->syncHashtagsFromCaption();
-            $model->syncMentionsFromCaption();
-        }
+        try {
+            DB::beginTransaction();
 
-        $profile->video_count = $profile->videos->count();
-        $profile->save();
+            $model = new Video;
+            $model->profile_id = $pid;
+            $model->caption = app(SanitizeService::class)->cleanPlainText($request->description);
+            $model->size_kb = intval($videoMeta['size']);
+            $model->is_sensitive = $request->filled('is_sensitive') ? (bool) $request->boolean('is_sensitive') : false;
+            $model->comment_state = $request->filled('comment_state') ? ($request->input('comment_state') == 4 ? 4 : 0) : 4;
+            $model->can_download = $request->filled('can_download') ? $request->boolean('can_download') : false;
+            $model->alt_text = $request->filled('alt_text') ? app(SanitizeService::class)->cleanPlainText($request->alt_text) : null;
+            $model->contains_ai = $request->filled('contains_ai') ? $request->boolean('contains_ai') : false;
+            $model->contains_ad = $request->filled('contains_ad') ? $request->boolean('contains_ad') : false;
+            $model->lang = $request->filled('lang') ? $request->input('lang') : null;
+            // @phpstan-ignore-next-line
+            $model->media_metadata = $videoMeta;
+            $model->save();
 
-        $config = app(ConfigService::class);
+            try {
+                $s3Path = $request->video->store('videos/'.$pid.'/'.$model->id, 's3');
 
-        $batch = Bus::batch([
-            [
-                new VideoThumbnailJob($model),
-            ],
-            [
-                new VideoOptimizeJob($model),
-            ],
-        ])->finally(function (Batch $batch) use ($model) {
-            $config = app(ConfigService::class);
-            if ($config->federation()) {
-                app(FederationDispatcher::class)->dispatchVideoCreation($model);
+                if (! $s3Path) {
+                    throw new \Exception('Failed to upload video to S3');
+                }
+
+                $model->vid = $s3Path;
+                $model->save();
+
+            } catch (\Exception $e) {
+                if (config('logging.dev_log')) {
+                    Log::error('S3 upload failed for video', [
+                        'user_id' => $request->user()->id,
+                        'video_id' => $model->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                throw new \Exception('Failed to upload video file. Please try again.');
             }
-        })->dispatch();
 
-        return $this->success();
+            if ($request->filled('description')) {
+                $model->syncHashtagsFromCaption();
+                $model->syncMentionsFromCaption();
+            }
+
+            $profile->video_count = $profile->videos->count();
+            $profile->save();
+
+            DB::commit();
+
+            $config = app(ConfigService::class);
+
+            Bus::batch([
+                [
+                    new VideoThumbnailJob($model),
+                ],
+                [
+                    new VideoOptimizeJob($model),
+                ],
+            ])->finally(function (Batch $batch) use ($model) {
+                $config = app(ConfigService::class);
+                if ($config->federation()) {
+                    app(FederationDispatcher::class)->dispatchVideoCreation($model);
+                }
+            })->dispatch();
+
+            return $this->success();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if ($s3Path) {
+                try {
+                    Storage::disk('s3')->delete($s3Path);
+
+                    if (config('logging.dev_log')) {
+                        Log::info('Cleaned up S3 file after error', ['path' => $s3Path]);
+                    }
+                } catch (\Exception $deleteError) {
+                    Log::error('Failed to delete S3 file during cleanup', [
+                        'path' => $s3Path,
+                        'error' => $deleteError->getMessage(),
+                    ]);
+                }
+            }
+
+            if ($model && $model->exists) {
+                try {
+                    $model->delete();
+                    if (config('logging.dev_log')) {
+                        Log::info('Cleaned up video model after error', ['video_id' => $model->id]);
+                    }
+                } catch (\Exception $deleteError) {
+                    if (config('logging.dev_log')) {
+                        Log::error('Failed to delete video model during cleanup', [
+                            'video_id' => $model->id,
+                            'error' => $deleteError->getMessage(),
+                        ]);
+                    }
+                }
+            }
+
+            if (config('logging.dev_log')) {
+                Log::error('Video upload failed', [
+                    'user_id' => $request->user()->id,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage() ?: 'An error occurred while uploading your video. Please try again.',
+                'error' => 'Upload failed',
+            ], 500);
+        }
     }
 
     /**
@@ -170,6 +256,21 @@ class VideoController extends Controller
         $video->comment_state = $request->has('can_comment') ? ($request->boolean('can_comment') ? 4 : 0) : 0;
         $video->is_pinned = $request->has('is_pinned') ? $request->boolean('is_pinned') : 0;
         $video->pinned_order = $request->has('is_pinned') ? Video::whereStatus(2)->whereProfileId($pid)->whereIsPinned(true)->count() + 1 : 0;
+        $video->alt_text = $request->filled('alt_text') ? app(SanitizeService::class)->cleanPlainText($request->alt_text) : null;
+        $video->can_duet = $request->has('can_duet') ? $request->boolean('can_duet') : $video->can_duet;
+        $video->can_stitch = $request->has('can_stitch') ? $request->boolean('can_stitch') : $video->can_stitch;
+        if ($request->filled('lang') && $request->input('lang') != $video->lang) {
+            $video->lang = $request->input('lang');
+        }
+        if (! $video->is_sensitive && $request->has('is_sensitive') && $request->boolean('is_sensitive')) {
+            $video->is_sensitive = true;
+        }
+        if (! $video->contains_ad && $request->has('contains_ad') && $request->boolean('contains_ad')) {
+            $video->contains_ad = true;
+        }
+        if (! $video->contains_ai && $request->has('contains_ai') && $request->boolean('contains_ai')) {
+            $video->contains_ai = true;
+        }
         $video->is_edited = true;
         $video->save();
         $video->syncHashtagsFromCaption();

@@ -47,6 +47,7 @@ class VideoResource extends JsonResource
                 'thumbnail' => $thumb,
                 'src_url' => $mediaUrl,
                 'hls_url' => null,
+                'alt_text' => $this->alt_text,
             ],
             'pinned' => $this->is_pinned,
             'likes' => $this->likes,
@@ -54,6 +55,7 @@ class VideoResource extends JsonResource
             'comments' => $this->comments,
             'has_liked' => $hasLiked,
             'is_edited' => $this->is_edited,
+            'lang' => $this->lang,
             'tags' => $this->hashtags->map(fn (Hashtag $tag) => $tag->name),
             'mentions' => $this->mentions,
             'permissions' => [
@@ -67,6 +69,10 @@ class VideoResource extends JsonResource
                 'id' => (string) 'at:'.$this->id,
                 'count' => 0,
                 'key' => (string) Str::uuid(),
+            ],
+            'meta' => [
+                'contains_ai' => $this->contains_ai,
+                'contains_ad' => $this->contains_ad,
             ],
             'created_at' => $this->created_at->format('c'),
         ];

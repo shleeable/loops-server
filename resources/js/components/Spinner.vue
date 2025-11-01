@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-type Size = "xs" | "sm" | "default" | "lg";
+type Size = "xs" | "sm" | "default" | "lg" | "xl";
 type Theme =
     | "default"
     | "brand"
@@ -31,6 +31,7 @@ const sizeClass = {
     sm: "h-6 w-6 border-3",
     default: "h-10 w-10 border-4",
     lg: "h-12 w-12 border-4",
+    xl: "h-18 w-18 border-8",
 }[props.size ?? "default"];
 
 const themeClass = {

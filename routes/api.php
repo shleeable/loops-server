@@ -190,6 +190,9 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/autocomplete/tags', [VideoController::class, 'showAutocompleteTags'])->middleware(['auth:web,api', 'throttle:autocomplete']);
     Route::get('/v1/autocomplete/accounts', [VideoController::class, 'showAutocompleteAccounts'])->middleware(['auth:web,api', 'throttle:autocomplete']);
 
+    // Languages
+    Route::get('/v1/i18n/list', [WebPublicController::class, 'getLanguagesList']);
+
     // Reports
     Route::post('/v1/report', [ReportController::class, 'store'])->middleware(['auth:web,api', 'throttle:api']);
 

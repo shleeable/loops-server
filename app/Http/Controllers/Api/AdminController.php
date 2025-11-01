@@ -93,17 +93,20 @@ class AdminController extends Controller
             $pid = $video->profile_id;
             VideoService::deleteMediaData($video->id);
 
-            if (str_starts_with($video->vid, 'https://')) {
+            if ($video->vid) {
+                if (str_starts_with($video->vid, 'https://')) {
 
-            } else {
-                if (Storage::exists($video->vid)) {
-                    Storage::delete($video->vid);
-                }
-                $s3Path = 'videos/'.$video->profile_id.'/'.$video->id.'/';
-                if (Storage::disk('s3')->exists($s3Path)) {
-                    Storage::disk('s3')->deleteDirectory($s3Path);
+                } else {
+                    if (Storage::exists($video->vid)) {
+                        Storage::delete($video->vid);
+                    }
+                    $s3Path = 'videos/'.$video->profile_id.'/'.$video->id.'/';
+                    if (Storage::disk('s3')->exists($s3Path)) {
+                        Storage::disk('s3')->deleteDirectory($s3Path);
+                    }
                 }
             }
+
             app(AdminAuditLogService::class)->logVideoDelete($request->user(), $video, ['vid' => $video->id, 'caption' => $video->caption, 'profile_id' => $video->profile_id, 'likes' => $video->likes]);
 
             $video->forceDelete();

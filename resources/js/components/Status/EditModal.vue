@@ -42,6 +42,64 @@
                     </div>
                 </div>
 
+                <div>
+                    <AnimatedButton
+                        @click="showAltText = !showAltText"
+                        type="button"
+                        variant="light"
+                        class="flex w-full"
+                    >
+                        <div
+                            class="flex items-center gap-2 text-sm font-medium"
+                        >
+                            <div>
+                                <svg
+                                    :class="{ 'rotate-90': showAltText }"
+                                    class="h-4 w-4 transition-transform duration-200"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M9 5l7 7-7 7"
+                                    />
+                                </svg>
+                            </div>
+                            <div>
+                                {{ $t("studio.editAltText") }}
+                            </div>
+                        </div>
+                    </AnimatedButton>
+
+                    <div v-if="showAltText" class="mt-3 space-y-2">
+                        <label
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >
+                            {{ $t("studio.altText") }}
+                        </label>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            {{ $t("studio.altTextHelp") }}
+                        </p>
+                        <textarea
+                            v-model="formData.altText"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F02C56] focus:border-[#F02C56] dark:bg-slate-800 dark:text-white resize-none"
+                            rows="3"
+                            :placeholder="
+                                $t('studio.describeYourVideoDotDotDotAltText')
+                            "
+                            maxlength="2000"
+                        />
+                        <div
+                            class="text-right text-sm text-gray-500 dark:text-gray-400"
+                        >
+                            {{ formData.altText.length }}/2000
+                        </div>
+                    </div>
+                </div>
+
                 <div class="space-y-4">
                     <div class="flex items-center justify-between">
                         <div>
@@ -87,6 +145,133 @@
                             </p>
                         </div>
                         <ToggleSwitch v-model="formData.downloadsEnabled" />
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label
+                                class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                            >
+                                {{ $t("studio.duet") }}
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ $t("studio.duetMessage") }}
+                            </p>
+                        </div>
+                        <ToggleSwitch v-model="formData.allowDuets" />
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label
+                                class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                            >
+                                {{ $t("studio.stitch") }}
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ $t("studio.stitchMessage") }}
+                            </p>
+                        </div>
+                        <ToggleSwitch v-model="formData.allowStitches" />
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ $t("studio.language") }}
+                    </label>
+                    <div class="relative">
+                        <select
+                            v-model="formData.lang"
+                            class="block w-full px-4 py-2 pr-8 text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        >
+                            <option value="" disabled selected>
+                                {{ $t("studio.selectLanguage") }}
+                            </option>
+
+                            <option
+                                v-for="lang in languages"
+                                :key="lang.code"
+                                :value="lang.code"
+                            >
+                                {{ lang.name }}
+                            </option>
+                        </select>
+                        <div
+                            class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none"
+                        >
+                            <svg
+                                class="w-5 h-5 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M19 9l-7 7-7-7"
+                                />
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="mt-2 text-sm text-gray-500">
+                        {{ $t("studio.selectLanguageHelp") }}
+                    </p>
+                </div>
+
+                <div
+                    class="space-y-4 pt-4 border-t border-gray-200 dark:border-slate-700"
+                >
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <label
+                                class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                            >
+                                {{ $t("studio.containsNSFW") }}
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ $t("studio.containsNSFWMessage") }}
+                            </p>
+                        </div>
+                        <ToggleSwitch
+                            v-model="formData.isNsfw"
+                            :disabled="formData.isNsfw"
+                        />
+                    </div>
+
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <label
+                                class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                            >
+                                {{ $t("studio.disclosePostContent") }}
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ $t("studio.disclosePostContentHelp") }}
+                            </p>
+                        </div>
+                        <ToggleSwitch
+                            v-model="formData.containsAds"
+                            :disabled="formData.containsAds"
+                        />
+                    </div>
+
+                    <div class="flex items-start justify-between gap-5">
+                        <div class="flex-1">
+                            <label
+                                class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                            >
+                                {{ $t("studio.containsAlteredContent") }}
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ $t("studio.containsAlteredContentHelp") }}
+                            </p>
+                        </div>
+                        <ToggleSwitch
+                            v-model="formData.containsAiContent"
+                            :disabled="formData.containsAiContent"
+                        />
                     </div>
                 </div>
 
@@ -148,9 +333,12 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onMounted, inject } from "vue";
+import { storeToRefs } from "pinia";
 import { XMarkIcon, ExclamationTriangleIcon } from "@heroicons/vue/24/outline";
 import { useAlertModal } from "@/composables/useAlertModal.js";
+const appStore = inject("appStore");
+const { languages } = storeToRefs(appStore);
 
 const props = defineProps({
     isOpen: {
@@ -167,12 +355,24 @@ const emit = defineEmits(["close", "save", "delete"]);
 const { alertModal, confirmModal } = useAlertModal();
 
 const isSaving = ref(false);
+const showAltText = ref(false);
 
 const formData = ref({
     caption: "",
+    altText: "",
+    lang: "",
     pinToProfile: false,
     commentsEnabled: true,
     downloadsEnabled: true,
+    allowDuets: true,
+    allowStitches: true,
+    isNsfw: false,
+    containsAds: false,
+    containsAiContent: false,
+});
+
+onMounted(async () => {
+    await appStore.ensureLanguages();
 });
 
 watch(
@@ -181,10 +381,18 @@ watch(
         if (isOpen && video) {
             formData.value = {
                 caption: video.caption || "",
+                altText: video.media.alt_text || "",
                 pinToProfile: video.is_pinned || false,
+                lang: video.lang || "",
                 downloadsEnabled: video.permissions.can_download || false,
                 commentsEnabled: video.permissions.can_comment !== false,
+                allowDuets: video.permissions.can_duet !== false,
+                allowStitches: video.permissions.can_stitch !== false,
+                isNsfw: video.is_sensitive || false,
+                containsAds: video.meta.contains_ad || false,
+                containsAiContent: video.meta.contains_ai || false,
             };
+            showAltText.value = !!video.alt_text;
         }
     },
     { immediate: true },
@@ -203,9 +411,16 @@ const saveChanges = async () => {
         await emit("save", {
             id: props.video.id,
             caption: formData.value.caption,
+            alt_text: formData.value.altText,
             is_pinned: formData.value.pinToProfile,
+            lang: formData.value.lang,
             can_comment: formData.value.commentsEnabled,
             can_download: formData.value.downloadsEnabled,
+            can_duet: formData.value.allowDuets,
+            can_stitch: formData.value.allowStitches,
+            is_sensitive: formData.value.isNsfw,
+            contains_ad: formData.value.containsAds,
+            contains_ai: formData.value.containsAiContent,
         });
         closeModal();
     } catch (error) {

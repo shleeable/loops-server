@@ -3,8 +3,10 @@
 namespace App\Http\Requests;
 
 use App\Models\Video;
+use App\Services\IntlService;
 use Cache;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
 
 class StoreVideoRequest extends FormRequest
@@ -53,6 +55,14 @@ class StoreVideoRequest extends FormRequest
             'comment_state' => 'sometimes|string|in:0,4',
             'can_download' => 'sometimes',
             'is_sensitive' => 'sometimes|boolean',
+            'alt_text' => 'nullable|sometimes|string|max:2000',
+            'contains_ai' => 'sometimes|boolean',
+            'contains_ad' => 'sometimes|boolean',
+            'lang' => [
+                'sometimes',
+                'string',
+                Rule::in(app(IntlService::class)->keys()),
+            ],
         ];
     }
 }

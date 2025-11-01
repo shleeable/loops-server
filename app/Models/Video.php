@@ -64,6 +64,10 @@ use Storage;
  * @property string|null $last_fetched_at
  * @property int $fetch_failure_count
  * @property int $is_edited
+ * @property string|null $alt_text
+ * @property string|null $lang
+ * @property bool $contains_ai
+ * @property bool $contains_ad
  * @property-read \Illuminate\Database\Eloquent\Relations\BelongsToMany<Hashtag, $this, VideoHashtag, 'pivot'> $hashtags
  * @property-read int|null $hashtags_count
  * @property-read \App\Models\Profile|null $profile
@@ -167,6 +171,8 @@ class Video extends Model
             'media_metadata' => 'array',
             'is_local' => 'boolean',
             'is_edited' => 'boolean',
+            'contains_ai' => 'boolean',
+            'contains_ad' => 'boolean',
         ];
     }
 

@@ -3,7 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Models\Video;
+use App\Services\IntlService;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateVideoRequest extends FormRequest
 {
@@ -31,7 +33,18 @@ class UpdateVideoRequest extends FormRequest
             'caption' => 'nullable|string|max:200',
             'can_download' => 'nullable|boolean',
             'can_comment' => 'nullable|boolean',
+            'can_duet' => 'nullable|boolean',
+            'can_stitch' => 'nullable|boolean',
             'is_pinned' => 'nullable|boolean',
+            'alt_text' => 'nullable|sometimes|string|max:2000',
+            'is_sensitive' => 'nullable|boolean',
+            'contains_ai' => 'nullable|boolean',
+            'contains_ad' => 'nullable|boolean',
+            'lang' => [
+                'sometimes',
+                'string',
+                Rule::in(app(IntlService::class)->keys()),
+            ],
         ];
     }
 
@@ -40,7 +53,7 @@ class UpdateVideoRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        $fields = ['can_download', 'can_comment', 'is_pinned'];
+        $fields = ['can_download', 'can_comment', 'is_pinned', 'can_duet', 'can_stitch', 'is_sensitive', 'contains_ai', 'contains_ad'];
         foreach ($fields as $key) {
             if ($this->has($key)) {
                 $this->merge([

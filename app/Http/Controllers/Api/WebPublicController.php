@@ -21,6 +21,7 @@ use App\Models\Video;
 use App\Models\VideoHashtag;
 use App\Services\AccountService;
 use App\Services\FeedService;
+use App\Services\IntlService;
 use App\Services\ReportService;
 use Cache;
 use Illuminate\Http\Request;
@@ -274,6 +275,11 @@ class WebPublicController extends Controller
         }
 
         return VideoHashtagResource::collection($tags)->additional(['meta' => ['total_results' => $tag->count]]);
+    }
+
+    public function getLanguagesList(Request $request)
+    {
+        return $this->data(app(IntlService::class)->get());
     }
 
     private function defaultCollection($meta = [])

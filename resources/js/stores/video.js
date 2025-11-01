@@ -41,6 +41,13 @@ export const useVideoStore = defineStore("video", {
             can_download,
             can_comment,
             is_pinned,
+            alt_text,
+            can_duet,
+            can_stitch,
+            is_sensitive,
+            contains_ad,
+            contains_ai,
+            lang,
         }) {
             const axiosInstance = axios.getAxiosInstance();
             try {
@@ -50,6 +57,13 @@ export const useVideoStore = defineStore("video", {
                         is_pinned: is_pinned,
                         can_download: can_download,
                         can_comment: can_comment,
+                        alt_text: alt_text,
+                        can_duet: can_duet,
+                        can_stitch: can_stitch,
+                        is_sensitive: is_sensitive,
+                        contains_ad: contains_ad,
+                        contains_ai: contains_ai,
+                        lang: lang,
                     })
                     .then((res) => {
                         this.currentVideo = res.data;

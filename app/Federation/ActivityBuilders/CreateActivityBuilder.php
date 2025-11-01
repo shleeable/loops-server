@@ -83,6 +83,7 @@ class CreateActivityBuilder
                     'type' => 'Document',
                     'mediaType' => 'video/mp4',
                     'url' => $video->mediaUrl(),
+                    'name' => $video->alt_text,
                 ],
             ],
         ];
