@@ -1061,12 +1061,13 @@ onBeforeUnmount(() => {
 
 const previewUsername = computed(() => {
     if (authStore?.user?.username) {
-        return `@${authStore.user?.username}`;
+        return "@" + `${authStore.user?.username}`;
     }
 
     if (authStore?.user?.name) {
-        return `@${authStore.user?.name}`;
+        return "@" + `${authStore.user?.name}`;
     }
+
     return "@username";
 });
 
