@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DeleteVideoRequest;
 use App\Http\Requests\GetMentionAutocomplete;
+use App\Http\Requests\GetTagAutocomplete;
 use App\Http\Requests\StoreCommentReplyUpdateRequest;
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\StoreCommentUpdateRequest;
@@ -60,7 +61,7 @@ class VideoController extends Controller
         $this->middleware('auth');
     }
 
-    public function showAutocompleteTags(Request $request)
+    public function showAutocompleteTags(GetTagAutocomplete $request)
     {
         $validated = $request->validate(['q' => 'required|alpha_dash|min:2|max:60']);
 
@@ -73,7 +74,7 @@ class VideoController extends Controller
         return HashtagResource::collection($hashtags);
     }
 
-    public function showAutocompleteAccounts(Request $request)
+    public function showAutocompleteAccounts(GetMentionAutocomplete $request)
     {
         $validated = $request->validate([
             'q' => [
@@ -89,9 +90,9 @@ class VideoController extends Controller
 
         $escaped = $this->escapeLike($q);
 
-        $profiles = Profile::where('username', 'like', $escaped.'%')->where('is_hidden', false)->limit(10)->get();
+        $profiles = Profile::where('username', 'like', $escaped.'%')->where('is_hidden', false)->orderByDesc('followers')->limit(10)->get();
 
-        return AccountCompactResource::collection($profiles);
+        return ProfileResource::collection($profiles);
     }
 
     /**
@@ -763,26 +764,6 @@ class VideoController extends Controller
         }
 
         return (new CommentResource($comment))->toArray($request);
-    }
-
-    public function getAutocompleteMention(GetMentionAutocomplete $request)
-    {
-        $query = $request->input('q');
-        $limit = $request->input('limit', 6);
-
-        $res = Profile::where('username', 'like', $query.'%')->limit($limit)->get();
-
-        return ProfileResource::collection($res);
-    }
-
-    public function getAutocompleteHashtag(GetMentionAutocomplete $request)
-    {
-        $query = $request->input('q');
-        $limit = $request->input('limit', 6);
-
-        $res = Hashtag::where('name', 'like', $query.'%')->limit($limit)->get();
-
-        return HashtagResource::collection($res);
     }
 
     private function escapeLike(string $value): string

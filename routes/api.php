@@ -78,8 +78,6 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/auth/register/verify-age', [UserRegisterVerifyController::class, 'verifyAge']);
 
     // Studio
-    Route::get('/v1/upload/autocomplete/hashtag', [VideoController::class, 'getAutocompleteHashtag'])->middleware(['auth:web,api', 'throttle:autocomplete']);
-    Route::get('/v1/upload/autocomplete/mention', [VideoController::class, 'getAutocompleteMention'])->middleware(['auth:web,api', 'throttle:autocomplete']);
     Route::get('/v1/studio/posts', [StudioController::class, 'getPosts'])->middleware('auth:web,api');
     Route::post('/v1/studio/upload', [VideoController::class, 'store'])->middleware('auth:web,api');
 

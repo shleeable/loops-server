@@ -818,12 +818,9 @@ const searchHashtags = async (query) => {
             return suggestionCache.hashtags.get(cacheKey);
         }
 
-        const response = await axios.get(
-            "/api/v1/upload/autocomplete/hashtag",
-            {
-                params: { q: query, limit: 6 },
-            },
-        );
+        const response = await axios.get("/api/v1/autocomplete/tags", {
+            params: { q: query, limit: 6 },
+        });
 
         const results = response.data.data || [];
         suggestionCache.hashtags.set(cacheKey, results);
@@ -842,12 +839,9 @@ const searchMentions = async (query) => {
             return suggestionCache.mentions.get(cacheKey);
         }
 
-        const response = await axios.get(
-            "/api/v1/upload/autocomplete/mention",
-            {
-                params: { q: query, limit: 6 },
-            },
-        );
+        const response = await axios.get("/api/v1/autocomplete/accounts", {
+            params: { q: query, limit: 6 },
+        });
 
         const results = response.data.data || [];
 
