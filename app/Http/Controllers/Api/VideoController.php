@@ -128,6 +128,8 @@ class VideoController extends Controller
             $model->is_sensitive = $request->filled('is_sensitive') ? (bool) $request->boolean('is_sensitive') : false;
             $model->comment_state = $request->filled('comment_state') ? ($request->input('comment_state') == 4 ? 4 : 0) : 4;
             $model->can_download = $request->filled('can_download') ? $request->boolean('can_download') : false;
+            $model->can_duet = $request->filled('can_duet') ? $request->boolean('can_duet') : false;
+            $model->can_stitch = $request->filled('can_stitch') ? $request->boolean('can_stitch') : false;
             $model->alt_text = $request->filled('alt_text') ? app(SanitizeService::class)->cleanPlainText($request->alt_text) : null;
             $model->contains_ai = $request->filled('contains_ai') ? $request->boolean('contains_ai') : false;
             $model->contains_ad = $request->filled('contains_ad') ? $request->boolean('contains_ad') : false;

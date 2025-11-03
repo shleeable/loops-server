@@ -171,6 +171,10 @@ class Video extends Model
             'media_metadata' => 'array',
             'is_local' => 'boolean',
             'is_edited' => 'boolean',
+            'can_duet' => 'boolean',
+            'can_stitch' => 'boolean',
+            'can_download' => 'boolean',
+            'can_comment' => 'boolean',
             'contains_ai' => 'boolean',
             'contains_ad' => 'boolean',
         ];
