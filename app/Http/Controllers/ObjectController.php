@@ -35,7 +35,13 @@ class ObjectController extends Controller
             return $this->activityPubResponse($profile->toActivityPub());
         }
 
-        return view('welcome');
+        $profile = Profile::whereUsername($username)->first();
+
+        if (! $profile) {
+            abort(404, 'Profile not found');
+        }
+
+        return view('profile', compact('profile'));
     }
 
     public function showVideo(Request $request, $hashId)
