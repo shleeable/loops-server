@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+      - dev
+      - staging
+  pull_request:
+    branches:
+      - main
+      - dev
+      - staging
 
 jobs:
   lint:
@@ -28,7 +35,7 @@ jobs:
         run: composer global require laravel/pint
 
       - name: Run Pint
-        run: pint  --test
+        run: pint --test
 
-#      - name: Commit linted files
-#        uses: stefanzweifel/git-auto-commit-action@v5
+      # - name: Commit linted files
+      #   uses: stefanzweifel/git-auto-commit-action@v5
