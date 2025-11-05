@@ -1539,6 +1539,11 @@ const goBackStep = () => {
 
 const handleLogin = async () => {
     clearMessages();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.value.email)) {
+        setError("Please enter a valid email address.");
+        return;
+    }
     loading.value = true;
 
     try {
