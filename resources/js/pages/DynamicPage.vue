@@ -162,9 +162,10 @@
 </template>
 
 <script setup>
-import { onMounted, watch } from "vue";
+import { onMounted, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import MainLayout from "@/layouts/FeedLayout.vue";
+import { useHead } from "@unhead/vue";
 import { useDynamicPage } from "@/composables/useDynamicPage";
 import {
     ExclamationTriangleIcon,
@@ -185,6 +186,44 @@ const {
     retry,
     formatDate,
 } = useDynamicPage();
+
+const pageDescription = computed(() => {
+    if (pageData.value.meta_description) {
+        return pageData.value.meta_description;
+    }
+
+    if (!pageData.value.content) {
+        return `Learn more about ${pageTitle.value} on Loops`;
+    }
+
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = pageData.value.content;
+
+    const text = tempDiv.textContent || tempDiv.innerText || "";
+
+    const cleanText = text.replace(/\s+/g, " ").trim();
+    return cleanText.length > 160
+        ? cleanText.substring(0, 157) + "..."
+        : cleanText;
+});
+
+const pageUrl = computed(() => {
+    return window.location.origin + route.fullPath;
+});
+
+useHead({
+    title: computed(() => `${pageTitle.value} | Loops`),
+    meta: computed(() => [
+        { name: "description", content: pageDescription.value },
+        { property: "og:title", content: pageTitle.value },
+        { property: "og:description", content: pageDescription.value },
+        { property: "og:type", content: "article" },
+        { property: "og:url", content: pageUrl.value },
+        { name: "twitter:card", content: "summary" },
+        { name: "twitter:title", content: pageTitle.value },
+        { name: "twitter:description", content: pageDescription.value },
+    ]),
+});
 
 watch(
     () => currentSlug.value,
