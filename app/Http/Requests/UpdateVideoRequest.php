@@ -41,6 +41,7 @@ class UpdateVideoRequest extends FormRequest
             'contains_ai' => 'nullable|boolean',
             'contains_ad' => 'nullable|boolean',
             'lang' => [
+                'nullable',
                 'sometimes',
                 'string',
                 Rule::in(app(IntlService::class)->keys()),
