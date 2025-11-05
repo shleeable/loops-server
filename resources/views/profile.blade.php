@@ -1,6 +1,7 @@
 @php
 use App\Services\FrontendService;
 use App\Services\AccountService;
+use Illuminate\Support\Str;
 
 $appName = FrontendService::getAppName();
 $appDesc = FrontendService::getAppDescription();

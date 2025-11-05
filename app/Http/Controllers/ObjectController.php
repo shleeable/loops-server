@@ -9,6 +9,7 @@ use App\Models\Profile;
 use App\Models\Video;
 use App\Services\ConfigService;
 use App\Services\HashidService;
+use App\Services\VideoService;
 use Illuminate\Http\Request;
 
 class ObjectController extends Controller
@@ -85,7 +86,9 @@ class ObjectController extends Controller
             }
         }
 
-        return view('welcome');
+        $videoData = VideoService::getMediaData($id);
+
+        return view('video', compact('videoData'));
     }
 
     protected function renderVideoObject($video, $hashId)
