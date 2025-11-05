@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
@@ -12,23 +10,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("
+        DB::statement('
             UPDATE followers
             INNER JOIN profiles ON profiles.id = followers.profile_id
             SET followers.profile_is_local = CASE
                 WHEN profiles.domain IS NULL OR profiles.user_id IS NOT NULL THEN 1
                 ELSE 0
             END
-        ");
+        ');
 
-        DB::statement("
+        DB::statement('
             UPDATE followers
             INNER JOIN profiles ON profiles.id = followers.following_id
             SET followers.following_is_local = CASE
                 WHEN profiles.domain IS NULL OR profiles.user_id IS NOT NULL THEN 1
                 ELSE 0
             END
-        ");
+        ');
     }
 
     /**
