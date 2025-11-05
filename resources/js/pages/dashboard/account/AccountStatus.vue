@@ -8,7 +8,9 @@
                 >
                     <i class="bx bx-arrow-back text-[20px] mr-1"></i>
                 </button>
-                <h1 class="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+                <h1
+                    class="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100"
+                >
                     Account status
                 </h1>
             </div>
@@ -23,10 +25,14 @@
                             class="bx bx-check-circle text-green-500 text-[20px] mt-0.5"
                         ></i>
                         <div>
-                            <h3 class="font-medium text-green-800 dark:text-green-300 mb-1">
+                            <h3
+                                class="font-medium text-green-800 dark:text-green-300 mb-1"
+                            >
                                 Your account is in good standing
                             </h3>
-                            <p class="text-sm text-green-700 dark:text-green-400">
+                            <p
+                                class="text-sm text-green-700 dark:text-green-400"
+                            >
                                 You currently have no restrictions and can use
                                 all Loops features.
                             </p>
@@ -34,11 +40,15 @@
                     </div>
                 </div>
 
-                <h2 class="tracking-tight font-light mb-4 text-gray-900 dark:text-gray-100">
+                <h2
+                    class="tracking-tight font-light mb-4 text-gray-900 dark:text-gray-100"
+                >
                     Account standing levels
                 </h2>
                 <div class="flex flex-col gap-3 mb-6">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+                    >
                         <div class="p-4 flex items-start gap-4">
                             <div
                                 class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center mt-1"
@@ -48,10 +58,14 @@
                                 ></i>
                             </div>
                             <div class="flex-1">
-                                <h3 class="font-medium text-gray-800 dark:text-gray-100 mb-1">
+                                <h3
+                                    class="font-medium text-gray-800 dark:text-gray-100 mb-1"
+                                >
                                     Good standing
                                 </h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300">
+                                <p
+                                    class="text-sm text-gray-600 dark:text-gray-300"
+                                >
                                     Full access to all features. No content
                                     violations or restrictions.
                                 </p>
@@ -63,7 +77,9 @@
                         </div>
                     </div>
 
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+                    >
                         <div class="p-4 flex items-start gap-4">
                             <div
                                 class="w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/40 flex items-center justify-center mt-1"
@@ -73,10 +89,14 @@
                                 ></i>
                             </div>
                             <div class="flex-1">
-                                <h3 class="font-medium text-gray-800 dark:text-gray-100 mb-1">
+                                <h3
+                                    class="font-medium text-gray-800 dark:text-gray-100 mb-1"
+                                >
                                     Warning issued
                                 </h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300">
+                                <p
+                                    class="text-sm text-gray-600 dark:text-gray-300"
+                                >
                                     Minor violations detected. Account remains
                                     active but further violations may lead to
                                     restrictions.
@@ -85,7 +105,9 @@
                         </div>
                     </div>
 
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+                    >
                         <div class="p-4 flex items-start gap-4">
                             <div
                                 class="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center mt-1"
@@ -95,10 +117,14 @@
                                 ></i>
                             </div>
                             <div class="flex-1">
-                                <h3 class="font-medium text-gray-800 dark:text-gray-100 mb-1">
+                                <h3
+                                    class="font-medium text-gray-800 dark:text-gray-100 mb-1"
+                                >
                                     Limited features
                                 </h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300">
+                                <p
+                                    class="text-sm text-gray-600 dark:text-gray-300"
+                                >
                                     Some features restricted due to policy
                                     violations. Can view content but cannot post
                                     or comment.
@@ -107,7 +133,9 @@
                         </div>
                     </div>
 
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+                    >
                         <div class="p-4 flex items-start gap-4">
                             <div
                                 class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center mt-1"
@@ -117,10 +145,14 @@
                                 ></i>
                             </div>
                             <div class="flex-1">
-                                <h3 class="font-medium text-gray-800 dark:text-gray-100 mb-1">
+                                <h3
+                                    class="font-medium text-gray-800 dark:text-gray-100 mb-1"
+                                >
                                     Suspended
                                 </h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-300">
+                                <p
+                                    class="text-sm text-gray-600 dark:text-gray-300"
+                                >
                                     Temporary suspension due to serious
                                     violations. Cannot access account during
                                     suspension period.
@@ -130,10 +162,14 @@
                     </div>
                 </div>
 
-                <h2 class="tracking-tight font-light mb-4 text-gray-900 dark:text-gray-100">
+                <h2
+                    class="tracking-tight font-light mb-4 text-gray-900 dark:text-gray-100"
+                >
                     Your activity summary
                 </h2>
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6"
+                >
                     <div class="p-6">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div class="text-center">
@@ -142,7 +178,9 @@
                                 >
                                     {{ activityStats.reports }}
                                 </div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">
+                                <div
+                                    class="text-sm text-gray-500 dark:text-gray-400"
+                                >
                                     Reports received
                                 </div>
                             </div>
@@ -152,7 +190,9 @@
                                 >
                                     {{ activityStats.violations }}
                                 </div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">
+                                <div
+                                    class="text-sm text-gray-500 dark:text-gray-400"
+                                >
                                     Policy violations
                                 </div>
                             </div>
@@ -162,7 +202,9 @@
                                 >
                                     {{ activityStats.warnings }}
                                 </div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">
+                                <div
+                                    class="text-sm text-gray-500 dark:text-gray-400"
+                                >
                                     Warnings issued
                                 </div>
                             </div>
@@ -170,12 +212,18 @@
                     </div>
                 </div>
 
-                <h2 class="tracking-tight font-light mb-4 text-gray-900 dark:text-gray-100">
+                <h2
+                    class="tracking-tight font-light mb-4 text-gray-900 dark:text-gray-100"
+                >
                     Community guidelines
                 </h2>
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6"
+                >
                     <div class="p-6">
-                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                        <p
+                            class="text-sm text-gray-600 dark:text-gray-300 mb-4"
+                        >
                             To maintain a safe and positive environment, all
                             Loops users must follow our Community Guidelines.
                             Violations can result in content removal, account
@@ -193,7 +241,9 @@
                                     >
                                         Respect others
                                     </h4>
-                                    <p class="text-xs text-gray-600 dark:text-gray-300">
+                                    <p
+                                        class="text-xs text-gray-600 dark:text-gray-300"
+                                    >
                                         No harassment, bullying, hate speech, or
                                         discrimination.
                                     </p>
@@ -210,7 +260,9 @@
                                     >
                                         Keep it appropriate
                                     </h4>
-                                    <p class="text-xs text-gray-600 dark:text-gray-300">
+                                    <p
+                                        class="text-xs text-gray-600 dark:text-gray-300"
+                                    >
                                         No explicit sexual content, violence, or
                                         harmful activities.
                                     </p>
@@ -227,7 +279,9 @@
                                     >
                                         Respect intellectual property
                                     </h4>
-                                    <p class="text-xs text-gray-600 dark:text-gray-300">
+                                    <p
+                                        class="text-xs text-gray-600 dark:text-gray-300"
+                                    >
                                         Only post content you own or have
                                         permission to use.
                                     </p>
@@ -244,7 +298,9 @@
                                     >
                                         Be authentic
                                     </h4>
-                                    <p class="text-xs text-gray-600 dark:text-gray-300">
+                                    <p
+                                        class="text-xs text-gray-600 dark:text-gray-300"
+                                    >
                                         No spam, fake accounts, or misleading
                                         information.
                                     </p>
@@ -252,7 +308,9 @@
                             </div>
                         </div>
 
-                        <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <div
+                            class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700"
+                        >
                             <router-link
                                 to="/community-guidelines"
                                 class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
@@ -263,12 +321,18 @@
                     </div>
                 </div>
 
-                <h2 class="hidden tracking-tight font-light mb-4 text-gray-900 dark:text-gray-100">
+                <h2
+                    class="hidden tracking-tight font-light mb-4 text-gray-900 dark:text-gray-100"
+                >
                     Appeal a decision
                 </h2>
-                <div class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+                <div
+                    class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6"
+                >
                     <div class="p-6">
-                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                        <p
+                            class="text-sm text-gray-600 dark:text-gray-300 mb-4"
+                        >
                             If you believe a warning or restriction was applied
                             incorrectly, you can request a review of the
                             decision.
@@ -276,18 +340,22 @@
 
                         <div class="space-y-3 mb-4">
                             <div class="text-sm">
-                                <span class="font-medium text-gray-800 dark:text-gray-100"
+                                <span
+                                    class="font-medium text-gray-800 dark:text-gray-100"
                                     >Response time:</span
                                 >
-                                <span class="text-gray-600 dark:text-gray-300 ml-1"
+                                <span
+                                    class="text-gray-600 dark:text-gray-300 ml-1"
                                     >Usually within 2-3 business days</span
                                 >
                             </div>
                             <div class="text-sm">
-                                <span class="font-medium text-gray-800 dark:text-gray-100"
+                                <span
+                                    class="font-medium text-gray-800 dark:text-gray-100"
                                     >What to include:</span
                                 >
-                                <span class="text-gray-600 dark:text-gray-300 ml-1"
+                                <span
+                                    class="text-gray-600 dark:text-gray-300 ml-1"
                                     >Specific details about why you believe the
                                     decision was incorrect</span
                                 >
@@ -302,44 +370,64 @@
                     </div>
                 </div>
 
-                <h2 class="tracking-tight font-light mb-4 text-gray-900 dark:text-gray-100">Get help</h2>
+                <h2
+                    class="tracking-tight font-light mb-4 text-gray-900 dark:text-gray-100"
+                >
+                    Get help
+                </h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+                    >
                         <div class="p-4 flex items-center justify-between">
                             <div class="flex items-center gap-3">
                                 <i
                                     class="bx bx-help-circle text-blue-500 text-[20px]"
                                 ></i>
                                 <div>
-                                    <h3 class="font-medium text-gray-800 dark:text-gray-100">
+                                    <h3
+                                        class="font-medium text-gray-800 dark:text-gray-100"
+                                    >
                                         Help Center
                                     </h3>
-                                    <p class="text-xs text-gray-600 dark:text-gray-300">
+                                    <p
+                                        class="text-xs text-gray-600 dark:text-gray-300"
+                                    >
                                         Find answers to common questions
                                     </p>
                                 </div>
                             </div>
-                            <i class="bx bx-chevron-right text-gray-400 dark:text-gray-500"></i>
+                            <i
+                                class="bx bx-chevron-right text-gray-400 dark:text-gray-500"
+                            ></i>
                         </div>
                     </div>
 
                     <router-link to="/contact">
-                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                        <div
+                            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+                        >
                             <div class="p-4 flex items-center justify-between">
                                 <div class="flex items-center gap-3">
                                     <i
                                         class="bx bx-message text-green-500 text-[20px]"
                                     ></i>
                                     <div>
-                                        <h3 class="font-medium text-gray-800 dark:text-gray-100">
+                                        <h3
+                                            class="font-medium text-gray-800 dark:text-gray-100"
+                                        >
                                             Contact Support
                                         </h3>
-                                        <p class="text-xs text-gray-600 dark:text-gray-300">
+                                        <p
+                                            class="text-xs text-gray-600 dark:text-gray-300"
+                                        >
                                             Get personalized help
                                         </p>
                                     </div>
                                 </div>
-                                <i class="bx bx-chevron-right text-gray-400 dark:text-gray-500"></i>
+                                <i
+                                    class="bx bx-chevron-right text-gray-400 dark:text-gray-500"
+                                ></i>
                             </div>
                         </div>
                     </router-link>
