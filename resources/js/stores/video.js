@@ -4,6 +4,10 @@ import axios from "~/plugins/axios";
 export const useVideoStore = defineStore("video", {
     state: () => ({
         currentVideo: null,
+        likesNextCursor: null,
+        likesHasMore: false,
+        sharesNextCursor: null,
+        sharesHasMore: false,
         error: null,
     }),
 
@@ -139,6 +143,72 @@ export const useVideoStore = defineStore("video", {
                 return res.data;
             } catch (error) {
                 console.error("Error fetching autocomplete:", error);
+                throw error;
+            }
+        },
+
+        async getVideoLikes(videoId, cursor = null) {
+            const axiosInstance = axios.getAxiosInstance();
+            try {
+                const res = await axiosInstance.get(
+                    `/api/v1/video/likes/${videoId}`,
+                    {
+                        params: this.likesNextCursor
+                            ? { cursor: this.likesNextCursor }
+                            : {},
+                    },
+                );
+                this.likesHasMore = res?.data?.meta?.next_cursor != null;
+                this.likesNextCursor = res?.data?.meta?.next_cursor;
+                return res.data;
+            } catch (error) {
+                console.error("Error fetching video likes:", error);
+                throw error;
+            }
+        },
+
+        async getVideoShares(videoId, page = 1) {
+            const axiosInstance = axios.getAxiosInstance();
+            try {
+                const res = await axiosInstance.get(
+                    `/api/v1/video/shares/${videoId}`,
+                    {
+                        params: this.sharesNextCursor
+                            ? { cursor: this.sharesNextCursor }
+                            : {},
+                    },
+                );
+                this.sharesHasMore = res?.data?.meta?.next_cursor != null;
+                this.sharesNextCursor = res?.data?.meta?.next_cursor;
+                return res.data;
+            } catch (error) {
+                console.error("Error fetching video shares:", error);
+                throw error;
+            }
+        },
+
+        async followUser(userId) {
+            const axiosInstance = axios.getAxiosInstance();
+            try {
+                const res = await axiosInstance.post(
+                    `/api/v1/account/follow/${userId}`,
+                );
+                return res.data;
+            } catch (error) {
+                console.error("Error following user:", error);
+                throw error;
+            }
+        },
+
+        async unfollowUser(userId) {
+            const axiosInstance = axios.getAxiosInstance();
+            try {
+                const res = await axiosInstance.post(
+                    `/api/v1/account/unfollow/${userId}`,
+                );
+                return res.data;
+            } catch (error) {
+                console.error("Error unfollowing user:", error);
                 throw error;
             }
         },

@@ -19,6 +19,8 @@ use App\Http\Resources\CommentResource;
 use App\Http\Resources\HashtagResource;
 use App\Http\Resources\ProfileResource;
 use App\Http\Resources\VideoCaptionEditResource;
+use App\Http\Resources\VideoLikeResource;
+use App\Http\Resources\VideoRepostResource;
 use App\Http\Resources\VideoResource;
 use App\Jobs\Federation\DeliverCommentLikeActivity;
 use App\Jobs\Federation\DeliverCommentReplyLikeActivity;
@@ -39,6 +41,7 @@ use App\Models\Profile;
 use App\Models\Video;
 use App\Models\VideoCaptionEdit;
 use App\Models\VideoLike;
+use App\Models\VideoRepost;
 use App\Services\AccountService;
 use App\Services\ConfigService;
 use App\Services\FederationDispatcher;
@@ -866,6 +869,62 @@ class VideoController extends Controller
         }
 
         return (new CommentResource($comment))->toArray($request);
+    }
+
+    public function showVideoLikes(Request $request, $id)
+    {
+        $user = $request->user();
+        $pid = $user->profile_id;
+
+        $video = Video::published()->findOrFail($id);
+        $isAuth = $video->profile_id == $pid || $user->is_admin;
+
+        $likes = VideoLike::whereVideoId($id);
+
+        if ($isAuth) {
+            $res = $likes->leftJoin('followers as auth_following', function ($join) use ($pid) {
+                $join->on('auth_following.following_id', '=', 'video_likes.profile_id')
+                    ->where('auth_following.profile_id', '=', $pid);
+            })
+                ->select([
+                    'video_likes.*',
+                    DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
+                ])
+                ->orderBy('video_likes.created_at', 'desc')
+                ->cursorPaginate(10);
+        } else {
+            $res = $likes->limit(10)->get();
+        }
+
+        return VideoLikeResource::collection($res);
+    }
+
+    public function showVideoShares(Request $request, $id)
+    {
+        $user = $request->user();
+        $pid = $user->profile_id;
+
+        $video = Video::published()->findOrFail($id);
+        $isAuth = $video->profile_id == $pid || $user->is_admin;
+
+        $likes = VideoRepost::whereVideoId($id);
+
+        if ($isAuth) {
+            $res = $likes->leftJoin('followers as auth_following', function ($join) use ($pid) {
+                $join->on('auth_following.following_id', '=', 'video_reposts.profile_id')
+                    ->where('auth_following.profile_id', '=', $pid);
+            })
+                ->select([
+                    'video_reposts.*',
+                    DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
+                ])
+                ->orderBy('video_reposts.created_at', 'desc')
+                ->cursorPaginate(10);
+        } else {
+            $res = $likes->limit(10)->get();
+        }
+
+        return VideoRepostResource::collection($res);
     }
 
     private function escapeLike(string $value): string

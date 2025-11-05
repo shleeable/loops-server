@@ -184,6 +184,8 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/video/like/{id}', [VideoController::class, 'like'])->middleware('auth:web,api');
     Route::post('/v1/video/unlike/{id}', [VideoController::class, 'unlike'])->middleware('auth:web,api');
     Route::get('/v1/video/history/{id}', [VideoController::class, 'showVideoHistory'])->middleware('throttle:api');
+    Route::get('/v1/video/likes/{id}', [VideoController::class, 'showVideoLikes'])->middleware('auth:web,api');
+    Route::get('/v1/video/shares/{id}', [VideoController::class, 'showVideoShares'])->middleware('auth:web,api');
     Route::get('/v1/video/{id}', [WebPublicController::class, 'showVideo'])->middleware('throttle:api');
 
     // Autocomplete

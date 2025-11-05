@@ -327,11 +327,12 @@
                                 "
                             ></span>
                         </button>
-                        <span
-                            class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
+                        <button
+                            @click="openInteractionModal('likes')"
+                            class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold hover:text-[#F02C56] dark:hover:text-[#F02C56] transition-colors cursor-pointer"
                         >
                             {{ formatCount(currentVideo.likes) }}
-                        </span>
+                        </button>
                     </div>
 
                     <div class="pb-4 text-center flex items-center">
@@ -356,11 +357,12 @@
                         >
                             <ShareIcon class="h-4 w-4 text-gray-400" />
                         </button>
-                        <span
-                            class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
+                        <button
+                            @click="openInteractionModal('shares')"
+                            class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold hover:text-[#F02C56] dark:hover:text-[#F02C56] transition-colors cursor-pointer"
                         >
                             {{ formatCount(currentVideo.shares) }}
-                        </span>
+                        </button>
                     </div>
 
                     <div class="pb-4 text-center flex items-center">
@@ -430,6 +432,13 @@
         />
 
         <EditHistoryModal />
+
+        <InteractionModal
+            :is-open="showInteractionModal"
+            :video-id="currentVideo?.id"
+            :initial-tab="InteractionModalTab"
+            @close="closeInteractionModal"
+        />
     </div>
 </template>
 
@@ -465,6 +474,7 @@ import UrlCopyInput from "@/components/Form/UrlCopyInput.vue";
 import Comments from "@/components/Status/Comments.vue";
 import ReportModal from "@/components/ReportModal.vue";
 import EditHistoryModal from "@/components/Status/EditHistoryModal.vue";
+import InteractionModal from "@/components/Status/InteractionModal.vue";
 import { useReportModal } from "@/composables/useReportModal";
 const { openVideoHistory } = useEditHistory();
 
@@ -485,10 +495,25 @@ const isVideoLoading = ref(true);
 const showEditModal = ref(false);
 const showMenu = ref(false);
 const showSensitiveContent = ref(false);
+const showInteractionModal = ref(false);
+const InteractionModalTab = ref("likes");
 const error = ref(null);
 
 const currentVideo = computed(() => videoStore.video);
 const userId = computed(() => authStore.id);
+
+const openInteractionModal = (tab) => {
+    if (!authStore.isAuthenticated) {
+        authStore.openAuthModal("login");
+        return;
+    }
+    InteractionModalTab.value = tab;
+    showInteractionModal.value = true;
+};
+
+const closeInteractionModal = () => {
+    showInteractionModal.value = false;
+};
 
 const setError = (type, title, message) => {
     error.value = { type, title, message };
