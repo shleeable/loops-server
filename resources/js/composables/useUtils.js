@@ -413,6 +413,9 @@ export function useUtils() {
         tags = [],
         options = {},
     ) => {
+        if (!caption || !caption.length) {
+            return;
+        }
         const segments = parseCaption(caption, mentions, tags);
         return renderCaption(segments, options);
     };
