@@ -1550,6 +1550,7 @@ const handleLogin = async () => {
         const res = await authStore.login({
             email: form.value.email,
             password: form.value.password,
+            remember: form.value.remember,
             captcha_type: form.value.captcha_type,
             captcha_token: form.value.captcha_token,
         });
