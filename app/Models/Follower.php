@@ -36,7 +36,7 @@ class Follower extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['profile_id', 'following_id'];
+    protected $fillable = ['profile_id', 'following_id', 'profile_is_local', 'following_is_local'];
 
     public $visible = ['profile_id', 'following_id'];
 
