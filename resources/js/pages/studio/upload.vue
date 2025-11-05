@@ -83,7 +83,7 @@
                         <input
                             ref="fileInput"
                             type="file"
-                            accept="video/mp4"
+                            accept="video/mp4,video/mov,video/quicktime"
                             @change="handleFileSelect"
                             class="hidden"
                         />
@@ -804,7 +804,7 @@
                                             class="w-full h-full object-cover"
                                             playsinline
                                             muted
-                                            :controls="false"
+                                            :controls="true"
                                         ></video>
 
                                         <div
@@ -945,6 +945,51 @@
             </div>
         </Transition>
     </Teleport>
+
+    <Teleport to="body">
+        <Transition
+            enter-active-class="transition-opacity duration-300"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition-opacity duration-300"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div
+                v-if="isConverting"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm"
+            >
+                <div class="text-center space-y-6">
+                    <div class="flex justify-center">
+                        <Spinner size="xl" speed="slow" />
+                    </div>
+
+                    <div class="space-y-3">
+                        <h2 class="text-2xl font-semibold text-white">
+                            Optimizing your Loop
+                        </h2>
+                        <p class="text-gray-300 text-lg">
+                            Please don't close this window...
+                        </p>
+
+                        <div class="w-80 mx-auto">
+                            <div
+                                class="bg-gray-700 rounded-full h-3 overflow-hidden"
+                            >
+                                <div
+                                    class="bg-gradient-to-r from-[#ed5b7bff] to-[#F02C56] h-full transition-all duration-300 ease-out"
+                                    :style="{ width: `${transcodeProgress}%` }"
+                                ></div>
+                            </div>
+                            <p class="text-white text-sm mt-2 font-medium">
+                                {{ transcodeProgress }}%
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+    </Teleport>
 </template>
 
 <script setup>
@@ -961,6 +1006,18 @@ import {
 import { storeToRefs } from "pinia";
 import { useRouter, onBeforeRouteLeave } from "vue-router";
 import { useAlertModal } from "@/composables/useAlertModal.js";
+import {
+    Input,
+    ALL_FORMATS,
+    BlobSource,
+    UrlSource,
+    Output,
+    BufferTarget,
+    Mp4OutputFormat,
+    Conversion,
+    QUALITY_VERY_HIGH,
+    QUALITY_HIGH,
+} from "mediabunny";
 
 const router = useRouter();
 const axios = inject("axios");
@@ -1003,9 +1060,13 @@ const isConverting = ref(false);
 const progress = ref(0);
 const needsConversion = ref(true);
 const convertedFile = ref(null);
+const transcodeProgress = ref(0);
 
 const ffmpegInstance = ref(null);
 const isFFmpegLoaded = ref(false);
+
+let currentConversion = null;
+let currentIntervalId = null;
 
 const suggestionCache = reactive({
     hashtags: new Map(),
@@ -1408,13 +1469,108 @@ const checkVideoResolution = async (file) => {
     });
 };
 
+const handleTranscode = async () => {
+    if (isConverting.value) {
+        return null;
+    }
+
+    isConverting.value = true;
+
+    try {
+        const source = new BlobSource(uploadedFile.value);
+        const input = new Input({
+            source,
+            formats: ALL_FORMATS,
+        });
+
+        const fileSize = await source.getSize();
+
+        const output = new Output({
+            target: new BufferTarget(),
+            format: new Mp4OutputFormat(),
+        });
+
+        const quality = fileSize > 50000000 ? QUALITY_HIGH : 1500000;
+
+        currentConversion = await Conversion.init({
+            input,
+            output,
+            video: {
+                width: 1080,
+                height: 1920,
+                fit: "contain",
+                bitrate: quality,
+                frameRate: 30,
+            },
+            audio: {
+                bitrate: 32e3,
+            },
+            trim: {
+                start: 0,
+                end: 60,
+            },
+        });
+
+        currentConversion.onProgress = (newProgress) =>
+            (transcodeProgress.value = Math.floor(newProgress * 100));
+
+        const fileDuration = await input.computeDuration();
+        const startTime = performance.now();
+
+        const updateProgress = () => {
+            const now = performance.now();
+            const elapsedSeconds = (now - startTime) / 1000;
+            const factor =
+                fileDuration / (elapsedSeconds / transcodeProgress.value);
+        };
+
+        currentIntervalId = window.setInterval(updateProgress, 1000 / 60);
+
+        await currentConversion.execute();
+
+        if (currentIntervalId) {
+            clearInterval(currentIntervalId);
+        }
+
+        const buffer = output.target.buffer;
+
+        if (buffer) {
+            const blob = new Blob([buffer], { type: output.format.mimeType });
+
+            console.log(`Original size: ${fileSize}`);
+            console.log(`Transcoded size: ${buffer.byteLength}`);
+            console.log(
+                `${((buffer.byteLength / fileSize) * 100).toPrecision(3)}% of original size`,
+            );
+
+            return blob;
+        }
+
+        return null;
+    } finally {
+        isConverting.value = false;
+        if (currentIntervalId) {
+            clearInterval(currentIntervalId);
+        }
+    }
+};
+
 const handleSubmit = async () => {
     if (!canSubmit.value || isSubmitting.value) return;
+
+    const transcodedVideo = await handleTranscode();
+
+    if (!transcodedVideo) {
+        await alertModal(
+            "Transcoding Failed",
+            "Failed to transcode video. Please try again.",
+        );
+        return;
+    }
 
     isSubmitting.value = true;
     uploadProgress.value = 0;
 
-    const videoToUpload = uploadedFile.value;
     let progressInterval = null;
     let hasReceivedResponse = false;
 
@@ -1445,7 +1601,7 @@ const handleSubmit = async () => {
 
     try {
         const formData = new FormData();
-        formData.append("video", videoToUpload);
+        formData.append("video", transcodedVideo, "transcoded-video.mp4");
         formData.append("description", description.value);
         formData.append("alt_text", altText.value);
         formData.append("lang", settings.lang);
