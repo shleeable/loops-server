@@ -6,7 +6,7 @@
             :item-component="VideoPlayer"
             :get-item-props="getVideoProps"
             :get-item-key="getVideoKey"
-            :auto-play="true"
+            :auto-play="hasInteracted"
             :scroll-threshold="1.5"
             :snap-sensitivity="50"
             @item-visible="onVideoVisible"
@@ -30,7 +30,8 @@ const authStore = inject("authStore");
 const activeFeed = shallowRef(null);
 
 // Get the global interaction state (shared with SnapScrollFeed)
-const { handleFirstInteraction } = useFeedInteraction();
+const { hasInteracted, handleFirstInteraction, globalMuted } =
+    useFeedInteraction();
 
 watch(
     () => authStore.authenticated,
@@ -63,6 +64,8 @@ const getVideoProps = (post, index) => ({
     index: index,
     isSensitive: post?.is_sensitive,
     altText: post?.media.alt_text,
+    autoPlay: hasInteracted.value,
+    muted: globalMuted.value,
 });
 
 const getVideoKey = (post) => post.id;
