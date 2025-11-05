@@ -2,7 +2,7 @@
     <MainLayout>
         <div
             v-if="!isLoading && !error && profileStore.id"
-            class="pt-[30px] px-5 overflow-hidden"
+            class="pt-[30px] px-5"
         >
             <ProfileHeader />
 
