@@ -47,6 +47,8 @@ if ($videoData) {
     <meta name="twitter:title" content="{{ $videoTitle }}" />
     <meta name="twitter:description" content="{{ $videoDesc }}" />
     <meta name="twitter:image" content="{{ $videoThumbnail }}" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:logo" content="{{ url('/nav-logo.png') }}" />
     <meta property="video:release_date" content="{{ $videoData['created_at'] ?? '' }}" />
 
     <meta property="article:author" content="{{ url('/@' . $authorUsername) }}" />
