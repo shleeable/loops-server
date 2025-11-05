@@ -38,6 +38,8 @@ $profileAvatar = $profile && $profile->avatar ? $profile->avatar : url('/storage
     <meta property="og:title" content="{{ $profileTitle }}" />
     <meta property="og:description" content="{{ $profileDesc }}" />
     <meta property="og:type" content="profile" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:logo" content="{{ url('/nav-logo.png') }}" />
     <meta property="og:url" content="{{ $profileUrl }}" />
     <meta property="og:image" content="{{ $profileAvatar }}" />
     @if($profile)<meta property="profile:username" content="{{ $profile->username }}" />@endif
