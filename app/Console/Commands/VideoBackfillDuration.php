@@ -13,7 +13,7 @@ class VideoBackfillDuration extends Command
      *
      * @var string
      */
-    protected $signature = 'app:video-backfill-duration';
+    protected $signature = 'app:video-backfill-duration {--limit=10}';
 
     /**
      * The console command description.
@@ -27,8 +27,10 @@ class VideoBackfillDuration extends Command
      */
     public function handle()
     {
-        $videos = Video::published()->whereNull('duration')->take(10)->get();
+        $limit = (int) $this->option('limit');
+        $videos = Video::published()->whereNull('duration')->take($limit)->get();
 
+        $this->info('Backfilling for '.$limit.' videos...');
         foreach ($videos as $video) {
             try {
                 $media = FFMpeg::fromDisk('s3')->open($video->vid);
@@ -39,9 +41,11 @@ class VideoBackfillDuration extends Command
                 }
                 $video->saveQuietly();
                 FFMpeg::cleanupTemporaryFiles();
+                $this->info('Backfilled '.$video->id);
             } catch (\Exception $e) {
 
             }
         }
+        $this->info('Finished.');
     }
 }
