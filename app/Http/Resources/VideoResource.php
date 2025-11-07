@@ -48,6 +48,7 @@ class VideoResource extends JsonResource
                 'src_url' => $mediaUrl,
                 'hls_url' => null,
                 'alt_text' => $this->alt_text,
+                'duration' => $this->duration,
             ],
             'pinned' => $this->is_pinned,
             'likes' => $this->likes,
