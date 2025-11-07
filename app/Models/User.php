@@ -100,6 +100,18 @@ class User extends Authenticatable implements OAuthenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    /**
+     * Status Bitmask
+     * 0 = Unused
+     * 1 = Active
+     * 2 = Reserved
+     * 3 = Reserved
+     * 4 = Reserved
+     * 5 = Reserved
+     * 6 = Reserved
+     * 7 = Account disabled
+     * 8 = Account pending deletion
+     **/
     protected $fillable = [
         'name',
         'username',
