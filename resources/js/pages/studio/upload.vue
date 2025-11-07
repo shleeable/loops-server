@@ -1469,9 +1469,23 @@ const checkVideoResolution = async (file) => {
     });
 };
 
+const isSafari = (() => {
+    if (typeof navigator === "undefined") {
+        return false;
+    }
+    const ua = navigator.userAgent;
+    const isSafariLike =
+        /Safari/.test(ua) && !/Chrome|Chromium|Edg|OPR/.test(ua);
+    return isSafariLike;
+})();
+
 const handleTranscode = async () => {
     if (isConverting.value) {
         return null;
+    }
+
+    if (isSafari) {
+        return uploadedFile.value;
     }
 
     isConverting.value = true;
