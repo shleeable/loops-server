@@ -1,14 +1,16 @@
 <template>
     <StudioLayout>
-        <div class="w-full min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div class="w-full min-h-screen bg-gray-50 dark:bg-gray-950">
             <div
                 v-if="showWarning"
-                class="bg-white border-b border-gray-200 px-6 py-4"
+                class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4"
             >
                 <div
                     class="flex items-center justify-between max-w-7xl mx-auto"
                 >
-                    <div class="flex items-center text-orange-600">
+                    <div
+                        class="flex items-center text-orange-600 dark:text-orange-400"
+                    >
                         <svg
                             class="w-5 h-5 mr-2"
                             fill="currentColor"
@@ -25,13 +27,13 @@
                     <div class="flex space-x-3">
                         <button
                             @click="showWarning = false"
-                            class="text-gray-600 hover:text-gray-800"
+                            class="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                         >
                             {{ $t("common.discard") }}
                         </button>
                         <button
                             @click="showWarning = false"
-                            class="text-gray-900 font-medium hover:text-gray-700"
+                            class="text-gray-900 dark:text-gray-100 font-medium hover:text-gray-700 dark:hover:text-gray-300"
                         >
                             {{ $t("common.continue") }}
                         </button>
@@ -45,14 +47,17 @@
                         @drop="handleDrop"
                         @dragover.prevent
                         @dragenter.prevent
-                        class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-gray-400 transition-colors"
-                        :class="{ 'border-blue-400 bg-blue-50': isDragging }"
+                        class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-12 text-center hover:border-gray-400 dark:hover:border-gray-600 transition-colors bg-white dark:bg-gray-800"
+                        :class="{
+                            'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-950/30':
+                                isDragging,
+                        }"
                         @dragenter="isDragging = true"
                         @dragleave="isDragging = false"
                     >
                         <div class="mb-6">
                             <svg
-                                class="w-16 h-16 mx-auto text-gray-400"
+                                class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -66,10 +71,12 @@
                             </svg>
                         </div>
 
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                        <h3
+                            class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2"
+                        >
                             {{ $t("studio.selectVideoToUpload") }}
                         </h3>
-                        <p class="text-gray-600 mb-6">
+                        <p class="text-gray-600 dark:text-gray-400 mb-6">
                             {{ $t("studio.orDragAndDropItHere") }}
                         </p>
 
@@ -93,7 +100,7 @@
                         <div class="text-center">
                             <div class="flex items-center justify-center mb-3">
                                 <svg
-                                    class="w-6 h-6 text-gray-600"
+                                    class="w-6 h-6 text-gray-600 dark:text-gray-400"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -106,10 +113,12 @@
                                     />
                                 </svg>
                             </div>
-                            <h4 class="font-medium text-gray-900 mb-2">
+                            <h4
+                                class="font-medium text-gray-900 dark:text-gray-100 mb-2"
+                            >
                                 {{ $t("studio.sizeAndDuration") }}
                             </h4>
-                            <p class="text-sm text-gray-600">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
                                 {{ $t("studio.maximumSize") }}
                                 {{ appConfig.media.max_video_size }}
                                 {{ $t("studio.mbVideoDuration") }}
@@ -121,7 +130,7 @@
                         <div class="text-center">
                             <div class="flex items-center justify-center mb-3">
                                 <svg
-                                    class="w-6 h-6 text-gray-600"
+                                    class="w-6 h-6 text-gray-600 dark:text-gray-400"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -134,10 +143,12 @@
                                     />
                                 </svg>
                             </div>
-                            <h4 class="font-medium text-gray-900 mb-2">
+                            <h4
+                                class="font-medium text-gray-900 dark:text-gray-100 mb-2"
+                            >
                                 {{ $t("studio.fileFormats") }}
                             </h4>
-                            <p class="text-sm text-gray-600">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
                                 {{ $t("studio.recommended") }}
                                 ".{{
                                     appConfig.media.allowed_video_formats.join(
@@ -152,7 +163,7 @@
                         <div class="text-center">
                             <div class="flex items-center justify-center mb-3">
                                 <svg
-                                    class="w-6 h-6 text-gray-600"
+                                    class="w-6 h-6 text-gray-600 dark:text-gray-400"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -165,10 +176,12 @@
                                     />
                                 </svg>
                             </div>
-                            <h4 class="font-medium text-gray-900 mb-2">
+                            <h4
+                                class="font-medium text-gray-900 dark:text-gray-100 mb-2"
+                            >
                                 {{ $t("studio.videoResolutions") }}
                             </h4>
-                            <p class="text-sm text-gray-600">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
                                 {{ $t("studio.videoResolutionsMessage") }}
                             </p>
                         </div>
@@ -176,7 +189,7 @@
                         <div class="text-center">
                             <div class="flex items-center justify-center mb-3">
                                 <svg
-                                    class="w-6 h-6 text-gray-600"
+                                    class="w-6 h-6 text-gray-600 dark:text-gray-400"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -189,10 +202,12 @@
                                     />
                                 </svg>
                             </div>
-                            <h4 class="font-medium text-gray-900 mb-2">
+                            <h4
+                                class="font-medium text-gray-900 dark:text-gray-100 mb-2"
+                            >
                                 {{ $t("studio.aspectRatios") }}
                             </h4>
-                            <p class="text-sm text-gray-600">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
                                 {{ $t("studio.aspectRatiosMessage") }}
                             </p>
                         </div>
@@ -202,24 +217,26 @@
                 <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-2">
                         <div
-                            class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6"
+                            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6"
                         >
                             <div class="flex items-center">
                                 <div class="flex items-center">
                                     <div
                                         class="w-3 h-3 bg-green-500 rounded-full mr-3"
                                     ></div>
-                                    <span class="font-medium">{{
-                                        uploadedFile.name
-                                    }}</span>
-                                    <span class="text-sm text-gray-500 ml-2"
+                                    <span
+                                        class="font-medium text-gray-900 dark:text-gray-100"
+                                        >{{ uploadedFile.name }}</span
+                                    >
+                                    <span
+                                        class="text-sm text-gray-500 dark:text-gray-400 ml-2"
                                         >({{
                                             formatFileSize(uploadedFile.size)
                                         }})</span
                                     >
                                 </div>
                                 <button
-                                    class="ml-auto text-gray-400 hover:text-gray-600"
+                                    class="ml-auto text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                                 >
                                     <span class="text-sm">{{
                                         $t("studio.replace")
@@ -227,24 +244,26 @@
                                 </button>
                             </div>
                             <div
-                                class="w-full bg-green-200 rounded-full h-2 mt-3"
+                                class="w-full bg-green-200 dark:bg-green-900/30 rounded-full h-2 mt-3"
                             >
                                 <div
-                                    class="bg-green-500 h-2 rounded-full w-full"
+                                    class="bg-green-500 dark:bg-green-600 h-2 rounded-full w-full"
                                 ></div>
                             </div>
                         </div>
 
                         <div
-                            class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+                            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
                         >
-                            <h3 class="text-lg font-medium mb-6">
+                            <h3
+                                class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-6"
+                            >
                                 {{ $t("studio.details") }}
                             </h3>
 
                             <div class="mb-6">
                                 <label
-                                    class="block text-sm font-medium text-gray-700 mb-2"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                     >{{ $t("studio.caption") }}</label
                                 >
                                 <div class="relative">
@@ -259,19 +278,19 @@
                                             )
                                         "
                                         rows="4"
-                                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                        class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                                         maxlength="2200"
                                     ></textarea>
 
                                     <div
                                         v-if="showAutocomplete"
-                                        class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1"
+                                        class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg mt-1"
                                         :style="autocompletePosition"
                                     >
                                         <div class="max-h-48 overflow-y-auto">
                                             <div
                                                 v-if="isLoadingSuggestions"
-                                                class="px-3 py-2 text-gray-500 text-sm flex items-center"
+                                                class="px-3 py-2 text-gray-500 dark:text-gray-400 text-sm flex items-center"
                                             >
                                                 <svg
                                                     class="animate-spin -ml-1 mr-2 h-4 w-4"
@@ -307,7 +326,7 @@
                                                         0 &&
                                                     autocompleteQuery
                                                 "
-                                                class="px-3 py-2 text-gray-500 text-sm"
+                                                class="px-3 py-2 text-gray-500 dark:text-gray-400 text-sm"
                                             >
                                                 {{ $t("studio.no") }}
                                                 {{
@@ -325,9 +344,9 @@
                                                 ) in filteredSuggestions"
                                                 :key="index"
                                                 @click="selectSuggestion(item)"
-                                                class="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                                                class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center"
                                                 :class="{
-                                                    'bg-blue-50':
+                                                    'bg-blue-50 dark:bg-blue-950/50':
                                                         index ===
                                                         selectedSuggestionIndex,
                                                 }"
@@ -337,7 +356,7 @@
                                                         autocompleteType ===
                                                         'mention'
                                                     "
-                                                    class="w-8 h-8 bg-gray-300 rounded-full mr-3 flex items-center justify-center overflow-hidden"
+                                                    class="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full mr-3 flex items-center justify-center overflow-hidden"
                                                 >
                                                     <img
                                                         v-if="item.avatar"
@@ -351,7 +370,7 @@
                                                     />
                                                     <span
                                                         v-else
-                                                        class="text-xs font-medium"
+                                                        class="text-xs font-medium text-gray-700 dark:text-gray-300"
                                                         >{{
                                                             item.username
                                                                 .charAt(0)
@@ -361,14 +380,17 @@
                                                 </div>
                                                 <div
                                                     v-else
-                                                    class="w-8 h-8 bg-blue-100 rounded-full mr-3 flex items-center justify-center"
+                                                    class="w-8 h-8 bg-blue-100 dark:bg-blue-900/40 rounded-full mr-3 flex items-center justify-center"
                                                 >
-                                                    <span class="text-blue-600"
+                                                    <span
+                                                        class="text-blue-600 dark:text-blue-400"
                                                         >#</span
                                                     >
                                                 </div>
                                                 <div>
-                                                    <div class="font-medium">
+                                                    <div
+                                                        class="font-medium text-gray-900 dark:text-gray-100"
+                                                    >
                                                         {{
                                                             autocompleteType ===
                                                             "hashtag"
@@ -379,7 +401,7 @@
                                                     <div class="flex gap-3">
                                                         <div
                                                             v-if="item.count"
-                                                            class="text-xs text-gray-500"
+                                                            class="text-xs text-gray-500 dark:text-gray-400"
                                                         >
                                                             {{ item.count }}
                                                             posts
@@ -388,7 +410,7 @@
                                                             v-if="
                                                                 item.post_count
                                                             "
-                                                            class="text-xs text-gray-500"
+                                                            class="text-xs text-gray-500 dark:text-gray-400"
                                                         >
                                                             {{
                                                                 item.post_count
@@ -399,7 +421,7 @@
                                                             v-if="
                                                                 item.follower_count
                                                             "
-                                                            class="text-xs text-gray-500"
+                                                            class="text-xs text-gray-500 dark:text-gray-400"
                                                         >
                                                             {{
                                                                 item.follower_count
@@ -413,10 +435,7 @@
                                     </div>
 
                                     <div
-                                        class="absolute bottom-2 left-2 text-xs text-gray-400"
-                                    ></div>
-                                    <div
-                                        class="absolute bottom-2 right-2 text-xs text-gray-400"
+                                        class="absolute bottom-2 right-2 text-xs text-gray-400 dark:text-gray-500"
                                     >
                                         {{ description.length }}/240
                                     </div>
@@ -424,13 +443,13 @@
                                 <div class="flex space-x-4 -mt-1">
                                     <button
                                         @click="insertHashtag"
-                                        class="text-gray-600 hover:text-gray-700 font-bold text-xs cursor-pointer"
+                                        class="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-bold text-xs cursor-pointer"
                                     >
                                         # {{ $t("studio.hashtag") }}
                                     </button>
                                     <button
                                         @click="insertMention"
-                                        class="text-gray-600 hover:text-gray-700 font-bold text-xs cursor-pointer"
+                                        class="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-bold text-xs cursor-pointer"
                                     >
                                         @ {{ $t("studio.mention") }}
                                     </button>
@@ -439,7 +458,7 @@
 
                             <div class="mb-6">
                                 <label
-                                    class="block text-sm font-medium text-gray-700 mb-2"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                     >{{ $t("studio.altText") }}</label
                                 >
                                 <div class="relative">
@@ -451,21 +470,18 @@
                                             )
                                         "
                                         rows="2"
-                                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                        class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                                         maxlength="2000"
                                     ></textarea>
 
                                     <div
-                                        class="absolute bottom-2 left-2 text-xs text-gray-400"
-                                    ></div>
-                                    <div
-                                        class="absolute bottom-2 right-2 text-xs text-gray-400"
+                                        class="absolute bottom-2 right-2 text-xs text-gray-400 dark:text-gray-500"
                                     >
                                         {{ altText.length }}/2000
                                     </div>
                                 </div>
                                 <p
-                                    class="text-sm text-gray-500 flex items-start gap-1"
+                                    class="text-sm text-gray-500 dark:text-gray-400 flex items-start gap-1"
                                 >
                                     <svg
                                         class="w-4 h-4 mt-0.5 flex-shrink-0"
@@ -486,14 +502,14 @@
 
                             <div class="mb-6">
                                 <label
-                                    class="block text-sm font-medium text-gray-700 mb-2"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                 >
                                     {{ $t("studio.language") }}
                                 </label>
                                 <div class="relative">
                                     <select
                                         v-model="settings.lang"
-                                        class="block w-full px-4 py-2 pr-8 text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                        class="block w-full px-4 py-2 pr-8 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                     >
                                         <option
                                             v-for="lang in languages"
@@ -507,7 +523,7 @@
                                         class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none"
                                     >
                                         <svg
-                                            class="w-5 h-5 text-gray-400"
+                                            class="w-5 h-5 text-gray-400 dark:text-gray-500"
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -521,19 +537,21 @@
                                         </svg>
                                     </div>
                                 </div>
-                                <p class="mt-2 text-sm text-gray-500">
+                                <p
+                                    class="mt-2 text-sm text-gray-500 dark:text-gray-400"
+                                >
                                     {{ $t("studio.selectLanguageHelp") }}
                                 </p>
                             </div>
 
                             <div class="hidden mb-6">
                                 <label
-                                    class="block text-sm font-medium text-gray-700 mb-2"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                     >{{ $t("studio.customCover") }}</label
                                 >
                                 <div class="flex items-center space-x-4">
                                     <div
-                                        class="relative w-24 h-32 bg-gray-200 rounded-md flex items-center justify-center overflow-hidden"
+                                        class="relative w-24 h-32 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center overflow-hidden"
                                     >
                                         <img
                                             v-if="coverImage"
@@ -543,7 +561,7 @@
                                         />
                                         <svg
                                             v-else
-                                            class="w-8 h-8 text-gray-400"
+                                            class="w-8 h-8 text-gray-400 dark:text-gray-500"
                                             fill="currentColor"
                                             viewBox="0 0 20 20"
                                         >
@@ -576,7 +594,7 @@
                                     <div class="flex flex-col space-y-2">
                                         <button
                                             @click="$refs.coverInput.click()"
-                                            class="text-blue-600 hover:text-blue-700 text-sm"
+                                            class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm"
                                         >
                                             {{
                                                 coverImage
@@ -597,15 +615,17 @@
                         </div>
 
                         <div
-                            class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6"
+                            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6"
                         >
-                            <h3 class="text-lg font-medium mb-6">
+                            <h3
+                                class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-6"
+                            >
                                 {{ $t("studio.settings") }}
                             </h3>
 
                             <div>
                                 <label
-                                    class="block text-sm font-medium text-gray-700 mb-3"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3"
                                     >{{ $t("studio.allowOthersTo") }}:</label
                                 >
                                 <div class="space-y-4">
@@ -614,12 +634,14 @@
                                     >
                                         <div>
                                             <span
-                                                class="text-sm font-medium text-gray-700"
+                                                class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                                 >{{
                                                     $t("common.comment")
                                                 }}</span
                                             >
-                                            <p class="text-xs text-gray-500">
+                                            <p
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                            >
                                                 {{
                                                     $t("studio.commentMessage")
                                                 }}
@@ -634,12 +656,14 @@
                                     >
                                         <div>
                                             <span
-                                                class="text-sm font-medium text-gray-700"
+                                                class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                                 >{{
                                                     $t("studio.download")
                                                 }}</span
                                             >
-                                            <p class="text-xs text-gray-500">
+                                            <p
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                            >
                                                 {{
                                                     $t("studio.downloadMessage")
                                                 }}
@@ -654,10 +678,12 @@
                                     >
                                         <div>
                                             <span
-                                                class="text-sm font-medium text-gray-700"
+                                                class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                                 >{{ $t("studio.duet") }}</span
                                             >
-                                            <p class="text-xs text-gray-500">
+                                            <p
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                            >
                                                 {{ $t("studio.duetMessage") }}
                                             </p>
                                         </div>
@@ -670,10 +696,12 @@
                                     >
                                         <div>
                                             <span
-                                                class="text-sm font-medium text-gray-700"
+                                                class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                                 >{{ $t("studio.stitch") }}</span
                                             >
-                                            <p class="text-xs text-gray-500">
+                                            <p
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                            >
                                                 {{ $t("studio.stitchMessage") }}
                                             </p>
                                         </div>
@@ -684,18 +712,22 @@
                                 </div>
                             </div>
 
-                            <div class="w-full h-[1px] bg-gray-100 my-6"></div>
+                            <div
+                                class="w-full h-[1px] bg-gray-100 dark:bg-gray-700 my-6"
+                            ></div>
 
                             <div class="space-y-4">
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <span
-                                            class="text-sm font-medium text-gray-700"
+                                            class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                             >{{
                                                 $t("studio.containsNSFW")
                                             }}</span
                                         >
-                                        <p class="text-xs text-gray-500">
+                                        <p
+                                            class="text-xs text-gray-500 dark:text-gray-400"
+                                        >
                                             {{
                                                 $t("studio.containsNSFWMessage")
                                             }}
@@ -706,12 +738,14 @@
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <span
-                                            class="text-sm font-medium text-gray-700"
+                                            class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                             >{{
                                                 $t("studio.disclosePostContent")
                                             }}</span
                                         >
-                                        <p class="text-xs text-gray-500">
+                                        <p
+                                            class="text-xs text-gray-500 dark:text-gray-400"
+                                        >
                                             {{
                                                 $t(
                                                     "studio.disclosePostContentHelp",
@@ -727,14 +761,16 @@
                                 <div class="flex items-center justify-between">
                                     <div class="max-w-[70%]">
                                         <span
-                                            class="text-sm font-medium text-gray-700"
+                                            class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                             >{{
                                                 $t(
                                                     "studio.containsAlteredContent",
                                                 )
                                             }}</span
                                         >
-                                        <div class="text-xs text-gray-500">
+                                        <div
+                                            class="text-xs text-gray-500 dark:text-gray-400"
+                                        >
                                             {{
                                                 $t(
                                                     "studio.containsAlteredContentHelp",
@@ -753,19 +789,19 @@
                     <div class="lg:col-span-1">
                         <div class="sticky top-6">
                             <div
-                                class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4"
+                                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-4"
                             >
                                 <div
                                     class="flex justify-center space-x-4 mb-4 text-sm"
                                 >
                                     <div
-                                        class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1"
+                                        class="flex bg-gray-100 dark:bg-gray-900 rounded-lg p-1"
                                     >
                                         <button
                                             :class="[
                                                 'px-3 py-1.5 text-[14px] font-medium rounded-md transition-all duration-200 relative cursor-pointer',
                                                 previewMode === 'feed'
-                                                    ? 'bg-white dark:bg-slate-700 text-black dark:text-white shadow-sm'
+                                                    ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-sm'
                                                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
                                             ]"
                                             @click="previewMode = 'feed'"
@@ -776,7 +812,7 @@
                                             :class="[
                                                 'px-3 py-1.5 text-[14px] font-medium rounded-md transition-all duration-200 relative cursor-pointer',
                                                 previewMode === 'profile'
-                                                    ? 'bg-white dark:bg-slate-700 text-black dark:text-white shadow-sm'
+                                                    ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-sm'
                                                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
                                             ]"
                                             @click="previewMode = 'profile'"
@@ -860,7 +896,7 @@
                                     :class="
                                         canSubmit && !isSubmitting
                                             ? 'bg-[#F02C56] border border-[#F02C56] hover:bg-[#F02C56]/80 text-white'
-                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                            : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                                     "
                                 >
                                     <svg
@@ -888,7 +924,7 @@
                                 </button>
                                 <button
                                     @click="handleDiscard"
-                                    class="w-full border border-gray-300 text-gray-700 py-3 rounded-md font-medium hover:bg-gray-50 transition-colors"
+                                    class="w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 py-3 rounded-md font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                                     :disabled="isSubmitting"
                                 >
                                     {{ $t("common.discard") }}
@@ -991,7 +1027,6 @@
         </Transition>
     </Teleport>
 </template>
-
 <script setup>
 import {
     ref,
