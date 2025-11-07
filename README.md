@@ -10,7 +10,6 @@
 </p>
 
 <p align="center">
-  <!-- Build & CI Badges -->
   <a href="https://github.com/joinloops/loops-server/actions/workflows/JS-Build-push.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/joinloops/loops-server/JS-Build-push.yml?branch=main&label=JS%20Build" alt="JS Build Status" />
   </a>
@@ -26,8 +25,8 @@
   <a href="https://github.com/joinloops/loops-server/actions/workflows/php-larastan-push.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/joinloops/loops-server/php-larastan-push.yml?branch=main&label=Larastan" alt="Larastan Status" />
   </a>
-  <a href="https://github.com/joinloops/loops-server/actions/workflows/php-pint-push.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/joinloops/loops-server/php-pint-push.yml?branch=main&label=Pint" alt="Pint Status" />
+  <a href="https://github.com/joinloops/loops-server/actions/workflows/php-pint.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/joinloops/loops-server/php-pint.yml?branch=main&label=Pint" alt="Pint Status" />
   </a>
 </p>
 
@@ -61,7 +60,7 @@ Loops Server is open-sourced software licensed under the AGPL license.
 Before participating, please read our [Code of Conduct](CODE_OF_CONDUCT.md).  
 You can connect with the community here:
 
-- Mastodon: [@pixelfed@mastodon.social](https://mastodon.social/@pixelfed)
+- Pixelfed: [@loops@pixelfed.social](https://pixelfed.social/loops)
 - Discord: [Join our community](https://discord.gg/wvud8BgFv8)
 
 ## Funding
