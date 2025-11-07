@@ -9,6 +9,7 @@ use App\Services\AutoLinkerService;
 use App\Services\SanitizeService;
 use App\Services\SigningService;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -103,6 +104,19 @@ class Profile extends Model
     use HasFactory, HasSnowflakePrimary;
 
     /**
+     * Status Bitmask
+     * 0 = Unused
+     * 1 = Active
+     * 2 = Reserved
+     * 3 = Reserved
+     * 4 = Reserved
+     * 5 = Reserved
+     * 6 = Reserved
+     * 7 = Account disabled
+     * 8 = Account pending deletion
+     **/
+
+    /**
      * Indicates if the IDs are auto-incrementing.
      *
      * @var bool
@@ -148,6 +162,15 @@ class Profile extends Model
     public function videos(): HasMany
     {
         return $this->hasMany(Video::class);
+    }
+
+    /**
+     * @param  Builder<Profile>  $query
+     * @return Builder<Profile>
+     */
+    protected function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', 1);
     }
 
     public function deepLink()
