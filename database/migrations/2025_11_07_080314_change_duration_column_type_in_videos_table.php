@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('videos', function (Blueprint $table) {
-            $table->smallInteger('duration')->unsigned()->change();
+            $table->smallInteger('duration')->unsigned()->nullable()->change();
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('videos', function (Blueprint $table) {
-            $table->tinyInteger('duration')->unsigned()->change();
+            $table->tinyInteger('duration')->unsigned()->nullable()->change();
         });
     }
 };
