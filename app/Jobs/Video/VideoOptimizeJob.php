@@ -103,12 +103,13 @@ class VideoOptimizeJob implements ShouldQueue
             ->withVisibility('public')
             ->save($name);
 
-        $media->cleanupTemporaryFiles();
-
+        $video->duration = $media->getDurationInSeconds();
         $video->vid_optimized = $name;
         $video->has_processed = true;
         $video->status = 2;
         $video->save();
+
+        $media->cleanupTemporaryFiles();
 
         VideoService::deleteMediaData($video->id);
     }
