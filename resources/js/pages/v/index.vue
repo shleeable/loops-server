@@ -150,7 +150,7 @@
                     v-if="currentVideo.media"
                     ref="videoRef"
                     loop
-                    controls
+                    :controls="showControls"
                     playsinline
                     preload="auto"
                     class="h-screen mx-auto"
@@ -530,6 +530,8 @@ const error = ref(null);
 const videoLoadTimeout = ref(null);
 const showPlayButton = ref(true);
 const isPlaying = ref(false);
+const showControls = ref(false);
+const controlsTimeout = ref(null);
 
 const currentVideo = computed(() => videoStore.video);
 const userId = computed(() => authStore.id);
@@ -774,6 +776,10 @@ const loadPost = async () => {
                 if (!isVideoLoaded.value) {
                     console.log("Video load timeout - forcing display");
                     isVideoLoaded.value = true;
+
+                    if (!("ontouchstart" in window)) {
+                        showControls.value = true;
+                    }
                 }
             }, 3000);
         }
@@ -839,6 +845,10 @@ const onVideoMetadataLoaded = (e) => {
         clearTimeout(videoLoadTimeout.value);
     }
     isVideoLoaded.value = true;
+
+    if (!("ontouchstart" in window)) {
+        showControls.value = true;
+    }
 };
 
 const onVideoCanPlay = (e) => {
@@ -848,6 +858,10 @@ const onVideoCanPlay = (e) => {
     }
     if (!isVideoLoaded.value) {
         isVideoLoaded.value = true;
+
+        if (!("ontouchstart" in window)) {
+            showControls.value = true;
+        }
     }
 };
 
@@ -866,6 +880,15 @@ const onVideoError = (e) => {
 const onVideoPlay = () => {
     isPlaying.value = true;
     showPlayButton.value = false;
+
+    if ("ontouchstart" in window) {
+        if (controlsTimeout.value) {
+            clearTimeout(controlsTimeout.value);
+        }
+        controlsTimeout.value = setTimeout(() => {
+            showControls.value = true;
+        }, 800);
+    }
 };
 
 const onVideoPause = () => {
@@ -888,6 +911,9 @@ onMounted(loadPost);
 onBeforeUnmount(() => {
     if (videoLoadTimeout.value) {
         clearTimeout(videoLoadTimeout.value);
+    }
+    if (controlsTimeout.value) {
+        clearTimeout(controlsTimeout.value);
     }
     if (videoRef.value) {
         videoRef.value.pause();
