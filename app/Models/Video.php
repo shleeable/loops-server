@@ -136,6 +136,8 @@ class Video extends Model
      * 4 = Archived
      * 5 = Reserved
      * 6 = Admin unpublished
+     * 7 = Account disabled
+     * 8 = Account pending deletion
      **/
 
     /**
@@ -165,6 +167,7 @@ class Video extends Model
     protected function casts(): array
     {
         return [
+            'duration' => 'integer',
             'status' => 'integer',
             'profile_id' => 'string',
             'is_sensitive' => 'boolean',
