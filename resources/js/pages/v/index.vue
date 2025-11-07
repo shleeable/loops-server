@@ -127,11 +127,11 @@
                 src="/nav-logo.png"
             />
 
-            <video
-                v-if="currentVideo.video"
-                class="absolute object-cover w-full my-auto z-[-1] h-screen"
-                :src="currentVideo.video"
-            />
+            <div
+                v-if="currentVideo.media"
+                class="absolute object-cover w-full my-auto z-[-1] h-screen bg-black bg-center bg-cover blur-2xl opacity-50"
+                :style="`background-image: url(${currentVideo.media.thumbnail})`"
+            ></div>
 
             <div
                 v-if="!isVideoLoaded"
@@ -145,18 +145,46 @@
                 </div>
             </div>
 
-            <div class="bg-black lg:min-w-[480px]">
+            <div class="bg-black lg:min-w-[480px] relative">
                 <video
                     v-if="currentVideo.media"
                     ref="videoRef"
                     loop
                     controls
+                    playsinline
+                    preload="auto"
                     class="h-screen mx-auto"
+                    :class="{ 'opacity-0': !isVideoLoaded }"
                     :aria-label="currentVideo.media.alt_text"
                     :src="currentVideo.media.src_url"
-                    @loadeddata="onVideoLoaded"
+                    @loadedmetadata="onVideoMetadataLoaded"
+                    @canplay="onVideoCanPlay"
                     @error="onVideoError"
+                    @loadstart="onVideoLoadStart"
+                    @play="onVideoPlay"
+                    @pause="onVideoPause"
                 />
+
+                <div
+                    v-if="showPlayButton && isVideoLoaded && currentVideo.media"
+                    @click="handlePlayButtonClick"
+                    class="absolute inset-0 flex items-center justify-center z-10 bg-black/70 backdrop-blur-sm cursor-pointer transition-opacity duration-300 hover:bg-black/60"
+                >
+                    <div class="flex flex-col items-center gap-3 animate-pulse">
+                        <div
+                            class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm w-30 h-30 flex justify-center items-center rounded-full p-6 shadow-2xl hover:scale-110 transition-transform duration-200"
+                        >
+                            <PlayIcon
+                                class="h-16 w-16 text-[#F02C56] dark:text-white ml-2"
+                            />
+                        </div>
+                        <p
+                            class="text-white text-lg font-semibold drop-shadow-lg"
+                        >
+                            {{ $t("common.tapToPlay") }}
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -469,6 +497,7 @@ import {
     FlagIcon,
     EyeIcon,
     ArrowLeftIcon,
+    PlayIcon,
 } from "@heroicons/vue/24/outline";
 import UrlCopyInput from "@/components/Form/UrlCopyInput.vue";
 import Comments from "@/components/Status/Comments.vue";
@@ -498,6 +527,9 @@ const showSensitiveContent = ref(false);
 const showInteractionModal = ref(false);
 const InteractionModalTab = ref("likes");
 const error = ref(null);
+const videoLoadTimeout = ref(null);
+const showPlayButton = ref(true);
+const isPlaying = ref(false);
 
 const currentVideo = computed(() => videoStore.video);
 const userId = computed(() => authStore.id);
@@ -523,6 +555,7 @@ const setError = (type, title, message) => {
 const retryLoad = async () => {
     error.value = null;
     isVideoLoading.value = true;
+    isVideoLoaded.value = false;
     await loadPost();
 };
 
@@ -736,6 +769,13 @@ const loadPost = async () => {
                 "Video Not Found",
                 "This video might have been deleted or moved.",
             );
+        } else {
+            videoLoadTimeout.value = setTimeout(() => {
+                if (!isVideoLoaded.value) {
+                    console.log("Video load timeout - forcing display");
+                    isVideoLoaded.value = true;
+                }
+            }, 3000);
         }
     } catch (error) {
         console.error("Error loading post:", error);
@@ -789,15 +829,33 @@ const handleReport = async () => {
     openReportModal("video", currentVideo.value?.id, window.location.href);
 };
 
-const onVideoLoaded = (e) => {
-    if (e.target) {
-        setTimeout(() => {
-            isVideoLoaded.value = true;
-        }, 500);
+const onVideoLoadStart = () => {
+    console.log("Video load started");
+};
+
+const onVideoMetadataLoaded = (e) => {
+    console.log("Video metadata loaded");
+    if (videoLoadTimeout.value) {
+        clearTimeout(videoLoadTimeout.value);
+    }
+    isVideoLoaded.value = true;
+};
+
+const onVideoCanPlay = (e) => {
+    console.log("Video can play");
+    if (videoLoadTimeout.value) {
+        clearTimeout(videoLoadTimeout.value);
+    }
+    if (!isVideoLoaded.value) {
+        isVideoLoaded.value = true;
     }
 };
 
-const onVideoError = () => {
+const onVideoError = (e) => {
+    console.error("Video error:", e);
+    if (videoLoadTimeout.value) {
+        clearTimeout(videoLoadTimeout.value);
+    }
     setError(
         "network",
         "Video Unavailable",
@@ -805,9 +863,32 @@ const onVideoError = () => {
     );
 };
 
+const onVideoPlay = () => {
+    isPlaying.value = true;
+    showPlayButton.value = false;
+};
+
+const onVideoPause = () => {
+    isPlaying.value = false;
+    if ("ontouchstart" in window) {
+        showPlayButton.value = true;
+    }
+};
+
+const handlePlayButtonClick = () => {
+    if (videoRef.value) {
+        videoRef.value.play().catch((err) => {
+            console.error("Play failed:", err);
+        });
+    }
+};
+
 onMounted(loadPost);
 
 onBeforeUnmount(() => {
+    if (videoLoadTimeout.value) {
+        clearTimeout(videoLoadTimeout.value);
+    }
     if (videoRef.value) {
         videoRef.value.pause();
         videoRef.value.currentTime = 0;
@@ -821,7 +902,6 @@ watch(isVideoLoaded, (newVal) => {
         videoRef.value &&
         (!currentVideo.value?.is_sensitive || showSensitiveContent.value)
     ) {
-        // setTimeout(() => videoRef.value.play(), 500);
     }
 });
 
