@@ -1476,13 +1476,32 @@ const handleTranscode = async () => {
 
     isConverting.value = true;
 
-    try {
-        const source = new BlobSource(uploadedFile.value);
-        const input = new Input({
-            source,
-            formats: ALL_FORMATS,
-        });
+    const source = new BlobSource(uploadedFile.value);
+    const input = new Input({
+        source,
+        formats: ALL_FORMATS,
+    });
 
+    let hasAudio = true;
+    try {
+        const track = await input.getPrimaryAudioTrack();
+        hasAudio = !!track;
+    } catch {
+        hasAudio = false;
+    }
+
+    const audioOptions = hasAudio
+        ? {
+              codec: "aac",
+              bitrate: 64_000,
+              numberOfChannels: 2,
+              sampleRate: 48_000,
+          }
+        : {
+              discard: true,
+          };
+
+    try {
         const fileSize = await source.getSize();
 
         const output = new Output({
@@ -1502,9 +1521,7 @@ const handleTranscode = async () => {
                 bitrate: quality,
                 frameRate: 30,
             },
-            audio: {
-                bitrate: 32e3,
-            },
+            audio: audioOptions,
             trim: {
                 start: 0,
                 end: 60,
