@@ -64,4 +64,8 @@ return [
             'max_length' => env('LOOPS_AL_MEN_MAX_LENGTH', 64),
         ],
     ],
+
+    'backups' => [
+        'enabled' => env('LOOPS_BACKUPS_ENABLED', false),
+    ],
 ];
