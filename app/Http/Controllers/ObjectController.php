@@ -47,7 +47,7 @@ class ObjectController extends Controller
         }
 
         if ($profile->status != 1) {
-            abort('Record not available', 400);
+            abort(403, 'Record not available');
         }
 
         return view('profile', compact('profile'));
