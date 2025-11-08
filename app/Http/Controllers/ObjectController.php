@@ -33,6 +33,10 @@ class ObjectController extends Controller
                 return $this->activityPubError('Record not found', 404);
             }
 
+            if ($profile->status != 1) {
+                return $this->activityPubError('Record not available', 400);
+            }
+
             return $this->activityPubResponse($profile->toActivityPub());
         }
 
@@ -40,6 +44,10 @@ class ObjectController extends Controller
 
         if (! $profile) {
             abort(404, 'Profile not found');
+        }
+
+        if ($profile->status != 1) {
+            abort('Record not available', 400);
         }
 
         return view('profile', compact('profile'));
