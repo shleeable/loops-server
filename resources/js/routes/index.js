@@ -277,7 +277,13 @@ const router = createRouter({
             children: [
                 {
                     path: "",
-                    redirect: "/admin/settings",
+                    redirect: "/admin/dashboard",
+                },
+                {
+                    path: "dashboard",
+                    name: "Dashboard",
+                    component: () => import("~/pages/admin/Dashboard.vue"),
+                    meta: { requiresAdmin: true },
                 },
                 {
                     path: "comments",

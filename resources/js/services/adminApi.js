@@ -1,5 +1,22 @@
 import axios from "~/plugins/axios";
 
+// Dashboard API
+export const dashboardApi = {
+    getDashboardStats: async (period = "30d", shouldRefresh = false) => {
+        const params = shouldRefresh
+            ? {
+                  period: period,
+                  refresh: true,
+              }
+            : { period };
+        const response = await apiClient.get(
+            "/api/v1/admin/dashboard/stats",
+            params,
+        );
+        return response;
+    },
+};
+
 // Pages API
 export const pagesApi = {
     getPages: async (params = {}) => {
@@ -106,6 +123,10 @@ export const hashtagsApi = {
             q: search,
             sort: sort,
         });
+    },
+
+    async getHashtag(id) {
+        return await apiClient.get(`/api/v1/admin/hashtag/${id}`);
     },
 
     async updateHashtag(id, params = {}) {

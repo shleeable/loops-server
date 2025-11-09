@@ -39,6 +39,7 @@
                     v-for="item in navigation"
                     :key="item.name"
                     :to="item.href"
+                    @click="sidebarOpen = false"
                     :class="[
                         'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors',
                         isRouteActive(item.href)
@@ -134,6 +135,7 @@ import { ref, onMounted, inject } from "vue";
 import { useRoute } from "vue-router";
 import { storeToRefs } from "pinia";
 import {
+    ChartBarSquareIcon,
     Cog6ToothIcon,
     ChatBubbleOvalLeftIcon,
     ChatBubbleLeftRightIcon,
@@ -150,9 +152,9 @@ import { useAdminStore } from "~/stores/admin";
 
 const route = useRoute();
 const sidebarOpen = ref(false);
-const isDark = ref(document.documentElement.classList.contains("dark"));
 
 const navigation = [
+    { name: "Dashboard", href: "/admin/dashboard", icon: ChartBarSquareIcon },
     { name: "Comments", href: "/admin/comments", icon: ChatBubbleOvalLeftIcon },
     { name: "Replies", href: "/admin/replies", icon: ChatBubbleLeftRightIcon },
     { name: "Hashtags", href: "/admin/hashtags", icon: HashtagIcon },
@@ -171,22 +173,16 @@ const isRouteActive = (navPath) => {
     return false;
 };
 
-const handleToggleDarkMode = () => {
-    isDark.value = !isDark.value;
-    if (isDark.value) {
-        document.documentElement.classList.add("dark");
-        localStorage.setItem("theme", "dark");
-    } else {
-        document.documentElement.classList.remove("dark");
-        localStorage.setItem("theme", "light");
-    }
-};
-
 const adminStore = useAdminStore();
-const { reportsCount, isLoading, displayReportsCount } =
+const { isDarkMode, reportsCount, isLoading, displayReportsCount } =
     storeToRefs(adminStore);
 
+const handleToggleDarkMode = () => {
+    adminStore.toggleDarkMode();
+};
+
 onMounted(() => {
+    adminStore.initTheme();
     adminStore.fetchReportsCount();
 });
 </script>

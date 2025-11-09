@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StudioController;
 use App\Http\Controllers\Api\VideoController;
 use App\Http\Controllers\Api\WebPublicController;
+use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailChangeController;
 use App\Http\Controllers\InboxController;
@@ -210,6 +211,9 @@ Route::prefix('api')->group(function () {
             Route::delete('pages/{id}', [PageController::class, 'destroy']);
         });
 
+        Route::get('/dashboard/stats', [AdminDashboardController::class, 'index']);
+
+
         Route::get('/reports-count', [AdminController::class, 'reportCount'])->middleware('auth:web,api');
         Route::get('/videos', [AdminController::class, 'videos'])->middleware('auth:web,api');
         Route::get('/comments', [AdminController::class, 'comments'])->middleware('auth:web,api');
@@ -222,6 +226,7 @@ Route::prefix('api')->group(function () {
         Route::get('/video/{id}', [AdminController::class, 'videoShow'])->middleware('auth:web,api');
         Route::get('/profiles', [AdminController::class, 'profiles'])->middleware('auth:web,api');
         Route::get('/hashtags', [AdminController::class, 'hashtags'])->middleware('auth:web,api');
+        Route::get('/hashtag/{id}', [AdminController::class, 'getHashtag'])->middleware('auth:web,api');
         Route::post('/hashtags/{id}/update', [AdminController::class, 'hashtagsUpdate'])->middleware('auth:web,api');
         Route::get('/reports', [AdminController::class, 'reports'])->middleware('auth:web,api');
         Route::get('/reports/{id}', [AdminController::class, 'reportShow'])->middleware('auth:web,api');

@@ -459,16 +459,22 @@ const previousPage = () => {
 const openModalById = async (id) => {
     if (!id) return;
     let tag = hashtags.value.find((h) => String(h.id) === String(id));
+
     if (!tag) {
         try {
-            const res = await hashtagsApi.getHashtags(id);
+            const numericId = Number(id);
+            const res = await hashtagsApi.getHashtag(numericId);
             tag = res?.data || res;
         } catch (e) {
             console.error("Unable to load hashtag by id:", id, e);
         }
     }
-    if (tag) openModal(tag);
-    else setQuery({ id: undefined }, { replace: true });
+
+    if (tag) {
+        openModal(tag);
+    } else {
+        setQuery({ id: undefined }, { replace: true });
+    }
 };
 
 onMounted(async () => {
@@ -488,48 +494,17 @@ onMounted(async () => {
 });
 
 watch(
-    () => route.query,
-    async (q, prev) => {
+    () => route.query.id,
+    async (newId, oldId) => {
         if (hydrating.value) return;
+        if (newId === oldId) return;
 
-        if (q.q !== prev.q) {
-            const next = typeof q.q === "string" ? q.q : "";
-            if (next !== searchQuery.value) {
-                searchQuery.value = next;
-                await fetchHashtags(null, "next");
-            }
-        }
-
-        if (q.sort !== prev.sort) {
-            const nextSort = typeof q.sort === "string" ? q.sort : "";
-            if (nextSort !== sortBy.value) {
-                sortBy.value = nextSort;
-                await fetchHashtags(null, "next");
-            }
-        }
-
-        if (q.cursor !== prev.cursor || q.dir !== prev.dir) {
-            const newCursor = typeof q.cursor === "string" ? q.cursor : null;
-            const newDir = q.dir === "previous" ? "previous" : "next";
-            if (
-                newCursor !== currentCursor.value ||
-                newDir !== currentDir.value
-            ) {
-                currentCursor.value = newCursor;
-                currentDir.value = newDir;
-                await fetchHashtags(currentCursor.value, currentDir.value);
-            }
-        }
-
-        if (q.id !== prev.id) {
-            if (q.id) {
-                await openModalById(q.id);
-            } else if (showModal.value) {
-                showModal.value = false;
-                selectedHashtag.value = null;
-            }
+        if (newId) {
+            await openModalById(newId);
+        } else if (showModal.value) {
+            showModal.value = false;
+            selectedHashtag.value = null;
         }
     },
-    { deep: true },
 );
 </script>

@@ -294,7 +294,7 @@ const mainLinks = computed(() => {
         if (authStore.isAdmin) {
             links.push({
                 name: t("nav.admin"),
-                path: "/admin",
+                path: "/admin/dashboard",
                 icon: "bx bx-badge",
             });
         }

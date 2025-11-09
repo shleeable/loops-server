@@ -566,6 +566,13 @@ class AdminController extends Controller
         return AdminHashtagResource::collection($tags);
     }
 
+    public function getHashtag(Request $request, $id)
+    {
+        $query = Hashtag::findOrFail($id);
+
+        return new AdminHashtagResource($query);
+    }
+
     public function hashtagsUpdate(Request $request, $id)
     {
         $validated = $request->validate([
