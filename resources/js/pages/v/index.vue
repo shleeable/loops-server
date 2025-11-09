@@ -955,22 +955,13 @@ const unlikePost = async () => {
     }
 };
 
-const deletePost = async () => {
-    const res = confirm("Are you sure you want to delete this post?");
-    if (res) {
-        try {
-            await videoStore.deleteVideoById(currentVideo.value.id);
-            await profileStore.getProfile(userId.value);
-            router.push(`/profile/${userId.value}`);
-        } catch (error) {
-            console.log(error);
-        }
-    }
-};
-
 const handleSaveVideo = async (data) => {
     await videoStore.updateVideoStore(data);
 };
 
-const handleDeleteVideo = async () => {};
+const handleDeleteVideo = async (id) => {
+    await videoStore.deleteVideoById(id);
+    await profileStore.getProfile(userId.value);
+    router.push(`/studio/posts`);
+};
 </script>
