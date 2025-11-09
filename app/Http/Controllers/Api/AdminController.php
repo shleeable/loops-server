@@ -306,6 +306,13 @@ class AdminController extends Controller
         return $this->success();
     }
 
+    public function reportCount(Request $request)
+    {
+        $count = Report::where('admin_seen', false)->count();
+
+        return $this->data(['count' => $count]);
+    }
+
     public function reports(Request $request)
     {
         $search = $request->query('q');

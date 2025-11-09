@@ -136,6 +136,7 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/account/settings/email/cancel', [EmailChangeController::class, 'cancelEmailChange'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/email/verify', [EmailChangeController::class, 'verifyEmailChange'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/email/resend', [EmailChangeController::class, 'resendEmailChange'])->middleware(['auth:web,api']);
+    // Route::post('/v1/account/settings/account/disable', [SettingsController::class, 'confirmDisableAccount'])->middleware(['auth:web']);
 
     // Account Data
     Route::get('/v1/account/data/insights', [AccountDataController::class, 'getDataInsights'])->middleware(['auth:web,api']);
@@ -209,6 +210,7 @@ Route::prefix('api')->group(function () {
             Route::delete('pages/{id}', [PageController::class, 'destroy']);
         });
 
+        Route::get('/reports-count', [AdminController::class, 'reportCount'])->middleware('auth:web,api');
         Route::get('/videos', [AdminController::class, 'videos'])->middleware('auth:web,api');
         Route::get('/comments', [AdminController::class, 'comments'])->middleware('auth:web,api');
         Route::get('/comment/{id}', [AdminController::class, 'getComment'])->middleware('auth:web,api');

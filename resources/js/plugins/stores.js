@@ -1,4 +1,5 @@
 import { useAuthStore } from "~/stores/auth";
+import { useAdminStore } from "~/stores/admin";
 import { useProfileStore } from "~/stores/profile";
 import { useAppStore } from "~/stores/app";
 import { useExploreStore } from "~/stores/explore";
@@ -9,6 +10,7 @@ import { useTagFeedStore } from "~/stores/tagFeed";
 export default {
     install: (app) => {
         const authStore = useAuthStore();
+        const adminStore = useAdminStore();
         const profileStore = useProfileStore();
         const appStore = useAppStore();
         const exploreStore = useExploreStore();
@@ -17,6 +19,7 @@ export default {
         const tagFeedStore = useTagFeedStore();
 
         app.provide("authStore", authStore);
+        app.provide("adminStore", adminStore);
         app.provide("profileStore", profileStore);
         app.provide("appStore", appStore);
         app.provide("exploreStore", exploreStore);
@@ -25,6 +28,7 @@ export default {
         app.provide("tagFeedStore", tagFeedStore);
 
         app.config.globalProperties.$authStore = authStore;
+        app.config.globalProperties.$adminStore = adminStore;
         app.config.globalProperties.$profileStore = profileStore;
         app.config.globalProperties.$appStore = appStore;
         app.config.globalProperties.$exploreStore = exploreStore;

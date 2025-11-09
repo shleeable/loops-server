@@ -826,8 +826,11 @@ import { useRoute, useRouter } from "vue-router";
 import { useAlertModal } from "@/composables/useAlertModal.js";
 import { useUtils } from "@/composables/useUtils";
 const { formatDate, formatNumber } = useUtils();
+import { useAdminStore } from "~/stores/admin";
 
 const { alertModal, confirmModal } = useAlertModal();
+
+const adminStore = useAdminStore();
 
 const route = useRoute();
 const router = useRouter();
@@ -863,7 +866,8 @@ const dismissAllReportsByAccount = async () => {
     if (result) {
         const response = await reportsApi
             .dismissAllReportsByAccount(report?.value.id)
-            .finally(() => {
+            .finally(async () => {
+                await adminStore.fetchReportsCount();
                 router.push("/admin/reports");
             });
     } else {
@@ -882,7 +886,8 @@ const dismissReport = async () => {
     if (result) {
         const response = await reportsApi
             .dismissReport(report?.value.id)
-            .finally(() => {
+            .finally(async () => {
+                await adminStore.fetchReportsCount();
                 router.push("/admin/reports");
             });
     } else {
@@ -901,7 +906,9 @@ const dismissAndManageHashtag = async () => {
     if (result) {
         const response = await reportsApi
             .dismissReport(report?.value.id)
-            .finally(() => {
+            .finally(async () => {
+                await adminStore.fetchReportsCount();
+
                 router.push(
                     `/admin/hashtags?q=${report?.value.content_preview?.name}&id=${report?.value.content_preview?.id}`,
                 );
@@ -927,7 +934,8 @@ const deleteVideo = async () => {
 
     if (result) {
         const id = report.value.id;
-        const response = await reportsApi.deleteVideo(id).finally(() => {
+        const response = await reportsApi.deleteVideo(id).finally(async () => {
+            await adminStore.fetchReportsCount();
             router.push("/admin/reports");
         });
     }
@@ -943,9 +951,12 @@ const deleteComment = async () => {
 
     if (result) {
         const id = report.value.id;
-        const response = await reportsApi.deleteComment(id).finally(() => {
-            router.push("/admin/reports");
-        });
+        const response = await reportsApi
+            .deleteComment(id)
+            .finally(async () => {
+                await adminStore.fetchReportsCount();
+                router.push("/admin/reports");
+            });
     }
 };
 
@@ -959,9 +970,12 @@ const deleteCommentReply = async () => {
 
     if (result) {
         const id = report.value.id;
-        const response = await reportsApi.deleteCommentReply(id).finally(() => {
-            router.push("/admin/reports");
-        });
+        const response = await reportsApi
+            .deleteCommentReply(id)
+            .finally(async () => {
+                await adminStore.fetchReportsCount();
+                router.push("/admin/reports");
+            });
     }
 };
 
@@ -977,7 +991,8 @@ const markAsNsfw = async () => {
         const id = report.value.id;
         const response = await reportsApi
             .updateReportMarkAsNsfw(id)
-            .finally(() => {
+            .finally(async () => {
+                await adminStore.fetchReportsCount();
                 router.push("/admin/reports");
             });
     }

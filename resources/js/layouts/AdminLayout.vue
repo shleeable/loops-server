@@ -50,7 +50,23 @@
                         :is="item.icon"
                         class="mr-3 h-5 w-5 flex-shrink-0"
                     />
-                    {{ item.name }}
+                    <span class="truncate">
+                        {{ item.name }}
+                    </span>
+
+                    <span
+                        v-if="
+                            item.href === '/admin/reports' && reportsCount > 0
+                        "
+                        class="ml-auto inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-semibold leading-none bg-red-500 text-white shadow-sm"
+                    >
+                        {{ displayReportsCount }}
+                    </span>
+
+                    <span
+                        v-else-if="item.href === '/admin/reports' && isLoading"
+                        class="ml-auto inline-flex h-4 w-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"
+                    ></span>
                 </router-link>
             </nav>
 
@@ -114,8 +130,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, onMounted, inject } from "vue";
 import { useRoute } from "vue-router";
+import { storeToRefs } from "pinia";
 import {
     Cog6ToothIcon,
     ChatBubbleOvalLeftIcon,
@@ -129,22 +146,15 @@ import {
     SunIcon,
     MoonIcon,
 } from "@heroicons/vue/24/outline";
+import { useAdminStore } from "~/stores/admin";
 
 const route = useRoute();
 const sidebarOpen = ref(false);
 const isDark = ref(document.documentElement.classList.contains("dark"));
 
 const navigation = [
-    {
-        name: "Comments",
-        href: "/admin/comments",
-        icon: ChatBubbleOvalLeftIcon,
-    },
-    {
-        name: "Replies",
-        href: "/admin/replies",
-        icon: ChatBubbleLeftRightIcon,
-    },
+    { name: "Comments", href: "/admin/comments", icon: ChatBubbleOvalLeftIcon },
+    { name: "Replies", href: "/admin/replies", icon: ChatBubbleLeftRightIcon },
     { name: "Hashtags", href: "/admin/hashtags", icon: HashtagIcon },
     { name: "Instances", href: "/admin/instances", icon: ServerStackIcon },
     { name: "Reports", href: "/admin/reports", icon: ExclamationTriangleIcon },
@@ -156,15 +166,8 @@ const navigation = [
 
 const isRouteActive = (navPath) => {
     const currentPath = route.path;
-
-    if (currentPath === navPath) {
-        return true;
-    }
-
-    if (currentPath.startsWith(navPath + "/")) {
-        return true;
-    }
-
+    if (currentPath === navPath) return true;
+    if (currentPath.startsWith(navPath + "/")) return true;
     return false;
 };
 
@@ -178,4 +181,12 @@ const handleToggleDarkMode = () => {
         localStorage.setItem("theme", "light");
     }
 };
+
+const adminStore = useAdminStore();
+const { reportsCount, isLoading, displayReportsCount } =
+    storeToRefs(adminStore);
+
+onMounted(() => {
+    adminStore.fetchReportsCount();
+});
 </script>
