@@ -59,6 +59,10 @@ class AccountController extends Controller
             return $this->error('Account not found or is unavailable', 404);
         }
 
+        if ($profile->status != 1) {
+            return $this->error('Account is not available', 400);
+        }
+
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_owner'] = $pid ? $pid == $profile->id : false;
         $res['likes_count'] = (int) AccountService::getAccountLikesCount($id);
@@ -155,7 +159,7 @@ class AccountController extends Controller
             return $this->error('You cannot follow your own account', 422);
         }
 
-        $profile = Profile::findOrFail($id);
+        $profile = Profile::active()->findOrFail($id);
 
         if ($request->user()->cannot('view', $profile)) {
             return $this->error('Account not found or is unavailable', 404);
@@ -302,7 +306,7 @@ class AccountController extends Controller
 
     public function accountFollowers(SearchFollowersRequest $request, $id)
     {
-        $profile = Profile::findOrFail($id);
+        $profile = Profile::active()->findOrFail($id);
 
         if ($request->user() && $request->user()->cannot('viewAny', [Profile::class])) {
             return $this->error('Unavailable', 403);
@@ -358,7 +362,7 @@ class AccountController extends Controller
 
     public function accountFollowing(SearchFollowersRequest $request, $id)
     {
-        $profile = Profile::findOrFail($id);
+        $profile = Profile::active()->findOrFail($id);
 
         if ($request->user() && $request->user()->cannot('viewAny', [Profile::class])) {
             return $this->error('Unavailable', 403);
@@ -417,7 +421,7 @@ class AccountController extends Controller
 
     public function accountFriends(SearchFollowersRequest $request, $id)
     {
-        $profile = Profile::findOrFail($id);
+        $profile = Profile::active()->findOrFail($id);
         $authProfileId = $request->user()->profile_id;
 
         if ($authProfileId == $id) {
@@ -455,7 +459,7 @@ class AccountController extends Controller
 
     public function accountSuggestedFollows(Request $request, $id)
     {
-        $profile = Profile::findOrFail($id);
+        $profile = Profile::active()->findOrFail($id);
 
         $authProfileId = $request->user()->profile_id;
 
