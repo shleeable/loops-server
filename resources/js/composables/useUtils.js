@@ -254,7 +254,7 @@ export function useUtils() {
     };
 
     const goBack = () => {
-        if (window.history.length > 1) {
+        if (window.history.length > 2) {
             router.go(-1);
         } else {
             router.push("/");

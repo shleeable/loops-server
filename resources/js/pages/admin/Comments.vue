@@ -53,7 +53,7 @@
             <template #cell-v_id="{ value }">
                 <router-link
                     :to="`/admin/videos/${value}`"
-                    class="text-blue-400 truncate cursor-pointer"
+                    class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline cursor-pointer"
                 >
                     {{ value }}
                 </router-link>

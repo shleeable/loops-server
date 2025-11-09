@@ -76,7 +76,7 @@ class Comment extends Model
 {
     use HasFactory, HasSnowflakePrimary, HasSyncHashtagsFromCaption, HasSyncMentionsFromCaption, SoftDeletes;
 
-    protected $fillable = ['video_id', 'profile_id', 'caption', 'status', 'is_sensitive', 'updated_at', 'is_edited'];
+    protected $fillable = ['video_id', 'profile_id', 'caption', 'status', 'replies', 'is_sensitive', 'updated_at', 'is_edited'];
 
     /**
      * Indicates if the IDs are auto-incrementing.
@@ -142,5 +142,10 @@ class Comment extends Model
     public function video()
     {
         return $this->belongsTo(Video::class);
+    }
+
+    public function recalculateReplies()
+    {
+        $this->update(['replies' => CommentReply::where('comment_id', $this->id)->count()]);
     }
 }

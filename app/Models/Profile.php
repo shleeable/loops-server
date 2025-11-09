@@ -131,6 +131,7 @@ class Profile extends Model
         'avatar',
         'followers',
         'following',
+        'video_count',
         'can_upload',
         'can_follow',
         'can_comment',

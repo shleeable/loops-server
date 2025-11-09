@@ -62,6 +62,36 @@ export const commentsApi = {
     },
 };
 
+// Comment Replies API
+export const repliesApi = {
+    async getComments({
+        cursor = null,
+        direction = "next",
+        search = "",
+        limit = 15,
+        local = false,
+    } = {}) {
+        const params = {
+            cursor: cursor,
+            limit: limit,
+            q: search,
+        };
+
+        if (local) {
+            params.local = 1;
+        }
+        return await apiClient.get("/api/v1/admin/replies", params);
+    },
+
+    async getParentComment(id) {
+        return await apiClient.get(`/api/v1/admin/comment/${id}`);
+    },
+
+    async deleteComment(id) {
+        return await apiClient.post(`/api/v1/admin/replies/${id}/delete`);
+    },
+};
+
 export const hashtagsApi = {
     async getHashtags({
         cursor = null,

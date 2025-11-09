@@ -534,7 +534,7 @@ class VideoController extends Controller
             $comment->profile_id = $pid;
             $comment->caption = $body;
             $comment->save();
-            $parent->increment('replies');
+            $parent->recalculateReplies();
             $parent->saveQuietly();
 
             $comment->syncHashtagsFromCaption();
@@ -685,8 +685,8 @@ class VideoController extends Controller
             $comment->forceDelete();
             $parent->forceDelete();
         } else {
-            $parent->decrement('replies');
             $comment->forceDelete();
+            $parent->recalculateReplies();
         }
 
         $video->recalculateCommentsCount();

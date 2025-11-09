@@ -211,6 +211,9 @@ Route::prefix('api')->group(function () {
 
         Route::get('/videos', [AdminController::class, 'videos'])->middleware('auth:web,api');
         Route::get('/comments', [AdminController::class, 'comments'])->middleware('auth:web,api');
+        Route::get('/comment/{id}', [AdminController::class, 'getComment'])->middleware('auth:web,api');
+        Route::get('/replies', [AdminController::class, 'replies'])->middleware('auth:web,api');
+        Route::post('/replies/{id}/delete', [AdminController::class, 'videoReplyDelete'])->middleware('auth:web,api');
         Route::get('/videos/{id}/comments', [AdminController::class, 'videoCommentsShow'])->middleware('auth:web,api');
         Route::post('/comments/{id}/delete', [AdminController::class, 'videoCommentsDelete'])->middleware('auth:web,api');
         Route::post('/videos/{id}/moderate', [AdminController::class, 'videoModerate'])->middleware('auth:web,api');

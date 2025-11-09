@@ -118,6 +118,7 @@ import { ref, computed } from "vue";
 import { useRoute } from "vue-router";
 import {
     Cog6ToothIcon,
+    ChatBubbleOvalLeftIcon,
     ChatBubbleLeftRightIcon,
     HashtagIcon,
     ExclamationTriangleIcon,
@@ -137,6 +138,11 @@ const navigation = [
     {
         name: "Comments",
         href: "/admin/comments",
+        icon: ChatBubbleOvalLeftIcon,
+    },
+    {
+        name: "Replies",
+        href: "/admin/replies",
         icon: ChatBubbleLeftRightIcon,
     },
     { name: "Hashtags", href: "/admin/hashtags", icon: HashtagIcon },

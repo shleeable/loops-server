@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AdminHashtagResource;
 use App\Http\Resources\AdminInstanceResource;
+use App\Http\Resources\CommentReplyResource;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\ProfileResource;
 use App\Http\Resources\ReportResource;
@@ -137,10 +138,42 @@ class AdminController extends Controller
 
     public function videoCommentsDelete(Request $request, $id)
     {
-        $comment = Comment::findOrFail($id);
+        $comment = Comment::withCount('children')->findOrFail($id);
         $video = Video::findOrFail($comment->video_id);
         app(AdminAuditLogService::class)->logVideoCommentDelete($request->user(), $video, ['vid' => $video->id, 'comment_id' => $comment->id, 'comment_profile_id' => $comment->profile_id, 'comment_caption' => $comment->caption, 'comment_likes' => $comment->likes]);
-        $comment->delete();
+        if($comment->children_count) {
+            $comment->update(['caption' => null, 'status' => 'deleted_by_admin']);
+            $comment->delete();
+        } else {
+            $comment->forceDelete();
+        }
+
+        $video->recalculateCommentsCount();
+
+        return $this->success();
+    }
+
+    public function videoReplyDelete(Request $request, $id)
+    {
+        $comment = CommentReply::findOrFail($id);
+        $video = Video::findOrFail($comment->video_id);
+
+        app(AdminAuditLogService::class)->logReportDeleteCommentReply(
+            $request->user(),
+            $video,
+            [
+                'vid' => $video->id,
+                'parent_id' => $comment->comment_id,
+                'comment_id' => $comment->id,
+                'comment_profile_id' => $comment->profile_id,
+                'comment_caption' => $comment->caption,
+                'comment_likes' => $comment->likes,
+            ]
+        );
+
+        $parent = $comment->parent;
+        $comment->forceDelete();
+        $parent->recalculateReplies();
         $video->decrement('comments');
 
         return $this->success();
@@ -381,6 +414,7 @@ class AdminController extends Controller
             $comment->forceDelete();
         } else {
             $comment->status = 'deleted_by_admin';
+            $comment->save();
             $comment->delete();
             $report->admin_seen = true;
             $report->save();
@@ -463,6 +497,50 @@ class AdminController extends Controller
             ->withQueryString();
 
         return CommentResource::collection($comments);
+    }
+
+    public function getComment(Request $request, $id)
+    {
+        $query = Comment::findOrFail($id);
+
+        return new CommentResource($query);
+    }
+
+    public function replies(Request $request)
+    {
+        $local = $request->query('local');
+
+        $query = CommentReply::query();
+
+        if ($local) {
+            $query->whereNull('ap_id');
+        }
+
+        $search = $request->get('q');
+
+        if (! empty($search)) {
+            if (str_starts_with($search, 'user:')) {
+                $username = trim(substr($search, 5));
+                if (! empty($username)) {
+                    $query->join('profiles', 'comments.profile_id', '=', 'profiles.id')
+                        ->where('profiles.username', 'like', '%'.$username.'%')
+                        ->select('comments.*');
+                }
+            } elseif (str_starts_with($search, 'video:')) {
+                $videoId = trim(substr($search, 6));
+                if (! empty($videoId)) {
+                    $query->where('video_id', $videoId);
+                }
+            } else {
+                $query->where('caption', 'like', '%'.$search.'%');
+            }
+        }
+
+        $comments = $query->orderByDesc('id')
+            ->cursorPaginate(10)
+            ->withQueryString();
+
+        return CommentReplyResource::collection($comments);
     }
 
     public function hashtags(Request $request)

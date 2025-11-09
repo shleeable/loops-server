@@ -214,16 +214,18 @@ const router = createRouter({
             meta: { requiresAuth: true },
         },
         // {
-        //   path: '/dashboard/account/deactivate',
-        //   name: 'dashboardAccountDeactivate',
-        //   component: () => import('~/pages/dashboard/account/AccountDeactivate.vue'),
-        //   meta: { requiresAuth: true },
+        //     path: "/dashboard/account/deactivate",
+        //     name: "dashboardAccountDeactivate",
+        //     component: () =>
+        //         import("~/pages/dashboard/account/AccountDeactivate.vue"),
+        //     meta: { requiresAuth: true },
         // },
         // {
-        //   path: '/dashboard/account/delete',
-        //   name: 'dashboardAccountDelete',
-        //   component: () => import('~/pages/dashboard/account/AccountDelete.vue'),
-        //   meta: { requiresAuth: true },
+        //     path: "/dashboard/account/delete",
+        //     name: "dashboardAccountDelete",
+        //     component: () =>
+        //         import("~/pages/dashboard/account/AccountDelete.vue"),
+        //     meta: { requiresAuth: true },
         // },
         {
             path: "/dashboard/safety",
@@ -281,6 +283,12 @@ const router = createRouter({
                     path: "comments",
                     name: "Comments",
                     component: () => import("~/pages/admin/Comments.vue"),
+                    meta: { requiresAdmin: true },
+                },
+                {
+                    path: "replies",
+                    name: "Replies",
+                    component: () => import("~/pages/admin/Replies.vue"),
                     meta: { requiresAdmin: true },
                 },
                 {
