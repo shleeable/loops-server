@@ -73,7 +73,7 @@ class VideoController extends Controller
 
         $escaped = $this->escapeLike($q);
 
-        $hashtags = Hashtag::where('name', 'like', $escaped.'%')->whereCanSearch(true)->limit(10)->get();
+        $hashtags = Hashtag::where('name', 'like', $escaped.'%')->whereCanSearch(true)->orderByDesc('count')->limit(10)->get();
 
         return HashtagResource::collection($hashtags);
     }
