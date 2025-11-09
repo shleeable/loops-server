@@ -5,6 +5,7 @@ use App\Http\Controllers\ActorController;
 use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\ExploreController;
 use App\Http\Controllers\Api\FeedController;
 use App\Http\Controllers\Api\ReportController;
@@ -13,7 +14,6 @@ use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StudioController;
 use App\Http\Controllers\Api\VideoController;
 use App\Http\Controllers\Api\WebPublicController;
-use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailChangeController;
 use App\Http\Controllers\InboxController;
@@ -212,7 +212,6 @@ Route::prefix('api')->group(function () {
         });
 
         Route::get('/dashboard/stats', [AdminDashboardController::class, 'index']);
-
 
         Route::get('/reports-count', [AdminController::class, 'reportCount'])->middleware('auth:web,api');
         Route::get('/videos', [AdminController::class, 'videos'])->middleware('auth:web,api');
