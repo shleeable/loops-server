@@ -961,7 +961,6 @@ const handleSaveVideo = async (data) => {
 
 const handleDeleteVideo = async (id) => {
     await videoStore.deleteVideoById(id);
-    await profileStore.getProfile(userId.value);
     router.push(`/studio/posts`);
 };
 </script>
