@@ -141,7 +141,7 @@ class AdminController extends Controller
         $comment = Comment::withCount('children')->findOrFail($id);
         $video = Video::findOrFail($comment->video_id);
         app(AdminAuditLogService::class)->logVideoCommentDelete($request->user(), $video, ['vid' => $video->id, 'comment_id' => $comment->id, 'comment_profile_id' => $comment->profile_id, 'comment_caption' => $comment->caption, 'comment_likes' => $comment->likes]);
-        if($comment->children_count) {
+        if ($comment->children_count) {
             $comment->update(['caption' => null, 'status' => 'deleted_by_admin']);
             $comment->delete();
         } else {
