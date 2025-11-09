@@ -68,7 +68,7 @@ class CommentReply extends Model
 {
     use HasFactory, HasSnowflakePrimary, HasSyncHashtagsFromCaption, HasSyncMentionsFromCaption, SoftDeletes;
 
-    protected $fillable = ['video_id', 'profile_id', 'comment_id', 'caption', 'status', 'is_edited'];
+    protected $fillable = ['video_id', 'profile_id', 'comment_id', 'caption', 'status', 'is_edited', 'ap_id', 'remote_url'];
 
     /**
      * Indicates if the IDs are auto-incrementing.

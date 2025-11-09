@@ -76,7 +76,7 @@ class Comment extends Model
 {
     use HasFactory, HasSnowflakePrimary, HasSyncHashtagsFromCaption, HasSyncMentionsFromCaption, SoftDeletes;
 
-    protected $fillable = ['video_id', 'profile_id', 'caption', 'status', 'replies', 'is_sensitive', 'updated_at', 'is_edited'];
+    protected $fillable = ['video_id', 'profile_id', 'caption', 'status', 'replies', 'is_sensitive', 'updated_at', 'is_edited', 'ap_id', 'remote_url'];
 
     /**
      * Indicates if the IDs are auto-incrementing.
