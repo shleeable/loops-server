@@ -5,7 +5,6 @@ namespace App\Federation\Validators;
 use App\Services\SanitizeService;
 use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
-use Illuminate\Support\Facades\Log;
 
 class UpdateValidator extends BaseValidator
 {
