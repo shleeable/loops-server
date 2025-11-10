@@ -88,7 +88,14 @@ class AutoLinkerService
         if (strpos($text, '#') !== false) {
             if (preg_match_all('/(^|[\s\p{P}])#([\p{L}\p{N}_]{1,100})/u', $text, $tm, PREG_SET_ORDER)) {
                 foreach ($tm as $t) {
+                    $lead = $t[1];
                     $tag = $t[2];
+
+                    // Skip if preceded by apostrophe (since this runs on original text before HTML encoding)
+                    if ($lead === "'" || $lead === "\u{2019}") {
+                        continue;
+                    }
+
                     if (! empty($tag)) {
                         $tagsWanted[mb_strtolower($tag)] = $tag;
                         if (count($tagsWanted) >= (self::MAX_TAGS * 2)) {
@@ -100,7 +107,6 @@ class AutoLinkerService
         }
 
         $profilesByUsername = collect();
-        $allUsernames = array_keys($localUsers) + array_keys($remoteAccts);
         if (! empty($localUsers) || ! empty($remoteAccts)) {
             $all = array_values(array_unique(array_merge(array_keys($localUsers), array_keys($remoteAccts))));
             if (! empty($all)) {
@@ -193,7 +199,8 @@ class AutoLinkerService
             return true;
         };
 
-        $safe = htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        // Work with raw text for pattern matching, escape only when generating HTML
+        $working = $text;
 
         $place = ['url' => [], 'men' => [], 'tag' => []];
         $salt = bin2hex(random_bytes(8));
@@ -201,22 +208,22 @@ class AutoLinkerService
 
         $counts = ['url' => 0, 'men' => 0, 'tag' => 0];
 
-        if (strpos($safe, 'http') !== false || strpos($safe, 'www.') !== false) {
-            $safe = preg_replace_callback(
+        if (strpos($working, 'http') !== false || strpos($working, 'www.') !== false) {
+            $working = preg_replace_callback(
                 '~(?<![\'"=])(https?://[^\s<]+|www\.[^\s<]+)~iu',
                 function ($m) use (&$place, &$counts, $tok, $cfg, $urlValidator) {
                     $raw = $m[0];
                     if ($counts['url'] >= self::MAX_URLS) {
+                        // Return raw text - it will be escaped in the final escaping step
                         return $raw;
                     }
 
-                    $rawUnescaped = html_entity_decode($raw, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-                    $url = str_starts_with(mb_strtolower($rawUnescaped), 'http') ? $rawUnescaped : ('https://'.$rawUnescaped);
+                    $url = str_starts_with(mb_strtolower($raw), 'http') ? $raw : ('https://'.$raw);
 
                     $i = count($place['url']);
 
                     if (! $urlValidator($url)) {
-                        $place['url'][$i] = self::renderBlockedUrl($raw, $cfg);
+                        $place['url'][$i] = self::renderBlockedUrl(htmlspecialchars($raw, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $cfg);
                         $counts['url']++;
 
                         return $tok('URL', $i);
@@ -227,12 +234,12 @@ class AutoLinkerService
 
                     return $tok('URL', $i);
                 },
-                $safe
+                $working
             );
         }
 
-        if (strpos($safe, '@') !== false) {
-            $safe = preg_replace_callback(
+        if (strpos($working, '@') !== false) {
+            $working = preg_replace_callback(
                 '/(^|[\s\p{P}])@('.$unameRe.')(?:@('.$domainRe.'))?(?=$|[\s\p{P}])/iu',
                 function ($m) use (&$place, &$counts, $tok, $rewriteLocalProfile, $resolveRemoteProfile, $mentionValidator, $cfg) {
                     $lead = $m[1] ?? '';
@@ -242,7 +249,8 @@ class AutoLinkerService
                     if ($counts['men'] >= self::MAX_MENTIONS) {
                         $acct = '@'.$user.($domain ? '@'.$domain : '');
 
-                        return $lead.htmlspecialchars($acct, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                        // Return raw text - it will be escaped in the final escaping step
+                        return $lead.$acct;
                     }
 
                     if (! $mentionValidator($user, $domain)) {
@@ -286,23 +294,31 @@ class AutoLinkerService
 
                     return $lead.$tok('MEN', $i);
                 },
-                $safe
+                $working
             );
         }
 
-        if (strpos($safe, '#') !== false) {
-            $safe = preg_replace_callback(
+        if (strpos($working, '#') !== false) {
+            $working = preg_replace_callback(
                 '/(^|[\s\p{P}])#([\p{L}\p{N}_]{1,100})/u',
                 function ($m) use (&$place, &$counts, $tok, $cfg, $hashtagValidator) {
                     $lead = $m[1];
                     $tag = $m[2];
 
+                    // Skip if preceded by apostrophe (now working on raw text)
+                    // Return raw text - it will be escaped in the final escaping step
+                    if ($lead === "'" || $lead === "\u{2019}") {
+                        return $m[0];
+                    }
+
                     if ($counts['tag'] >= self::MAX_TAGS) {
-                        return $lead.'#'.htmlspecialchars($tag, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                        // Return raw text - it will be escaped in the final escaping step
+                        return $m[0];
                     }
 
                     if (! $hashtagValidator($tag)) {
-                        return $lead.'#'.htmlspecialchars($tag, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                        // Return raw text - it will be escaped in the final escaping step
+                        return $m[0];
                     }
 
                     $href = rtrim((string) $cfg['tag_base'], '/').'/'.rawurlencode($tag);
@@ -312,16 +328,34 @@ class AutoLinkerService
                         htmlspecialchars($tag, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</span></a>';
 
                     $i = count($place['tag']);
-                    $place['tag'][$i] = $html;
+                    // Include the escaped lead in the final HTML so it won't be double-escaped
+                    $place['tag'][$i] = htmlspecialchars($lead, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').$html;
                     $counts['tag']++;
 
-                    return $lead.$tok('TAG', $i);
+                    return $tok('TAG', $i);
                 },
-                $safe
+                $working
             );
         }
 
-        $lines = preg_split("/\r?\n/", $safe);
+        // Escape all text that isn't part of our tokens to prevent XSS
+        $tokenPattern = '<!--__'.preg_quote($salt, '/').':[A-Z]+_TOK_\d+__-->';
+        $working = preg_replace_callback(
+            "/($tokenPattern)|([^<]+|<(?!--__))/",
+            function ($m) {
+                if (! empty($m[2])) {
+                    // This is non-token text, escape it
+                    return htmlspecialchars($m[2], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                }
+
+                // This is a token, return as-is
+                return $m[0];
+            },
+            $working
+        );
+
+        // Split into lines and wrap in paragraphs
+        $lines = preg_split("/\r?\n/", $working);
         $html = '';
         foreach ($lines as $line) {
             if ($line === '') {
