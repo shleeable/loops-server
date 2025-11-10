@@ -2,101 +2,44 @@
 
 namespace App\Federation\Validators;
 
-use App\Models\Comment;
-use App\Models\CommentReply;
-use App\Models\Status;
-use App\Models\Video;
 use App\Services\SanitizeService;
-use Illuminate\Support\Facades\Log;
 
 class LikeValidator extends BaseValidator
 {
-    public function validate(array $activity): bool
+    /**
+     * Validates an incoming Like activity.
+     *
+     * @throws \Exception if the activity is invalid.
+     */
+    public function validate(array $activity): void
     {
         if (! $this->hasRequiredFields($activity, ['type', 'actor', 'object'])) {
-            return false;
+            throw new \Exception('Like activity is missing required fields: type, actor, or object.');
         }
 
         if ($activity['type'] !== 'Like') {
-            return false;
+            throw new \Exception("Invalid activity type: expected 'Like', got '{$activity['type']}'.");
         }
 
         if (! is_string($activity['actor'])) {
-            return false;
+            throw new \Exception('Like activity "actor" must be a string URI.');
         }
 
         if (! is_string($activity['object'])) {
-            return false;
+            throw new \Exception('Like activity "object" must be a string URI.');
         }
 
         if (! app(SanitizeService::class)->url($activity['actor'], true)) {
-            return false;
+            throw new \Exception('Like activity "actor" URI is invalid.');
+        }
+
+        if (! app(SanitizeService::class)->url($activity['object'], true)) {
+            throw new \Exception('Like activity "object" URI is invalid.');
         }
 
         if (! $this->isLocalStatus($activity['object'])) {
-            if (config('logging.dev_log')) {
-                Log::warning('Like activity rejected - target is not a local status', [
-                    'actor' => $activity['actor'],
-                    'object' => $activity['object'],
-                ]);
-            }
-
-            return false;
+            throw new \Exception("Like activity rejected: target status '{$activity['object']}' is not a local status.");
         }
 
-        return true;
-    }
-
-    /**
-     * Check if the given URL represents a local status
-     */
-    private function isLocalStatus(string $url): bool
-    {
-        $isLocal = $this->isLocalObject($url);
-
-        if (! $isLocal) {
-            return false;
-        }
-
-        $statusMatch = app(SanitizeService::class)->matchUrlTemplate(
-            url: $url,
-            templates: [
-                '/ap/users/{userId}/video/{videoId}',
-            ],
-            useAppHost: true,
-            constraints: ['userId' => '\d+', 'videoId' => '\d+']
-        );
-
-        if ($statusMatch && isset($statusMatch['userId'], $statusMatch['videoId'])) {
-            return Video::whereProfileId($statusMatch['userId'])->whereKey($statusMatch['videoId'])->exists();
-        }
-
-        $commentMatch = app(SanitizeService::class)->matchUrlTemplate(
-            url: $url,
-            templates: [
-                '/ap/users/{userId}/comment/{replyId}',
-            ],
-            useAppHost: true,
-            constraints: ['userId' => '\d+', 'replyId' => '\d+']
-        );
-
-        if ($commentMatch && isset($commentMatch['userId'], $commentMatch['replyId'])) {
-            return Comment::whereProfileId($commentMatch['userId'])->whereKey($commentMatch['replyId'])->exists();
-        }
-
-        $commentReplyMatch = app(SanitizeService::class)->matchUrlTemplate(
-            url: $url,
-            templates: [
-                '/ap/users/{userId}/reply/{commentReplyId}',
-            ],
-            useAppHost: true,
-            constraints: ['userId' => '\d+', 'commentReplyId' => '\d+']
-        );
-
-        if ($commentReplyMatch && isset($commentReplyMatch['userId'], $commentReplyMatch['commentReplyId'])) {
-            return CommentReply::whereProfileId($commentReplyMatch['userId'])->whereKey($commentReplyMatch['commentReplyId'])->exists();
-        }
-
-        return false;
     }
 }

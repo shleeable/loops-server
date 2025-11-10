@@ -210,14 +210,18 @@ class ProcessSharedInboxActivity implements ShouldQueue
     {
         $validator = app(DeleteValidator::class);
 
-        if (! $validator->validate($this->activity)) {
+        try {
+            $validator->validate($this->activity);
+        } catch (\Exception $e) {
+
             if (config('logging.dev_log')) {
-                Log::warning('Delete activity failed validation', [
+                Log::warning("Delete activity failed validation: {$e->getMessage()}", [
                     'activity_id' => $this->activity['id'] ?? null,
+                    'raw_activity' => $this->activity,
                 ]);
             }
 
-            return;
+            throw new \Exception("Invalid activity: {$e->getMessage()}");
         }
 
         $handler = app(DeleteHandler::class);

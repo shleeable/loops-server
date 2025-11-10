@@ -2,10 +2,6 @@
 
 namespace App\Federation\Validators;
 
-use App\Models\Comment;
-use App\Models\CommentReply;
-use App\Models\Profile;
-use App\Models\Video;
 use App\Services\SanitizeService;
 use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
@@ -13,201 +9,113 @@ use Illuminate\Support\Facades\Log;
 
 class UpdateValidator extends BaseValidator
 {
-    public function validate(array $activity): bool
+    /**
+     * @throws \Exception
+     */
+    public function validate(array $activity): void
     {
         if (! $this->hasRequiredFields($activity, ['type', 'actor', 'object'])) {
-            return false;
+            throw new \Exception('Update activity is missing required fields: type, actor, or object.');
         }
 
         if ($activity['type'] !== 'Update') {
-            return false;
+            throw new \Exception("Activity type must be 'Update', found '{$activity['type']}'.");
         }
 
         if (! is_string($activity['actor'])) {
-            return false;
+            throw new \Exception('Activity "actor" property must be a string (URI).');
         }
 
         if (! is_array($activity['object'])) {
-            return false;
+            throw new \Exception('Activity "object" property must be an object (array).');
         }
 
         if (! app(SanitizeService::class)->url($activity['actor'], true)) {
-            return false;
+            throw new \Exception('Activity "actor" URI is invalid.');
         }
 
         $object = $activity['object'];
 
-        if (! isset($object['type']) || ! is_string($object['type'])) {
-            return false;
+        if (empty($object['type']) || ! is_string($object['type'])) {
+            throw new \Exception('Activity "object" is missing a "type" string.');
         }
 
-        if (! isset($object['id']) || ! is_string($object['id'])) {
-            return false;
+        if (empty($object['id']) || ! is_string($object['id'])) {
+            throw new \Exception('Activity "object" is missing an "id" string (URI).');
         }
 
         if (! app(SanitizeService::class)->url($object['id'])) {
-            return false;
+            throw new \Exception('Activity "object" ID is not a valid URL.');
         }
 
-        return match ($object['type']) {
+        match ($object['type']) {
             'Note', 'Article', 'Video', 'Image' => $this->validateStatusUpdate($activity, $object),
             'Person' => $this->validateProfileUpdate($activity, $object),
             default => $this->validateGenericUpdate($activity, $object)
         };
     }
 
-    private function validateStatusUpdate(array $activity, array $object): bool
+    /**
+     * @throws \Exception
+     */
+    private function validateStatusUpdate(array $activity, array $object): void
     {
         if (! $this->isLocalStatus($object['id'])) {
-            if (config('logging.dev_log')) {
-                Log::warning('Update activity rejected - target is not a local status', [
-                    'actor' => $activity['actor'],
-                    'object_id' => $object['id'],
-                ]);
-            }
-
-            return false;
+            throw new \Exception("Update activity rejected: Object '{$object['id']}' is not a local status on this server.");
         }
 
         if (isset($object['content']) && ! is_string($object['content'])) {
-            return false;
+            throw new \Exception('Object "content" must be a string.');
         }
 
         if (isset($object['summary']) && ! is_string($object['summary'])) {
-            return false;
+            throw new \Exception('Object "summary" must be a string.');
         }
 
         if (isset($object['sensitive']) && ! is_bool($object['sensitive'])) {
-            return false;
+            throw new \Exception('Object "sensitive" must be a boolean.');
         }
 
         if (isset($object['updated']) && ! is_string($object['updated'])) {
-            return false;
+            throw new \Exception('Object "updated" timestamp must be a string.');
         }
 
-        try {
-            Carbon::parse($object['updated']);
-        } catch (InvalidFormatException $e) {
-            return false;
+        if (isset($object['updated'])) {
+            try {
+                Carbon::parse($object['updated']);
+            } catch (InvalidFormatException $e) {
+                throw new \Exception("Object 'updated' timestamp is invalid: {$e->getMessage()}");
+            }
         }
-
-        return true;
     }
 
-    private function validateProfileUpdate(array $activity, array $object): bool
+    /**
+     * @throws \Exception
+     */
+    private function validateProfileUpdate(array $activity, array $object): void
     {
         if (! $this->isLocalProfile($object['id'])) {
-            if (config('logging.dev_log')) {
-                Log::warning('Update activity rejected - target is not a local profile', [
-                    'actor' => $activity['actor'],
-                    'object_id' => $object['id'],
-                ]);
-            }
-
-            return false;
+            throw new \Exception("Update activity rejected: Object '{$object['id']}' is not a local profile on this server.");
         }
 
         if (isset($object['name']) && ! is_string($object['name'])) {
-            return false;
+            throw new \Exception('Object "name" must be a string.');
         }
 
         if (isset($object['summary']) && ! is_string($object['summary'])) {
-            return false;
+            throw new \Exception('Object "summary" must be a string.');
         }
 
         if (isset($object['icon']) && (! is_array($object['icon']) || ! isset($object['icon']['url']))) {
-            return false;
+            throw new \Exception('Object "icon" must be an object with a "url" property.');
         }
-
-        return true;
-    }
-
-    private function validateGenericUpdate(array $activity, array $object): bool
-    {
-        if (config('logging.dev_log')) {
-            Log::info('Generic Update activity validation - unknown type', [
-                'actor' => $activity['actor'],
-                'object_type' => $object['type'],
-            ]);
-        }
-
-        return false;
     }
 
     /**
-     * Check if the given URL represents a local profile
+     * @throws \Exception
      */
-    private function isLocalProfile(string $url): bool
+    private function validateGenericUpdate(array $activity, array $object): void
     {
-        $isLocal = $this->isLocalObject($url);
-
-        if ($isLocal) {
-            return false;
-        }
-
-        return Profile::where('uri', $url)->exists();
-    }
-
-    /**
-     * Check if the given URL represents a local status
-     */
-    private function isLocalStatus(string $url): bool
-    {
-        $isLocal = $this->isLocalObject($url);
-
-        if ($isLocal) {
-            $statusMatch = app(SanitizeService::class)->matchUrlTemplate(
-                url: $url,
-                templates: [
-                    '/ap/users/{userId}/video/{videoId}',
-                ],
-                useAppHost: true,
-                constraints: ['userId' => '\d+', 'videoId' => '\d+']
-            );
-
-            if ($statusMatch && isset($statusMatch['userId'], $statusMatch['videoId'])) {
-                return Video::whereProfileId($statusMatch['userId'])->whereKey($statusMatch['videoId'])->exists();
-            }
-
-            $commentMatch = app(SanitizeService::class)->matchUrlTemplate(
-                url: $url,
-                templates: [
-                    '/ap/users/{userId}/comment/{replyId}',
-                ],
-                useAppHost: true,
-                constraints: ['userId' => '\d+', 'replyId' => '\d+']
-            );
-
-            if ($commentMatch && isset($commentMatch['userId'], $commentMatch['replyId'])) {
-                return Comment::whereProfileId($commentMatch['userId'])->whereKey($commentMatch['replyId'])->exists();
-            }
-
-            $commentReplyMatch = app(SanitizeService::class)->matchUrlTemplate(
-                url: $url,
-                templates: [
-                    '/ap/users/{userId}/reply/{commentReplyId}',
-                ],
-                useAppHost: true,
-                constraints: ['userId' => '\d+', 'commentReplyId' => '\d+']
-            );
-
-            if ($commentReplyMatch && isset($commentReplyMatch['userId'], $commentReplyMatch['commentReplyId'])) {
-                return CommentReply::whereProfileId($commentReplyMatch['userId'])->whereKey($commentReplyMatch['commentReplyId'])->exists();
-            }
-
-            return false;
-        }
-
-        $commentMatch = Comment::where('ap_id', $url)->exists();
-        if ($commentMatch) {
-            return true;
-        }
-
-        $commentReplyMatch = CommentReply::where('ap_id', $url)->exists();
-        if ($commentReplyMatch) {
-            return true;
-        }
-
-        return Video::where('uri', $url)->exists();
+        throw new \Exception("Unsupported object type for Update: '{$object['type']}'.");
     }
 }

@@ -12,149 +12,161 @@ use Illuminate\Support\Facades\Log;
 
 class CreateValidator extends BaseValidator
 {
-    public function validate(array $activity): bool
+    /**
+     * Validates an incoming Create activity.
+     * Assumes the object is a 'Note' (reply) and validates that its reply
+     * chain eventually terminates at a local Video.
+     *
+     * @throws \Exception if the activity is invalid.
+     */
+    public function validate(array $activity): void
     {
         if (! $this->hasRequiredFields($activity, ['type', 'actor', 'object'])) {
-            return false;
+            throw new \Exception('Create activity is missing required fields: type, actor, or object.');
         }
 
         if ($activity['type'] !== 'Create') {
-            return false;
+            throw new \Exception("Invalid activity type: expected 'Create', got '{$activity['type']}'.");
         }
 
         if (! is_array($activity['object'])) {
-            return false;
-        }
-
-        if (! isset($activity['object']['type'], $activity['object']['inReplyTo']) || ! in_array($activity['object']['type'], ['Note'])) {
-            return false;
+            throw new \Exception('Create activity "object" must be an array.');
         }
 
         if (! app(SanitizeService::class)->url($activity['actor'], true)) {
-            return false;
+            throw new \Exception('Create activity "actor" URI is invalid.');
         }
 
-        if (empty($activity['object']['inReplyTo'])) {
-            return false;
+        $object = $activity['object'];
+
+        if (empty($object['type']) || $object['type'] !== 'Note') {
+            throw new \Exception("Create activity 'object' type must be 'Note'. Got '{$object['type']}'.");
         }
 
-        return $this->validateReplyChain($activity['object']['inReplyTo']);
+        if (empty($object['inReplyTo'])) {
+            throw new \Exception("Create 'Note' activity is missing 'inReplyTo' property.");
+        }
+
+        if (! is_string($object['inReplyTo'])) {
+            throw new \Exception("Create 'Note' activity 'inReplyTo' property must be a string URI.");
+        }
+
+        $this->validateReplyChain($object['inReplyTo']);
     }
 
     /**
-     * Walk the reply chain to ensure it eventually leads to a local Video
+     * Walk the reply chain to ensure it eventually leads to a local Video.
+     *
+     * @throws \Exception if the chain is invalid or does not lead to a local Video.
      */
-    private function validateReplyChain(string $inReplyToUrl, int $depth = 0): bool
+    private function validateReplyChain(string $inReplyToUrl, int $depth = 0): void
     {
         if ($depth > 10) {
-            if (config('logging.dev_log')) {
-                Log::warning('Reply chain depth exceeded', ['url' => $inReplyToUrl, 'depth' => $depth]);
-            }
-
-            return false;
+            throw new \Exception("Reply chain depth exceeded (10) while checking '{$inReplyToUrl}'.");
         }
 
         if (! app(SanitizeService::class)->url($inReplyToUrl, true)) {
-            if (config('logging.dev_log')) {
-                Log::warning('Invalid inReplyToUrl url, may be banned or inaccessible', ['url' => $inReplyToUrl, 'depth' => $depth]);
-            }
-
-            return false;
+            throw new \Exception("Invalid URL in reply chain: '{$inReplyToUrl}'.");
         }
 
-        $replyUrl = parse_url($inReplyToUrl);
-        $baseDomain = $this->localDomain();
-        $isLocal = $this->isLocalObject($inReplyToUrl);
+        $sanitizeService = app(SanitizeService::class);
 
-        if ($isLocal) {
-            $videoHashIdMatch = app(SanitizeService::class)->matchUrlTemplate(
+        if ($this->isLocalObject($inReplyToUrl)) {
+            $hashIdMatch = $sanitizeService->matchUrlTemplate(
                 url: $inReplyToUrl,
-                templates: '/v/{hashId}',
+                templates: [
+                    '/v/{hashId}',
+                ],
                 useAppHost: true,
                 constraints: ['hashId' => '[0-9a-zA-Z_-]{1,11}']
             );
 
-            if ($videoHashIdMatch && isset($videoHashIdMatch['hashId'])) {
-                $decodedId = HashidService::safeDecode($videoHashIdMatch['hashId']);
-                if ($decodedId !== null) {
-                    return Video::where('id', $decodedId)->exists();
+            if ($hashIdMatch) {
+                $decodedId = HashidService::safeDecode($hashIdMatch['hashId']);
+                if ($decodedId !== null && Video::where('id', $decodedId)->exists()) {
+                    return;
                 }
             }
 
-            $videoMatch = app(SanitizeService::class)->matchUrlTemplate(
+            $videoMatch = $sanitizeService->matchUrlTemplate(
                 url: $inReplyToUrl,
-                templates: '/ap/users/{profileId}/video/{videoId}',
+                templates: [
+                    '/ap/users/{pId}/video/{vId}',
+                ],
                 useAppHost: true,
-                constraints: ['profileId' => '\d+', 'videoId' => '\d+']
+                constraints: ['pId' => '\d+', 'vId' => '\d+']
             );
 
-            if ($videoMatch && isset($videoMatch['videoId'])) {
-                return Video::where('id', $videoMatch['videoId'])->exists();
+            if ($videoMatch && Video::where('id', $videoMatch['vId'])->exists()) {
+                return;
             }
 
-            $commentMatch = app(SanitizeService::class)->matchUrlTemplate(
+            $commentMatch = $sanitizeService->matchUrlTemplate(
                 url: $inReplyToUrl,
-                templates: '/ap/users/{profileId}/comment/{commentId}',
+                templates: [
+                    '/ap/users/{pId}/comment/{cId}',
+                ],
                 useAppHost: true,
-                constraints: ['profileId' => '\d+', 'commentId' => '\d+']
+                constraints: ['pId' => '\d+', 'cId' => '\d+']
             );
 
-            if ($commentMatch && isset($commentMatch['commentId'])) {
-                return Comment::where('id', $commentMatch['commentId'])->exists();
+            if ($commentMatch && Comment::where('id', $commentMatch['cId'])->exists()) {
+                return;
             }
 
-            $replyMatch = app(SanitizeService::class)->matchUrlTemplate(
+            $replyMatch = $sanitizeService->matchUrlTemplate(
                 url: $inReplyToUrl,
-                templates: '/ap/users/{profileId}/reply/{replyId}',
+                templates: [
+                    '/ap/users/{pId}/reply/{rId}',
+                ],
                 useAppHost: true,
-                constraints: ['profileId' => '\d+', 'replyId' => '\d+']
+                constraints: ['pId' => '\d+', 'rId' => '\d+']
             );
 
-            if ($replyMatch && isset($replyMatch['replyId'])) {
-                return CommentReply::where('id', $replyMatch['replyId'])->exists();
+            if ($replyMatch && CommentReply::where('id', $replyMatch['rId'])->exists()) {
+                return;
             }
 
-            return false;
+            throw new \Exception("Local object '{$inReplyToUrl}' is not a valid reply target.");
         }
 
         $comment = Comment::where('ap_id', $inReplyToUrl)->first();
         if ($comment) {
-            return true;
+            if ($comment->video()->exists()) {
+                return;
+            }
+            throw new \Exception("Known remote comment '{$inReplyToUrl}' is orphaned (no local video).");
         }
 
         $commentReply = CommentReply::where('ap_id', $inReplyToUrl)->first();
         if ($commentReply) {
-            return true;
+            $parentComment = $commentReply->parent;
+            if (! $parentComment) {
+                throw new \Exception("Known remote reply '{$inReplyToUrl}' is orphaned (parent comment not found).");
+            }
+            $this->validateReplyChain($parentComment->getObjectUrl(), $depth + 1);
+
+            return;
         }
 
         try {
-            $response = app(ActivityPubService::class)->get($inReplyToUrl);
+            $remoteObject = app(ActivityPubService::class)->get($inReplyToUrl);
 
-            if (! $response) {
-                if (config('logging.dev_log')) {
-                    Log::warning('Failed to fetch remote object', ['url' => $inReplyToUrl]);
-                }
-
-                return false;
+            if (! $remoteObject) {
+                throw new \Exception("Failed to fetch remote object '{$inReplyToUrl}'.");
             }
 
-            $remoteObject = $response;
-
-            if (isset($remoteObject['inReplyTo']) && ! empty($remoteObject['inReplyTo'])) {
-                return $this->validateReplyChain($remoteObject['inReplyTo'], $depth + 1);
+            if (empty($remoteObject['inReplyTo'])) {
+                throw new \Exception("Remote object '{$inReplyToUrl}' is not a reply, chain terminated.");
             }
 
-            return false;
+            $this->validateReplyChain($remoteObject['inReplyTo'], $depth + 1);
 
         } catch (\Exception $e) {
             if (config('logging.dev_log')) {
-                Log::error('Error fetching remote object for reply validation', [
-                    'url' => $inReplyToUrl,
-                    'error' => $e->getMessage(),
-                ]);
+                Log::error("Error fetching remote object '{$inReplyToUrl}'", ['error' => $e->getMessage()]);
             }
-
-            return false;
+            throw new \Exception("Error during reply chain validation: {$e->getMessage()}");
         }
     }
 }

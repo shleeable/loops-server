@@ -2,243 +2,108 @@
 
 namespace App\Federation\Validators;
 
-use App\Models\Comment;
-use App\Models\CommentReply;
 use App\Models\Profile;
-use App\Models\Video;
 use App\Services\SanitizeService;
-use Illuminate\Support\Facades\Log;
 
 class UndoValidator extends BaseValidator
 {
-    public function validate(array $activity): bool
+    /**
+     * Validates an incoming Undo activity.
+     *
+     * @throws \Exception if the activity is invalid.
+     */
+    public function validate(array $activity): void
     {
         if (! $this->hasRequiredFields($activity, ['type', 'actor', 'object'])) {
-            return false;
+            throw new \Exception('Undo activity is missing required fields: type, actor, or object.');
         }
 
         if ($activity['type'] !== 'Undo') {
-            return false;
+            throw new \Exception("Invalid activity type: expected 'Undo', got '{$activity['type']}'.");
         }
 
         if (! is_string($activity['actor'])) {
-            return false;
+            throw new \Exception('Undo activity "actor" must be a string URI.');
         }
 
         if (! is_array($activity['object'])) {
-            return false;
+            throw new \Exception('Undo activity "object" must be an array (the original activity).');
         }
 
         if (! app(SanitizeService::class)->url($activity['actor'], true)) {
-            return false;
+            throw new \Exception('Undo activity "actor" URI is invalid.');
         }
 
         $object = $activity['object'];
 
-        if (! isset($object['type'], $object['object']) || ! is_string($object['type']) || ! is_string($object['object'])) {
-            return false;
+        // Validate the structure of the original activity
+        if (empty($object['type']) || ! is_string($object['type'])) {
+            throw new \Exception('Original activity (the "object") must have a "type" property.');
         }
 
+        if (empty($object['object']) || ! is_string($object['object'])) {
+            throw new \Exception('Original activity (the "object") must have its own "object" property (the target URI).');
+        }
+
+        // The actor of the Undo must be the same as the actor of the original activity
         if (isset($object['actor']) && $object['actor'] !== $activity['actor']) {
-            if (config('logging.dev_log')) {
-                Log::warning('Undo activity rejected - actor mismatch', [
-                    'undo_actor' => $activity['actor'],
-                    'original_actor' => $object['actor'],
-                ]);
-            }
-
-            return false;
+            throw new \Exception('Undo activity actor does not match the original activity actor.');
         }
 
+        // Validate the target of the original activity is a URL
         if (! app(SanitizeService::class)->url($object['object'], true)) {
-            return false;
+            throw new \Exception('The "object" of the original activity is not a valid URL.');
         }
 
-        return match ($object['type']) {
-            'Follow' => $this->validateUndoFollow($activity, $object),
-            'Like' => $this->validateUndoLike($activity, $object),
-            'Announce' => $this->validateUndoAnnounce($activity, $object),
-            default => $this->validateGenericUndo($activity, $object)
+        // Dispatch based on the *original* activity's type
+        match ($object['type']) {
+            'Follow' => $this->validateUndoFollow($object),
+            'Like' => $this->validateUndoLike($object),
+            'Announce' => $this->validateUndoAnnounce($object),
+            default => $this->validateGenericUndo($object)
         };
     }
 
-    private function validateUndoFollow(array $activity, array $followObject): bool
+    /**
+     * @throws \Exception
+     */
+    private function validateUndoFollow(array $followObject): void
     {
-        if (! isset($followObject['object']) || ! is_string($followObject['object'])) {
-            return false;
+        if (empty($followObject['object']) || ! is_string($followObject['object'])) {
+            throw new \Exception('Undo Follow "object" (the original activity) is missing its own "object" (the profile URI).');
         }
 
+        // We only process unfollows if the target profile is one of ours.
         if (! $this->isLocalProfile($followObject['object'])) {
-            if (config('logging.dev_log')) {
-                Log::warning('Undo Follow activity rejected - target is not a local profile', [
-                    'actor' => $activity['actor'],
-                    'object' => $followObject['object'],
-                ]);
-            }
-
-            return false;
+            throw new \Exception("Undo Follow rejected: target profile '{$followObject['object']}' is not a local profile.");
         }
-
-        return true;
-    }
-
-    private function validateUndoLike(array $activity, array $likeObject): bool
-    {
-        if (! isset($likeObject['object']) || ! is_string($likeObject['object'])) {
-            return false;
-        }
-
-        if (! $this->isLocalStatus($likeObject['object'])) {
-            if (config('logging.dev_log')) {
-                Log::warning('Undo Like activity rejected - target is not a local status', [
-                    'actor' => $activity['actor'],
-                    'object' => $likeObject['object'],
-                ]);
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private function validateUndoAnnounce(array $activity, array $announceObject): bool
-    {
-        if (! isset($announceObject['object']) || ! is_string($announceObject['object'])) {
-            return false;
-        }
-
-        if (! $this->isLocalStatus($announceObject['object'])) {
-            if (config('logging.dev_log')) {
-                Log::warning('Undo Announce activity rejected - target is not a local status', [
-                    'actor' => $activity['actor'],
-                    'object' => $announceObject['object'],
-                ]);
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private function validateGenericUndo(array $activity, array $object): bool
-    {
-        if (config('logging.dev_log')) {
-            Log::info('Generic Undo activity validation - unknown type', [
-                'actor' => $activity['actor'],
-                'object_type' => $object['type'],
-            ]);
-        }
-
-        return true;
     }
 
     /**
-     * Check if the given URL represents a local profile
+     * @throws \Exception
      */
-    private function isLocalProfile(string $url): bool
+    private function validateUndoLike(array $likeObject): void
     {
-        $isLocal = $this->isLocalObject($url);
-
-        if (! $isLocal) {
-            return Profile::where('uri', $url)->exists();
+        if (empty($likeObject['object']) || ! is_string($likeObject['object'])) {
+            throw new \Exception('Undo Like "object" (the original activity) is missing its own "object" (the status URI).');
         }
-
-        $profileMatch = app(SanitizeService::class)->matchUrlTemplate(
-            url: $url,
-            templates: [
-                '/ap/users/{profileId}',
-                '/@{username}',
-                '/users/{username}',
-            ],
-            useAppHost: true,
-            constraints: ['profileId' => '\d+', 'username' => '[a-zA-Z0-9_.-]+']
-        );
-
-        if ($profileMatch) {
-            if (isset($profileMatch['profileId'])) {
-                return Profile::where('id', $profileMatch['profileId'])->whereLocal(true)->exists();
-            }
-
-            if (isset($profileMatch['username'])) {
-                return Profile::where('username', $profileMatch['username'])->whereLocal(true)->exists();
-            }
-        }
-
-        return false;
     }
 
     /**
-     * Check if the given URL represents a local status
+     * @throws \Exception
      */
-    private function isLocalStatus(string $url): bool
+    private function validateUndoAnnounce(array $announceObject): void
     {
-        $isLocal = $this->isLocalObject($url);
-
-        if (! $isLocal) {
-            return $this->isRemoteStatus($url);
+        if (empty($announceObject['object']) || ! is_string($announceObject['object'])) {
+            throw new \Exception('Undo Announce "object" (the original activity) is missing its own "object" (the status URI).');
         }
-
-        $statusMatch = app(SanitizeService::class)->matchUrlTemplate(
-            url: $url,
-            templates: [
-                '/ap/users/{userId}/video/{videoId}',
-            ],
-            useAppHost: true,
-            constraints: ['userId' => '\d+', 'videoId' => '\d+']
-        );
-
-        if ($statusMatch && isset($statusMatch['userId'], $statusMatch['videoId'])) {
-            return Video::whereProfileId($statusMatch['userId'])->whereKey($statusMatch['videoId'])->exists();
-        }
-
-        $commentMatch = app(SanitizeService::class)->matchUrlTemplate(
-            url: $url,
-            templates: [
-                '/ap/users/{userId}/comment/{commentId}',
-            ],
-            useAppHost: true,
-            constraints: ['userId' => '\d+', 'commentId' => '\d+']
-        );
-
-        if ($commentMatch && isset($commentMatch['userId'], $commentMatch['commentId'])) {
-            return Comment::whereProfileId($commentMatch['userId'])->whereKey($commentMatch['commentId'])->exists();
-        }
-
-        $commentReplyMatch = app(SanitizeService::class)->matchUrlTemplate(
-            url: $url,
-            templates: [
-                '/ap/users/{userId}/reply/{commentReplyId}',
-            ],
-            useAppHost: true,
-            constraints: ['userId' => '\d+', 'commentReplyId' => '\d+']
-        );
-
-        if ($commentReplyMatch && isset($commentReplyMatch['userId'], $commentReplyMatch['commentReplyId'])) {
-            return CommentReply::whereProfileId($commentReplyMatch['userId'])->whereKey($commentReplyMatch['commentReplyId'])->exists();
-        }
-
-        return false;
     }
 
-    private function isRemoteStatus(string $url): bool
+    /**
+     * @throws \Exception
+     */
+    private function validateGenericUndo(array $object): void
     {
-        $comment = Comment::where('ap_id', $url)->exists();
-        if ($comment) {
-            return true;
-        }
-
-        $commentReply = CommentReply::where('ap_id', $url)->exists();
-        if ($commentReply) {
-            return true;
-        }
-
-        $video = Video::whereUri($url)->exists();
-        if ($video) {
-            return true;
-        }
-
-        return false;
+        throw new \Exception("Unsupported object type for Undo activity: '{$object['type']}'.");
     }
 }
