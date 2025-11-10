@@ -196,14 +196,6 @@ class ProcessSharedInboxActivity implements ShouldQueue
     }
 
     /**
-     * Determine the time at which the job should timeout.
-     */
-    public function retryUntil()
-    {
-        return now()->addMinutes(5);
-    }
-
-    /**
      * Handle Delete activities without requiring to/cc fields
      */
     protected function handleDeleteActivity()
