@@ -48,7 +48,7 @@ class DeliverUndoCommentLikeActivity implements ShouldBeUnique, ShouldQueue
     public function __construct(Profile $actor, Profile $target, $commentLike, string $objectUrl)
     {
         $this->actor = $actor;
-        $this->actor = $target;
+        $this->target = $target;
         $this->commentLike = $commentLike;
         $this->objectUrl = $objectUrl;
 

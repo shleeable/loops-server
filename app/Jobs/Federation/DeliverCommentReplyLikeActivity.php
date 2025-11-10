@@ -49,7 +49,7 @@ class DeliverCommentReplyLikeActivity implements ShouldBeUnique, ShouldQueue
     public function __construct(Profile $actor, Profile $target, CommentReplyLike $commentReplyLike, string $objectUrl)
     {
         $this->actor = $actor;
-        $this->actor = $target;
+        $this->target = $target;
         $this->commentReplyLike = $commentReplyLike;
         $this->objectUrl = $objectUrl;
 
