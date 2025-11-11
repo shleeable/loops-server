@@ -124,6 +124,23 @@ class LoginController extends Controller
 
         $user = $this->guard()->user();
 
+        if ((int) $user->status === 6) {
+            $this->guard()->logout();
+
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'message' => 'Your account has been disabled.',
+                ], 403);
+            }
+
+            return redirect()->route('login')->withErrors([
+                $this->username() => 'Your account has been disabled.',
+            ]);
+        }
+
         if ($user->has_2fa) {
             Session::put('2fa:user:id', $user->id);
             Session::put('2fa:user:attempts', 0);
@@ -147,6 +164,11 @@ class LoginController extends Controller
     protected function authenticated(Request $request, $user)
     {
         $intendedUrl = session('url.intended');
+
+        if (in_array($user->status, [7, 8])) {
+            $user->update(['status' => 1]);
+            $user->profile->update(['status' => 1]);
+        }
 
         if ($intendedUrl && str_contains($intendedUrl, '/oauth/authorize')) {
             session()->forget('url.intended');
