@@ -61,7 +61,9 @@ class WebPublicController extends Controller
 
     public function showVideo(Request $request, $id)
     {
-        $video = Video::published()->find($id);
+        $video = Video::with('profile')->published()->find($id);
+
+        abort_if($video->profile->status != 1, 400, 'Resource not available');
 
         if (! $video || ($request->user() && $request->user()->cannot('view', $video))) {
             return $this->error('Video not found or is unavailable', 404);
@@ -75,7 +77,9 @@ class WebPublicController extends Controller
      */
     public function comments(Request $request, $id)
     {
-        $video = Video::published()->canComment()->find($id);
+        $video = Video::with('profile')->published()->canComment()->find($id);
+
+        abort_if($video->profile->status != 1, 400, 'Resource not available');
 
         if (! $video || ($request->user() && $request->user()->cannot('view', [Video::class, $video]))) {
             return $this->error('Video not found or is unavailable or has comments disabled', 404);
@@ -91,7 +95,10 @@ class WebPublicController extends Controller
 
     public function getCommentById(Request $request, $videoId, $commentId)
     {
-        $video = Video::published()->canComment()->find($videoId);
+        $video = Video::with('profile')->published()->canComment()->find($videoId);
+
+        abort_if($video->profile->status != 1, 400, 'Resource not available');
+
         $comment = Comment::withTrashed()
             ->whereVideoId($video->id)
             ->findOrFail($commentId);
@@ -101,13 +108,15 @@ class WebPublicController extends Controller
 
     public function getReplyById(Request $request, $videoId, $replyId)
     {
-        $video = Video::published()->canComment()->find($videoId);
+        $video = Video::with('profile')->published()->canComment()->find($videoId);
 
         if (! $video) {
             return response()->json([
                 'error' => 'Video not found or comments are disabled',
             ], 404);
         }
+
+        abort_if($video->profile->status != 1, 400, 'Resource not available');
 
         $reply = CommentReply::withTrashed()
             ->with(['profile', 'parent'])
@@ -141,7 +150,9 @@ class WebPublicController extends Controller
             'cr' => 'required|integer',
         ]);
 
-        $video = Video::published()->canComment()->find($id);
+        $video = Video::with('profile')->published()->canComment()->find($id);
+
+        abort_if($video->profile->status != 1, 400, 'Resource not available');
 
         if (! $video || ($request->user() && $request->user()->cannot('view', [Video::class, $video]))) {
             return $this->error('Video not found or is unavailable or has comments disabled', 404);
@@ -173,6 +184,7 @@ class WebPublicController extends Controller
         if ($profile->status != 1) {
             return $this->error('This resource is not available', 403);
         }
+
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_owner'] = false;
         $res['likes_count'] = AccountService::getAccountLikesCount($profile->id);
@@ -229,7 +241,7 @@ class WebPublicController extends Controller
         $profile = Profile::findOrFail($id);
 
         if ($profile->status != 1) {
-            return $this->error('This resource is not available', 403);
+            return $this->error('This resource is not available', 400);
         }
 
         return FeedService::getAccountFeed($id, 10, $sort);
