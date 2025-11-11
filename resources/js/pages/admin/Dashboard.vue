@@ -14,7 +14,10 @@
                 </p>
             </div>
 
-            <div v-if="dashboardData?.cached_at" class="text-xs text-gray-400 mb-3 xl:mb-0 flex gap-1">
+            <div
+                v-if="dashboardData?.cached_at"
+                class="text-xs text-gray-400 mb-3 xl:mb-0 flex gap-1"
+            >
                 <span
                     >Data Updated:
                     {{ formatTimeAgo(dashboardData?.cached_at) }}</span
