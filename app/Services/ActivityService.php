@@ -71,6 +71,10 @@ class ActivityService
     public function activityMap()
     {
         return [
+            'Accept' => [
+                'handler' => \App\Federation\Handlers\AcceptHandler::class,
+                'validator' => \App\Federation\Validators\AcceptValidator::class,
+            ],
             'Create' => [
                 'handler' => \App\Federation\Handlers\CreateHandler::class,
                 'validator' => \App\Federation\Validators\CreateValidator::class,

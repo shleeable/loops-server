@@ -61,8 +61,6 @@ class FollowHandler extends BaseHandler
 
             $this->sendAcceptActivity($activity, $targetProfile, $actor, $follower);
 
-            $this->updateFollowCounts($actor, $targetProfile);
-
             DB::commit();
 
             if (config('logging.dev_log')) {
@@ -152,11 +150,5 @@ class FollowHandler extends BaseHandler
         ];
 
         DeliverAcceptActivity::dispatch($acceptActivity, $target, $actor)->onQueue('activitypub-out');
-    }
-
-    private function updateFollowCounts(Profile $follower, Profile $following): void
-    {
-        $following->increment('followers');
-        $follower->increment('following');
     }
 }
