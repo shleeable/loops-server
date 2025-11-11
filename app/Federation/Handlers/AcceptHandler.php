@@ -79,12 +79,12 @@ class AcceptHandler
 
             Follower::updateOrCreate(
                 [
-                    'profile_id' => $actor->id,
-                    'following_id' => $target->id,
+                    'profile_id' => $target->id,
+                    'following_id' => $actor->id,
                 ],
                 [
-                    'profile_is_local' => (bool) $actor->local,
-                    'following_is_local' => (bool) $target->local,
+                    'profile_is_local' => (bool) $target->local,
+                    'following_is_local' => (bool) $actor->local,
                 ]
             );
 
