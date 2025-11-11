@@ -3,7 +3,8 @@
 namespace App\Jobs\Federation;
 
 use App\Federation\ActivityBuilders\UndoActivityBuilder;
-use App\Models\FollowRequest;
+use App\Models\Follower;
+use App\Models\Profile;
 use App\Services\HttpSignatureService;
 use App\Services\SigningService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,18 +16,26 @@ class DeliverUndoFollowActivity implements ShouldQueue
 {
     use Queueable;
 
-    public $followRequest;
+    protected $followerId;
 
-    public $tries = 10;
+    protected $profileId;
+
+    protected $followingId;
+
+    public $tries = 3;
 
     public $timeout = 120;
+
+    public $backoff = [10, 30, 60];
 
     /**
      * Create a new job instance.
      */
-    public function __construct(FollowRequest $followRequest)
+    public function __construct(Follower $follower)
     {
-        $this->followRequest = $followRequest;
+        $this->followerId = $follower->id;
+        $this->profileId = $follower->profile_id;
+        $this->followingId = $follower->following_id;
     }
 
     /**
@@ -34,11 +43,16 @@ class DeliverUndoFollowActivity implements ShouldQueue
      */
     public function handle(): void
     {
-        $followRequest = $this->followRequest;
-        $actor = $followRequest->actor;
-        $target = $followRequest->target;
+        $actor = Profile::find($this->profileId);
+        $target = Profile::find($this->followingId);
 
-        $activity = UndoActivityBuilder::buildForFollow($actor, $target->getActorId(), $followRequest->id);
+        if (! $actor || ! $target) {
+            Log::warning('Cannot deliver Undo - profiles not found');
+
+            return;
+        }
+
+        $activity = UndoActivityBuilder::buildForFollow($actor, $target->getActorId(), $this->followerId);
 
         $inboxUrl = $target->inbox_url;
         $parsedUrl = parse_url($inboxUrl);
@@ -85,7 +99,6 @@ class DeliverUndoFollowActivity implements ShouldQueue
                 ->post($inboxUrl, $activity);
 
             if ($response->successful()) {
-                $followRequest->delete();
             } else {
                 $error = "Delivery failed with status {$response->status()}: {$response->body()}";
                 Log::warning($error, [
@@ -116,7 +129,7 @@ class DeliverUndoFollowActivity implements ShouldQueue
     public function failed(\Throwable $exception)
     {
         Log::error('Activity delivery job failed permanently', [
-            'to' => $this->followRequest->following_id,
+            'to' => $this->followingId,
             'type' => 'Follow',
             'error' => $exception->getMessage(),
         ]);

@@ -2,7 +2,8 @@
 
 namespace App\Jobs\Federation;
 
-use App\Models\Profile;
+use App\Federation\ActivityBuilders\UndoActivityBuilder;
+use App\Models\FollowRequest;
 use App\Services\HttpSignatureService;
 use App\Services\SigningService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -10,15 +11,11 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class DeliverAcceptActivity implements ShouldQueue
+class DeliverUndoFollowRequestActivity implements ShouldQueue
 {
     use Queueable;
 
-    public $activity;
-
-    public $actor;
-
-    public $target;
+    public $followRequest;
 
     public $tries = 3;
 
@@ -29,11 +26,9 @@ class DeliverAcceptActivity implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct($activity, Profile $actor, Profile $target)
+    public function __construct(FollowRequest $followRequest)
     {
-        $this->activity = $activity;
-        $this->actor = $actor;
-        $this->target = $target;
+        $this->followRequest = $followRequest;
     }
 
     /**
@@ -41,9 +36,11 @@ class DeliverAcceptActivity implements ShouldQueue
      */
     public function handle(): void
     {
-        $activity = $this->activity;
-        $actor = $this->actor;
-        $target = $this->target;
+        $followRequest = $this->followRequest;
+        $actor = $followRequest->actor;
+        $target = $followRequest->target;
+
+        $activity = UndoActivityBuilder::buildForFollow($actor, $target->getActorId(), $followRequest->id);
 
         $inboxUrl = $target->inbox_url;
         $parsedUrl = parse_url($inboxUrl);
@@ -90,6 +87,7 @@ class DeliverAcceptActivity implements ShouldQueue
                 ->post($inboxUrl, $activity);
 
             if ($response->successful()) {
+                $followRequest->delete();
             } else {
                 $error = "Delivery failed with status {$response->status()}: {$response->body()}";
                 Log::warning($error, [
@@ -120,8 +118,8 @@ class DeliverAcceptActivity implements ShouldQueue
     public function failed(\Throwable $exception)
     {
         Log::error('Activity delivery job failed permanently', [
-            'to' => $this->target->id,
-            'type' => 'Accept',
+            'to' => $this->followRequest->following_id,
+            'type' => 'Follow',
             'error' => $exception->getMessage(),
         ]);
     }

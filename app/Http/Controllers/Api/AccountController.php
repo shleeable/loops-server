@@ -12,6 +12,7 @@ use App\Http\Resources\NotificationResource;
 use App\Http\Resources\ProfileResource;
 use App\Jobs\Federation\DeliverFollowRequest;
 use App\Jobs\Federation\DeliverUndoFollowActivity;
+use App\Jobs\Federation\DeliverUndoFollowRequestActivity;
 use App\Models\Follower;
 use App\Models\FollowRequest;
 use App\Models\Notification;
@@ -205,22 +206,26 @@ class AccountController extends Controller
 
         $profile = Profile::findOrFail($id);
 
-        if ($profile->local) {
-            $res = Follower::where([
-                'profile_id' => $pid,
-                'following_id' => $id,
-            ])->first();
+        $res = Follower::where([
+            'profile_id' => $pid,
+            'following_id' => $profile->id,
+        ])->first();
 
-            if (! $res) {
-                return $this->data(AccountService::get($id));
-            }
+        if (! $res) {
+            return $this->data(AccountService::get($id));
+        }
+
+        if ($profile->local) {
             $res->delete();
             NotificationService::unFollow($id, $pid);
         } else {
             $followRequest = FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->first();
             if ($followRequest) {
-                DeliverUndoFollowActivity::dispatch($followRequest)->onQueue('activitypub-out');
+                DeliverUndoFollowRequestActivity::dispatch($followRequest)->onQueue('activitypub-out');
+            } else {
+                DeliverUndoFollowActivity::dispatch($res)->onQueue('activitypub-out');
             }
+            $res->delete();
         }
 
         return $this->data(AccountService::get($id));
@@ -243,7 +248,7 @@ class AccountController extends Controller
             return $this->data(AccountService::get($id));
         } else {
             $followRequest->update(['following_state' => 5]);
-            DeliverUndoFollowActivity::dispatch($followRequest)->onQueue('activitypub-out');
+            DeliverUndoFollowRequestActivity::dispatch($followRequest)->onQueue('activitypub-out');
         }
 
         return $this->data(AccountService::get($id));
