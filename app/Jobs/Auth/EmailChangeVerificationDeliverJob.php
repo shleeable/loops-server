@@ -17,9 +17,19 @@ class EmailChangeVerificationDeliverJob implements ShouldBeUnique, ShouldQueue
 
     public $tries = 3;
 
-    public $backoff = [30, 60, 120];
-
     public $timeout = 30;
+
+    public $deleteWhenMissingModels = true;
+
+    /**
+     * Calculate the number of seconds to wait before retrying the job.
+     *
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [1, 10, 15];
+    }
 
     public function __construct(
         public User $user,

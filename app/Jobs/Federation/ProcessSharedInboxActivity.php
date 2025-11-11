@@ -41,11 +41,19 @@ class ProcessSharedInboxActivity implements ShouldQueue
      */
     public $timeout = 60;
 
-    public $backoff = [10, 30, 40];
-
     public $maxExceptions = 1;
 
     public $deleteWhenMissingModels = true;
+
+    /**
+     * Calculate the number of seconds to wait before retrying the job.
+     *
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [1, 10, 15];
+    }
 
     /**
      * Create a new job instance.

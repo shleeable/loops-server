@@ -17,8 +17,6 @@ class DiscoverInstance implements ShouldBeUnique, ShouldQueue
 
     public $tries = 3;
 
-    public $backoff = [60, 90, 120];
-
     public $timeout = 120;
 
     public $maxExceptions = 1;
@@ -29,6 +27,16 @@ class DiscoverInstance implements ShouldBeUnique, ShouldQueue
     public function __construct(string $url)
     {
         $this->url = $url;
+    }
+
+    /**
+     * Calculate the number of seconds to wait before retrying the job.
+     *
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [1, 10, 15];
     }
 
     /**

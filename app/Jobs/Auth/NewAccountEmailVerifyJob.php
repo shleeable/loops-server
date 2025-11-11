@@ -23,9 +23,9 @@ class NewAccountEmailVerifyJob implements ShouldBeUnique, ShouldQueue
 
     public $maxExceptions = 2;
 
-    public $backoff = [60, 300, 900];
-
     public $timeout = 120;
+
+    public $deleteWhenMissingModels = true;
 
     /**
      * Create a new job instance.
@@ -45,6 +45,16 @@ class NewAccountEmailVerifyJob implements ShouldBeUnique, ShouldQueue
     public function uniqueId(): string
     {
         return "email-verify-{$this->verify->id}-{$this->verify->email}";
+    }
+
+    /**
+     * Calculate the number of seconds to wait before retrying the job.
+     *
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [1, 10, 15];
     }
 
     /**
