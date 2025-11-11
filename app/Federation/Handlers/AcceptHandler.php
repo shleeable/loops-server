@@ -5,6 +5,7 @@ namespace App\Federation\Handlers;
 use App\Models\Follower;
 use App\Models\FollowRequest;
 use App\Models\Profile;
+use App\Services\FollowerService;
 use App\Services\SanitizeService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -76,16 +77,18 @@ class AcceptHandler
                 }
             }
 
-            $follower = Follower::firstOrCreate(
+            Follower::updateOrCreate(
                 [
                     'profile_id' => $actor->id,
                     'following_id' => $target->id,
                 ],
                 [
-                    'profile_is_local' => $actor->local,
-                    'following_is_local' => $target->local,
+                    'profile_is_local' => (bool) $actor->local,
+                    'following_is_local' => (bool) $target->local,
                 ]
             );
+
+            FollowerService::refreshAndSync($actor->id, $target->id);
         });
     }
 }
