@@ -613,6 +613,7 @@ class SanitizeService
             return null;
         }
         $host = strtolower($parts['host']);
+        $fragment = $parts['fragment'] ?? null;
 
         if ($useAppHost) {
             $appUrl = config('app.url');
@@ -645,8 +646,15 @@ class SanitizeService
         $seg = array_values(array_filter(explode('/', $path), fn ($s) => $s !== ''));
 
         foreach ((array) $templates as $tpl) {
-            $tplPath = rtrim($tpl, '/');
+            // Split template into path and fragment parts
+            $tplParts = explode('#', $tpl, 2);
+            $tplPath = rtrim($tplParts[0], '/');
+            $tplFragment = $tplParts[1] ?? null;
+
+            // Parse path segments
             $tplSeg = array_values(array_filter(explode('/', $tplPath), fn ($s) => $s !== ''));
+
+            // Check if path segment counts match
             if (count($tplSeg) !== count($seg)) {
                 continue;
             }
@@ -654,6 +662,7 @@ class SanitizeService
             $params = [];
             $ok = true;
 
+            // Match path segments
             foreach ($tplSeg as $i => $chunk) {
                 if (preg_match('/^\{([a-zA-Z_][a-zA-Z0-9_]*)\}$/', $chunk, $m)) {
                     $name = $m[1];
@@ -674,9 +683,57 @@ class SanitizeService
                 }
             }
 
-            if ($ok) {
-                return ['_template' => $tpl, '_host' => $host] + $params;
+            if (! $ok) {
+                continue;
             }
+
+            // If template has a fragment pattern, match it
+            if ($tplFragment !== null) {
+                // Template requires a fragment, but URL doesn't have one
+                if ($fragment === null) {
+                    continue;
+                }
+
+                // Parse fragment segments
+                $fragmentPath = trim($fragment, '/');
+                $fragmentSeg = array_values(array_filter(explode('/', $fragmentPath), fn ($s) => $s !== ''));
+                $tplFragmentSeg = array_values(array_filter(explode('/', $tplFragment), fn ($s) => $s !== ''));
+
+                // Check if fragment segment counts match
+                if (count($tplFragmentSeg) !== count($fragmentSeg)) {
+                    continue;
+                }
+
+                // Match fragment segments
+                foreach ($tplFragmentSeg as $i => $chunk) {
+                    if (preg_match('/^\{([a-zA-Z_][a-zA-Z0-9_]*)\}$/', $chunk, $m)) {
+                        $name = $m[1];
+                        $val = $fragmentSeg[$i];
+
+                        if (isset($constraints[$name])) {
+                            if (! preg_match('~^'.$constraints[$name].'$~', $val)) {
+                                $ok = false;
+                                break;
+                            }
+                        }
+                        $params[$name] = $val;
+                    } else {
+                        if ($chunk !== $fragmentSeg[$i]) {
+                            $ok = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (! $ok) {
+                    continue;
+                }
+            } elseif ($fragment !== null) {
+                // URL has a fragment, but template doesn't expect one
+                // Skip without failing
+            }
+
+            return ['_template' => $tpl, '_host' => $host] + $params;
         }
 
         return null;
