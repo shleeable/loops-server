@@ -68,4 +68,8 @@ return [
     'backups' => [
         'enabled' => env('LOOPS_BACKUPS_ENABLED', false),
     ],
+
+    'admin_dashboard' => [
+        'autoUpdate' => (bool) env('LOOPS_ADMIN_DASHBOARD_AUTOUPDATE', true),
+    ],
 ];
