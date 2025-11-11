@@ -39,6 +39,9 @@ class AccountController extends Controller
         $user = $request->user();
         $pid = $user->profile_id;
         $profile = Profile::findOrFail($pid);
+        if ($profile->status != 1) {
+            return $this->error('This resource is not available', 403);
+        }
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_admin'] = (bool) $user->is_admin;
         $res['is_owner'] = true;
@@ -54,14 +57,10 @@ class AccountController extends Controller
         if ($user) {
             $pid = $user->profile_id;
         }
-        $profile = Profile::find($id);
+        $profile = Profile::active()->find($id);
 
         if (! $profile || $request->user()->cannot('view', $profile)) {
             return $this->error('Account not found or is unavailable', 404);
-        }
-
-        if ($profile->status != 1) {
-            return $this->error('Account is not available', 400);
         }
 
         $res = (new ProfileResource($profile))->toArray($request);
@@ -266,7 +265,7 @@ class AccountController extends Controller
 
         $account = AccountService::get($id);
         if (! $account) {
-            $this->error('Record not found');
+            return $this->error('Record not found');
         }
         $res = [
             'pending_follow_request' => false,
@@ -285,7 +284,7 @@ class AccountController extends Controller
     {
         $pid = $request->user()->profile_id;
 
-        $accounts = Profile::whereStatus(1)
+        $accounts = Profile::active()
             ->whereLocal(true)
             ->where('id', '!=', $pid)
             ->orderByDesc('followers')
