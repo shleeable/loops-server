@@ -34,6 +34,7 @@ export const useProfileStore = defineStore("profile", {
         allLikes: 0,
         isLoadingMorePosts: false,
         hasMorePosts: true,
+        isPollingFollowState: false,
     }),
     actions: {
         async updateSort(type) {
@@ -275,6 +276,14 @@ export const useProfileStore = defineStore("profile", {
                 this.followerCount = res.follower_count;
                 await nextTick();
                 await this.getProfileState(this.id);
+                if (!prevState && this.isFollowingRequestPending) {
+                    this.pollFollowRequestState().catch((err) => {
+                        console.error(
+                            "Error polling follow request state:",
+                            err,
+                        );
+                    });
+                }
             } catch (error) {
                 console.error("Error toggling follow:", error);
             }
@@ -329,6 +338,46 @@ export const useProfileStore = defineStore("profile", {
             }
         },
 
+        async pollFollowRequestState(maxAttempts = 6, initialDelay = 1000) {
+            if (this.isPollingFollowState) {
+                return;
+            }
+
+            this.isPollingFollowState = true;
+            let attempt = 0;
+
+            try {
+                while (attempt < maxAttempts) {
+                    if (!this.isFollowingRequestPending) {
+                        return;
+                    }
+
+                    const delay = initialDelay * Math.pow(2, attempt);
+
+                    console.log(
+                        `Polling follow request state (attempt ${attempt + 1}/${maxAttempts}, waiting ${delay}ms)`,
+                    );
+
+                    await new Promise((resolve) => setTimeout(resolve, delay));
+
+                    await this.getProfileState(this.id);
+
+                    if (this.isFollowing && !this.isFollowingRequestPending) {
+                        console.log("Follow request accepted!");
+                        return;
+                    }
+
+                    attempt++;
+                }
+
+                console.log(
+                    "Max polling attempts reached, follow request still pending",
+                );
+            } finally {
+                this.isPollingFollowState = false;
+            }
+        },
+
         resetUser() {
             this.id = "";
             this.name = "";
@@ -356,6 +405,7 @@ export const useProfileStore = defineStore("profile", {
             this.allLikes = 0;
             this.isLoadingMorePosts = false;
             this.hasMorePosts = true;
+            this.isPollingFollowState = false;
         },
     },
     persist: true,

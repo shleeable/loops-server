@@ -53,8 +53,12 @@
                                 <button
                                     v-else-if="isFollowingRequestPending"
                                     @click="handleUndoFollowRequest"
-                                    class="flex item-center rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-border-[#F02C56] cursor-pointer"
+                                    class="flex item-center gap-2 rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-border-[#F02C56] cursor-pointer"
                                 >
+                                    <Spinner
+                                        v-if="isPollingFollowState"
+                                        size="xs"
+                                    />
                                     {{ t("profile.followRequestPending") }}
                                 </button>
                                 <button
@@ -239,6 +243,7 @@ import { useAlertModal } from "@/composables/useAlertModal.js";
 import { useReportModal } from "@/composables/useReportModal";
 const { openReportModal } = useReportModal();
 import { useI18n } from "vue-i18n";
+import { storeToRefs } from "pinia";
 import {
     CogIcon,
     PhotoIcon,
@@ -252,6 +257,7 @@ import {
 const { t } = useI18n();
 const router = useRouter();
 const profile = useProfileStore();
+const { isPollingFollowState } = storeToRefs(profile);
 const { toggleFollow } = useProfileStore();
 const { alertModal, confirmModal } = useAlertModal();
 
