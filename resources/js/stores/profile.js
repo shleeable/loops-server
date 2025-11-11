@@ -73,7 +73,7 @@ export const useProfileStore = defineStore("profile", {
             const axiosInstance = axios.getAxiosInstance();
             try {
                 const res = await axiosInstance.get(
-                    `/api/v1/account/username/${id}?ext=1`,
+                    `/api/v1/account/info/${id}`,
                 );
 
                 this.followerCount = res.data.data.follower_count;
