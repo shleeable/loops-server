@@ -94,7 +94,7 @@ class VideoController extends Controller
 
         $escaped = $this->escapeLike($q);
 
-        $profiles = Profile::where('username', 'like', $escaped.'%')->where('is_hidden', false)->orderByDesc('followers')->limit(10)->get();
+        $profiles = Profile::where('username', 'like', $escaped.'%')->whereStatus(1)->where('is_hidden', false)->orderByDesc('followers')->limit(10)->get();
 
         return ProfileResource::collection($profiles);
     }
