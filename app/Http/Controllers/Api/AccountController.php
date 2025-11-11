@@ -178,9 +178,8 @@ class AccountController extends Controller
                 NotificationService::newFollower($id, $pid);
             }
         } else {
-            if (FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->exists()) {
-                return $this->data(AccountService::get($id));
-            }
+            // Delete existing follow request to force a new one, to fix broken federation
+            FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->delete();
 
             $res = FollowRequest::firstOrCreate([
                 'profile_id' => $pid,
@@ -243,7 +242,7 @@ class AccountController extends Controller
 
             return $this->data(AccountService::get($id));
         } else {
-            $followRequest->update(['following_state' => 5]);
+            $followRequest->delete();
             DeliverUndoFollowActivity::dispatch($followRequest)->onQueue('activitypub-out');
         }
 
