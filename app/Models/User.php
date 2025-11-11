@@ -108,7 +108,7 @@ class User extends Authenticatable implements OAuthenticatable
      * 3 = Reserved
      * 4 = Reserved
      * 5 = Reserved
-     * 6 = Reserved
+     * 6 = Restricted by admins
      * 7 = Account disabled
      * 8 = Account pending deletion
      **/
@@ -123,6 +123,7 @@ class User extends Authenticatable implements OAuthenticatable
         'can_like',
         'last_active_at',
         'birth_date',
+        'status',
     ];
 
     protected $hidden = [
@@ -149,6 +150,7 @@ class User extends Authenticatable implements OAuthenticatable
             'device' => 'json',
             'push_token_verified_at' => 'datetime',
             'birth_date' => 'date',
+            'status' => 'integer',
         ];
     }
 

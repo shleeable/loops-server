@@ -111,7 +111,7 @@ class Profile extends Model
      * 3 = Reserved
      * 4 = Reserved
      * 5 = Reserved
-     * 6 = Reserved
+     * 6 = Restricted by admins
      * 7 = Account disabled
      * 8 = Account pending deletion
      **/
@@ -149,11 +149,13 @@ class Profile extends Model
         'last_fetched_at',
         'local',
         'discoverable',
+        'status',
     ];
 
     protected $guarded = [];
 
     protected $casts = [
+        'status' => 'integer',
         'links' => 'array',
         'local' => 'boolean',
         'discoverable' => 'boolean',
@@ -197,6 +199,17 @@ class Profile extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getStatusDescription()
+    {
+        return match ($this->status) {
+            1 => 'active',
+            6 => 'suspended',
+            7 => 'disabled',
+            8 => 'deleted',
+            default => 'Unknown',
+        };
     }
 
     public function getActorId($suffix = null)
