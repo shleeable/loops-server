@@ -69,6 +69,21 @@ export const useProfileStore = defineStore("profile", {
             }
         },
 
+        async getProfilePartialFollowStats(id) {
+            const axiosInstance = axios.getAxiosInstance();
+            try {
+                const res = await axiosInstance.get(
+                    `/api/v1/account/username/${id}?ext=1`,
+                );
+
+                this.followerCount = res.data.data.follower_count;
+                this.followingCount = res.data.data.following_count;
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+                throw error;
+            }
+        },
+
         async getProfilePosts(id) {
             const axiosInstance = axios.getAxiosInstance();
             try {
@@ -361,6 +376,7 @@ export const useProfileStore = defineStore("profile", {
                     await new Promise((resolve) => setTimeout(resolve, delay));
 
                     await this.getProfileState(this.id);
+                    await this.getProfilePartialFollowStats(this.id);
 
                     if (this.isFollowing && !this.isFollowingRequestPending) {
                         console.log("Follow request accepted!");
