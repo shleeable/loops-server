@@ -29,17 +29,27 @@ class DeliverUndoCommentReplyLikeActivity implements ShouldBeUnique, ShouldQueue
 
     private $deliveryTimeout;
 
-    public $backoff = [60, 300, 900];
-
-    public $tries = 10;
+    public $tries = 3;
 
     public $timeout = 120;
 
     public $uniqueFor = 3600;
 
+    public $deleteWhenMissingModels = true;
+
     public function uniqueId(): string
     {
         return "deliver-undo-comment-reply-like-{$this->commentReplyLike->comment_id}-{$this->actor->id}-{$this->objectUrl}";
+    }
+
+    /**
+     * Calculate the number of seconds to wait before retrying the job.
+     *
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [1, 10, 15];
     }
 
     /**

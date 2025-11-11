@@ -19,6 +19,10 @@ class DiscoverInstance implements ShouldBeUnique, ShouldQueue
 
     public $backoff = [60, 90, 120];
 
+    public $timeout = 120;
+
+    public $maxExceptions = 1;
+
     /**
      * Create a new job instance.
      */

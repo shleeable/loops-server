@@ -17,9 +17,11 @@ class DeliverFollowRequest implements ShouldQueue
 
     public $followRequest;
 
-    public $tries = 10;
+    public $tries = 3;
 
     public $timeout = 120;
+
+    public $deleteWhenMissingModels = true;
 
     /**
      * Create a new job instance.
@@ -27,6 +29,16 @@ class DeliverFollowRequest implements ShouldQueue
     public function __construct(FollowRequest $followRequest)
     {
         $this->followRequest = $followRequest;
+    }
+
+    /**
+     * Calculate the number of seconds to wait before retrying the job.
+     *
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [1, 10, 15];
     }
 
     /**

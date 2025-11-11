@@ -26,7 +26,17 @@ class DeliverUndoFollowActivity implements ShouldQueue
 
     public $timeout = 120;
 
-    public $backoff = [10, 30, 60];
+    public $deleteWhenMissingModels = true;
+
+    /**
+     * Calculate the number of seconds to wait before retrying the job.
+     *
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [1, 10, 15];
+    }
 
     /**
      * Create a new job instance.

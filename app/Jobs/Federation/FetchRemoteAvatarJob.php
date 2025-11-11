@@ -21,6 +21,8 @@ class FetchRemoteAvatarJob implements ShouldBeUnique, ShouldQueue
 
     public $uniqueFor = 3600;
 
+    public $deleteWhenMissingModels = true;
+
     public function uniqueId(): string
     {
         return "fetch-remote-avatar-{$this->profile->id}";

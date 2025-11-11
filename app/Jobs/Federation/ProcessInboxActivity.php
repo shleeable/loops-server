@@ -44,6 +44,12 @@ class ProcessInboxActivity implements ShouldQueue
      */
     public $timeout = 60;
 
+    public $backoff = [10, 30, 40];
+
+    public $maxExceptions = 2;
+
+    public $deleteWhenMissingModels = true;
+
     /**
      * Create a new job instance.
      */

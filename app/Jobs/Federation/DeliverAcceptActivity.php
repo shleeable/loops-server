@@ -24,7 +24,7 @@ class DeliverAcceptActivity implements ShouldQueue
 
     public $timeout = 120;
 
-    public $backoff = [10, 30, 60];
+    public $deleteWhenMissingModels = true;
 
     /**
      * Create a new job instance.
@@ -34,6 +34,16 @@ class DeliverAcceptActivity implements ShouldQueue
         $this->activity = $activity;
         $this->actor = $actor;
         $this->target = $target;
+    }
+
+    /**
+     * Calculate the number of seconds to wait before retrying the job.
+     *
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [1, 10, 15];
     }
 
     /**

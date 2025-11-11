@@ -29,9 +29,7 @@ class DeliverVideoLikeActivity implements ShouldBeUnique, ShouldQueue
 
     private $deliveryTimeout;
 
-    public $backoff = [60, 300, 900];
-
-    public $tries = 10;
+    public $tries = 3;
 
     public $timeout = 120;
 
@@ -40,6 +38,16 @@ class DeliverVideoLikeActivity implements ShouldBeUnique, ShouldQueue
     public function uniqueId(): string
     {
         return "deliver-video-like-{$this->video->id}-{$this->actor->id}-{$this->videoLike->id}";
+    }
+
+    /**
+     * Calculate the number of seconds to wait before retrying the job.
+     *
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [1, 10, 15];
     }
 
     /**
