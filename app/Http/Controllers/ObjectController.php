@@ -47,7 +47,7 @@ class ObjectController extends Controller
         }
 
         if ($profile->status != 1) {
-            abort(403, 'Record not available');
+            return view('welcome');
         }
 
         return view('profile', compact('profile'));
@@ -57,9 +57,11 @@ class ObjectController extends Controller
     {
         $id = HashidService::safeDecode($hashId);
 
-        $video = Video::whereStatus(2)->findOrFail($id);
+        $video = Video::with('profile')->whereStatus(2)->findOrFail($id);
 
         if ($request->wantsJson() && $video->is_local) {
+            abort_if($video->profile->status != 1, 403, 'Resource is not available');
+
             $config = app(ConfigService::class);
 
             if (! $config->federation()) {
@@ -94,6 +96,10 @@ class ObjectController extends Controller
             }
         }
 
+        if ($video->profile->status != 1) {
+            return view('welcome');
+        }
+
         $videoData = VideoService::getMediaData($id);
 
         return view('video', compact('videoData'));
@@ -108,6 +114,7 @@ class ObjectController extends Controller
 
     public function showVideoObject(Request $request, $actor, $id)
     {
+        $profile = Profile::active()->findOrFail($actor);
         $video = Video::whereStatus(2)->findOrFail($id);
         abort_if($actor != $video->profile_id || ! $video->is_local, 404);
         $hashId = HashidService::safeEncode($video->id);
@@ -135,7 +142,8 @@ class ObjectController extends Controller
 
     public function showCommentObject(Request $request, $actor, $id)
     {
-        $comment = Comment::findOrFail($id);
+        $comment = Comment::with('profile')->findOrFail($id);
+        abort_if($comment->profile->status != 1, 403, 'Resource not available');
         $video = Video::whereStatus(2)->findOrFail($comment->video_id);
         $videoHashId = HashidService::safeEncode($video->id);
         $hashId = HashidService::safeEncode($comment->id);
@@ -147,7 +155,8 @@ class ObjectController extends Controller
 
     public function showReplyObject(Request $request, $actor, $id)
     {
-        $comment = CommentReply::with('parent')->findOrFail($id);
+        $comment = CommentReply::with(['parent', 'profile'])->findOrFail($id);
+        abort_if($comment->profile->status != 1, 403, 'Resource not available');
         $video = Video::whereStatus(2)->findOrFail($comment->video_id);
         $videoHashId = HashidService::safeEncode($video->id);
         $hashId = HashidService::safeEncode($comment->id);
@@ -159,7 +168,8 @@ class ObjectController extends Controller
 
     protected function renderVideoCommentObject($video, $videoHashId, $hashId, $vid, $cid)
     {
-        $comment = Comment::whereVideoId($vid)->findOrFail($cid);
+        $comment = Comment::with('profile')->whereVideoId($vid)->findOrFail($cid);
+        abort_if($comment->profile->status != 1, 403, 'Resource not available');
         $res = CreateActivityBuilder::buildForCommentFlat($comment->profile, $comment);
 
         return $this->activityPubResponse($res);
@@ -167,6 +177,8 @@ class ObjectController extends Controller
 
     protected function renderVideoCommentReplyObject($video, $comment, $videoHashId, $hashId, $vid, $cid)
     {
+        abort_if($comment->profile->status != 1, 403, 'Resource not available');
+
         $res = CreateActivityBuilder::buildForCommentReplyFlat($comment->profile, $comment);
 
         return $this->activityPubResponse($res);
