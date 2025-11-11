@@ -70,6 +70,13 @@ class ProcessSharedInboxActivity implements ShouldQueue
                 return;
             }
 
+            // Handle Follow activities - they don't have to/cc, only actor and object
+            if (isset($this->activity['type']) && $this->activity['type'] === 'Follow') {
+                $this->handleFollowActivity();
+
+                return;
+            }
+
             $recipients = $this->extractRecipients();
 
             if (empty($recipients)) {
@@ -193,6 +200,91 @@ class ProcessSharedInboxActivity implements ShouldQueue
         }
 
         return $localTargets->unique('id');
+    }
+
+    /**
+     * Handle Follow activities - extract target from object field
+     */
+    protected function handleFollowActivity()
+    {
+        if (! isset($this->activity['object'])) {
+            if (config('logging.dev_log')) {
+                Log::warning('Follow activity missing object field', [
+                    'activity_id' => $this->activity['id'] ?? null,
+                ]);
+            }
+
+            return;
+        }
+
+        $objectUrl = $this->activity['object'];
+
+        // Check if this is a local object
+        if (! app(SanitizeService::class)->isLocalObject($objectUrl)) {
+            if (config('logging.dev_log')) {
+                Log::info('Follow activity object is not local', [
+                    'activity_id' => $this->activity['id'] ?? null,
+                    'object' => $objectUrl,
+                ]);
+            }
+
+            return;
+        }
+
+        // Find the local target profile
+        $target = $this->findLocalTargetFromUrl($objectUrl);
+
+        if (! $target) {
+            if (config('logging.dev_log')) {
+                Log::warning('Could not find local target for Follow activity', [
+                    'activity_id' => $this->activity['id'] ?? null,
+                    'object' => $objectUrl,
+                ]);
+            }
+
+            return;
+        }
+
+        // Dispatch to the regular inbox processor with the target
+        ProcessInboxActivity::dispatch($this->activity, $this->actor, $target)->onQueue('activitypub-in');
+
+        if (config('logging.dev_log')) {
+            Log::info('Dispatched Follow activity to local target', [
+                'activity_id' => $this->activity['id'] ?? null,
+                'target' => $target->username,
+                'actor' => $this->actor?->username,
+            ]);
+        }
+    }
+
+    /**
+     * Find a local profile from a URL
+     */
+    protected function findLocalTargetFromUrl(string $url): ?Profile
+    {
+        $profileMatch = app(SanitizeService::class)->matchUrlTemplate(
+            url: $url,
+            templates: [
+                '/ap/users/{profileId}',
+                '/@{username}',
+                '/users/{username}',
+            ],
+            useAppHost: true,
+            constraints: ['profileId' => '\d+', 'username' => '[a-zA-Z0-9_.-]+']
+        );
+
+        if ($profileMatch) {
+            if (isset($profileMatch['profileId'])) {
+                return Profile::whereLocal(true)->find($profileMatch['profileId']);
+            }
+
+            if (isset($profileMatch['username'])) {
+                return Profile::where('username', $profileMatch['username'])->whereLocal(true)->first();
+            }
+        }
+
+        // Fallback: try to find by URI
+        return Profile::where('uri', $url)->whereLocal(true)->first();
     }
 
     /**
