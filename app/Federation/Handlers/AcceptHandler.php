@@ -79,7 +79,7 @@ class AcceptHandler
             $follower = Follower::firstOrCreate(
                 [
                     'profile_id' => $actor->id,
-                    'follower_id' => $target->id,
+                    'following_id' => $target->id,
                 ],
                 [
                     'profile_is_local' => $actor->local,
