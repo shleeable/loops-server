@@ -35,7 +35,7 @@ class AdminDashboardController extends Controller
         $period = $this->validateAndParsePeriod($periodParam);
 
         $baseCacheKey = 'admin_dashboard_stats_';
-        $cacheKey = "{$baseCacheKey}{$periodParam}:v1.25";
+        $cacheKey = "{$baseCacheKey}{$periodParam}:v1.26";
 
         $res = ['data' => ['refresh' => $shouldRefresh]];
 
@@ -54,7 +54,7 @@ class AdminDashboardController extends Controller
 
         $res['data']['recent_activity'] = Cache::remember(
             "{$baseCacheKey}partial:recent_activity",
-            now()->addMinutes(5),
+            now()->addMinutes(15),
             function () {
                 return $this->getRecentActivity();
             }
@@ -62,7 +62,7 @@ class AdminDashboardController extends Controller
 
         $res['data']['federation'] = Cache::remember(
             "{$baseCacheKey}partial:federation",
-            now()->addMinutes(30),
+            now()->addHours(4),
             function () {
                 return $this->getFederationStats();
             }
@@ -70,7 +70,7 @@ class AdminDashboardController extends Controller
 
         $res['data']['top_hashtags'] = Cache::remember(
             "{$baseCacheKey}partial:top_hashtags",
-            now()->addMinutes(30),
+            now()->addHours(12),
             function () {
                 return $this->getTopHashtags();
             }
@@ -81,6 +81,7 @@ class AdminDashboardController extends Controller
             $period['ttl'],
             function () use ($period) {
                 return [
+                    'cached_at' => now(),
                     'period' => $period['label'],
                     'metrics' => $this->getKeyMetrics($period['days']),
                     'charts' => [
@@ -109,10 +110,10 @@ class AdminDashboardController extends Controller
     protected function validateAndParsePeriod($period)
     {
         $validPeriods = [
-            '30d' => ['days' => 30, 'label' => 'Last 30 Days', 'chart_days' => 30, 'grouping' => 'daily', 'ttl' => now()->addMinutes(15)],
-            '60d' => ['days' => 60, 'label' => 'Last 60 Days', 'chart_days' => 60, 'grouping' => 'daily', 'ttl' => now()->addHours(4)],
-            '90d' => ['days' => 90, 'label' => 'Last 90 Days', 'chart_days' => 30, 'grouping' => 'weekly', 'ttl' => now()->addHours(4)],
-            '365d' => ['days' => 365, 'label' => 'Last 365 Days', 'chart_days' => 12, 'grouping' => 'monthly', 'ttl' => now()->addHours(12)],
+            '30d' => ['days' => 30, 'label' => 'Last 30 Days', 'chart_days' => 30, 'grouping' => 'daily', 'ttl' => now()->addHours(12)],
+            '60d' => ['days' => 60, 'label' => 'Last 60 Days', 'chart_days' => 60, 'grouping' => 'daily', 'ttl' => now()->addDays(2)],
+            '90d' => ['days' => 90, 'label' => 'Last 90 Days', 'chart_days' => 30, 'grouping' => 'weekly', 'ttl' => now()->addDays(12)],
+            '365d' => ['days' => 365, 'label' => 'Last 365 Days', 'chart_days' => 12, 'grouping' => 'monthly', 'ttl' => now()->addDays(20)],
         ];
 
         return $validPeriods[$period] ?? $validPeriods['30d'];
@@ -147,7 +148,7 @@ class AdminDashboardController extends Controller
 
     protected function getCommentCount()
     {
-        return Cache::remember('admin_dashboard_stats_partial:total_comments', now()->addMinutes(30), function () {
+        return Cache::remember('admin_dashboard_stats_partial:total_comments', now()->addHours(4), function () {
             return Comment::count();
         });
     }

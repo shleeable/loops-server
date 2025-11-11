@@ -1,17 +1,24 @@
 <template>
     <div class="space-y-6">
         <div
-            class="flex items-center justify-center lg:justify-between flex-col lg:flex-row"
+            class="flex items-center justify-center lg:justify-between flex-col xl:flex-row"
         >
             <div
-                class="flex justify-center items-center lg:items-start flex-col mb-3 lg:mb-0"
+                class="flex justify-center items-center xl:items-start flex-col mb-3 xl:mb-0"
             >
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
                     Dashboard
                 </h1>
                 <p class="text-gray-600 dark:text-gray-400">
-                    Server overview and analytics
+                    Server overview and analytics.
                 </p>
+            </div>
+
+            <div v-if="dashboardData?.cached_at" class="text-xs text-gray-400 mb-3 xl:mb-0 flex gap-1">
+                <span
+                    >Data Updated:
+                    {{ formatTimeAgo(dashboardData?.cached_at) }}</span
+                >
             </div>
 
             <div class="flex flex-col lg:flex-row gap-2">
@@ -45,9 +52,10 @@
                     :loading="loading"
                     variant="primary"
                     @click="refreshDashboard"
+                    title="Refresh stats"
                 >
-                    <div class="flex items-center gap-1 font-bold">
-                        <span class="bx bx-refresh text-[20px]"></span> Refresh
+                    <div class="flex items-center font-bold gap-2">
+                        <span class="bx bx-refresh text-[25px]"></span> Refresh
                     </div>
                 </AnimatedButton>
             </div>
@@ -421,7 +429,7 @@ import { useAlertModal } from "@/composables/useAlertModal.js";
 import { useUtils } from "@/composables/useUtils";
 import { useAdminStore } from "~/stores/admin";
 
-const { formatDate, formatCount } = useUtils();
+const { formatDate, formatCount, formatTimeAgo } = useUtils();
 const { alertModal } = useAlertModal();
 const adminStore = useAdminStore();
 const { isDarkMode } = storeToRefs(adminStore);
