@@ -85,6 +85,7 @@ class DeliverUndoFollowActivity implements ShouldQueue
                 ->post($inboxUrl, $activity);
 
             if ($response->successful()) {
+                $followRequest->delete();
             } else {
                 $error = "Delivery failed with status {$response->status()}: {$response->body()}";
                 Log::warning($error, [

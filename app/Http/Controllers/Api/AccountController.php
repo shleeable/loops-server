@@ -242,7 +242,7 @@ class AccountController extends Controller
 
             return $this->data(AccountService::get($id));
         } else {
-            $followRequest->delete();
+            $followRequest->update(['following_state' => 5]);
             DeliverUndoFollowActivity::dispatch($followRequest)->onQueue('activitypub-out');
         }
 
