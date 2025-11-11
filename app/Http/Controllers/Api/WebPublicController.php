@@ -169,6 +169,10 @@ class WebPublicController extends Controller
         }
 
         $profile = Profile::whereUsername($id)->firstOrFail();
+
+        if ($profile->status != 1) {
+            return $this->error('This resource is not available', 403);
+        }
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_owner'] = false;
         $res['likes_count'] = AccountService::getAccountLikesCount($profile->id);
@@ -179,6 +183,10 @@ class WebPublicController extends Controller
     public function accountFollowers(Request $request, $id)
     {
         $profile = Profile::findOrFail($id);
+
+        if ($profile->status != 1) {
+            return $this->error('This resource is not available', 403);
+        }
 
         if ($request->user() && $request->user()->cannot('viewAny', [Profile::class])) {
             return $this->error('Unavailable', 403);
@@ -192,6 +200,10 @@ class WebPublicController extends Controller
     public function accountFollowing(Request $request, $id)
     {
         $profile = Profile::findOrFail($id);
+
+        if ($profile->status != 1) {
+            return $this->error('This resource is not available', 403);
+        }
 
         if ($request->user() && $request->user()->cannot('viewAny', [Profile::class])) {
             return $this->error('Unavailable', 403);
@@ -215,6 +227,10 @@ class WebPublicController extends Controller
         $sort = $request->input('sort', 'Latest');
 
         $profile = Profile::findOrFail($id);
+
+        if ($profile->status != 1) {
+            return $this->error('This resource is not available', 403);
+        }
 
         return FeedService::getAccountFeed($id, 10, $sort);
     }
