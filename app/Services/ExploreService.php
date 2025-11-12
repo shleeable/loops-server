@@ -17,7 +17,7 @@ class ExploreService
 
         return Cache::remember(self::TRENDING_TAGS_KEY, now()->addWeek(), function () {
             return Hashtag::select(['id', 'name', 'count'])
-                ->where('count', '>', 10)
+                ->where('count', '>', 9)
                 ->where('can_trend', true)
                 ->orderByDesc('count')
                 ->limit(12)
