@@ -305,6 +305,14 @@ class WebPublicController extends Controller
         return VideoHashtagResource::collection($tags)->additional(['meta' => ['total_results' => $tag->count]]);
     }
 
+    public function authStartFallback(Request $request)
+    {
+        $res = [
+            'message' => 'This app is outdated. Get the new version: loops.video/app-update'
+        ];
+        return response()->json($res);
+    }
+
     public function getLanguagesList(Request $request)
     {
         return $this->data(app(IntlService::class)->get());

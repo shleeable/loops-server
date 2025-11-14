@@ -60,6 +60,8 @@ Route::group(['prefix' => '.well-known'], function () {
     })->where('any', '.*');
 });
 
+Route::post('/auth/start', [WebPublicController::class, 'authStartFallback']);
+
 Route::prefix('api')->group(function () {
     Route::post('/v1/apps', [AuthController::class, 'registerApp']);
 
