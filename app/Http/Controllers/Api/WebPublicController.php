@@ -308,7 +308,7 @@ class WebPublicController extends Controller
     public function authStartFallback(Request $request)
     {
         $res = [
-            'message' => 'This app is outdated. Get the new version: loops.video/app-update',
+            'errors' => 'This app is outdated. Get the new version: loops.video/app-update',
         ];
 
         return response()->json($res);
