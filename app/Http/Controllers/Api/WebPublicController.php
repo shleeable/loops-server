@@ -289,7 +289,7 @@ class WebPublicController extends Controller
     {
         $tag = Hashtag::where('name', $id)->firstOrFail();
         abort_if((bool) $tag->is_banned, 404);
-        $guest = auth()->guest();
+        $guest = $request->user() === null;
 
         if ($guest && $tag->is_nsfw) {
             return $this->defaultCollection(['is_nsfw' => true, 'is_guest' => true]);
