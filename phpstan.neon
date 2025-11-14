@@ -24,11 +24,6 @@ parameters:
 
     paths:
         - app/
-        - bootstrap/
-        - config/
-        - database/
-        - lang/
-        - resources/
         - routes/
         - tests/
 
