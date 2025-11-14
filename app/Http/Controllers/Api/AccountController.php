@@ -451,7 +451,9 @@ class AccountController extends Controller
         $query = Follower::select('f1.*')
             ->from('followers as f1')
             ->join('followers as f2', 'f1.following_id', '=', 'f2.following_id')
+            // @phpstan-ignore argument.type
             ->where('f1.profile_id', $authProfileId)
+            // @phpstan-ignore argument.type
             ->where('f2.profile_id', $id);
 
         $query->addSelect([
@@ -483,6 +485,7 @@ class AccountController extends Controller
         ])
             ->join('followers as f_target', 'f_target.following_id', '=', 'profiles.id')
             ->leftJoin('followers as f_count', 'f_count.following_id', '=', 'profiles.id')
+            // @phpstan-ignore argument.type
             ->where('f_target.profile_id', $id)
             ->whereNotExists(function ($query) use ($authProfileId) {
                 $query->select(DB::raw(1))
@@ -521,6 +524,7 @@ class AccountController extends Controller
             ])
                 ->join('followers as f_follower', 'f_follower.profile_id', '=', 'profiles.id')
                 ->leftJoin('followers as f_count', 'f_count.following_id', '=', 'profiles.id')
+                // @phpstan-ignore argument.type
                 ->where('f_follower.following_id', $id)
                 ->whereNotExists(function ($query) use ($authProfileId) {
                     $query->select(DB::raw(1))
