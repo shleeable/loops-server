@@ -236,7 +236,7 @@ class AdminController extends Controller
         $res['reports_created_count'] = Report::whereReporterProfileId($profile->id)->count();
         $res['reported_count'] = Report::totalReportsAgainstProfile($profile->id);
         $res['likes_count'] = AccountService::getAccountLikesCount($profile->id);
-        $res['status'] = $profile->status == 1 ? 'active' : 'suspended';
+        $res['status'] = $profile->getStatusDescription();
         $res['admin_notes'] = $profile->admin_notes;
         $res['can_upload'] = (bool) $profile->can_upload;
         $res['can_comment'] = (bool) $profile->can_comment;
@@ -280,6 +280,40 @@ class AdminController extends Controller
         $user->update($userValidated);
 
         app(AdminAuditLogService::class)->logProfileAdminPermissionUpdate($request->user(), $profile, ['old' => $oldValues, 'new' => $validated]);
+
+        return $this->success();
+    }
+
+    public function profileSuspend(Request $request, $id)
+    {
+        $profile = Profile::find($id);
+
+        if (! $profile) {
+            return $this->error('Ooops!');
+        }
+
+        $profile->update(['status' => 6]);
+
+        if ($profile->local) {
+            $profile->user->update(['status' => 6]);
+        }
+
+        return $this->success();
+    }
+
+    public function profileUnsuspend(Request $request, $id)
+    {
+        $profile = Profile::find($id);
+
+        if (! $profile) {
+            return $this->error('Ooops!');
+        }
+
+        $profile->update(['status' => 1]);
+
+        if ($profile->local) {
+            $profile->user->update(['status' => 1]);
+        }
 
         return $this->success();
     }
@@ -340,7 +374,7 @@ class AdminController extends Controller
 
     public function reportUpdateMarkAsNsfw(Request $request, $id)
     {
-        $report = Report::whereNotNull('reported_video_id')->whereAdminSeen(false)->findOrFail($id);
+        $report = Report::whereNotNull('reported_video_id')->where('admin_seen', false)->findOrFail($id);
         $video = $report->video;
         $video->is_sensitive = true;
         $video->save();
@@ -354,7 +388,7 @@ class AdminController extends Controller
 
     public function reportDismiss(Request $request, $id)
     {
-        $report = Report::whereAdminSeen(false)->findOrFail($id);
+        $report = Report::where('admin_seen', false)->findOrFail($id);
         $report->admin_seen = true;
         $report->save();
 
@@ -365,7 +399,7 @@ class AdminController extends Controller
 
     public function reportDismissAllByAccount(Request $request, $id)
     {
-        $report = Report::whereAdminSeen(false)->findOrFail($id);
+        $report = Report::where('admin_seen', false)->findOrFail($id);
 
         app(AdminAuditLogService::class)->logReportDismissAllByAccount($request->user(), $report, ['profile_id' => $report->reporter_profile_id]);
 
@@ -380,7 +414,7 @@ class AdminController extends Controller
 
     public function reportDeleteVideo(Request $request, $id)
     {
-        $report = Report::whereNotNull('reported_video_id')->whereAdminSeen(false)->findOrFail($id);
+        $report = Report::whereNotNull('reported_video_id')->where('admin_seen', false)->findOrFail($id);
         $videoId = $report->reported_video_id;
         $report->admin_seen = true;
         $report->save();
@@ -409,7 +443,7 @@ class AdminController extends Controller
 
     public function reportDeleteComment(Request $request, $id)
     {
-        $report = Report::whereNotNull('reported_comment_id')->whereAdminSeen(false)->findOrFail($id);
+        $report = Report::whereNotNull('reported_comment_id')->where('admin_seen', false)->findOrFail($id);
         $comment = Comment::withCount('children')->findOrFail($report->reported_comment_id);
 
         app(AdminAuditLogService::class)->logReportDeleteComment($request->user(), $report, ['vid' => $comment->video_id, 'comment_id' => $comment->id, 'comment_profile_id' => $comment->profile_id, 'comment_content' => $comment->caption]);
@@ -435,7 +469,7 @@ class AdminController extends Controller
 
     public function reportDeleteCommentReply(Request $request, $id)
     {
-        $report = Report::whereNotNull('reported_comment_reply_id')->whereAdminSeen(false)->findOrFail($id);
+        $report = Report::whereNotNull('reported_comment_reply_id')->where('admin_seen', false)->findOrFail($id);
         $commentReply = CommentReply::with('parent')->findOrFail($report->reported_comment_reply_id);
         $vid = $commentReply->video_id;
         app(AdminAuditLogService::class)->logReportDeleteCommentReply($request->user(), $report, ['vid' => $vid, 'comment_id' => $commentReply->id, 'comment_profile_id' => $commentReply->profile_id, 'comment_parent_id' => $commentReply->comment_id, 'comment_content' => $commentReply->caption]);
