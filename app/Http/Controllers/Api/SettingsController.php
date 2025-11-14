@@ -15,6 +15,7 @@ use App\Services\AccountService;
 use App\Services\AvatarService;
 use App\Services\TwoFactorService;
 use App\Services\UserAuditLogService;
+use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -145,7 +146,7 @@ class SettingsController extends Controller
     public function confirmTwoFactor(Request $request)
     {
         $request->validate([
-            'code' => 'required|int|min:111111|max:999999',
+            'code' => ['required', 'integer', 'digits:6'],
         ]);
 
         $user = $request->user();
@@ -297,5 +298,24 @@ class SettingsController extends Controller
         return $this->data([
             'discoverable' => $profile->discoverable,
         ]);
+    }
+
+    public function confirmDisableAccount(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|current_password',
+        ]);
+
+        $request->user()->update(['status' => 7]);
+        $request->user()->profile->update(['status' => 7]);
+
+        Auth::logoutOtherDevices($request->input('password'));
+        Auth::logout();
+
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();
+
+        return $this->success();
     }
 }

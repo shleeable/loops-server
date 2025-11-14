@@ -13,7 +13,7 @@ class AuthController extends Controller
 {
     public function verifyTwoFactor(Request $request)
     {
-        $request->validate(['otp_code' => 'required|digits:6']);
+        $request->validate(['otp_code' => 'required|integer|digits:6']);
         $user = User::find(session('2fa:user:id'));
 
         if (! $user) {
