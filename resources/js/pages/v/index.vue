@@ -64,7 +64,6 @@
             </div>
         </div>
 
-        <!-- Sensitive Content Warning -->
         <div
             v-else-if="
                 currentVideo &&
@@ -128,11 +127,11 @@
                 src="/nav-logo.png"
             />
 
-            <video
-                v-if="currentVideo.video"
-                class="absolute object-cover w-full my-auto z-[-1] h-screen"
-                :src="currentVideo.video"
-            />
+            <div
+                v-if="currentVideo.media"
+                class="absolute object-cover w-full my-auto z-[-1] h-screen bg-black bg-center bg-cover blur-2xl opacity-50"
+                :style="`background-image: url(${currentVideo.media.thumbnail})`"
+            ></div>
 
             <div
                 v-if="!isVideoLoaded"
@@ -146,17 +145,46 @@
                 </div>
             </div>
 
-            <div class="bg-black lg:min-w-[480px]">
+            <div class="bg-black lg:min-w-[480px] relative">
                 <video
                     v-if="currentVideo.media"
                     ref="videoRef"
                     loop
-                    controls
+                    :controls="showControls"
+                    playsinline
+                    preload="auto"
                     class="h-screen mx-auto"
+                    :class="{ 'opacity-0': !isVideoLoaded }"
+                    :aria-label="currentVideo.media.alt_text"
                     :src="currentVideo.media.src_url"
-                    @loadeddata="onVideoLoaded"
+                    @loadedmetadata="onVideoMetadataLoaded"
+                    @canplay="onVideoCanPlay"
                     @error="onVideoError"
+                    @loadstart="onVideoLoadStart"
+                    @play="onVideoPlay"
+                    @pause="onVideoPause"
                 />
+
+                <div
+                    v-if="showPlayButton && isVideoLoaded && currentVideo.media"
+                    @click="handlePlayButtonClick"
+                    class="absolute inset-0 flex items-center justify-center z-10 bg-black/70 backdrop-blur-sm cursor-pointer transition-opacity duration-300 hover:bg-black/60"
+                >
+                    <div class="flex flex-col items-center gap-3 animate-pulse">
+                        <div
+                            class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm w-30 h-30 flex justify-center items-center rounded-full p-6 shadow-2xl hover:scale-110 transition-transform duration-200"
+                        >
+                            <PlayIcon
+                                class="h-16 w-16 text-[#F02C56] dark:text-white ml-2"
+                            />
+                        </div>
+                        <p
+                            class="text-white text-lg font-semibold drop-shadow-lg"
+                        >
+                            {{ $t("common.tapToPlay") }}
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -167,219 +195,255 @@
                 !error &&
                 (!currentVideo.is_sensitive || showSensitiveContent)
             "
-            class="lg:max-w-[550px] relative w-full h-full bg-white dark:bg-slate-950"
+            class="lg:max-w-[550px] relative w-full h-full bg-white dark:bg-slate-950 flex flex-col"
         >
-            <div
-                class="p-3 sm:p-5 m-2 sm:m-8 mb-0 rounded-lg bg-gray-100 dark:bg-slate-900"
-            >
+            <div class="flex-shrink-0">
                 <div
-                    class="flex items-start sm:items-center justify-between gap-3"
+                    class="p-3 sm:p-5 m-2 sm:m-8 mb-0 rounded-lg bg-gray-100 dark:bg-slate-900"
                 >
-                    <div class="flex items-center flex-1 min-w-0">
-                        <router-link :to="`/@${currentVideo.account.username}`">
-                            <img
-                                class="rounded-full flex-shrink-0"
-                                :class="{
-                                    'w-10 h-10': true,
-                                    'sm:w-12 sm:h-12': true,
-                                }"
-                                :src="currentVideo.account.avatar"
-                                :alt="currentVideo.account.username"
-                                @error="
-                                    $event.target.src =
-                                        '/storage/avatars/default.jpg'
-                                "
-                            />
-                        </router-link>
-                        <div class="ml-3 pt-0.5 min-w-0 flex-1 items-center">
-                            <div
-                                class="text-base sm:text-[17px] font-semibold dark:text-slate-50 mt-2 -mb-1 truncate"
+                    <div
+                        class="flex items-start sm:items-center justify-between gap-3"
+                    >
+                        <div class="flex items-center flex-1 min-w-0">
+                            <router-link
+                                :to="`/@${currentVideo.account.username}`"
                             >
-                                {{ currentVideo.account.username }}
-                            </div>
+                                <img
+                                    class="rounded-full flex-shrink-0"
+                                    :class="{
+                                        'w-10 h-10': true,
+                                        'sm:w-12 sm:h-12': true,
+                                    }"
+                                    :src="currentVideo.account.avatar"
+                                    :alt="currentVideo.account.username"
+                                    @error="
+                                        $event.target.src =
+                                            '/storage/avatars/default.jpg'
+                                    "
+                                />
+                            </router-link>
                             <div
-                                class="text-xs sm:text-[13px] font-light flex gap-1 items-center"
+                                class="ml-3 pt-0.5 min-w-0 flex-1 items-center"
                             >
-                                <div class="dark:text-slate-400 truncate">
-                                    {{ currentVideo.account.name }}
+                                <div
+                                    class="text-base sm:text-[17px] font-semibold dark:text-slate-50 mt-2 -mb-1 truncate"
+                                >
+                                    {{ currentVideo.account.username }}
                                 </div>
                                 <div
-                                    class="text-slate-400 dark:text-slate-500 leading-none"
+                                    class="text-xs sm:text-[13px] font-light flex gap-1 items-center"
                                 >
-                                    ·
-                                </div>
-                                <div
-                                    class="dark:text-slate-400 whitespace-nowrap"
-                                >
-                                    {{
-                                        formatTimestamp(currentVideo.created_at)
-                                    }}
+                                    <div class="dark:text-slate-400 truncate">
+                                        {{ currentVideo.account.name }}
+                                    </div>
+                                    <div
+                                        class="text-slate-400 dark:text-slate-500 leading-none"
+                                    >
+                                        ·
+                                    </div>
+                                    <div
+                                        class="dark:text-slate-400 whitespace-nowrap"
+                                    >
+                                        {{
+                                            formatRecentDate(
+                                                currentVideo.created_at,
+                                            )
+                                        }}
+                                    </div>
+                                    <div
+                                        v-if="currentVideo.is_edited"
+                                        class="text-slate-400 dark:text-slate-500 leading-none"
+                                    >
+                                        ·
+                                    </div>
+                                    <button
+                                        v-if="currentVideo?.is_edited"
+                                        @click="
+                                            openVideoHistory(currentVideo?.id)
+                                        "
+                                        class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer"
+                                    >
+                                        Edited
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <template v-if="authStore.isAuthenticated">
-                        <button
-                            v-if="userId === currentVideo.account.id"
-                            @click="showEditModal = true"
-                            class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-[#F02C56]/70 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer"
-                        >
-                            {{ $t("post.edit") }}
-                        </button>
+                        <template v-if="authStore.isAuthenticated">
+                            <button
+                                v-if="userId === currentVideo.account.id"
+                                @click="showEditModal = true"
+                                class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-[#F02C56]/70 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer"
+                            >
+                                {{ $t("post.edit") }}
+                            </button>
+                            <template v-else>
+                                <button
+                                    v-if="!profileStore.isFollowing"
+                                    @click="profileStore.follow()"
+                                    class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-red-600 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer"
+                                >
+                                    {{ $t("common.follow") }}
+                                </button>
+                                <button
+                                    v-else
+                                    @click="profileStore.unfollow()"
+                                    class="flex items-center border-[#F02C56] text-[#F02C56] border rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer hover:opacity-60"
+                                >
+                                    {{ $t("common.unfollow") }}
+                                </button>
+                            </template>
+                        </template>
                         <template v-else>
                             <button
-                                v-if="!profileStore.isFollowing"
-                                @click="profileStore.follow()"
-                                class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-red-600 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer"
+                                @click="handleGuestFollow"
+                                class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-red-600 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0"
                             >
                                 {{ $t("common.follow") }}
                             </button>
-                            <button
-                                v-else
-                                @click="profileStore.unfollow()"
-                                class="flex items-center border-[#F02C56] text-[#F02C56] border rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer hover:opacity-60"
-                            >
-                                {{ $t("common.unfollow") }}
-                            </button>
                         </template>
-                    </template>
-                    <template v-else>
-                        <button
-                            @click="handleGuestFollow"
-                            class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-red-600 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0"
-                        >
-                            {{ $t("common.follow") }}
-                        </button>
-                    </template>
-                </div>
+                    </div>
 
-                <div class="mt-3 sm:mt-3">
-                    <p class="text-sm dark:text-slate-300 leading-relaxed">
-                        {{ currentVideo.caption }}
-                    </p>
-                </div>
+                    <div class="mt-3 sm:mt-3">
+                        <AutolinkedText
+                            :caption="currentVideo?.caption"
+                            :mentions="currentVideo?.mentions"
+                            :tags="currentVideo?.tags"
+                            :max-char-limit="140"
+                        />
+                    </div>
 
-                <!-- Sensitive Content Badge -->
-                <div
-                    v-if="currentVideo.is_sensitive"
-                    class="mt-3 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-                >
-                    <ExclamationTriangleIcon class="h-3 w-3 mr-1" />
-                    Sensitive Content
-                </div>
-
-                <div
-                    class="mt-3 text-xs sm:text-sm font-medium dark:text-slate-500 flex items-center"
-                >
-                    <MusicalNoteIcon
-                        class="inline h-4 w-4 mr-1 flex-shrink-0"
-                    />
-                    <span class="truncate"
-                        >original sound - {{ currentVideo.account.name }}</span
+                    <div
+                        v-if="currentVideo.is_sensitive"
+                        class="mt-3 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
                     >
+                        <ExclamationTriangleIcon class="h-3 w-3 mr-1" />
+                        Sensitive Content
+                    </div>
+
+                    <div
+                        class="mt-3 text-xs sm:text-sm font-medium dark:text-slate-500 flex items-center"
+                    >
+                        <MusicalNoteIcon
+                            class="inline h-4 w-4 mr-1 flex-shrink-0"
+                        />
+                        <span class="truncate"
+                            >original sound -
+                            {{ currentVideo.account.name }}</span
+                        >
+                    </div>
                 </div>
             </div>
 
-            <div class="flex items-center px-8 mt-4 justify-between">
-                <div class="pb-4 text-center flex items-center">
-                    <button
-                        @click="currentVideo.has_liked == true ? unlikePost() : likePost()"
-                        class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
-                    >
-                        <span
-                            class="text-[20px]"
-                            :class="
-                                currentVideo.has_liked
-                                    ? 'bx bxs-heart text-red-500'
-                                    : 'bx bx-heart text-gray-400 hover:text-red-500'
+            <div class="flex-shrink-0">
+                <div class="flex items-center px-8 mt-4 justify-between">
+                    <div class="pb-4 text-center flex items-center">
+                        <button
+                            @click="
+                                currentVideo.has_liked == true
+                                    ? unlikePost()
+                                    : likePost()
                             "
-                        ></span>
-                    </button>
-                    <span
-                        class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
-                    >
-                        {{ formatCount(currentVideo.likes) }}
-                    </span>
-                </div>
-
-                <div class="pb-4 text-center flex items-center">
-                    <div
-                        class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
-                    >
-                        <ChatBubbleOvalLeftIcon class="h-4 w-4 text-gray-400" />
-                    </div>
-                    <span
-                        class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
-                    >
-                        {{ formatCount(currentVideo.comments) }}
-                    </span>
-                </div>
-
-                <div class="pb-4 text-center flex items-center">
-                    <button
-                        class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
-                        @click="handleShare"
-                    >
-                        <ShareIcon class="h-4 w-4 text-gray-400" />
-                    </button>
-                    <span
-                        class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
-                    >
-                        {{ formatCount(0) }}
-                    </span>
-                </div>
-
-                <div class="pb-4 text-center flex items-center">
-                    <div
-                        class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
-                    >
-                        <BookmarkIcon class="h-4 w-4 text-gray-400" />
-                    </div>
-                    <span
-                        class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
-                    >
-                        {{ formatCount(0) }}
-                    </span>
-                </div>
-
-                <div
-                    v-if="userId != currentVideo.account.id"
-                    class="pb-4 text-center flex items-center"
-                >
-                    <div class="relative">
-                        <button @click="showMenu = !showMenu">
-                            <div
-                                class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
-                            >
-                                <EllipsisVerticalIcon class="h-5 w-5" />
-                            </div>
-                        </button>
-
-                        <div
-                            v-if="showMenu"
-                            class="absolute bg-white dark:bg-slate-900 rounded-lg w-[200px] shadow-xl overflow-hidden border border-gray-200 dark:border-slate-700 top-[43px] -right-2"
+                            class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
                         >
+                            <span
+                                class="text-[20px]"
+                                :class="
+                                    currentVideo.has_liked
+                                        ? 'bx bxs-heart text-red-500'
+                                        : 'bx bx-heart text-gray-400 hover:text-red-500'
+                                "
+                            ></span>
+                        </button>
+                        <button
+                            @click="openInteractionModal('likes')"
+                            class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold hover:text-[#F02C56] dark:hover:text-[#F02C56] transition-colors cursor-pointer"
+                        >
+                            {{ formatCount(currentVideo.likes) }}
+                        </button>
+                    </div>
+
+                    <div class="pb-4 text-center flex items-center">
+                        <div
+                            class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
+                        >
+                            <ChatBubbleOvalLeftIcon
+                                class="h-4 w-4 text-gray-400"
+                            />
+                        </div>
+                        <span
+                            class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
+                        >
+                            {{ formatCount(currentVideo.comments) }}
+                        </span>
+                    </div>
+
+                    <div class="pb-4 text-center flex items-center">
+                        <button
+                            class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
+                            @click="handleShare"
+                        >
+                            <ShareIcon class="h-4 w-4 text-gray-400" />
+                        </button>
+                        <button
+                            @click="openInteractionModal('shares')"
+                            class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold hover:text-[#F02C56] dark:hover:text-[#F02C56] transition-colors cursor-pointer"
+                        >
+                            {{ formatCount(currentVideo.shares) }}
+                        </button>
+                    </div>
+
+                    <div class="pb-4 text-center flex items-center">
+                        <div
+                            class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
+                        >
+                            <BookmarkIcon class="h-4 w-4 text-gray-400" />
+                        </div>
+                        <span
+                            class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
+                        >
+                            {{ formatCount(0) }}
+                        </span>
+                    </div>
+
+                    <div
+                        v-if="userId != currentVideo.account.id"
+                        class="pb-4 text-center flex items-center"
+                    >
+                        <div class="relative">
+                            <button @click="showMenu = !showMenu">
+                                <div
+                                    class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
+                                >
+                                    <EllipsisVerticalIcon class="h-5 w-5" />
+                                </div>
+                            </button>
+
                             <div
-                                @click="handleReport"
-                                class="flex items-center justify-start py-3 px-4 hover:bg-gray-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+                                v-if="showMenu"
+                                class="absolute bg-white dark:bg-slate-900 rounded-lg w-[200px] shadow-xl overflow-hidden border border-gray-200 dark:border-slate-700 top-[43px] -right-2"
                             >
-                                <FlagIcon class="h-4 w-4" />
-                                <span class="pl-2 font-semibold text-sm">{{
-                                    $t("common.report")
-                                }}</span>
+                                <div
+                                    @click="handleReport"
+                                    class="flex items-center justify-start py-3 px-4 hover:bg-gray-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+                                >
+                                    <FlagIcon class="h-4 w-4" />
+                                    <span class="pl-2 font-semibold text-sm">{{
+                                        $t("common.report")
+                                    }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="flex justify-center px-8 mb-3">
-                <UrlCopyInput :url="`${currentVideo.url}`" />
+                <div class="flex justify-center px-8 mb-3">
+                    <UrlCopyInput :url="`${currentVideo.url}`" />
+                </div>
             </div>
 
             <div
-                class="bg-[#F8F8F8] dark:bg-slate-900 z-0 w-full h-[calc(100%-10px)] border-t-2 border-gray-100 dark:border-slate-800 overflow-auto"
+                class="flex-1 min-h-0 border-t-2 border-gray-100 dark:border-slate-800 bg-[#F8F8F8] dark:bg-slate-900"
             >
                 <Comments />
             </div>
@@ -394,6 +458,15 @@
             @save="handleSaveVideo"
             @delete="handleDeleteVideo"
         />
+
+        <EditHistoryModal />
+
+        <InteractionModal
+            :is-open="showInteractionModal"
+            :video-id="currentVideo?.id"
+            :initial-tab="InteractionModalTab"
+            @close="closeInteractionModal"
+        />
     </div>
 </template>
 
@@ -407,6 +480,7 @@ import { useProfileStore } from "~/stores/profile";
 import { useHashids } from "@/composables/useHashids";
 import { useAlertModal } from "@/composables/useAlertModal.js";
 import { useUtils } from "@/composables/useUtils";
+import { useEditHistory } from "@/composables/useEditHistory";
 import {
     ArrowPathIcon,
     VideoCameraSlashIcon,
@@ -423,11 +497,15 @@ import {
     FlagIcon,
     EyeIcon,
     ArrowLeftIcon,
+    PlayIcon,
 } from "@heroicons/vue/24/outline";
 import UrlCopyInput from "@/components/Form/UrlCopyInput.vue";
 import Comments from "@/components/Status/Comments.vue";
 import ReportModal from "@/components/ReportModal.vue";
+import EditHistoryModal from "@/components/Status/EditHistoryModal.vue";
+import InteractionModal from "@/components/Status/InteractionModal.vue";
 import { useReportModal } from "@/composables/useReportModal";
+const { openVideoHistory } = useEditHistory();
 
 const router = useRouter();
 const route = useRoute();
@@ -436,7 +514,7 @@ const authStore = useAuthStore();
 const profileStore = useProfileStore();
 const videoStore = useVideoStore();
 const { openReportModal } = useReportModal();
-const { formatNumber, formatDate, goBack } = useUtils();
+const { formatNumber, formatRecentDate, goBack, formatCount } = useUtils();
 const { alertModal, confirmModal, persistentModal } = useAlertModal();
 const appConfig = inject("appConfig");
 
@@ -446,10 +524,30 @@ const isVideoLoading = ref(true);
 const showEditModal = ref(false);
 const showMenu = ref(false);
 const showSensitiveContent = ref(false);
+const showInteractionModal = ref(false);
+const InteractionModalTab = ref("likes");
 const error = ref(null);
+const videoLoadTimeout = ref(null);
+const showPlayButton = ref(true);
+const isPlaying = ref(false);
+const showControls = ref(false);
+const controlsTimeout = ref(null);
 
 const currentVideo = computed(() => videoStore.video);
 const userId = computed(() => authStore.id);
+
+const openInteractionModal = (tab) => {
+    if (!authStore.isAuthenticated) {
+        authStore.openAuthModal("login");
+        return;
+    }
+    InteractionModalTab.value = tab;
+    showInteractionModal.value = true;
+};
+
+const closeInteractionModal = () => {
+    showInteractionModal.value = false;
+};
 
 const setError = (type, title, message) => {
     error.value = { type, title, message };
@@ -459,6 +557,7 @@ const setError = (type, title, message) => {
 const retryLoad = async () => {
     error.value = null;
     isVideoLoading.value = true;
+    isVideoLoaded.value = false;
     await loadPost();
 };
 
@@ -672,6 +771,17 @@ const loadPost = async () => {
                 "Video Not Found",
                 "This video might have been deleted or moved.",
             );
+        } else {
+            videoLoadTimeout.value = setTimeout(() => {
+                if (!isVideoLoaded.value) {
+                    console.log("Video load timeout - forcing display");
+                    isVideoLoaded.value = true;
+
+                    if (!("ontouchstart" in window)) {
+                        showControls.value = true;
+                    }
+                }
+            }, 3000);
         }
     } catch (error) {
         console.error("Error loading post:", error);
@@ -725,15 +835,41 @@ const handleReport = async () => {
     openReportModal("video", currentVideo.value?.id, window.location.href);
 };
 
-const onVideoLoaded = (e) => {
-    if (e.target) {
-        setTimeout(() => {
-            isVideoLoaded.value = true;
-        }, 500);
+const onVideoLoadStart = () => {
+    console.log("Video load started");
+};
+
+const onVideoMetadataLoaded = (e) => {
+    console.log("Video metadata loaded");
+    if (videoLoadTimeout.value) {
+        clearTimeout(videoLoadTimeout.value);
+    }
+    isVideoLoaded.value = true;
+
+    if (!("ontouchstart" in window)) {
+        showControls.value = true;
     }
 };
 
-const onVideoError = () => {
+const onVideoCanPlay = (e) => {
+    console.log("Video can play");
+    if (videoLoadTimeout.value) {
+        clearTimeout(videoLoadTimeout.value);
+    }
+    if (!isVideoLoaded.value) {
+        isVideoLoaded.value = true;
+
+        if (!("ontouchstart" in window)) {
+            showControls.value = true;
+        }
+    }
+};
+
+const onVideoError = (e) => {
+    console.error("Video error:", e);
+    if (videoLoadTimeout.value) {
+        clearTimeout(videoLoadTimeout.value);
+    }
     setError(
         "network",
         "Video Unavailable",
@@ -741,9 +877,44 @@ const onVideoError = () => {
     );
 };
 
+const onVideoPlay = () => {
+    isPlaying.value = true;
+    showPlayButton.value = false;
+
+    if ("ontouchstart" in window) {
+        if (controlsTimeout.value) {
+            clearTimeout(controlsTimeout.value);
+        }
+        controlsTimeout.value = setTimeout(() => {
+            showControls.value = true;
+        }, 800);
+    }
+};
+
+const onVideoPause = () => {
+    isPlaying.value = false;
+    if ("ontouchstart" in window) {
+        showPlayButton.value = true;
+    }
+};
+
+const handlePlayButtonClick = () => {
+    if (videoRef.value) {
+        videoRef.value.play().catch((err) => {
+            console.error("Play failed:", err);
+        });
+    }
+};
+
 onMounted(loadPost);
 
 onBeforeUnmount(() => {
+    if (videoLoadTimeout.value) {
+        clearTimeout(videoLoadTimeout.value);
+    }
+    if (controlsTimeout.value) {
+        clearTimeout(controlsTimeout.value);
+    }
     if (videoRef.value) {
         videoRef.value.pause();
         videoRef.value.currentTime = 0;
@@ -757,7 +928,6 @@ watch(isVideoLoaded, (newVal) => {
         videoRef.value &&
         (!currentVideo.value?.is_sensitive || showSensitiveContent.value)
     ) {
-        setTimeout(() => videoRef.value.play(), 500);
     }
 });
 
@@ -785,60 +955,12 @@ const unlikePost = async () => {
     }
 };
 
-const deletePost = async () => {
-    let res = confirm("Are you sure you want to delete this post?");
-    if (res) {
-        try {
-            await videoStore.deleteVideoById(currentVideo.value.id);
-            await profileStore.getProfile(userId.value);
-            router.push(`/profile/${userId.value}`);
-        } catch (error) {
-            console.log(error);
-        }
-    }
-};
-
 const handleSaveVideo = async (data) => {
     await videoStore.updateVideoStore(data);
 };
 
-const handleDeleteVideo = async () => {};
-
-const formatCount = (count) => {
-    if (!count) return "0";
-
-    const formatter = Intl.NumberFormat("en", {
-        notation: "compact",
-        maximumFractionDigits: 1,
-    });
-
-    return formatter.format(count);
-};
-
-const formatTimestamp = (isoTimestamp) => {
-    const date = new Date(isoTimestamp);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
-
-    if (isNaN(date.getTime())) {
-        return "Invalid date";
-    }
-
-    if (diffInSeconds < 60) {
-        return "just now";
-    }
-
-    if (diffInSeconds < 3600) {
-        const minutes = Math.floor(diffInSeconds / 60);
-        return `${minutes}m ago`;
-    }
-
-    if (diffInSeconds < 86400) {
-        const hours = Math.floor(diffInSeconds / 3600);
-        return `${hours}h ago`;
-    }
-
-    const options = { month: "short", day: "numeric", year: "numeric" };
-    return date.toLocaleDateString("en-US", options);
+const handleDeleteVideo = async (id) => {
+    await videoStore.deleteVideoById(id);
+    router.push(`/studio/posts`);
 };
 </script>

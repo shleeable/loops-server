@@ -1,14 +1,16 @@
 <template>
     <StudioLayout>
-        <div class="w-full min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div class="w-full min-h-screen bg-gray-50 dark:bg-gray-950">
             <div
                 v-if="showWarning"
-                class="bg-white border-b border-gray-200 px-6 py-4"
+                class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4"
             >
                 <div
                     class="flex items-center justify-between max-w-7xl mx-auto"
                 >
-                    <div class="flex items-center text-orange-600">
+                    <div
+                        class="flex items-center text-orange-600 dark:text-orange-400"
+                    >
                         <svg
                             class="w-5 h-5 mr-2"
                             fill="currentColor"
@@ -25,13 +27,13 @@
                     <div class="flex space-x-3">
                         <button
                             @click="showWarning = false"
-                            class="text-gray-600 hover:text-gray-800"
+                            class="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                         >
                             {{ $t("common.discard") }}
                         </button>
                         <button
                             @click="showWarning = false"
-                            class="text-gray-900 font-medium hover:text-gray-700"
+                            class="text-gray-900 dark:text-gray-100 font-medium hover:text-gray-700 dark:hover:text-gray-300"
                         >
                             {{ $t("common.continue") }}
                         </button>
@@ -45,14 +47,17 @@
                         @drop="handleDrop"
                         @dragover.prevent
                         @dragenter.prevent
-                        class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-gray-400 transition-colors"
-                        :class="{ 'border-blue-400 bg-blue-50': isDragging }"
+                        class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-12 text-center hover:border-gray-400 dark:hover:border-gray-600 transition-colors bg-white dark:bg-gray-800"
+                        :class="{
+                            'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-950/30':
+                                isDragging,
+                        }"
                         @dragenter="isDragging = true"
                         @dragleave="isDragging = false"
                     >
                         <div class="mb-6">
                             <svg
-                                class="w-16 h-16 mx-auto text-gray-400"
+                                class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -66,10 +71,12 @@
                             </svg>
                         </div>
 
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                        <h3
+                            class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2"
+                        >
                             {{ $t("studio.selectVideoToUpload") }}
                         </h3>
-                        <p class="text-gray-600 mb-6">
+                        <p class="text-gray-600 dark:text-gray-400 mb-6">
                             {{ $t("studio.orDragAndDropItHere") }}
                         </p>
 
@@ -83,7 +90,7 @@
                         <input
                             ref="fileInput"
                             type="file"
-                            accept="video/mp4"
+                            accept="video/mp4,video/mov,video/quicktime"
                             @change="handleFileSelect"
                             class="hidden"
                         />
@@ -93,7 +100,7 @@
                         <div class="text-center">
                             <div class="flex items-center justify-center mb-3">
                                 <svg
-                                    class="w-6 h-6 text-gray-600"
+                                    class="w-6 h-6 text-gray-600 dark:text-gray-400"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -106,10 +113,12 @@
                                     />
                                 </svg>
                             </div>
-                            <h4 class="font-medium text-gray-900 mb-2">
+                            <h4
+                                class="font-medium text-gray-900 dark:text-gray-100 mb-2"
+                            >
                                 {{ $t("studio.sizeAndDuration") }}
                             </h4>
-                            <p class="text-sm text-gray-600">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
                                 {{ $t("studio.maximumSize") }}
                                 {{ appConfig.media.max_video_size }}
                                 {{ $t("studio.mbVideoDuration") }}
@@ -121,7 +130,7 @@
                         <div class="text-center">
                             <div class="flex items-center justify-center mb-3">
                                 <svg
-                                    class="w-6 h-6 text-gray-600"
+                                    class="w-6 h-6 text-gray-600 dark:text-gray-400"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -134,10 +143,12 @@
                                     />
                                 </svg>
                             </div>
-                            <h4 class="font-medium text-gray-900 mb-2">
+                            <h4
+                                class="font-medium text-gray-900 dark:text-gray-100 mb-2"
+                            >
                                 {{ $t("studio.fileFormats") }}
                             </h4>
-                            <p class="text-sm text-gray-600">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
                                 {{ $t("studio.recommended") }}
                                 ".{{
                                     appConfig.media.allowed_video_formats.join(
@@ -152,7 +163,7 @@
                         <div class="text-center">
                             <div class="flex items-center justify-center mb-3">
                                 <svg
-                                    class="w-6 h-6 text-gray-600"
+                                    class="w-6 h-6 text-gray-600 dark:text-gray-400"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -165,10 +176,12 @@
                                     />
                                 </svg>
                             </div>
-                            <h4 class="font-medium text-gray-900 mb-2">
+                            <h4
+                                class="font-medium text-gray-900 dark:text-gray-100 mb-2"
+                            >
                                 {{ $t("studio.videoResolutions") }}
                             </h4>
-                            <p class="text-sm text-gray-600">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
                                 {{ $t("studio.videoResolutionsMessage") }}
                             </p>
                         </div>
@@ -176,7 +189,7 @@
                         <div class="text-center">
                             <div class="flex items-center justify-center mb-3">
                                 <svg
-                                    class="w-6 h-6 text-gray-600"
+                                    class="w-6 h-6 text-gray-600 dark:text-gray-400"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -189,10 +202,12 @@
                                     />
                                 </svg>
                             </div>
-                            <h4 class="font-medium text-gray-900 mb-2">
+                            <h4
+                                class="font-medium text-gray-900 dark:text-gray-100 mb-2"
+                            >
                                 {{ $t("studio.aspectRatios") }}
                             </h4>
-                            <p class="text-sm text-gray-600">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
                                 {{ $t("studio.aspectRatiosMessage") }}
                             </p>
                         </div>
@@ -202,24 +217,26 @@
                 <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-2">
                         <div
-                            class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6"
+                            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6"
                         >
                             <div class="flex items-center">
                                 <div class="flex items-center">
                                     <div
                                         class="w-3 h-3 bg-green-500 rounded-full mr-3"
                                     ></div>
-                                    <span class="font-medium">{{
-                                        uploadedFile.name
-                                    }}</span>
-                                    <span class="text-sm text-gray-500 ml-2"
+                                    <span
+                                        class="font-medium text-gray-900 dark:text-gray-100"
+                                        >{{ uploadedFile.name }}</span
+                                    >
+                                    <span
+                                        class="text-sm text-gray-500 dark:text-gray-400 ml-2"
                                         >({{
                                             formatFileSize(uploadedFile.size)
                                         }})</span
                                     >
                                 </div>
                                 <button
-                                    class="ml-auto text-gray-400 hover:text-gray-600"
+                                    class="ml-auto text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                                 >
                                     <span class="text-sm">{{
                                         $t("studio.replace")
@@ -227,24 +244,26 @@
                                 </button>
                             </div>
                             <div
-                                class="w-full bg-green-200 rounded-full h-2 mt-3"
+                                class="w-full bg-green-200 dark:bg-green-900/30 rounded-full h-2 mt-3"
                             >
                                 <div
-                                    class="bg-green-500 h-2 rounded-full w-full"
+                                    class="bg-green-500 dark:bg-green-600 h-2 rounded-full w-full"
                                 ></div>
                             </div>
                         </div>
 
                         <div
-                            class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+                            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
                         >
-                            <h3 class="text-lg font-medium mb-6">
+                            <h3
+                                class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-6"
+                            >
                                 {{ $t("studio.details") }}
                             </h3>
 
                             <div class="mb-6">
                                 <label
-                                    class="block text-sm font-medium text-gray-700 mb-2"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                     >{{ $t("studio.caption") }}</label
                                 >
                                 <div class="relative">
@@ -259,19 +278,19 @@
                                             )
                                         "
                                         rows="4"
-                                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                        class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                                         maxlength="2200"
                                     ></textarea>
 
                                     <div
                                         v-if="showAutocomplete"
-                                        class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1"
+                                        class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg mt-1"
                                         :style="autocompletePosition"
                                     >
                                         <div class="max-h-48 overflow-y-auto">
                                             <div
                                                 v-if="isLoadingSuggestions"
-                                                class="px-3 py-2 text-gray-500 text-sm flex items-center"
+                                                class="px-3 py-2 text-gray-500 dark:text-gray-400 text-sm flex items-center"
                                             >
                                                 <svg
                                                     class="animate-spin -ml-1 mr-2 h-4 w-4"
@@ -307,7 +326,7 @@
                                                         0 &&
                                                     autocompleteQuery
                                                 "
-                                                class="px-3 py-2 text-gray-500 text-sm"
+                                                class="px-3 py-2 text-gray-500 dark:text-gray-400 text-sm"
                                             >
                                                 {{ $t("studio.no") }}
                                                 {{
@@ -325,9 +344,9 @@
                                                 ) in filteredSuggestions"
                                                 :key="index"
                                                 @click="selectSuggestion(item)"
-                                                class="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                                                class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center"
                                                 :class="{
-                                                    'bg-blue-50':
+                                                    'bg-blue-50 dark:bg-blue-950/50':
                                                         index ===
                                                         selectedSuggestionIndex,
                                                 }"
@@ -337,7 +356,7 @@
                                                         autocompleteType ===
                                                         'mention'
                                                     "
-                                                    class="w-8 h-8 bg-gray-300 rounded-full mr-3 flex items-center justify-center overflow-hidden"
+                                                    class="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full mr-3 flex items-center justify-center overflow-hidden"
                                                 >
                                                     <img
                                                         v-if="item.avatar"
@@ -351,7 +370,7 @@
                                                     />
                                                     <span
                                                         v-else
-                                                        class="text-xs font-medium"
+                                                        class="text-xs font-medium text-gray-700 dark:text-gray-300"
                                                         >{{
                                                             item.username
                                                                 .charAt(0)
@@ -361,14 +380,17 @@
                                                 </div>
                                                 <div
                                                     v-else
-                                                    class="w-8 h-8 bg-blue-100 rounded-full mr-3 flex items-center justify-center"
+                                                    class="w-8 h-8 bg-blue-100 dark:bg-blue-900/40 rounded-full mr-3 flex items-center justify-center"
                                                 >
-                                                    <span class="text-blue-600"
+                                                    <span
+                                                        class="text-blue-600 dark:text-blue-400"
                                                         >#</span
                                                     >
                                                 </div>
                                                 <div>
-                                                    <div class="font-medium">
+                                                    <div
+                                                        class="font-medium text-gray-900 dark:text-gray-100"
+                                                    >
                                                         {{
                                                             autocompleteType ===
                                                             "hashtag"
@@ -379,7 +401,7 @@
                                                     <div class="flex gap-3">
                                                         <div
                                                             v-if="item.count"
-                                                            class="text-xs text-gray-500"
+                                                            class="text-xs text-gray-500 dark:text-gray-400"
                                                         >
                                                             {{ item.count }}
                                                             posts
@@ -388,7 +410,7 @@
                                                             v-if="
                                                                 item.post_count
                                                             "
-                                                            class="text-xs text-gray-500"
+                                                            class="text-xs text-gray-500 dark:text-gray-400"
                                                         >
                                                             {{
                                                                 item.post_count
@@ -399,7 +421,7 @@
                                                             v-if="
                                                                 item.follower_count
                                                             "
-                                                            class="text-xs text-gray-500"
+                                                            class="text-xs text-gray-500 dark:text-gray-400"
                                                         >
                                                             {{
                                                                 item.follower_count
@@ -413,10 +435,7 @@
                                     </div>
 
                                     <div
-                                        class="absolute bottom-2 left-2 text-xs text-gray-400"
-                                    ></div>
-                                    <div
-                                        class="absolute bottom-2 right-2 text-xs text-gray-400"
+                                        class="absolute bottom-2 right-2 text-xs text-gray-400 dark:text-gray-500"
                                     >
                                         {{ description.length }}/240
                                     </div>
@@ -424,27 +443,115 @@
                                 <div class="flex space-x-4 -mt-1">
                                     <button
                                         @click="insertHashtag"
-                                        class="text-gray-600 hover:text-gray-700 font-bold text-xs cursor-pointer"
+                                        class="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-bold text-xs cursor-pointer"
                                     >
                                         # {{ $t("studio.hashtag") }}
                                     </button>
                                     <button
                                         @click="insertMention"
-                                        class="text-gray-600 hover:text-gray-700 font-bold text-xs cursor-pointer"
+                                        class="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-bold text-xs cursor-pointer"
                                     >
                                         @ {{ $t("studio.mention") }}
                                     </button>
                                 </div>
                             </div>
 
+                            <div class="mb-6">
+                                <label
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                    >{{ $t("studio.altText") }}</label
+                                >
+                                <div class="relative">
+                                    <textarea
+                                        v-model="altText"
+                                        :placeholder="
+                                            $t(
+                                                'studio.describeYourVideoDotDotDotAltText',
+                                            )
+                                        "
+                                        rows="2"
+                                        class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                        maxlength="2000"
+                                    ></textarea>
+
+                                    <div
+                                        class="absolute bottom-2 right-2 text-xs text-gray-400 dark:text-gray-500"
+                                    >
+                                        {{ altText.length }}/2000
+                                    </div>
+                                </div>
+                                <p
+                                    class="text-sm text-gray-500 dark:text-gray-400 flex items-start gap-1"
+                                >
+                                    <svg
+                                        class="w-4 h-4 mt-0.5 flex-shrink-0"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                    </svg>
+                                    <span>{{ $t("studio.altTextHelp") }}</span>
+                                </p>
+                            </div>
+
+                            <div class="mb-6">
+                                <label
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                >
+                                    {{ $t("studio.language") }}
+                                </label>
+                                <div class="relative">
+                                    <select
+                                        v-model="settings.lang"
+                                        class="block w-full px-4 py-2 pr-8 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    >
+                                        <option
+                                            v-for="lang in languages"
+                                            :key="lang.code"
+                                            :value="lang.code"
+                                        >
+                                            {{ lang.name }}
+                                        </option>
+                                    </select>
+                                    <div
+                                        class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none"
+                                    >
+                                        <svg
+                                            class="w-5 h-5 text-gray-400 dark:text-gray-500"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M19 9l-7 7-7-7"
+                                            />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <p
+                                    class="mt-2 text-sm text-gray-500 dark:text-gray-400"
+                                >
+                                    {{ $t("studio.selectLanguageHelp") }}
+                                </p>
+                            </div>
+
                             <div class="hidden mb-6">
                                 <label
-                                    class="block text-sm font-medium text-gray-700 mb-2"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                     >{{ $t("studio.customCover") }}</label
                                 >
                                 <div class="flex items-center space-x-4">
                                     <div
-                                        class="relative w-24 h-32 bg-gray-200 rounded-md flex items-center justify-center overflow-hidden"
+                                        class="relative w-24 h-32 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center overflow-hidden"
                                     >
                                         <img
                                             v-if="coverImage"
@@ -454,7 +561,7 @@
                                         />
                                         <svg
                                             v-else
-                                            class="w-8 h-8 text-gray-400"
+                                            class="w-8 h-8 text-gray-400 dark:text-gray-500"
                                             fill="currentColor"
                                             viewBox="0 0 20 20"
                                         >
@@ -487,7 +594,7 @@
                                     <div class="flex flex-col space-y-2">
                                         <button
                                             @click="$refs.coverInput.click()"
-                                            class="text-blue-600 hover:text-blue-700 text-sm"
+                                            class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm"
                                         >
                                             {{
                                                 coverImage
@@ -508,15 +615,17 @@
                         </div>
 
                         <div
-                            class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6"
+                            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6"
                         >
-                            <h3 class="text-lg font-medium mb-6">
+                            <h3
+                                class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-6"
+                            >
                                 {{ $t("studio.settings") }}
                             </h3>
 
                             <div>
                                 <label
-                                    class="block text-sm font-medium text-gray-700 mb-3"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3"
                                     >{{ $t("studio.allowOthersTo") }}:</label
                                 >
                                 <div class="space-y-4">
@@ -525,12 +634,14 @@
                                     >
                                         <div>
                                             <span
-                                                class="text-sm font-medium text-gray-700"
+                                                class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                                 >{{
                                                     $t("common.comment")
                                                 }}</span
                                             >
-                                            <p class="text-xs text-gray-500">
+                                            <p
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                            >
                                                 {{
                                                     $t("studio.commentMessage")
                                                 }}
@@ -545,12 +656,14 @@
                                     >
                                         <div>
                                             <span
-                                                class="text-sm font-medium text-gray-700"
+                                                class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                                 >{{
                                                     $t("studio.download")
                                                 }}</span
                                             >
-                                            <p class="text-xs text-gray-500">
+                                            <p
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                            >
                                                 {{
                                                     $t("studio.downloadMessage")
                                                 }}
@@ -565,10 +678,12 @@
                                     >
                                         <div>
                                             <span
-                                                class="text-sm font-medium text-gray-700"
+                                                class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                                 >{{ $t("studio.duet") }}</span
                                             >
-                                            <p class="text-xs text-gray-500">
+                                            <p
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                            >
                                                 {{ $t("studio.duetMessage") }}
                                             </p>
                                         </div>
@@ -581,10 +696,12 @@
                                     >
                                         <div>
                                             <span
-                                                class="text-sm font-medium text-gray-700"
+                                                class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                                 >{{ $t("studio.stitch") }}</span
                                             >
-                                            <p class="text-xs text-gray-500">
+                                            <p
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                            >
                                                 {{ $t("studio.stitchMessage") }}
                                             </p>
                                         </div>
@@ -595,18 +712,22 @@
                                 </div>
                             </div>
 
-                            <div class="w-full h-[1px] bg-gray-100 my-6"></div>
+                            <div
+                                class="w-full h-[1px] bg-gray-100 dark:bg-gray-700 my-6"
+                            ></div>
 
                             <div class="space-y-4">
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <span
-                                            class="text-sm font-medium text-gray-700"
+                                            class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                             >{{
                                                 $t("studio.containsNSFW")
                                             }}</span
                                         >
-                                        <p class="text-xs text-gray-500">
+                                        <p
+                                            class="text-xs text-gray-500 dark:text-gray-400"
+                                        >
                                             {{
                                                 $t("studio.containsNSFWMessage")
                                             }}
@@ -614,25 +735,53 @@
                                     </div>
                                     <ToggleSwitch v-model="settings.nsfw" />
                                 </div>
-                                <!-- <div class="flex items-center justify-between">
-                                  <div>
-                                    <span class="text-sm font-medium text-gray-700">Disclose post content</span>
-                                    <p class="text-xs text-gray-500">Let others know this post promotes a brand, product or service</p>
-                                  </div>
-                                  <ToggleSwitch
-                                    v-model="settings.discloseContent"
-                                  />
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <span
+                                            class="text-sm font-medium text-gray-700 dark:text-gray-200"
+                                            >{{
+                                                $t("studio.disclosePostContent")
+                                            }}</span
+                                        >
+                                        <p
+                                            class="text-xs text-gray-500 dark:text-gray-400"
+                                        >
+                                            {{
+                                                $t(
+                                                    "studio.disclosePostContentHelp",
+                                                )
+                                            }}
+                                        </p>
+                                    </div>
+                                    <ToggleSwitch
+                                        v-model="settings.containsAd"
+                                    />
                                 </div>
 
                                 <div class="flex items-center justify-between">
-                                  <div>
-                                    <span class="text-sm font-medium text-gray-700">AI-generated content</span>
-                                    <p class="text-xs text-gray-500">Add this label for tags</p>
-                                  </div>
-                                  <ToggleSwitch
-                                    v-model="settings.aiGenerated"
-                                  />
-                                </div> -->
+                                    <div class="max-w-[70%]">
+                                        <span
+                                            class="text-sm font-medium text-gray-700 dark:text-gray-200"
+                                            >{{
+                                                $t(
+                                                    "studio.containsAlteredContent",
+                                                )
+                                            }}</span
+                                        >
+                                        <div
+                                            class="text-xs text-gray-500 dark:text-gray-400"
+                                        >
+                                            {{
+                                                $t(
+                                                    "studio.containsAlteredContentHelp",
+                                                )
+                                            }}
+                                        </div>
+                                    </div>
+                                    <ToggleSwitch
+                                        v-model="settings.containsAi"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -640,19 +789,19 @@
                     <div class="lg:col-span-1">
                         <div class="sticky top-6">
                             <div
-                                class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4"
+                                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-4"
                             >
                                 <div
                                     class="flex justify-center space-x-4 mb-4 text-sm"
                                 >
                                     <div
-                                        class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1"
+                                        class="flex bg-gray-100 dark:bg-gray-900 rounded-lg p-1"
                                     >
                                         <button
                                             :class="[
                                                 'px-3 py-1.5 text-[14px] font-medium rounded-md transition-all duration-200 relative cursor-pointer',
                                                 previewMode === 'feed'
-                                                    ? 'bg-white dark:bg-slate-700 text-black dark:text-white shadow-sm'
+                                                    ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-sm'
                                                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
                                             ]"
                                             @click="previewMode = 'feed'"
@@ -663,7 +812,7 @@
                                             :class="[
                                                 'px-3 py-1.5 text-[14px] font-medium rounded-md transition-all duration-200 relative cursor-pointer',
                                                 previewMode === 'profile'
-                                                    ? 'bg-white dark:bg-slate-700 text-black dark:text-white shadow-sm'
+                                                    ? 'bg-white dark:bg-gray-700 text-black dark:text-white shadow-sm'
                                                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
                                             ]"
                                             @click="previewMode = 'profile'"
@@ -682,9 +831,59 @@
                                     "
                                 >
                                     <div
-                                        class="bg-gray-800 w-full h-full rounded-xl flex items-center justify-center text-white text-sm"
+                                        class="relative w-full h-full rounded-xl overflow-hidden bg-black"
                                     >
-                                        Video Preview (todo)
+                                        <video
+                                            v-if="videoPreviewUrl"
+                                            ref="videoPreviewEl"
+                                            :src="videoPreviewUrl"
+                                            class="w-full h-full object-cover"
+                                            playsinline
+                                            muted
+                                            :controls="true"
+                                        ></video>
+
+                                        <div
+                                            v-else
+                                            class="w-full h-full flex flex-col items-center justify-center text-white/70 text-xs bg-gray-800"
+                                        >
+                                            <span class="text-lg mb-1"
+                                                >No preview</span
+                                            >
+                                            <span
+                                                >Upload a video to see it
+                                                here</span
+                                            >
+                                        </div>
+
+                                        <div
+                                            v-if="videoPreviewUrl"
+                                            class="pointer-events-none absolute inset-x-0 px-3 pb-2 bg-gradient-to-t from-black/80 via-black/10 to-transparent pt-10"
+                                            :class="[
+                                                videoPreviewUrl &&
+                                                previewMode === 'feed'
+                                                    ? 'bottom-[46px]'
+                                                    : 'bottom-0',
+                                            ]"
+                                        >
+                                            <p
+                                                class="text-white font-semibold text-sm mb-1"
+                                            >
+                                                {{ previewUsername }}
+                                            </p>
+                                            <p
+                                                class="text-white/90 text-[12px] leading-snug line-clamp-1 overflow-hidden break-words"
+                                            >
+                                                {{ previewCaption }}
+                                            </p>
+                                        </div>
+
+                                        <MockUIIcons
+                                            v-if="
+                                                videoPreviewUrl &&
+                                                previewMode === 'feed'
+                                            "
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -697,7 +896,7 @@
                                     :class="
                                         canSubmit && !isSubmitting
                                             ? 'bg-[#F02C56] border border-[#F02C56] hover:bg-[#F02C56]/80 text-white'
-                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                            : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                                     "
                                 >
                                     <svg
@@ -725,7 +924,7 @@
                                 </button>
                                 <button
                                     @click="handleDiscard"
-                                    class="w-full border border-gray-300 text-gray-700 py-3 rounded-md font-medium hover:bg-gray-50 transition-colors"
+                                    class="w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 py-3 rounded-md font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                                     :disabled="isSubmitting"
                                 >
                                     {{ $t("common.discard") }}
@@ -737,8 +936,97 @@
             </div>
         </div>
     </StudioLayout>
-</template>
 
+    <Teleport to="body">
+        <Transition
+            enter-active-class="transition-opacity duration-300"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition-opacity duration-300"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div
+                v-if="isSubmitting"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm"
+            >
+                <div class="text-center space-y-6">
+                    <div class="flex justify-center">
+                        <Spinner size="xl" speed="slow" />
+                    </div>
+
+                    <div class="space-y-3">
+                        <h2 class="text-2xl font-semibold text-white">
+                            Uploading Your Loop
+                        </h2>
+                        <p class="text-gray-300 text-lg">
+                            Please don't close this window...
+                        </p>
+
+                        <div class="w-80 mx-auto">
+                            <div
+                                class="bg-gray-700 rounded-full h-3 overflow-hidden"
+                            >
+                                <div
+                                    class="bg-gradient-to-r from-[#ed5b7bff] to-[#F02C56] h-full transition-all duration-300 ease-out"
+                                    :style="{ width: `${uploadProgress}%` }"
+                                ></div>
+                            </div>
+                            <p class="text-white text-sm mt-2 font-medium">
+                                {{ uploadProgress }}%
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+    </Teleport>
+
+    <Teleport to="body">
+        <Transition
+            enter-active-class="transition-opacity duration-300"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition-opacity duration-300"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div
+                v-if="isConverting"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm"
+            >
+                <div class="text-center space-y-6">
+                    <div class="flex justify-center">
+                        <Spinner size="xl" speed="slow" />
+                    </div>
+
+                    <div class="space-y-3">
+                        <h2 class="text-2xl font-semibold text-white">
+                            Optimizing your Loop
+                        </h2>
+                        <p class="text-gray-300 text-lg">
+                            Please don't close this window...
+                        </p>
+
+                        <div class="w-80 mx-auto">
+                            <div
+                                class="bg-gray-700 rounded-full h-3 overflow-hidden"
+                            >
+                                <div
+                                    class="bg-gradient-to-r from-[#ed5b7bff] to-[#F02C56] h-full transition-all duration-300 ease-out"
+                                    :style="{ width: `${transcodeProgress}%` }"
+                                ></div>
+                            </div>
+                            <p class="text-white text-sm mt-2 font-medium">
+                                {{ transcodeProgress }}%
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Transition>
+    </Teleport>
+</template>
 <script setup>
 import {
     ref,
@@ -748,8 +1036,23 @@ import {
     watch,
     inject,
     onMounted,
+    onBeforeUnmount,
 } from "vue";
-import { useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
+import { useRouter, onBeforeRouteLeave } from "vue-router";
+import { useAlertModal } from "@/composables/useAlertModal.js";
+import {
+    Input,
+    ALL_FORMATS,
+    BlobSource,
+    UrlSource,
+    Output,
+    BufferTarget,
+    Mp4OutputFormat,
+    Conversion,
+    QUALITY_VERY_HIGH,
+    QUALITY_HIGH,
+} from "mediabunny";
 
 const router = useRouter();
 const axios = inject("axios");
@@ -761,7 +1064,12 @@ const coverImage = ref(null);
 const privacy = ref("everyone");
 const previewMode = ref("feed");
 const isSubmitting = ref(false);
+const uploadProgress = ref(0);
 const appConfig = inject("appConfig");
+const authStore = inject("authStore");
+const appStore = inject("appStore");
+const { languages } = storeToRefs(appStore);
+const { alertModal, confirmModal } = useAlertModal();
 
 const showAutocomplete = ref(false);
 const autocompleteType = ref("");
@@ -772,11 +1080,14 @@ const autocompletePosition = ref({ top: "100%", left: "0" });
 const isLoadingSuggestions = ref(false);
 const apiSuggestions = ref([]);
 const searchTimeout = ref(null);
+const videoPreviewUrl = ref("");
+const videoPreviewEl = ref(null);
 
 const videoPreview = ref(null);
 const fileDisplay = ref(null);
 const errorType = ref(null);
 const caption = ref("");
+const altText = ref("");
 const fileData = ref(null);
 const errors = ref(null);
 const isUploading = ref(false);
@@ -784,9 +1095,13 @@ const isConverting = ref(false);
 const progress = ref(0);
 const needsConversion = ref(true);
 const convertedFile = ref(null);
+const transcodeProgress = ref(0);
 
 const ffmpegInstance = ref(null);
 const isFFmpegLoaded = ref(false);
+
+let currentConversion = null;
+let currentIntervalId = null;
 
 const suggestionCache = reactive({
     hashtags: new Map(),
@@ -794,13 +1109,68 @@ const suggestionCache = reactive({
 });
 
 const settings = reactive({
+    lang: "en",
     nsfw: false,
     allowComments: true,
     allowDownloads: true,
     allowDuets: true,
     allowStitch: true,
-    discloseContent: false,
-    aiGenerated: false,
+    containsAd: false,
+    containsAi: false,
+});
+
+onBeforeRouteLeave((to, from, next) => {
+    if (isSubmitting.value) {
+        confirmModal(
+            "Upload in Progress",
+            '<p class="text-gray-700">Your video is still uploading. If you leave now, the upload will be cancelled.</p><p class="text-gray-700 mt-2">Are you sure you want to leave?</p>',
+            "Leave Anyway",
+            "Stay on Page",
+        ).then((confirmed) => {
+            if (confirmed) {
+                next();
+            } else {
+                next(false);
+            }
+        });
+    } else {
+        next();
+    }
+});
+
+const handleBeforeUnload = (e) => {
+    if (isSubmitting.value) {
+        e.preventDefault();
+        e.returnValue = "";
+        return "";
+    }
+};
+
+onMounted(async () => {
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    await appStore.ensureLanguages();
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+});
+
+const previewUsername = computed(() => {
+    if (authStore?.user?.username) {
+        return "@" + authStore.user?.username;
+    }
+
+    if (authStore?.user?.name) {
+        return "@" + authStore.user?.name;
+    }
+
+    return "@username";
+});
+
+const previewCaption = computed(() => {
+    return description.value?.trim()
+        ? description.value.trim()
+        : "Add a caption to tell people what this loop is about ✨";
 });
 
 const canSubmit = computed(() => {
@@ -818,12 +1188,9 @@ const searchHashtags = async (query) => {
             return suggestionCache.hashtags.get(cacheKey);
         }
 
-        const response = await axios.get(
-            "/api/v1/upload/autocomplete/hashtag",
-            {
-                params: { q: query, limit: 6 },
-            },
-        );
+        const response = await axios.get("/api/v1/autocomplete/tags", {
+            params: { q: query, limit: 6 },
+        });
 
         const results = response.data.data || [];
         suggestionCache.hashtags.set(cacheKey, results);
@@ -842,12 +1209,9 @@ const searchMentions = async (query) => {
             return suggestionCache.mentions.get(cacheKey);
         }
 
-        const response = await axios.get(
-            "/api/v1/upload/autocomplete/mention",
-            {
-                params: { q: query, limit: 6 },
-            },
-        );
+        const response = await axios.get("/api/v1/autocomplete/accounts", {
+            params: { q: query, limit: 6 },
+        });
 
         const results = response.data.data || [];
 
@@ -896,8 +1260,21 @@ const debouncedSearch = async (query, type) => {
 const handleFileSelect = async (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith("video/")) {
+        if (videoPreviewUrl.value) {
+            URL.revokeObjectURL(videoPreviewUrl.value);
+        }
+
         uploadedFile.value = file;
+        videoPreviewUrl.value = URL.createObjectURL(file);
+
         await checkVideoResolution(file);
+
+        nextTick(() => {
+            if (videoPreviewEl.value) {
+                videoPreviewEl.value.pause();
+                videoPreviewEl.value.currentTime = 0;
+            }
+        });
     }
 };
 
@@ -907,8 +1284,21 @@ const handleDrop = async (event) => {
 
     const file = event.dataTransfer.files[0];
     if (file && file.type.startsWith("video/")) {
+        if (videoPreviewUrl.value) {
+            URL.revokeObjectURL(videoPreviewUrl.value);
+        }
+
         uploadedFile.value = file;
+        videoPreviewUrl.value = URL.createObjectURL(file);
+
         await checkVideoResolution(file);
+
+        nextTick(() => {
+            if (videoPreviewEl.value) {
+                videoPreviewEl.value.pause();
+                videoPreviewEl.value.currentTime = 0;
+            }
+        });
     }
 };
 
@@ -1064,13 +1454,14 @@ const handleDiscard = () => {
 const resetForm = () => {
     uploadedFile.value = null;
     description.value = "";
+    altText.value = "";
     coverImage.value = null;
     privacy.value = "everyone";
     settings.allowComments = true;
     settings.allowDuet = true;
     settings.allowStitch = true;
-    settings.discloseContent = false;
-    settings.aiGenerated = false;
+    settings.containsAd = false;
+    settings.containsAi = false;
     showAutocomplete.value = false;
     apiSuggestions.value = [];
     isLoadingSuggestions.value = false;
@@ -1113,20 +1504,158 @@ const checkVideoResolution = async (file) => {
     });
 };
 
+const isSafari = (() => {
+    if (typeof navigator === "undefined") {
+        return false;
+    }
+    const ua = navigator.userAgent;
+    const isSafariLike =
+        /Safari/.test(ua) && !/Chrome|Chromium|Edg|OPR/.test(ua);
+    return isSafariLike;
+})();
+
+const handleTranscode = async () => {
+    if (isConverting.value) {
+        return null;
+    }
+
+    if (isSafari) {
+        return uploadedFile.value;
+    }
+
+    isConverting.value = true;
+
+    const source = new BlobSource(uploadedFile.value);
+    const input = new Input({
+        source,
+        formats: ALL_FORMATS,
+    });
+
+    try {
+        const fileSize = await source.getSize();
+
+        const output = new Output({
+            target: new BufferTarget(),
+            format: new Mp4OutputFormat(),
+        });
+
+        const quality = fileSize > 50000000 ? QUALITY_HIGH : 1500000;
+
+        currentConversion = await Conversion.init({
+            input,
+            output,
+            video: {
+                width: 1080,
+                height: 1920,
+                fit: "contain",
+                bitrate: quality,
+                frameRate: 30,
+            },
+            trim: {
+                start: 0,
+                end: 60,
+            },
+        });
+
+        currentConversion.onProgress = (newProgress) =>
+            (transcodeProgress.value = Math.floor(newProgress * 100));
+
+        const fileDuration = await input.computeDuration();
+        const startTime = performance.now();
+
+        const updateProgress = () => {
+            const now = performance.now();
+            const elapsedSeconds = (now - startTime) / 1000;
+            const factor =
+                fileDuration / (elapsedSeconds / transcodeProgress.value);
+        };
+
+        currentIntervalId = window.setInterval(updateProgress, 1000 / 60);
+
+        await currentConversion.execute();
+
+        if (currentIntervalId) {
+            clearInterval(currentIntervalId);
+        }
+
+        const buffer = output.target.buffer;
+
+        if (buffer) {
+            const blob = new Blob([buffer], { type: output.format.mimeType });
+
+            console.log(`Original size: ${fileSize}`);
+            console.log(`Transcoded size: ${buffer.byteLength}`);
+            console.log(
+                `${((buffer.byteLength / fileSize) * 100).toPrecision(3)}% of original size`,
+            );
+
+            return blob;
+        }
+
+        return null;
+    } finally {
+        isConverting.value = false;
+        if (currentIntervalId) {
+            clearInterval(currentIntervalId);
+        }
+    }
+};
+
 const handleSubmit = async () => {
     if (!canSubmit.value || isSubmitting.value) return;
 
-    isSubmitting.value = true;
+    const transcodedVideo = await handleTranscode();
 
-    let videoToUpload = uploadedFile.value;
+    if (!transcodedVideo) {
+        await alertModal(
+            "Transcoding Failed",
+            "Failed to transcode video. Please try again.",
+        );
+        return;
+    }
+
+    isSubmitting.value = true;
+    uploadProgress.value = 0;
+
+    let progressInterval = null;
+    let hasReceivedResponse = false;
+
+    const startSimulatedProgress = () => {
+        let progress = 0;
+        const startTime = Date.now();
+
+        progressInterval = setInterval(() => {
+            const elapsedSeconds = (Date.now() - startTime) / 1000;
+
+            if (elapsedSeconds < 10) {
+                progress = (elapsedSeconds / 10) * 50;
+            } else if (elapsedSeconds < 20) {
+                progress = 50 + ((elapsedSeconds - 10) / 10) * 30;
+            } else if (elapsedSeconds < 40) {
+                progress = 80 + ((elapsedSeconds - 20) / 20) * 10;
+            } else {
+                progress = 90;
+            }
+
+            if (!hasReceivedResponse) {
+                uploadProgress.value = Math.min(Math.round(progress), 90);
+            }
+        }, 100);
+    };
+
+    startSimulatedProgress();
 
     try {
         const formData = new FormData();
-        formData.append("video", videoToUpload);
+        formData.append("video", transcodedVideo, "transcoded-video.mp4");
         formData.append("description", description.value);
+        formData.append("alt_text", altText.value);
+        formData.append("lang", settings.lang);
         formData.append("comment_state", settings.allowComments ? 4 : 0);
         formData.append("can_download", settings.allowDownloads);
         formData.append("is_sensitive", settings.nsfw ? 1 : 0);
+        formData.append("contains_ad", settings.containsAd ? 1 : 0);
+        formData.append("contains_ai", settings.containsAi ? 1 : 0);
 
         if (coverImage.value) {
             formData.append("cover_image", coverImage.value);
@@ -1136,26 +1665,127 @@ const handleSubmit = async () => {
             headers: {
                 "Content-Type": "multipart/form-data",
             },
-            onUploadProgress: (progressEvent) => {
-                const uploadProgress = Math.round(
-                    (progressEvent.loaded * 100) / progressEvent.total,
-                );
+            timeout: 120000,
+            validateStatus: function (status) {
+                return status >= 200 && status < 300;
             },
         });
 
-        resetForm();
-    } catch (error) {
-        console.error("Error posting video:", error);
-        if (error.response?.data?.errors) {
-            errors.value = error.response.data.errors;
-        } else {
-            errors.value = {
-                general: ["Error posting video. Please try again."],
-            };
+        hasReceivedResponse = true;
+        if (progressInterval) {
+            clearInterval(progressInterval);
         }
-    } finally {
-        isSubmitting.value = false;
+
+        if (!response || !response.data || typeof response.data !== "object") {
+            throw new Error("Invalid response from server");
+        }
+
+        const isSuccess =
+            response.data.success === true ||
+            response.data.status === "success" ||
+            response.status === 200;
+
+        if (!isSuccess) {
+            throw new Error(
+                response.data.message || "Upload failed - invalid response",
+            );
+        }
+
+        uploadProgress.value = 95;
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        uploadProgress.value = 100;
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        resetForm();
         router.push("/studio/posts");
+    } catch (error) {
+        hasReceivedResponse = true;
+        if (progressInterval) {
+            clearInterval(progressInterval);
+        }
+
+        console.error("Error posting video:", error);
+
+        let errorMessage = "Error posting video. Please try again.";
+        let errorTitle = "Upload Failed";
+        let errorDetails = null;
+
+        const status = error.response?.status;
+        const responseData = error.response?.data;
+        const errorCode = error.code;
+        const errorMsg = error.message;
+
+        if (errorCode === "ECONNABORTED" || errorMsg?.includes("timeout")) {
+            errorTitle = "Upload Timeout";
+            errorMessage =
+                "The upload took too long and timed out. This usually happens with larger videos. Please try uploading a smaller video or check your internet connection.";
+        } else if (status === 500) {
+            errorTitle = "Server Error";
+
+            const hasTimeoutError =
+                responseData?.message
+                    ?.toLowerCase()
+                    .includes("maximum execution time") ||
+                responseData?.message
+                    ?.toLowerCase()
+                    .includes("execution time") ||
+                responseData?.exception
+                    ?.toLowerCase()
+                    .includes("maximum execution time");
+
+            if (hasTimeoutError) {
+                errorMessage =
+                    "The server took too long to process your video. This usually happens with large files. Please try again with a smaller video or contact support if the issue persists.";
+                errorDetails = "Server timeout error";
+            } else if (responseData?.message) {
+                errorMessage = responseData.message;
+            } else {
+                errorMessage =
+                    "A server error occurred while uploading your video. Please try again later.";
+            }
+        } else if (status >= 400 && status < 500) {
+            if (
+                responseData?.errors &&
+                typeof responseData.errors === "object"
+            ) {
+                errors.value = responseData.errors;
+                const firstErrorArray = Object.values(responseData.errors)[0];
+                errorMessage = Array.isArray(firstErrorArray)
+                    ? firstErrorArray[0]
+                    : firstErrorArray;
+            } else if (responseData?.message) {
+                errorMessage = responseData.message;
+            } else if (responseData?.error) {
+                errorMessage = responseData.error;
+            }
+        } else if (errorMsg === "Network Error") {
+            errorTitle = "Network Error";
+            errorMessage =
+                "Unable to connect to the server. Please check your internet connection and try again.";
+        } else if (errorMsg) {
+            errorMessage = errorMsg;
+        }
+
+        let errorHtml = `<div class="space-y-3">
+            <p class="text-gray-700">${errorMessage}</p>`;
+
+        if (status) {
+            errorHtml += `<p class="text-sm text-gray-500">Error code: ${status}</p>`;
+        }
+
+        if (errorDetails) {
+            errorHtml += `<p class="text-xs text-gray-400 mt-2">${errorDetails}</p>`;
+        }
+
+        errorHtml += `</div>`;
+
+        await alertModal(errorTitle, errorHtml);
+    } finally {
+        if (progressInterval) {
+            clearInterval(progressInterval);
+        }
+        isSubmitting.value = false;
+        uploadProgress.value = 0;
     }
 };
 

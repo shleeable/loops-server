@@ -15,8 +15,10 @@ use App\Services\AccountService;
 use App\Services\AvatarService;
 use App\Services\TwoFactorService;
 use App\Services\UserAuditLogService;
+use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use PragmaRX\Google2FA\Google2FA;
 
 class SettingsController extends Controller
@@ -40,13 +42,13 @@ class SettingsController extends Controller
 
         if ($request->filled('name')) {
             $name = $request->input('name') ?: AccountService::getDefaultDisplayName($user->profile_id);
-            $profile->name = $this->purify($name);
-            $user->name = $this->purify($name);
+            $profile->name = $this->purifyText($name);
+            $user->name = $this->purifyText($name);
             $user->save();
         }
 
         if ($request->filled('bio')) {
-            $profile->bio = $this->purify($request->input('bio'));
+            $profile->bio = $this->purifyText($request->input('bio'));
         }
 
         $profile->save();
@@ -62,7 +64,10 @@ class SettingsController extends Controller
 
         AccountService::del($pid);
 
-        return $this->data(AccountService::get($pid));
+        $res = AccountService::get($pid);
+        $res['is_owner'] = true;
+
+        return $this->data($res);
     }
 
     public function updateAvatar(UpdateAvatarRequest $request)
@@ -73,7 +78,10 @@ class SettingsController extends Controller
         AvatarService::updateAvatar($profile, $request->file('avatar'));
         $this->auditService->logProfileAvatarUpdated($user);
 
-        return $this->data(AccountService::get($profile->id));
+        $res = AccountService::get($profile->id);
+        $res['is_owner'] = true;
+
+        return $this->data($res);
     }
 
     public function deleteAvatar(Request $request)
@@ -84,7 +92,10 @@ class SettingsController extends Controller
         AvatarService::deleteAvatar($profile);
         $this->auditService->logProfileAvatarDeleted($user);
 
-        return $this->data(AccountService::get($profile->id));
+        $res = AccountService::get($profile->id);
+        $res['is_owner'] = true;
+
+        return $this->data($res);
     }
 
     public function securityConfig(Request $request)
@@ -135,7 +146,7 @@ class SettingsController extends Controller
     public function confirmTwoFactor(Request $request)
     {
         $request->validate([
-            'code' => 'required|int|min:111111|max:999999',
+            'code' => ['required', 'integer', 'digits:6'],
         ]);
 
         $user = $request->user();
@@ -174,12 +185,16 @@ class SettingsController extends Controller
 
         $search = $request->input('q');
 
+        if ($request->filled('q')) {
+            $search = str_replace(['%', '_'], ['\%', '\_'], $search);
+        }
+
         $res = UserFilter::whereProfileId($request->user()->profile_id)
             ->when($search, function ($query, $search) {
                 $query->join('profiles', 'user_filters.account_id', '=', 'profiles.id')
                     ->where('profiles.username', 'like', $search.'%')
                     ->select('user_filters.*');
-            })->orderByDesc('id')->cursorPaginate(10);
+            })->orderByDesc('user_filters.id')->cursorPaginate(10)->withQueryString();
 
         return BlockedAccountResource::collection($res);
     }
@@ -196,7 +211,7 @@ class SettingsController extends Controller
                 'required',
                 'string',
                 'min:1',
-                'max:30',
+                'max:80',
                 'regex:/^[a-zA-Z0-9_\.@]+$/',
             ],
         ], [
@@ -216,7 +231,6 @@ class SettingsController extends Controller
                 ->whereNot('id', $currentProfileId)
                 ->where('is_hidden', false)
                 ->where('status', 1)
-
                 ->whereNotExists(function ($query) use ($currentProfileId) {
                     $query->select('id')
                         ->from('user_filters')
@@ -232,5 +246,76 @@ class SettingsController extends Controller
         } catch (\Exception $e) {
             return $this->error('Search temporarily unavailable. Please try again.');
         }
+    }
+
+    public function checkBirthdate(Request $request)
+    {
+        return $this->data([
+            'has_birthdate' => $request->user()->birth_date != null,
+        ]);
+    }
+
+    public function setBirthdate(Request $request)
+    {
+        if ($request->user()->birth_date) {
+            return $this->error('You already have set your birthdate', 400);
+        }
+
+        $minAge = config('loops.registration.min_years_old', 16);
+
+        $data = $request->validate([
+            'birth_date' => [
+                'required',
+                Rule::date()->before(today()->subYears($minAge)),
+            ],
+        ]);
+        $user = $request->user();
+        $user->birth_date = $data['birth_date'];
+        $user->save();
+
+        return $this->success();
+    }
+
+    public function getPrivacy(Request $request)
+    {
+        $profile = $request->user()->profile;
+
+        return $this->data([
+            'discoverable' => $profile->discoverable,
+        ]);
+    }
+
+    public function updatePrivacy(Request $request)
+    {
+        $profile = $request->user()->profile;
+
+        $data = $request->validate([
+            'discoverable' => 'required|boolean',
+        ]);
+
+        $profile->update($data);
+
+        return $this->data([
+            'discoverable' => $profile->discoverable,
+        ]);
+    }
+
+    public function confirmDisableAccount(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|current_password',
+        ]);
+
+        $request->user()->update(['status' => 7]);
+        $request->user()->profile->update(['status' => 7]);
+
+        Auth::logoutOtherDevices($request->input('password'));
+        Auth::logout();
+
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();
+
+        return $this->success();
     }
 }

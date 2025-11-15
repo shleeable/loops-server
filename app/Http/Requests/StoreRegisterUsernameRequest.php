@@ -18,7 +18,7 @@ class StoreRegisterUsernameRequest extends FormRequest
             throw new AuthorizationException('You are already logged in, you must logout before registering a new account.');
         }
 
-        if (config('mail.default') == 'log') {
+        if (config('mail.default') == 'log' && app()->environment() === 'production') {
             throw new AuthorizationException('Mail service not configured, please contact support for assistance.');
         }
 
@@ -47,6 +47,7 @@ class StoreRegisterUsernameRequest extends FormRequest
             ],
             'password' => 'required|min:8',
             'password_confirmation' => 'required|confirmed:password',
+            'birth_date' => 'required|date|before:today',
         ];
     }
 }

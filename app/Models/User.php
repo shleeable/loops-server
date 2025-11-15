@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Laravel\Passport\Contracts\OAuthenticatable;
+use Laravel\Passport\HasApiTokens;
 
 /**
  * @property-read Profile|null $profile
@@ -95,10 +96,22 @@ use Laravel\Sanctum\HasApiTokens;
  * @mixin \Eloquent
  */
 #[ObservedBy([UserObserver::class])]
-class User extends Authenticatable
+class User extends Authenticatable implements OAuthenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    /**
+     * Status Bitmask
+     * 0 = Unused
+     * 1 = Active
+     * 2 = Reserved
+     * 3 = Reserved
+     * 4 = Reserved
+     * 5 = Reserved
+     * 6 = Restricted by admins
+     * 7 = Account disabled
+     * 8 = Account pending deletion
+     **/
     protected $fillable = [
         'name',
         'username',
@@ -109,6 +122,8 @@ class User extends Authenticatable
         'can_comment',
         'can_like',
         'last_active_at',
+        'birth_date',
+        'status',
     ];
 
     protected $hidden = [
@@ -123,6 +138,7 @@ class User extends Authenticatable
         'two_factor_backups',
         'email_verification_token',
         'last_active_at',
+        'birth_date',
     ];
 
     protected function casts(): array
@@ -133,6 +149,8 @@ class User extends Authenticatable
             'is_admin' => 'boolean',
             'device' => 'json',
             'push_token_verified_at' => 'datetime',
+            'birth_date' => 'date',
+            'status' => 'integer',
         ];
     }
 

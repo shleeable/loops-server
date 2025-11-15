@@ -114,11 +114,29 @@ const notificationConfig = {
         iconColor: "text-blue-500",
         bgColor: "bg-blue-100 dark:bg-blue-900/30",
     },
+    "video.commentReply": {
+        message: t("notifications.messageTypes.videoCommentReply"),
+        icon: ChatBubbleLeftIcon,
+        iconColor: "text-green-500",
+        bgColor: "bg-green-100 dark:bg-green-900/30",
+    },
     "video.comment": {
         message: t("notifications.messageTypes.videoComment"),
         icon: ChatBubbleLeftIcon,
         iconColor: "text-green-500",
         bgColor: "bg-green-100 dark:bg-green-900/30",
+    },
+    "comment.like": {
+        message: t("notifications.messageTypes.videoCommentLike"),
+        icon: HeartIcon,
+        iconColor: "text-red-500",
+        bgColor: "bg-red-100 dark:bg-red-900/30",
+    },
+    "commentReply.like": {
+        message: t("notifications.messageTypes.videoCommentReplyLike"),
+        icon: HeartIcon,
+        iconColor: "text-red-500",
+        bgColor: "bg-red-100 dark:bg-red-900/30",
     },
     "video.share": {
         message: t("notifications.messageTypes.videoShare"),

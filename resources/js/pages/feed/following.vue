@@ -7,7 +7,7 @@
             :item-component="VideoPlayer"
             :get-item-props="getVideoProps"
             :get-item-key="getVideoKey"
-            :auto-play="true"
+            :auto-play="hasInteracted"
             :scroll-threshold="1.5"
             :snap-sensitivity="50"
             @item-visible="onVideoVisible"
@@ -79,6 +79,7 @@
 import { inject, computed, ref } from "vue";
 import { useFollowingFeed } from "~/composables/useFollowingFeed";
 import FeedLayout from "~/layouts/FeedLayout.vue";
+import { useFeedInteraction } from "~/composables/useFeedInteraction";
 import SnapScrollFeed from "~/components/Feed/SnapScrollFeed.vue";
 import VideoPlayer from "~/components/Feed/VideoPlayer.vue";
 import SuggestedAccountsCarousel from "~/components/SuggestedAccountsCarousel.vue";
@@ -87,6 +88,9 @@ const authStore = inject("authStore");
 
 const showRefresh = ref(false);
 const accountsFollowed = ref(0);
+
+const { hasInteracted, handleFirstInteraction, globalMuted } =
+    useFeedInteraction();
 
 const {
     data: feedData,
@@ -109,26 +113,27 @@ const getVideoProps = (post, index) => ({
     caption: post.caption,
     hashtags: [],
     likes: post.likes,
+    hasLiked: post.has_liked,
     bookmarks: 0,
     shares: 0,
     comments: [],
+    canComment: post.permissions?.can_comment,
     "comment-count": post.comments,
     index: index,
     isSensitive: post?.is_sensitive,
+    altText: post?.media.alt_text,
+    autoPlay: hasInteracted.value,
+    muted: globalMuted.value,
 });
 
 const getVideoKey = (post) => post.id;
 
-const onVideoVisible = (index) => {
-    console.log(`Video ${index} is now visible`);
-};
+const onVideoVisible = (index) => {};
 
-const onVideoHidden = (index) => {
-    console.log(`Video ${index} is now hidden`);
-};
+const onVideoHidden = (index) => {};
 
 const onUserInteraction = () => {
-    console.log("User has interacted with the feed");
+    handleFirstInteraction();
 };
 
 const onAccountFollowed = (accountId) => {

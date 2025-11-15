@@ -106,7 +106,24 @@
                                                 "
                                                 class="mt-2"
                                             >
+                                                <router-link
+                                                    v-if="notification.url"
+                                                    :to="notification.url"
+                                                >
+                                                    <img
+                                                        :src="
+                                                            notification.video_thumbnail
+                                                        "
+                                                        :alt="'Video thumbnail'"
+                                                        class="w-16 h-16 rounded object-cover shadow-xl"
+                                                        @error="
+                                                            $event.target.src =
+                                                                '/storage/videos/video-placeholder.jpg'
+                                                        "
+                                                    />
+                                                </router-link>
                                                 <LoopLink
+                                                    v-else
                                                     :id="notification.video_id"
                                                 >
                                                     <img
@@ -196,6 +213,12 @@ const getNotificationText = (notification) => {
             return t("notifications.messageTypes.videoComment");
         case "video.share":
             return t("notifications.messageTypes.videoShare");
+        case "video.commentReply":
+            return t("notifications.messageTypes.videoCommentReply");
+        case "comment.like":
+            return t("notifications.messageTypes.videoCommentLike");
+        case "commentReply.like":
+            return t("notifications.messageTypes.videoCommentReplyLike");
         default:
             return t("notifications.messageTypes.default");
     }

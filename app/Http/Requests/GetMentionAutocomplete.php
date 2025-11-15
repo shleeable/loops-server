@@ -22,7 +22,13 @@ class GetMentionAutocomplete extends FormRequest
     public function rules(): array
     {
         return [
-            'q' => 'required|string|min:1|max:50',
+            'q' => [
+                'required',
+                'string',
+                'min:2',
+                'max:90',
+                'regex:/^[A-Za-z0-9.\-_@]+$/',
+            ],
             'limit' => 'sometimes|int|min:1|max:10',
         ];
     }

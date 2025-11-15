@@ -63,13 +63,33 @@ return [
             'throw' => false,
         ],
 
+        'backupS3' => [
+            'driver' => 's3',
+            'key' => env('BACKUP_AWS_ACCESS_KEY_ID'),
+            'secret' => env('BACKUP_AWS_SECRET_ACCESS_KEY'),
+            'region' => env('BACKUP_AWS_DEFAULT_REGION'),
+            'bucket' => env('BACKUP_AWS_BUCKET'),
+            'url' => env('BACKUP_AWS_URL'),
+            'endpoint' => env('BACKUP_AWS_ENDPOINT'),
+            'visibility' => 'private',
+            'use_path_style_endpoint' => false,
+            'throw' => false,
+        ],
+
+        'backupLocal' => [
+            'driver' => 'local',
+            'root' => storage_path('app/backups'),
+            'serve' => true,
+            'throw' => false,
+            'visibility' => 'private',
+        ],
+
         'exports' => [
             'driver' => 'local',
             'root' => storage_path('app/exports'),
             'url' => env('APP_URL').'/storage/exports',
             'visibility' => 'private',
         ],
-
     ],
 
     /*

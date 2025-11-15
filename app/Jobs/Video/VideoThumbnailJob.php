@@ -3,6 +3,7 @@
 namespace App\Jobs\Video;
 
 use App\Services\VideoService;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -13,7 +14,7 @@ use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 
 class VideoThumbnailJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $video;
 
@@ -22,7 +23,9 @@ class VideoThumbnailJob implements ShouldQueue
      *
      * @var int
      */
-    public $timeout = 200;
+    public $timeout = 120;
+
+    public $tries = 3;
 
     /**
      * The maximum number of unhandled exceptions to allow before failing.
@@ -38,7 +41,7 @@ class VideoThumbnailJob implements ShouldQueue
      */
     public function middleware(): array
     {
-        return [(new WithoutOverlapping('video-thumb'))->expireAfter(220)];
+        return [(new WithoutOverlapping('video-thumb:'.$this->video->id))->expireAfter(180)];
     }
 
     /**
@@ -54,6 +57,10 @@ class VideoThumbnailJob implements ShouldQueue
      */
     public function handle(): void
     {
+        if ($this->batch()->cancelled()) {
+            return;
+        }
+
         $video = $this->video;
 
         if (str_starts_with($video->vid, 'https://')) {
@@ -64,7 +71,7 @@ class VideoThumbnailJob implements ShouldQueue
         $thumb = str_replace('.'.$ext, '.jpg', $video->vid);
 
         $indexSec = 0;
-        if ($video->size_kb && $video->size_kb > 2000) {
+        if ($video->size_kb && $video->size_kb > 8000) {
             $indexSec = 2;
         }
 
@@ -79,8 +86,6 @@ class VideoThumbnailJob implements ShouldQueue
 
         $video->has_thumb = true;
         $video->save();
-
-        sleep(6);
 
         VideoService::deleteMediaData($video->id);
     }

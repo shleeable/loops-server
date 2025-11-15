@@ -50,6 +50,7 @@
                             <div class="mt-6 grid grid-cols-4 gap-x-4 gap-y-6">
                                 <div
                                     v-for="provider in shareProviders"
+                                    :key="provider.id"
                                     class="flex flex-col items-center gap-1"
                                 >
                                     <button
@@ -136,6 +137,7 @@ const title = computed(() => {
     } else if (props.type === "profile") {
         return t("common.shareThisAccount");
     }
+    return "Share this content";
 });
 
 const isOpen = ref(false);

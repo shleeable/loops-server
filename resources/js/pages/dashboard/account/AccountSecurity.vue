@@ -237,7 +237,8 @@
                         {{ $t("settings.oopsTheFollowingErrorsOccured") }}
                     </div>
                     <div
-                        v-for="error in passwordErrors"
+                        v-for="(error, index) in passwordErrors"
+                        :key="index"
                         class="pl-2 text-red-500 text-xs"
                     >
                         {{ error[0] }}

@@ -39,6 +39,7 @@
                     v-for="item in navigation"
                     :key="item.name"
                     :to="item.href"
+                    @click="sidebarOpen = false"
                     :class="[
                         'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors',
                         isRouteActive(item.href)
@@ -50,7 +51,23 @@
                         :is="item.icon"
                         class="mr-3 h-5 w-5 flex-shrink-0"
                     />
-                    {{ item.name }}
+                    <span class="truncate">
+                        {{ item.name }}
+                    </span>
+
+                    <span
+                        v-if="
+                            item.href === '/admin/reports' && reportsCount > 0
+                        "
+                        class="ml-auto inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-semibold leading-none bg-red-500 text-white shadow-sm"
+                    >
+                        {{ displayReportsCount }}
+                    </span>
+
+                    <span
+                        v-else-if="item.href === '/admin/reports' && isLoading"
+                        class="ml-auto inline-flex h-4 w-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"
+                    ></span>
                 </router-link>
             </nav>
 
@@ -114,31 +131,34 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, onMounted, inject } from "vue";
 import { useRoute } from "vue-router";
+import { storeToRefs } from "pinia";
 import {
+    ChartBarSquareIcon,
     Cog6ToothIcon,
+    ChatBubbleOvalLeftIcon,
     ChatBubbleLeftRightIcon,
     HashtagIcon,
     ExclamationTriangleIcon,
     UserGroupIcon,
     VideoCameraIcon,
+    ServerStackIcon,
     HomeIcon,
     SunIcon,
     MoonIcon,
 } from "@heroicons/vue/24/outline";
+import { useAdminStore } from "~/stores/admin";
 
 const route = useRoute();
 const sidebarOpen = ref(false);
-const isDark = ref(document.documentElement.classList.contains("dark"));
 
 const navigation = [
-    {
-        name: "Comments",
-        href: "/admin/comments",
-        icon: ChatBubbleLeftRightIcon,
-    },
+    { name: "Dashboard", href: "/admin/dashboard", icon: ChartBarSquareIcon },
+    { name: "Comments", href: "/admin/comments", icon: ChatBubbleOvalLeftIcon },
+    { name: "Replies", href: "/admin/replies", icon: ChatBubbleLeftRightIcon },
     { name: "Hashtags", href: "/admin/hashtags", icon: HashtagIcon },
+    { name: "Instances", href: "/admin/instances", icon: ServerStackIcon },
     { name: "Reports", href: "/admin/reports", icon: ExclamationTriangleIcon },
     { name: "Profiles", href: "/admin/profiles", icon: UserGroupIcon },
     { name: "Videos", href: "/admin/videos", icon: VideoCameraIcon },
@@ -148,26 +168,21 @@ const navigation = [
 
 const isRouteActive = (navPath) => {
     const currentPath = route.path;
-
-    if (currentPath === navPath) {
-        return true;
-    }
-
-    if (currentPath.startsWith(navPath + "/")) {
-        return true;
-    }
-
+    if (currentPath === navPath) return true;
+    if (currentPath.startsWith(navPath + "/")) return true;
     return false;
 };
 
+const adminStore = useAdminStore();
+const { isDarkMode, reportsCount, isLoading, displayReportsCount } =
+    storeToRefs(adminStore);
+
 const handleToggleDarkMode = () => {
-    isDark.value = !isDark.value;
-    if (isDark.value) {
-        document.documentElement.classList.add("dark");
-        localStorage.setItem("theme", "dark");
-    } else {
-        document.documentElement.classList.remove("dark");
-        localStorage.setItem("theme", "light");
-    }
+    adminStore.toggleDarkMode();
 };
+
+onMounted(() => {
+    adminStore.initTheme();
+    adminStore.fetchReportsCount();
+});
 </script>

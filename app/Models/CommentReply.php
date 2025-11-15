@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Concerns\HasSnowflakePrimary;
+use App\Concerns\HasSyncHashtagsFromCaption;
+use App\Concerns\HasSyncMentionsFromCaption;
 use App\Observers\CommentReplyObserver;
 use App\Services\HashidService;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -10,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[ObservedBy([CommentReplyObserver::class])]
@@ -31,6 +34,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property string|null $ap_id
  * @property string|null $remote_url
+ * @property-read \Illuminate\Database\Eloquent\Relations\BelongsToMany<Hashtag, $this, CommentReplyHashtag, 'pivot'> $hashtags
  * @property-read \App\Models\Comment|null $parent
  * @property-read \App\Models\Profile|null $profile
  *
@@ -62,9 +66,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class CommentReply extends Model
 {
-    use HasFactory, HasSnowflakePrimary, SoftDeletes;
+    use HasFactory, HasSnowflakePrimary, HasSyncHashtagsFromCaption, HasSyncMentionsFromCaption, SoftDeletes;
 
-    protected $fillable = ['video_id', 'profile_id', 'comment_id', 'caption', 'status'];
+    protected $fillable = ['video_id', 'profile_id', 'comment_id', 'caption', 'status', 'is_edited', 'ap_id', 'remote_url'];
 
     /**
      * Indicates if the IDs are auto-incrementing.
@@ -90,6 +94,26 @@ class CommentReply extends Model
         return $this->hasOne(Comment::class, 'id', 'comment_id');
     }
 
+    /** @return BelongsTo<Video, $this> */
+    public function video(): BelongsTo
+    {
+        return $this->belongsTo(Video::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<Hashtag, $this, CommentReplyHashtag, 'pivot'>
+     */
+    public function hashtags()
+    {
+        return $this->belongsToMany(Hashtag::class, 'comment_reply_hashtags', 'reply_id')->using(CommentReplyHashtag::class);
+    }
+
+    /** @return MorphMany<Mention, $this> */
+    public function mentions(): MorphMany
+    {
+        return $this->morphMany(Mention::class, 'mentionable');
+    }
+
     /** @return BelongsTo<Profile, $this> */
     public function profile(): BelongsTo
     {
@@ -103,9 +127,9 @@ class CommentReply extends Model
 
     public function shareUrl(): string
     {
-        $vid = HashidService::encode($this->video_id);
-        $cid = HashidService::encode($this->id);
+        $vid = HashidService::encode((string) $this->video_id);
+        $cid = HashidService::encode((string) $this->id);
 
-        return "/v/{$vid}?rid={$cid}";
+        return url("/v/{$vid}?rid={$cid}");
     }
 }

@@ -60,6 +60,24 @@
                 </div>
             </template>
 
+            <template #cell-can_search="{ value }">
+                <span :class="[value ? 'text-green-600' : 'text-red-600']">{{
+                    value ? "Yes" : "No"
+                }}</span>
+            </template>
+
+            <template #cell-can_trend="{ value }">
+                <span :class="{ 'text-green-600': value }">{{
+                    value ? "Yes" : ""
+                }}</span>
+            </template>
+
+            <template #cell-is_nsfw="{ value }">
+                <span :class="{ 'text-red-600': value }">{{
+                    value ? "Yes" : ""
+                }}</span>
+            </template>
+
             <template #cell-count="{ value }">
                 {{ formatNumber(value) }}
             </template>
@@ -241,11 +259,15 @@
 
 <script setup>
 import { ref, onMounted, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import DataTable from "@/components/DataTable.vue";
 import ToggleSwitch from "@/components/Form/ToggleSwitch.vue";
 import { hashtagsApi } from "@/services/adminApi";
 import { useUtils } from "@/composables/useUtils";
 const { formatNumber, formatDate } = useUtils();
+
+const route = useRoute();
+const router = useRouter();
 
 const hashtags = ref([]);
 const loading = ref(false);
@@ -268,6 +290,11 @@ const formData = ref({
 
 const searchQuery = ref("");
 const sortBy = ref("");
+const hydrating = ref(true);
+
+const currentCursor = ref(null);
+const currentDir = ref("next");
+
 const DEBOUNCE_DELAY = 300;
 let searchTimeout = null;
 
@@ -277,6 +304,7 @@ const columns = [
     { key: "count", label: "# of uses" },
     { key: "can_search", label: "Searchable" },
     { key: "can_trend", label: "Trendable" },
+    { key: "is_nsfw", label: "NSFW" },
     { key: "created_at", label: "Created At" },
 ];
 
@@ -289,22 +317,41 @@ const sortOptions = [
     { name: "NSFW", value: "is_nsfw" },
 ];
 
+const setQuery = (updates, { replace = false } = {}) => {
+    const nextQuery = { ...route.query, ...updates };
+    Object.keys(nextQuery).forEach((k) => {
+        if (
+            nextQuery[k] === "" ||
+            nextQuery[k] === null ||
+            nextQuery[k] === undefined
+        ) {
+            nextQuery[k] = undefined; // removes param
+        }
+    });
+
+    const same =
+        Object.keys(nextQuery).length === Object.keys(route.query).length &&
+        Object.keys(nextQuery).every((k) => nextQuery[k] === route.query[k]);
+
+    if (same) return Promise.resolve();
+
+    const nav = { query: nextQuery };
+    return replace ? router.replace(nav) : router.push(nav);
+};
+
 const fetchHashtags = async (cursor = null, direction = "next") => {
     loading.value = true;
     try {
         const params = { cursor, direction };
-
-        if (searchQuery.value) {
-            params.search = searchQuery.value;
-        }
-
-        if (sortBy.value) {
-            params.sort = sortBy.value;
-        }
+        if (searchQuery.value) params.search = searchQuery.value;
+        if (sortBy.value) params.sort = sortBy.value;
 
         const response = await hashtagsApi.getHashtags(params);
         hashtags.value = response.data;
         pagination.value = response.meta;
+
+        currentCursor.value = cursor;
+        currentDir.value = direction;
     } catch (error) {
         console.error("Error fetching hashtags:", error);
     } finally {
@@ -322,12 +369,14 @@ const openModal = (hashtag) => {
         is_nsfw: hashtag.is_nsfw || false,
     };
     showModal.value = true;
+    setQuery({ id: hashtag.id });
 };
 
 const closeModal = () => {
     showModal.value = false;
     selectedHashtag.value = null;
     saving.value = false;
+    setQuery({ id: undefined }, { replace: true });
 };
 
 const saveSettings = async () => {
@@ -339,7 +388,6 @@ const saveSettings = async () => {
             selectedHashtag.value.id,
             formData.value,
         );
-
         const index = hashtags.value.findIndex(
             (h) => h.id === selectedHashtag.value.id,
         );
@@ -349,7 +397,6 @@ const saveSettings = async () => {
                 ...formData.value,
             };
         }
-
         closeModal();
     } catch (error) {
         console.error("Error updating hashtag:", error);
@@ -358,27 +405,34 @@ const saveSettings = async () => {
     }
 };
 
-watch(searchQuery, (newQuery) => {
-    if (searchTimeout) {
-        clearTimeout(searchTimeout);
-    }
-
+watch(searchQuery, () => {
+    if (hydrating.value) return;
+    if (searchTimeout) clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-        fetchHashtags();
+        setQuery({
+            q: searchQuery.value || undefined,
+            id: undefined,
+            cursor: undefined,
+            dir: undefined,
+        });
+        fetchHashtags(null, "next");
     }, DEBOUNCE_DELAY);
 });
 
-const handleSearch = async (query) => {
+const handleSearch = (query) => {
     searchQuery.value = query;
 };
 
-watch(sortBy, (newQuery) => {
-    if (searchTimeout) {
-        clearTimeout(searchTimeout);
-    }
-
+watch(sortBy, () => {
+    if (hydrating.value) return;
+    if (searchTimeout) clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-        fetchHashtags();
+        setQuery({
+            sort: sortBy.value || undefined,
+            cursor: undefined,
+            dir: undefined,
+        });
+        fetchHashtags(null, "next");
     }, DEBOUNCE_DELAY);
 });
 
@@ -388,17 +442,69 @@ const handleSort = (sortValue) => {
 
 const nextPage = () => {
     if (pagination.value.next_cursor) {
-        fetchHashtags(pagination.value.next_cursor, "next");
+        const next = pagination.value.next_cursor;
+        setQuery({ cursor: next, dir: "next" });
+        fetchHashtags(next, "next");
     }
 };
 
 const previousPage = () => {
     if (pagination.value.prev_cursor) {
-        fetchHashtags(pagination.value.prev_cursor, "previous");
+        const prev = pagination.value.prev_cursor;
+        setQuery({ cursor: prev, dir: "previous" });
+        fetchHashtags(prev, "previous");
     }
 };
 
-onMounted(() => {
-    fetchHashtags();
+const openModalById = async (id) => {
+    if (!id) return;
+    let tag = hashtags.value.find((h) => String(h.id) === String(id));
+
+    if (!tag) {
+        try {
+            const numericId = Number(id);
+            const res = await hashtagsApi.getHashtag(numericId);
+            tag = res?.data || res;
+        } catch (e) {
+            console.error("Unable to load hashtag by id:", id, e);
+        }
+    }
+
+    if (tag) {
+        openModal(tag);
+    } else {
+        setQuery({ id: undefined }, { replace: true });
+    }
+};
+
+onMounted(async () => {
+    const { q, id, sort, cursor, dir } = route.query;
+
+    if (typeof sort === "string") sortBy.value = sort;
+    if (typeof q === "string") searchQuery.value = q;
+
+    currentCursor.value = typeof cursor === "string" ? cursor : null;
+    currentDir.value = dir === "previous" ? "previous" : "next";
+
+    await fetchHashtags(currentCursor.value, currentDir.value);
+
+    if (id) await openModalById(id);
+
+    hydrating.value = false;
 });
+
+watch(
+    () => route.query.id,
+    async (newId, oldId) => {
+        if (hydrating.value) return;
+        if (newId === oldId) return;
+
+        if (newId) {
+            await openModalById(newId);
+        } else if (showModal.value) {
+            showModal.value = false;
+            selectedHashtag.value = null;
+        }
+    },
+);
 </script>

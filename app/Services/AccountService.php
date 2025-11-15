@@ -18,7 +18,7 @@ class AccountService
     {
         $res = Cache::remember(self::CACHE_KEY.$id, now()->addDays(7), function () use ($id) {
             $req = new Request;
-            $profile = Profile::find($id);
+            $profile = Profile::active()->find($id);
             if (! $profile) {
                 return false;
             }
@@ -27,6 +27,18 @@ class AccountService
         });
 
         return $res ? $res : [];
+    }
+
+    public static function getActorId($id)
+    {
+        return Cache::remember(self::CACHE_KEY.'actorid:'.$id, now()->addHours(12), function () use ($id) {
+            $profile = Profile::active()->find($id);
+            if (! $profile) {
+                return;
+            }
+
+            return $profile->getActorId();
+        });
     }
 
     public static function compact($id)

@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\Comment;
 use App\Models\CommentReply;
+use App\Models\Hashtag;
 use App\Models\Report;
 use App\Services\AccountService;
 use App\Services\ReportService;
@@ -46,6 +47,10 @@ class ReportResource extends JsonResource
             $comment = CommentReply::with('parent')->findOrFail($this->reported_comment_reply_id);
             $contentPreview = (new CommentReplyResource($comment))->toArray(request());
             $contentPreview['parent'] = new CommentResource($comment->parent);
+        } elseif ($this->reported_hashtag_id) {
+            $contentType = 'hashtag';
+            $hashtag = Hashtag::findOrFail($this->reported_hashtag_id);
+            $contentPreview = (new AdminHashtagResource($hashtag))->toArray(request());
         }
 
         return [

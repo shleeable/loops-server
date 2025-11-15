@@ -77,7 +77,7 @@
             <h1 class="title">Verify Your Email on Loops</h1>
         </div>
         
-        <p>Hi <strong>&commat;{{ $user->username }}</strong>,</p>
+        <p>Hi <strong>{{ $user->username }}</strong>,</p>
         
         <p>You recently requested to change your email address on your <strong>{{ $host }}</strong> account. To complete this change and verify your new email address, please click the button below:</p>
         

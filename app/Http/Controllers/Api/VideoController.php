@@ -6,33 +6,55 @@ use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DeleteVideoRequest;
 use App\Http\Requests\GetMentionAutocomplete;
+use App\Http\Requests\GetTagAutocomplete;
+use App\Http\Requests\StoreCommentReplyUpdateRequest;
 use App\Http\Requests\StoreCommentRequest;
+use App\Http\Requests\StoreCommentUpdateRequest;
 use App\Http\Requests\StoreVideoRequest;
 use App\Http\Requests\UpdateVideoRequest;
+use App\Http\Resources\CommentCaptionEditResource;
+use App\Http\Resources\CommentReplyCaptionEditResource;
 use App\Http\Resources\CommentReplyResource;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\HashtagResource;
 use App\Http\Resources\ProfileResource;
+use App\Http\Resources\VideoCaptionEditResource;
+use App\Http\Resources\VideoLikeResource;
+use App\Http\Resources\VideoRepostResource;
 use App\Http\Resources\VideoResource;
+use App\Jobs\Federation\DeliverCommentLikeActivity;
+use App\Jobs\Federation\DeliverCommentReplyLikeActivity;
+use App\Jobs\Federation\DeliverUndoCommentLikeActivity;
+use App\Jobs\Federation\DeliverUndoCommentReplyLikeActivity;
+use App\Jobs\Federation\DeliverUndoVideoLikeActivity;
+use App\Jobs\Federation\DeliverVideoLikeActivity;
 use App\Jobs\Video\VideoOptimizeJob;
 use App\Jobs\Video\VideoThumbnailJob;
 use App\Models\Comment;
+use App\Models\CommentCaptionEdit;
 use App\Models\CommentLike;
 use App\Models\CommentReply;
+use App\Models\CommentReplyCaptionEdit;
 use App\Models\CommentReplyLike;
 use App\Models\Hashtag;
-use App\Models\Notification;
 use App\Models\Profile;
 use App\Models\Video;
+use App\Models\VideoCaptionEdit;
 use App\Models\VideoLike;
+use App\Models\VideoRepost;
 use App\Services\AccountService;
+use App\Services\ConfigService;
+use App\Services\FederationDispatcher;
 use App\Services\LikeService;
-use App\Services\NotificationService;
+use App\Services\SanitizeService;
 use App\Services\UserActivityService;
 use App\Services\VideoService;
+use Illuminate\Bus\Batch;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Stevebauman\Purify\Facades\Purify;
 
 class VideoController extends Controller
 {
@@ -43,45 +65,180 @@ class VideoController extends Controller
         $this->middleware('auth');
     }
 
+    public function showAutocompleteTags(GetTagAutocomplete $request)
+    {
+        $validated = $request->validate(['q' => 'required|alpha_dash|min:2|max:60']);
+
+        $q = trim($validated['q']);
+
+        $escaped = $this->escapeLike($q);
+
+        $hashtags = Hashtag::where('name', 'like', $escaped.'%')->whereCanSearch(true)->orderByDesc('count')->limit(10)->get();
+
+        return HashtagResource::collection($hashtags);
+    }
+
+    public function showAutocompleteAccounts(GetMentionAutocomplete $request)
+    {
+        $validated = $request->validate([
+            'q' => [
+                'required',
+                'string',
+                'min:2',
+                'max:90',
+                'regex:/^[A-Za-z0-9.\-_@]+$/',
+            ],
+        ]);
+
+        $q = trim($validated['q']);
+
+        $escaped = $this->escapeLike($q);
+
+        $profiles = Profile::where('username', 'like', $escaped.'%')->whereStatus(1)->where('is_hidden', false)->orderByDesc('followers')->limit(10)->get();
+
+        return ProfileResource::collection($profiles);
+    }
+
     /**
      * Store a newly created resource in storage.
      */
     public function store(StoreVideoRequest $request)
     {
+        set_time_limit(300);
+        ini_set('max_execution_time', '300');
+
         $pid = $request->user()->profile_id;
         app(UserActivityService::class)->markActive($request->user());
         $profile = Profile::findOrFail($pid);
         $videoFile = $request->file('video');
+
         $videoMeta = [
             'size' => ceil($videoFile->getSize() / 1024),
             'name' => $videoFile->getClientOriginalName(),
             'mime' => $videoFile->getMimeType(),
         ];
 
-        $model = new Video;
-        $model->profile_id = $pid;
-        $model->caption = Purify::clean($request->description);
-        $model->size_kb = intval($videoMeta['size']);
-        $model->is_sensitive = $request->filled('is_sensitive') ? (bool) $request->boolean('is_sensitive') : false;
-        $model->comment_state = $request->filled('comment_state') ? ($request->input('comment_state') == 4 ? 4 : 0) : 4;
-        $model->can_download = $request->filled('can_download') ? $request->boolean('can_download') : false;
-        // @phpstan-ignore-next-line
-        $model->media_metadata = $videoMeta;
-        $model->save();
-        $path = $request->video->store('videos/'.$pid.'/'.$model->id, 's3');
-        $model->vid = $path;
-        $model->save();
+        $model = null;
+        $s3Path = null;
 
-        if ($request->filled('description')) {
-            $model->syncHashtagsFromCaption();
+        try {
+            DB::beginTransaction();
+
+            $model = new Video;
+            $model->profile_id = $pid;
+            $model->caption = app(SanitizeService::class)->cleanPlainText($request->description);
+            $model->size_kb = intval($videoMeta['size']);
+            $model->is_sensitive = $request->filled('is_sensitive') ? (bool) $request->boolean('is_sensitive') : false;
+            $model->comment_state = $request->filled('comment_state') ? ($request->input('comment_state') == 4 ? 4 : 0) : 4;
+            $model->can_download = $request->filled('can_download') ? $request->boolean('can_download') : false;
+            $model->can_duet = $request->filled('can_duet') ? $request->boolean('can_duet') : false;
+            $model->can_stitch = $request->filled('can_stitch') ? $request->boolean('can_stitch') : false;
+            $model->alt_text = $request->filled('alt_text') ? app(SanitizeService::class)->cleanPlainText($request->alt_text) : null;
+            $model->contains_ai = $request->filled('contains_ai') ? $request->boolean('contains_ai') : false;
+            $model->contains_ad = $request->filled('contains_ad') ? $request->boolean('contains_ad') : false;
+            $model->lang = $request->filled('lang') ? $request->input('lang') : null;
+            // @phpstan-ignore-next-line
+            $model->media_metadata = $videoMeta;
+            $model->save();
+
+            try {
+                $s3Path = $request->video->store('videos/'.$pid.'/'.$model->id, 's3');
+
+                if (! $s3Path) {
+                    throw new \Exception('Failed to upload video to S3');
+                }
+
+                $model->vid = $s3Path;
+                $model->save();
+
+            } catch (\Exception $e) {
+                if (config('logging.dev_log')) {
+                    Log::error('S3 upload failed for video', [
+                        'user_id' => $request->user()->id,
+                        'video_id' => $model->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                throw new \Exception('Failed to upload video file. Please try again.');
+            }
+
+            if ($request->filled('description')) {
+                $model->syncHashtagsFromCaption();
+                $model->syncMentionsFromCaption();
+            }
+
+            $profile->video_count = $profile->videos->count();
+            $profile->save();
+
+            DB::commit();
+
+            $config = app(ConfigService::class);
+
+            Bus::batch([
+                [
+                    new VideoThumbnailJob($model),
+                ],
+                [
+                    new VideoOptimizeJob($model),
+                ],
+            ])->finally(function (Batch $batch) use ($model) {
+                $config = app(ConfigService::class);
+                if ($config->federation()) {
+                    app(FederationDispatcher::class)->dispatchVideoCreation($model);
+                }
+            })->dispatch();
+
+            return $this->success();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if ($s3Path) {
+                try {
+                    Storage::disk('s3')->delete($s3Path);
+
+                    if (config('logging.dev_log')) {
+                        Log::info('Cleaned up S3 file after error', ['path' => $s3Path]);
+                    }
+                } catch (\Exception $deleteError) {
+                    Log::error('Failed to delete S3 file during cleanup', [
+                        'path' => $s3Path,
+                        'error' => $deleteError->getMessage(),
+                    ]);
+                }
+            }
+
+            if ($model && $model->exists) {
+                try {
+                    $model->delete();
+                    if (config('logging.dev_log')) {
+                        Log::info('Cleaned up video model after error', ['video_id' => $model->id]);
+                    }
+                } catch (\Exception $deleteError) {
+                    if (config('logging.dev_log')) {
+                        Log::error('Failed to delete video model during cleanup', [
+                            'video_id' => $model->id,
+                            'error' => $deleteError->getMessage(),
+                        ]);
+                    }
+                }
+            }
+
+            if (config('logging.dev_log')) {
+                Log::error('Video upload failed', [
+                    'user_id' => $request->user()->id,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage() ?: 'An error occurred while uploading your video. Please try again.',
+                'error' => 'Upload failed',
+            ], 500);
         }
-
-        $profile->video_count = $profile->videos->count();
-        $profile->save();
-        VideoThumbnailJob::dispatch($model);
-        VideoOptimizeJob::dispatch($model);
-
-        return $this->success();
     }
 
     /**
@@ -90,18 +247,107 @@ class VideoController extends Controller
     public function update(UpdateVideoRequest $request, $id)
     {
         $pid = $request->user()->profile_id;
+        $updatedCaption = $this->purifyText($request->caption);
         $video = Video::published()->findOrFail($id);
-        $video->caption = $this->purify($request->caption);
+        if ($video->caption !== $updatedCaption) {
+            VideoCaptionEdit::create([
+                'video_id' => $video->id,
+                'profile_id' => $video->profile_id,
+                'caption' => $video->caption,
+            ]);
+        }
+        $video->caption = $updatedCaption;
         $video->can_download = $request->has('can_download') ? $request->boolean('can_download') : false;
         $video->comment_state = $request->has('can_comment') ? ($request->boolean('can_comment') ? 4 : 0) : 0;
         $video->is_pinned = $request->has('is_pinned') ? $request->boolean('is_pinned') : 0;
         $video->pinned_order = $request->has('is_pinned') ? Video::whereStatus(2)->whereProfileId($pid)->whereIsPinned(true)->count() + 1 : 0;
+        $video->alt_text = $request->filled('alt_text') ? app(SanitizeService::class)->cleanPlainText($request->alt_text) : null;
+        $video->can_duet = $request->has('can_duet') ? $request->boolean('can_duet') : $video->can_duet;
+        $video->can_stitch = $request->has('can_stitch') ? $request->boolean('can_stitch') : $video->can_stitch;
+        if ($request->filled('lang') && $request->input('lang') != $video->lang) {
+            $video->lang = $request->input('lang');
+        }
+        if (! $video->is_sensitive && $request->has('is_sensitive') && $request->boolean('is_sensitive')) {
+            $video->is_sensitive = true;
+        }
+        if (! $video->contains_ad && $request->has('contains_ad') && $request->boolean('contains_ad')) {
+            $video->contains_ad = true;
+        }
+        if (! $video->contains_ai && $request->has('contains_ai') && $request->boolean('contains_ai')) {
+            $video->contains_ai = true;
+        }
+        $video->is_edited = true;
         $video->save();
         $video->syncHashtagsFromCaption();
+        $video->syncMentionsFromCaption();
         VideoService::deleteMediaData($video->id);
         $res = new VideoResource($video);
+        $config = app(ConfigService::class);
+
+        if ($config->federation()) {
+            app(FederationDispatcher::class)->dispatchVideoUpdate($video);
+        }
 
         return response()->json($res);
+    }
+
+    public function showVideoHistory(Request $request, $id)
+    {
+        $video = Video::published()->findOrFail($id);
+        $paginator = VideoCaptionEdit::whereVideoId($video->id)->orderByDesc('id')->cursorPaginate(2)->withQueryString();
+        if (! $request->has('cursor')) {
+            $latest = new VideoCaptionEdit([
+                'video_id' => (string) $video->id,
+                'profile_id' => (string) $video->profile_id,
+                'caption' => $video->caption,
+                'updated_at' => $video->updated_at,
+            ]);
+            $collection = $paginator->getCollection();
+            $collection->prepend($latest);
+            $paginator->setCollection($collection->values());
+        }
+
+        return VideoCaptionEditResource::collection($paginator);
+    }
+
+    public function showCommentsHistory(Request $request, $vid, $cid)
+    {
+        $video = Video::published()->findOrFail($vid);
+        $comment = Comment::whereVideoId($video->id)->findOrFail($cid);
+        $paginator = CommentCaptionEdit::whereCommentId($comment->id)->orderByDesc('id')->cursorPaginate(2)->withQueryString();
+        if (! $request->has('cursor')) {
+            $latest = new CommentCaptionEdit([
+                'comment_id' => (string) $comment->id,
+                'profile_id' => (string) $comment->profile_id,
+                'caption' => $comment->caption,
+                'updated_at' => $comment->updated_at,
+            ]);
+            $collection = $paginator->getCollection();
+            $collection->prepend($latest);
+            $paginator->setCollection($collection->values());
+        }
+
+        return CommentCaptionEditResource::collection($paginator);
+    }
+
+    public function showCommentReplyHistory(Request $request, $vid, $cid, $id)
+    {
+        $video = Video::published()->findOrFail($vid);
+        $comment = CommentReply::whereCommentId($cid)->findOrFail($id);
+        $paginator = CommentReplyCaptionEdit::whereCommentId($comment->id)->orderByDesc('id')->cursorPaginate(2)->withQueryString();
+        if (! $request->has('cursor')) {
+            $latest = new CommentReplyCaptionEdit([
+                'comment_id' => (string) $comment->id,
+                'profile_id' => (string) $comment->profile_id,
+                'caption' => $comment->caption,
+                'updated_at' => $comment->updated_at,
+            ]);
+            $collection = $paginator->getCollection();
+            $collection->prepend($latest);
+            $paginator->setCollection($collection->values());
+        }
+
+        return CommentReplyCaptionEditResource::collection($paginator);
     }
 
     /**
@@ -112,6 +358,9 @@ class VideoController extends Controller
         $pid = $request->user()->profile_id;
         $video = Video::published()->findOrFail($id);
         VideoService::deleteMediaData($video->id);
+        $videoId = $video->id;
+        $videoObjectUrl = $video->getObjectUrl();
+        $actor = $video->profile;
 
         if (str_starts_with($video->vid, 'https://')) {
 
@@ -124,8 +373,14 @@ class VideoController extends Controller
                 Storage::disk('s3')->deleteDirectory($s3Path);
             }
         }
-        $video->forceDelete();
+        $config = app(ConfigService::class);
 
+        if ($config->federation()) {
+            app(FederationDispatcher::class)->dispatchVideoDeleteToAllKnownInboxes($actor, $videoId, $videoObjectUrl);
+        }
+
+        $video->forceDelete();
+        VideoService::deleteMediaData($videoId);
         AccountService::del($pid);
 
         return $this->success();
@@ -154,12 +409,11 @@ class VideoController extends Controller
 
             app(LikeService::class)->addVideoLike((string) $video->id, (string) $pid);
 
-            if ($pid !== $video->profile_id) {
-                NotificationService::newVideoLike(
-                    $video->profile_id,
-                    $video->id,
-                    $pid
-                );
+            if ($video->uri) {
+                $config = app(ConfigService::class);
+                if ($config->federation()) {
+                    DeliverVideoLikeActivity::dispatch($request->user()->profile, $video, $like)->onQueue('activitypub-out');
+                }
             }
         }
 
@@ -187,6 +441,17 @@ class VideoController extends Controller
             ->first();
 
         if ($res) {
+            if ($video->uri) {
+                $config = app(ConfigService::class);
+                if ($config->federation()) {
+                    DeliverUndoVideoLikeActivity::dispatch(
+                        $request->user()->profile,
+                        $video,
+                        $video->getObjectUrl(),
+                        $res->id
+                    )->onQueue('activitypub-out');
+                }
+            }
             app(LikeService::class)->removeVideoLike((string) $video->id, (string) $pid);
             $res->delete();
             $video->likes = VideoLike::whereVideoId($video->id)->count();
@@ -253,7 +518,7 @@ class VideoController extends Controller
     public function storeComment(StoreCommentRequest $request, $vid)
     {
         $pid = $request->user()->profile_id;
-        $body = $this->purify($request->comment);
+        $body = $this->purifyText($request->comment);
 
         $parentId = $request->filled('parent_id') ? $request->parent_id : false;
         $video = Video::published()->canComment()->find($vid);
@@ -269,17 +534,15 @@ class VideoController extends Controller
             $comment->profile_id = $pid;
             $comment->caption = $body;
             $comment->save();
-            $parent->increment('replies');
+            $parent->recalculateReplies();
             $parent->saveQuietly();
 
-            if ($pid != $parent->profile_id) {
-                NotificationService::newVideoCommentReply(
-                    $pid,
-                    $video->profile_id,
-                    $video->id,
-                    $parent->id,
-                    $comment->id
-                );
+            $comment->syncHashtagsFromCaption();
+            $comment->syncMentionsFromCaption();
+
+            $config = app(ConfigService::class);
+            if ($config->federation()) {
+                app(FederationDispatcher::class)->dispatchCommentReplyCreation($comment);
             }
         } else {
             $comment = new Comment;
@@ -288,13 +551,12 @@ class VideoController extends Controller
             $comment->caption = $body;
             $comment->save();
 
-            if ($pid != $video->profile_id) {
-                NotificationService::newVideoComment(
-                    $pid,
-                    $video->profile_id,
-                    $video->id,
-                    $comment->id
-                );
+            $comment->syncHashtagsFromCaption();
+            $comment->syncMentionsFromCaption();
+
+            $config = app(ConfigService::class);
+            if ($config->federation()) {
+                app(FederationDispatcher::class)->dispatchCommentCreation($comment);
             }
         }
 
@@ -305,13 +567,88 @@ class VideoController extends Controller
             CommentResource::collection([$comment]);
     }
 
+    public function storeCommentUpdate(StoreCommentUpdateRequest $request, $vid)
+    {
+        $pid = $request->user()->profile_id;
+        $body = $this->purifyText($request->comment);
+
+        $video = Video::published()->canComment()->find($vid);
+        if (! $video || $request->user()->cannot('view', [Video::class, $video])) {
+            return $this->error('Video not found or is unavailable or has comments disabled', 404);
+        }
+
+        $comment = Comment::whereProfileId($pid)->findOrFail($request->id);
+        CommentCaptionEdit::create([
+            'comment_id' => $comment->id,
+            'profile_id' => $pid,
+            'caption' => $comment->caption,
+        ]);
+
+        $comment->update(['caption' => $body, 'is_edited' => true]);
+        $comment->syncHashtagsFromCaption();
+        $comment->syncMentionsFromCaption();
+
+        $video->recalculateCommentsCount();
+
+        $config = app(ConfigService::class);
+        if ($config->federation()) {
+            app(FederationDispatcher::class)->dispatchCommentUpdate($comment);
+        }
+
+        return CommentResource::collection([$comment]);
+    }
+
+    public function storeCommentReplyUpdate(StoreCommentReplyUpdateRequest $request, $vid)
+    {
+        $pid = $request->user()->profile_id;
+        $body = $this->purifyText($request->comment);
+
+        $video = Video::published()->canComment()->find($vid);
+        if (! $video || $request->user()->cannot('view', [Video::class, $video])) {
+            return $this->error('Video not found or is unavailable or has comments disabled', 404);
+        }
+
+        $comment = CommentReply::whereProfileId($pid)->findOrFail($request->id);
+        CommentReplyCaptionEdit::create([
+            'comment_id' => $comment->id,
+            'profile_id' => $pid,
+            'caption' => $comment->caption,
+        ]);
+
+        $comment->update(['caption' => $body, 'is_edited' => true]);
+        $comment->syncHashtagsFromCaption();
+        $comment->syncMentionsFromCaption();
+
+        $config = app(ConfigService::class);
+        if ($config->federation()) {
+            app(FederationDispatcher::class)->dispatchCommentReplyUpdate(
+                $comment
+            );
+        }
+
+        $video->recalculateCommentsCount();
+
+        return CommentReplyResource::collection([$comment]);
+    }
+
     public function deleteComment(Request $request, $vid, $id)
     {
         $video = Video::published()->findOrFail($vid);
         $comment = Comment::withCount('children')->findOrFail($id);
+        $commentId = $comment->id;
+        $commentObjectUrl = $comment->getObjectUrl();
 
         if ($comment->video_id !== $video->id || $comment->profile_id !== $request->user()->profile_id) {
             return $this->error('Record not found');
+        }
+
+        $config = app(ConfigService::class);
+        if ($config->federation()) {
+            app(FederationDispatcher::class)->dispatchCommentDeleteToAllKnownInboxes(
+                $request->user()->profile,
+                $commentId,
+                $commentObjectUrl
+            );
         }
 
         if ($comment->children_count) {
@@ -333,12 +670,23 @@ class VideoController extends Controller
         $comment = CommentReply::whereVideoId($video->id)
             ->whereProfileId($request->user()->profile_id)
             ->findOrFail($id);
+        $commentId = $comment->id;
+        $commentObjectUrl = $comment->getObjectUrl();
+
+        $config = app(ConfigService::class);
+        if ($config->federation()) {
+            app(FederationDispatcher::class)->dispatchCommentReplyDeleteToAllKnownInboxes(
+                $request->user()->profile,
+                $commentId,
+                $commentObjectUrl
+            );
+        }
         if ($parent->status != 'active' && $parent->children_count === 1) {
             $comment->forceDelete();
             $parent->forceDelete();
         } else {
-            $parent->decrement('replies');
             $comment->forceDelete();
+            $parent->recalculateReplies();
         }
 
         $video->recalculateCommentsCount();
@@ -363,21 +711,24 @@ class VideoController extends Controller
             'comment_id' => $comment->id,
         ]);
 
-        Notification::updateOrCreate([
-            'user_id' => $profileId,
-            'profile_id' => $comment->profile_id,
-            'video_id' => $vid,
-            'type' => Notification::VIDEO_COMMENT_REPLY_LIKE,
-            'comment_reply_id' => $id,
-        ]);
-
         if ($commentLike->wasRecentlyCreated) {
             $comment->increment('likes');
             $comment->saveQuietly();
             $video->increment('likes');
             $video->saveQuietly();
         }
-        // CommentLikePipeline::dispatch($commentLike)->onQueue('comment-like');
+
+        if ($comment->ap_id) {
+            $config = app(ConfigService::class);
+            if ($config->federation()) {
+                DeliverCommentReplyLikeActivity::dispatch(
+                    $request->user()->profile,
+                    $comment->profile,
+                    $commentLike,
+                    $comment->getObjectUrl()
+                )->onQueue('activitypub-out');
+            }
+        }
 
         return (new CommentReplyResource($comment))->toArray($request);
     }
@@ -403,10 +754,18 @@ class VideoController extends Controller
             return $this->success();
         }
 
-        Notification::whereType(Notification::VIDEO_COMMENT_REPLY_LIKE)
-            ->whereUserId($profileId)
-            ->whereCommentReplyId($id)
-            ->delete();
+        $commentLikeId = $commentLike->id;
+        if ($comment->ap_id) {
+            $config = app(ConfigService::class);
+            if ($config->federation()) {
+                DeliverUndoCommentReplyLikeActivity::dispatch(
+                    $request->user()->profile,
+                    $comment->profile,
+                    $commentLikeId,
+                    $comment->getObjectUrl()
+                )->onQueue('activitypub-out');
+            }
+        }
 
         $commentLike->delete();
         if ($comment->likes) {
@@ -418,7 +777,7 @@ class VideoController extends Controller
             $video->saveQuietly();
         }
 
-        return $this->success();
+        return (new CommentReplyResource($comment))->toArray($request);
     }
 
     public function storeCommentLike(Request $request, $vid, $id)
@@ -438,13 +797,20 @@ class VideoController extends Controller
             'comment_id' => $comment->id,
         ]);
 
-        Notification::updateOrCreate([
-            'user_id' => $pid,
-            'profile_id' => $comment->profile_id,
-            'video_id' => $vid,
-            'type' => Notification::VIDEO_COMMENT_LIKE,
-            'comment_id' => $id,
-        ]);
+        if ($comment->ap_id) {
+            $config = app(ConfigService::class);
+            if ($config->federation()) {
+                $actorProfile = $request->user()->profile;
+                $targetProfile = $comment->profile;
+                $commentObjectUrl = $comment->getObjectUrl();
+                DeliverCommentLikeActivity::dispatch(
+                    $actorProfile,
+                    $targetProfile,
+                    $commentLike,
+                    $commentObjectUrl
+                )->onQueue('activitypub-out');
+            }
+        }
 
         if ($commentLike->wasRecentlyCreated) {
             $comment->increment('likes');
@@ -452,7 +818,6 @@ class VideoController extends Controller
             $video->increment('likes');
             $video->saveQuietly();
         }
-        // CommentLikePipeline::dispatch($commentLike)->onQueue('comment-like');
 
         return (new CommentResource($comment))->toArray($request);
     }
@@ -477,11 +842,21 @@ class VideoController extends Controller
         if (! $commentLike) {
             return $this->success();
         }
-
-        Notification::whereType(Notification::VIDEO_COMMENT_LIKE)
-            ->whereUserId($pid)
-            ->whereCommentId($id)
-            ->delete();
+        if ($comment->ap_id) {
+            $commentObjectUrl = $comment->getObjectUrl();
+            $commentId = $comment->id;
+            $config = app(ConfigService::class);
+            if ($config->federation()) {
+                $actorProfile = $request->user()->profile;
+                $targetProfile = $comment->profile;
+                DeliverUndoCommentLikeActivity::dispatch(
+                    $actorProfile,
+                    $targetProfile,
+                    $commentId,
+                    $commentObjectUrl
+                )->onQueue('activitypub-out');
+            }
+        }
 
         $commentLike->delete();
         if ($comment->likes) {
@@ -493,26 +868,71 @@ class VideoController extends Controller
             $video->saveQuietly();
         }
 
-        return $this->success();
+        return (new CommentResource($comment))->toArray($request);
     }
 
-    public function getAutocompleteMention(GetMentionAutocomplete $request)
+    public function showVideoLikes(Request $request, $id)
     {
-        $query = $request->input('q');
-        $limit = $request->input('limit', 6);
+        $user = $request->user();
+        $pid = $user->profile_id;
 
-        $res = Profile::where('username', 'like', $query.'%')->limit($limit)->get();
+        $video = Video::published()->findOrFail($id);
+        $isAuth = $video->profile_id == $pid || $user->is_admin;
 
-        return ProfileResource::collection($res);
+        $likes = VideoLike::whereVideoId($id);
+
+        if ($isAuth) {
+            $res = $likes->leftJoin('followers as auth_following', function ($join) use ($pid) {
+                $join->on('auth_following.following_id', '=', 'video_likes.profile_id')
+                    ->where('auth_following.profile_id', '=', $pid);
+            })
+                ->select([
+                    'video_likes.*',
+                    DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
+                ])
+                ->orderBy('video_likes.created_at', 'desc')
+                ->cursorPaginate(10);
+        } else {
+            $res = $likes->limit(10)->get();
+        }
+
+        return VideoLikeResource::collection($res);
     }
 
-    public function getAutocompleteHashtag(GetMentionAutocomplete $request)
+    public function showVideoShares(Request $request, $id)
     {
-        $query = $request->input('q');
-        $limit = $request->input('limit', 6);
+        $user = $request->user();
+        $pid = $user->profile_id;
 
-        $res = Hashtag::where('name', 'like', $query.'%')->limit($limit)->get();
+        $video = Video::published()->findOrFail($id);
+        $isAuth = $video->profile_id == $pid || $user->is_admin;
 
-        return HashtagResource::collection($res);
+        $likes = VideoRepost::whereVideoId($id);
+
+        if ($isAuth) {
+            $res = $likes->leftJoin('followers as auth_following', function ($join) use ($pid) {
+                $join->on('auth_following.following_id', '=', 'video_reposts.profile_id')
+                    ->where('auth_following.profile_id', '=', $pid);
+            })
+                ->select([
+                    'video_reposts.*',
+                    DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
+                ])
+                ->orderBy('video_reposts.created_at', 'desc')
+                ->cursorPaginate(10);
+        } else {
+            $res = $likes->limit(10)->get();
+        }
+
+        return VideoRepostResource::collection($res);
+    }
+
+    private function escapeLike(string $value): string
+    {
+        return str_replace(
+            ['\\', '%', '_'],
+            ['\\\\', '\\%', '\\_'],
+            $value
+        );
     }
 }

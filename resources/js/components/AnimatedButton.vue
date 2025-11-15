@@ -58,20 +58,18 @@ export default {
             type: String,
             default: "primary",
             validator: (value) =>
-                ["primary", "secondary", "outline", "ghost"].includes(value),
+                [
+                    "primary",
+                    "secondary",
+                    "light",
+                    "outline",
+                    "ghost",
+                    "primaryOutline",
+                ].includes(value),
         },
-        loading: {
-            type: Boolean,
-            default: false,
-        },
-        disabled: {
-            type: Boolean,
-            default: false,
-        },
-        type: {
-            type: String,
-            default: "button",
-        },
+        loading: { type: Boolean, default: false },
+        disabled: { type: Boolean, default: false },
+        type: { type: String, default: "button" },
     },
     setup(props) {
         const buttonClasses = computed(() => {
@@ -90,8 +88,25 @@ export default {
                     ].join(" ");
                 case "secondary":
                     return `${baseClasses} bg-gray-600 dark:bg-gray-500 text-white hover:bg-gray-700 dark:hover:bg-gray-600 focus:ring-gray-500 dark:focus:ring-gray-400 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:opacity-50`;
+                case "light":
+                    return `${baseClasses}
+                        bg-gray-100 dark:bg-gray-800
+                        text-gray-900 dark:text-white
+                        hover:bg-gray-200 dark:hover:bg-gray-700
+                        active:bg-gray-300 dark:active:bg-gray-600
+                        focus:ring-gray-300 dark:focus:ring-gray-600
+                        disabled:opacity-50`;
                 case "outline":
                     return `${baseClasses} border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-gray-500 dark:focus:ring-gray-400 disabled:opacity-50`;
+                case "primaryOutline":
+                    return `${baseClasses}
+                        border border-[#F02C56]
+                        text-[#F02C56]
+                        bg-transparent dark:bg-transparent
+                        hover:bg-[#F02C56]/10 dark:hover:bg-[#F02C56]/20
+                        active:bg-[#F02C56]/20
+                        focus:ring-[#F02C56]
+                        disabled:opacity-50 disabled:border-opacity-50 disabled:text-opacity-50`;
                 case "ghost":
                     return `${baseClasses} text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-gray-500 dark:focus:ring-gray-400 disabled:opacity-50`;
                 default:
@@ -99,9 +114,7 @@ export default {
             }
         });
 
-        return {
-            buttonClasses,
-        };
+        return { buttonClasses };
     },
 };
 </script>

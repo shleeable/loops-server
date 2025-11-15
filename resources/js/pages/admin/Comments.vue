@@ -17,6 +17,8 @@
             :has-previous="pagination.prev_cursor"
             :has-next="pagination.next_cursor"
             :initial-search-query="searchQuery"
+            :show-local-filter="true"
+            @local-change="handleLocalChange"
             @search="handleSearch"
             @refresh="refreshComments"
             @previous="previousPage"
@@ -51,7 +53,7 @@
             <template #cell-v_id="{ value }">
                 <router-link
                     :to="`/admin/videos/${value}`"
-                    class="text-blue-400 truncate cursor-pointer"
+                    class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline cursor-pointer"
                 >
                     {{ value }}
                 </router-link>
@@ -94,6 +96,7 @@ const pagination = ref({
 });
 
 const searchQuery = ref(route.query.q || "");
+const localOnly = ref(false);
 const DEBOUNCE_DELAY = 300;
 let searchTimeout = null;
 
@@ -113,6 +116,10 @@ const fetchComments = async (cursor = null, direction = "next") => {
             params.search = searchQuery.value;
         }
 
+        if (localOnly.value) {
+            params.local = true;
+        }
+
         await commentsApi
             .getComments(params)
             .then((response) => {
@@ -129,6 +136,16 @@ const fetchComments = async (cursor = null, direction = "next") => {
     }
 };
 
+watch(localOnly, () => {
+    if (searchTimeout) {
+        clearTimeout(searchTimeout);
+    }
+
+    searchTimeout = setTimeout(() => {
+        fetchComments();
+    }, DEBOUNCE_DELAY);
+});
+
 watch(searchQuery, () => {
     if (searchTimeout) {
         clearTimeout(searchTimeout);
@@ -141,6 +158,10 @@ watch(searchQuery, () => {
 
 const handleSearch = (query) => {
     searchQuery.value = query;
+};
+
+const handleLocalChange = (value) => {
+    localOnly.value = value;
 };
 
 const refreshComments = () => {

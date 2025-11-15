@@ -1,5 +1,5 @@
 <template>
-    <router-link :to="convertedPath" :class="class">
+    <router-link :to="convertedPath">
         <slot></slot>
     </router-link>
 </template>
@@ -11,7 +11,6 @@ const { encodeHashid } = useHashids();
 interface Props {
     id: string;
     prefix?: string;
-    class?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {

@@ -24,6 +24,12 @@ class FollowerResource extends JsonResource
      */
     public function toArray(Request $request)
     {
-        return AccountService::compact($this->profile_id);
+        $account = AccountService::compact($this->profile_id);
+
+        if (isset($this->is_following)) {
+            $account['is_following'] = (bool) $this->is_following;
+        }
+
+        return $account;
     }
 }

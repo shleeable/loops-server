@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AdminHashtagResource;
 use App\Http\Resources\AdminInstanceResource;
+use App\Http\Resources\CommentReplyResource;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\ProfileResource;
 use App\Http\Resources\ReportResource;
@@ -22,6 +23,7 @@ use App\Models\User;
 use App\Models\Video;
 use App\Services\AccountService;
 use App\Services\AdminAuditLogService;
+use App\Services\ExploreService;
 use App\Services\NodeinfoCrawlerService;
 use App\Services\SanitizeService;
 use App\Services\VideoService;
@@ -92,17 +94,20 @@ class AdminController extends Controller
             $pid = $video->profile_id;
             VideoService::deleteMediaData($video->id);
 
-            if (str_starts_with($video->vid, 'https://')) {
+            if ($video->vid) {
+                if (str_starts_with($video->vid, 'https://')) {
 
-            } else {
-                if (Storage::exists($video->vid)) {
-                    Storage::delete($video->vid);
-                }
-                $s3Path = 'videos/'.$video->profile_id.'/'.$video->id.'/';
-                if (Storage::disk('s3')->exists($s3Path)) {
-                    Storage::disk('s3')->deleteDirectory($s3Path);
+                } else {
+                    if (Storage::exists($video->vid)) {
+                        Storage::delete($video->vid);
+                    }
+                    $s3Path = 'videos/'.$video->profile_id.'/'.$video->id.'/';
+                    if (Storage::disk('s3')->exists($s3Path)) {
+                        Storage::disk('s3')->deleteDirectory($s3Path);
+                    }
                 }
             }
+
             app(AdminAuditLogService::class)->logVideoDelete($request->user(), $video, ['vid' => $video->id, 'caption' => $video->caption, 'profile_id' => $video->profile_id, 'likes' => $video->likes]);
 
             $video->forceDelete();
@@ -133,10 +138,42 @@ class AdminController extends Controller
 
     public function videoCommentsDelete(Request $request, $id)
     {
-        $comment = Comment::findOrFail($id);
+        $comment = Comment::withCount('children')->findOrFail($id);
         $video = Video::findOrFail($comment->video_id);
         app(AdminAuditLogService::class)->logVideoCommentDelete($request->user(), $video, ['vid' => $video->id, 'comment_id' => $comment->id, 'comment_profile_id' => $comment->profile_id, 'comment_caption' => $comment->caption, 'comment_likes' => $comment->likes]);
-        $comment->delete();
+        if ($comment->children_count) {
+            $comment->update(['caption' => null, 'status' => 'deleted_by_admin']);
+            $comment->delete();
+        } else {
+            $comment->forceDelete();
+        }
+
+        $video->recalculateCommentsCount();
+
+        return $this->success();
+    }
+
+    public function videoReplyDelete(Request $request, $id)
+    {
+        $comment = CommentReply::findOrFail($id);
+        $video = Video::findOrFail($comment->video_id);
+
+        app(AdminAuditLogService::class)->logReportDeleteCommentReply(
+            $request->user(),
+            $video,
+            [
+                'vid' => $video->id,
+                'parent_id' => $comment->comment_id,
+                'comment_id' => $comment->id,
+                'comment_profile_id' => $comment->profile_id,
+                'comment_caption' => $comment->caption,
+                'comment_likes' => $comment->likes,
+            ]
+        );
+
+        $parent = $comment->parent;
+        $comment->forceDelete();
+        $parent->recalculateReplies();
         $video->decrement('comments');
 
         return $this->success();
@@ -146,8 +183,13 @@ class AdminController extends Controller
     {
         $search = $request->query('q');
         $sort = $request->query('sort');
+        $local = $request->query('local');
 
         $query = Profile::query();
+
+        if ($local) {
+            $query->where('local', true);
+        }
 
         if (! empty($search)) {
             if (str_starts_with($search, 'bio:')) {
@@ -194,7 +236,7 @@ class AdminController extends Controller
         $res['reports_created_count'] = Report::whereReporterProfileId($profile->id)->count();
         $res['reported_count'] = Report::totalReportsAgainstProfile($profile->id);
         $res['likes_count'] = AccountService::getAccountLikesCount($profile->id);
-        $res['status'] = $profile->status == 1 ? 'active' : 'suspended';
+        $res['status'] = $profile->getStatusDescription();
         $res['admin_notes'] = $profile->admin_notes;
         $res['can_upload'] = (bool) $profile->can_upload;
         $res['can_comment'] = (bool) $profile->can_comment;
@@ -214,7 +256,15 @@ class AdminController extends Controller
             'can_share' => 'sometimes|boolean',
         ]);
 
+        $userValidated = $request->validate([
+            'can_upload' => 'sometimes|boolean',
+            'can_follow' => 'sometimes|boolean',
+            'can_comment' => 'sometimes|boolean',
+            'can_like' => 'sometimes|boolean',
+        ]);
+
         $profile = Profile::find($id);
+        $user = User::whereProfileId($id)->firstOrFail();
 
         if (! $profile) {
             return $this->error('Ooops!');
@@ -227,8 +277,43 @@ class AdminController extends Controller
         $oldValues = $profile->only(['can_upload', 'can_follow', 'can_comment', 'can_like', 'can_share']);
 
         $profile->update($validated);
+        $user->update($userValidated);
 
         app(AdminAuditLogService::class)->logProfileAdminPermissionUpdate($request->user(), $profile, ['old' => $oldValues, 'new' => $validated]);
+
+        return $this->success();
+    }
+
+    public function profileSuspend(Request $request, $id)
+    {
+        $profile = Profile::find($id);
+
+        if (! $profile) {
+            return $this->error('Ooops!');
+        }
+
+        $profile->update(['status' => 6]);
+
+        if ($profile->local) {
+            $profile->user->update(['status' => 6]);
+        }
+
+        return $this->success();
+    }
+
+    public function profileUnsuspend(Request $request, $id)
+    {
+        $profile = Profile::find($id);
+
+        if (! $profile) {
+            return $this->error('Ooops!');
+        }
+
+        $profile->update(['status' => 1]);
+
+        if ($profile->local) {
+            $profile->user->update(['status' => 1]);
+        }
 
         return $this->success();
     }
@@ -253,6 +338,13 @@ class AdminController extends Controller
         $profile->save();
 
         return $this->success();
+    }
+
+    public function reportCount(Request $request)
+    {
+        $count = Report::where('admin_seen', false)->count();
+
+        return $this->data(['count' => $count]);
     }
 
     public function reports(Request $request)
@@ -282,7 +374,7 @@ class AdminController extends Controller
 
     public function reportUpdateMarkAsNsfw(Request $request, $id)
     {
-        $report = Report::whereNotNull('reported_video_id')->whereAdminSeen(false)->findOrFail($id);
+        $report = Report::whereNotNull('reported_video_id')->where('admin_seen', false)->findOrFail($id);
         $video = $report->video;
         $video->is_sensitive = true;
         $video->save();
@@ -296,7 +388,7 @@ class AdminController extends Controller
 
     public function reportDismiss(Request $request, $id)
     {
-        $report = Report::whereAdminSeen(false)->findOrFail($id);
+        $report = Report::where('admin_seen', false)->findOrFail($id);
         $report->admin_seen = true;
         $report->save();
 
@@ -307,7 +399,7 @@ class AdminController extends Controller
 
     public function reportDismissAllByAccount(Request $request, $id)
     {
-        $report = Report::whereAdminSeen(false)->findOrFail($id);
+        $report = Report::where('admin_seen', false)->findOrFail($id);
 
         app(AdminAuditLogService::class)->logReportDismissAllByAccount($request->user(), $report, ['profile_id' => $report->reporter_profile_id]);
 
@@ -322,7 +414,7 @@ class AdminController extends Controller
 
     public function reportDeleteVideo(Request $request, $id)
     {
-        $report = Report::whereNotNull('reported_video_id')->whereAdminSeen(false)->findOrFail($id);
+        $report = Report::whereNotNull('reported_video_id')->where('admin_seen', false)->findOrFail($id);
         $videoId = $report->reported_video_id;
         $report->admin_seen = true;
         $report->save();
@@ -351,7 +443,7 @@ class AdminController extends Controller
 
     public function reportDeleteComment(Request $request, $id)
     {
-        $report = Report::whereNotNull('reported_comment_id')->whereAdminSeen(false)->findOrFail($id);
+        $report = Report::whereNotNull('reported_comment_id')->where('admin_seen', false)->findOrFail($id);
         $comment = Comment::withCount('children')->findOrFail($report->reported_comment_id);
 
         app(AdminAuditLogService::class)->logReportDeleteComment($request->user(), $report, ['vid' => $comment->video_id, 'comment_id' => $comment->id, 'comment_profile_id' => $comment->profile_id, 'comment_content' => $comment->caption]);
@@ -363,6 +455,7 @@ class AdminController extends Controller
             $comment->forceDelete();
         } else {
             $comment->status = 'deleted_by_admin';
+            $comment->save();
             $comment->delete();
             $report->admin_seen = true;
             $report->save();
@@ -376,7 +469,7 @@ class AdminController extends Controller
 
     public function reportDeleteCommentReply(Request $request, $id)
     {
-        $report = Report::whereNotNull('reported_comment_reply_id')->whereAdminSeen(false)->findOrFail($id);
+        $report = Report::whereNotNull('reported_comment_reply_id')->where('admin_seen', false)->findOrFail($id);
         $commentReply = CommentReply::with('parent')->findOrFail($report->reported_comment_reply_id);
         $vid = $commentReply->video_id;
         app(AdminAuditLogService::class)->logReportDeleteCommentReply($request->user(), $report, ['vid' => $vid, 'comment_id' => $commentReply->id, 'comment_profile_id' => $commentReply->profile_id, 'comment_parent_id' => $commentReply->comment_id, 'comment_content' => $commentReply->caption]);
@@ -412,7 +505,13 @@ class AdminController extends Controller
 
     public function comments(Request $request)
     {
+        $local = $request->query('local');
+
         $query = Comment::query();
+
+        if ($local) {
+            $query->whereNull('ap_id');
+        }
 
         $search = $request->get('q');
 
@@ -441,6 +540,50 @@ class AdminController extends Controller
         return CommentResource::collection($comments);
     }
 
+    public function getComment(Request $request, $id)
+    {
+        $query = Comment::findOrFail($id);
+
+        return new CommentResource($query);
+    }
+
+    public function replies(Request $request)
+    {
+        $local = $request->query('local');
+
+        $query = CommentReply::query();
+
+        if ($local) {
+            $query->whereNull('ap_id');
+        }
+
+        $search = $request->get('q');
+
+        if (! empty($search)) {
+            if (str_starts_with($search, 'user:')) {
+                $username = trim(substr($search, 5));
+                if (! empty($username)) {
+                    $query->join('profiles', 'comments.profile_id', '=', 'profiles.id')
+                        ->where('profiles.username', 'like', '%'.$username.'%')
+                        ->select('comments.*');
+                }
+            } elseif (str_starts_with($search, 'video:')) {
+                $videoId = trim(substr($search, 6));
+                if (! empty($videoId)) {
+                    $query->where('video_id', $videoId);
+                }
+            } else {
+                $query->where('caption', 'like', '%'.$search.'%');
+            }
+        }
+
+        $comments = $query->orderByDesc('id')
+            ->cursorPaginate(10)
+            ->withQueryString();
+
+        return CommentReplyResource::collection($comments);
+    }
+
     public function hashtags(Request $request)
     {
         $q = $request->query('q');
@@ -455,6 +598,13 @@ class AdminController extends Controller
         $tags = $query->cursorPaginate(10)->withQueryString();
 
         return AdminHashtagResource::collection($tags);
+    }
+
+    public function getHashtag(Request $request, $id)
+    {
+        $query = Hashtag::findOrFail($id);
+
+        return new AdminHashtagResource($query);
     }
 
     public function hashtagsUpdate(Request $request, $id)
@@ -474,6 +624,8 @@ class AdminController extends Controller
         $hashtag->update($validated);
 
         app(AdminAuditLogService::class)->logHashtagUpdate($request->user(), $hashtag, ['old' => $oldValues, 'new' => $validated]);
+
+        app(ExploreService::class)->getTrendingTags(true);
 
         return $this->success();
     }

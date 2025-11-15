@@ -104,6 +104,22 @@
                         >
                             Delete Comment Reply
                         </button>
+
+                        <button
+                            v-if="report.content_type === 'hashtag'"
+                            @click="dismissAndManageHashtag"
+                            class="px-4 py-2 text-red-600 border border-red-600 text-sm font-medium rounded-lg hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
+                        >
+                            Dismiss & Manage Hashtag
+                        </button>
+
+                        <button
+                            v-if="report.content_type === 'hashtag'"
+                            @click="manageHashtag"
+                            class="px-4 py-2 text-red-600 border border-red-600 text-sm font-medium rounded-lg hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
+                        >
+                            Manage Hashtag
+                        </button>
                     </div>
                 </div>
             </div>
@@ -645,6 +661,109 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div
+                            v-else-if="
+                                report.content_type === 'hashtag' &&
+                                report.content_preview
+                            "
+                            class="space-y-3"
+                        >
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0"
+                                >
+                                    <span class="text-white text-xl font-bold"
+                                        >#</span
+                                    >
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4
+                                        class="font-medium text-gray-900 dark:text-white text-lg"
+                                    >
+                                        #{{ report.content_preview.name }}
+                                    </h4>
+                                    <p
+                                        class="text-sm text-gray-600 dark:text-gray-400"
+                                    >
+                                        {{ report.content_preview.count || 0 }}
+                                        posts
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <span
+                                    v-if="report.content_preview.is_banned"
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                                >
+                                    Banned
+                                </span>
+                                <span
+                                    v-if="report.content_preview.is_nsfw"
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
+                                >
+                                    NSFW
+                                </span>
+                                <span
+                                    v-if="report.content_preview.can_trend"
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                >
+                                    Can Trend
+                                </span>
+                                <span
+                                    v-if="report.content_preview.can_search"
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                                >
+                                    Searchable
+                                </span>
+                                <span
+                                    v-if="report.content_preview.can_autolink"
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400"
+                                >
+                                    Auto-linkable
+                                </span>
+                            </div>
+
+                            <div
+                                class="pt-4 border-t border-gray-200 dark:border-gray-700"
+                            >
+                                <div class="grid grid-cols-2 gap-4 text-center">
+                                    <div>
+                                        <div
+                                            class="text-lg font-semibold text-gray-900 dark:text-white"
+                                        >
+                                            {{
+                                                report.content_preview.count ||
+                                                0
+                                            }}
+                                        </div>
+                                        <div
+                                            class="text-xs text-gray-600 dark:text-gray-400"
+                                        >
+                                            Total Posts
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div
+                                            class="text-lg font-semibold text-gray-900 dark:text-white"
+                                        >
+                                            {{
+                                                formatDate(
+                                                    report.content_preview
+                                                        .created_at,
+                                                )
+                                            }}
+                                        </div>
+                                        <div
+                                            class="text-xs text-gray-600 dark:text-gray-400"
+                                        >
+                                            Created
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -707,8 +826,11 @@ import { useRoute, useRouter } from "vue-router";
 import { useAlertModal } from "@/composables/useAlertModal.js";
 import { useUtils } from "@/composables/useUtils";
 const { formatDate, formatNumber } = useUtils();
+import { useAdminStore } from "~/stores/admin";
 
 const { alertModal, confirmModal } = useAlertModal();
+
+const adminStore = useAdminStore();
 
 const route = useRoute();
 const router = useRouter();
@@ -744,7 +866,8 @@ const dismissAllReportsByAccount = async () => {
     if (result) {
         const response = await reportsApi
             .dismissAllReportsByAccount(report?.value.id)
-            .finally(() => {
+            .finally(async () => {
+                await adminStore.fetchReportsCount();
                 router.push("/admin/reports");
             });
     } else {
@@ -763,12 +886,42 @@ const dismissReport = async () => {
     if (result) {
         const response = await reportsApi
             .dismissReport(report?.value.id)
-            .finally(() => {
+            .finally(async () => {
+                await adminStore.fetchReportsCount();
                 router.push("/admin/reports");
             });
     } else {
         loading.value = false;
     }
+};
+
+const dismissAndManageHashtag = async () => {
+    const result = await confirmModal(
+        "Dismiss Report",
+        `Are you sure you want to dismiss this hashtag report?`,
+        "Mark as Resolved",
+        "Cancel",
+    );
+
+    if (result) {
+        const response = await reportsApi
+            .dismissReport(report?.value.id)
+            .finally(async () => {
+                await adminStore.fetchReportsCount();
+
+                router.push(
+                    `/admin/hashtags?q=${report?.value.content_preview?.name}&id=${report?.value.content_preview?.id}`,
+                );
+            });
+    } else {
+        loading.value = false;
+    }
+};
+
+const manageHashtag = async () => {
+    router.push(
+        `/admin/hashtags?q=${report?.value.content_preview?.name}&id=${report?.value.content_preview?.id}`,
+    );
 };
 
 const deleteVideo = async () => {
@@ -781,7 +934,8 @@ const deleteVideo = async () => {
 
     if (result) {
         const id = report.value.id;
-        const response = await reportsApi.deleteVideo(id).finally(() => {
+        const response = await reportsApi.deleteVideo(id).finally(async () => {
+            await adminStore.fetchReportsCount();
             router.push("/admin/reports");
         });
     }
@@ -797,9 +951,12 @@ const deleteComment = async () => {
 
     if (result) {
         const id = report.value.id;
-        const response = await reportsApi.deleteComment(id).finally(() => {
-            router.push("/admin/reports");
-        });
+        const response = await reportsApi
+            .deleteComment(id)
+            .finally(async () => {
+                await adminStore.fetchReportsCount();
+                router.push("/admin/reports");
+            });
     }
 };
 
@@ -813,9 +970,12 @@ const deleteCommentReply = async () => {
 
     if (result) {
         const id = report.value.id;
-        const response = await reportsApi.deleteCommentReply(id).finally(() => {
-            router.push("/admin/reports");
-        });
+        const response = await reportsApi
+            .deleteCommentReply(id)
+            .finally(async () => {
+                await adminStore.fetchReportsCount();
+                router.push("/admin/reports");
+            });
     }
 };
 
@@ -831,7 +991,8 @@ const markAsNsfw = async () => {
         const id = report.value.id;
         const response = await reportsApi
             .updateReportMarkAsNsfw(id)
-            .finally(() => {
+            .finally(async () => {
+                await adminStore.fetchReportsCount();
                 router.push("/admin/reports");
             });
     }
@@ -848,17 +1009,6 @@ const saveAdminNotes = async () => {
         console.log("Admin notes saved for report", report.value.id);
     } catch (error) {
         console.error("Error saving admin notes:", error);
-    }
-};
-
-const updatePriority = async () => {
-    try {
-        // API call would go here
-        console.log(
-            `Priority updated to ${report.value.priority} for report ${report.value.id}`,
-        );
-    } catch (error) {
-        console.error("Error updating priority:", error);
     }
 };
 

@@ -50,7 +50,7 @@ class Notification extends Model
      * 15 = New Video Comment
      * 16 = New Video Comment Reply
      * 17 = Reserved
-     * 18 = Reserved
+     * 18 = New Comment Reply (When not owner of video_id)
      * 19 = Reserved
      * 20 = Reserved
      * 21 = Video Like
@@ -62,6 +62,8 @@ class Notification extends Model
     public const NEW_VIDCOMMENT = 15;
 
     public const NEW_VIDCOMMENTREPLY = 16;
+
+    public const NEW_COMMENT_REPLY = 18;
 
     public const VIDEO_LIKE = 21;
 

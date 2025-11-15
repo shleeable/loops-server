@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Profile;
 use App\Models\UserFilter;
 use App\Services\AccountService;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class BlockedAccountResource extends JsonResource
 {
-    public function __construct(UserFilter $resource)
+    public function __construct(Profile|UserFilter $resource)
     {
         parent::__construct($resource);
     }
@@ -24,9 +25,16 @@ class BlockedAccountResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $profile = $this->resource instanceof UserFilter
+            ? AccountService::compact($this->account_id)
+            : AccountService::compact($this->id);
+        $blockedAt = $this->resource instanceof UserFilter
+            ? $this->created_at
+            : null;
+
         return [
-            'account' => AccountService::compact($this->account_id),
-            'blocked_at' => $this->created_at,
+            'account' => $profile,
+            'blocked_at' => $blockedAt,
         ];
     }
 }

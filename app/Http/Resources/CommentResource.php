@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Comment;
+use App\Models\Hashtag;
 use App\Services\AccountService;
 use App\Services\LikeService;
 use Illuminate\Http\Request;
@@ -25,7 +26,11 @@ class CommentResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $pid = $request->user() ? $request->user()->profile_id : false;
+        $pid = false;
+        $user = auth('web')->user() ?? auth('api')->user();
+        if ($user) {
+            $pid = $user->profile_id;
+        }
 
         if ($this->deleted_at && $this->status != 'active') {
             $msg = $this->status === 'deleted_by_user' ?
@@ -40,6 +45,9 @@ class CommentResource extends JsonResource
                 'likes' => 0,
                 'replies' => $this->replies ?? 0,
                 'children' => [],
+                'tags' => [],
+                'mentions' => [],
+                'is_edited' => false,
                 'liked' => false,
                 'url' => null,
                 'is_owner' => false,
@@ -53,12 +61,15 @@ class CommentResource extends JsonResource
             'v_id' => (string) $this->video_id,
             'account' => AccountService::compact($this->profile_id),
             'caption' => $this->caption,
-            'likes' => $this->likes ?? 0,
             'replies' => $this->replies ?? 0,
             'children' => [],
+            'tags' => $this->hashtags->map(fn (Hashtag $tag) => $tag->name),
+            'mentions' => $this->mentions,
+            'likes' => $this->likes ?? 0,
             'liked' => $pid ? app(LikeService::class)->hasLikedComment((string) $this->id, (string) $pid) : false,
             'url' => $this->shareUrl(),
             'tombstone' => false,
+            'is_edited' => $this->is_edited,
             'is_owner' => $pid ? (string) $this->profile_id === (string) $pid : false,
             'created_at' => $this->created_at->format('c'),
         ];

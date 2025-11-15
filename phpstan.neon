@@ -4,15 +4,25 @@ includes:
 
 parameters:
     # Level 10 is the highest level
-    level: 1
+    level: 5
+
+    # Laravel specific configurations
+    noModelMake: true
+    noUnnecessaryCollectionCall: true
+    checkModelProperties: true
+    checkOctaneCompatibility: true
+    noEnvCallsOutsideOfConfig: true
+    checkModelAppends: true
+    checkModelMethodVisibility: true
+    checkAuthCallsWhenInRequestScope: true
+    checkConfigTypes: true
+
+    checkMissingTranslations: false
+    translationDirectories:
+        - resources/lang
 
     paths:
         - app/
-        - bootstrap/
-        - config/
-        - database/
-        - lang/
-        - resources/
         - routes/
         - tests/
 

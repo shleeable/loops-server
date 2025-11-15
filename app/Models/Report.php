@@ -37,7 +37,6 @@ use Illuminate\Support\Facades\DB;
  * @method static Builder<static>|Report search(?string $search)
  * @method static Builder<static>|Report whereAdminNotes($value)
  * @method static Builder<static>|Report whereAdminRemindAfter($value)
- * @method static Builder<static>|Report whereAdminSeen($value)
  * @method static Builder<static>|Report whereCreatedAt($value)
  * @method static Builder<static>|Report whereDomain($value)
  * @method static Builder<static>|Report whereHandled($value)
@@ -120,7 +119,7 @@ class Report extends Model
 
         $adminSeen = $sort === 'closed';
 
-        return $query->whereAdminSeen($adminSeen);
+        return $query->where('admin_seen', $adminSeen);
     }
 
     #[Scope]

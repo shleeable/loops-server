@@ -1,11 +1,31 @@
 <?php
 
 return [
+    'api' => [
+        'rate_limits' => [
+            'enabled' => (bool) env('LOOPS_API_RATE_LIMITS_ENABLED', true),
+            'guests' => [
+                'per_minute' => (int) env('LOOPS_API_RATE_LIMITS_GUEST_PER_MIN', 60),
+                'per_hour' => (int) env('LOOPS_API_RATE_LIMITS_GUEST_PER_HOUR', 700),
+            ],
+            'users' => [
+                'per_minute' => (int) env('LOOPS_API_RATE_LIMITS_USER_PER_MIN', 120),
+                'per_hour' => (int) env('LOOPS_API_RATE_LIMITS_USER_PER_HOUR', 3000),
+            ],
+        ],
+    ],
+
     'feed' => [
         'fyp' => [
             'max_page' => [
                 'enabled' => env('LOOPS_FEED_FYP_MAXP_ENABLED', false),
                 'max_days' => env('LOOPS_FEED_FYP_MAXP_MAX_DAYS', 7),
+            ],
+        ],
+        'following' => [
+            'max_page' => [
+                'enabled' => env('LOOPS_FEED_FOLLOWING_MAXP_ENABLED', true),
+                'max_days' => env('LOOPS_FEED_FOLLOWING_MAXP_MAX_DAYS', 31),
             ],
         ],
     ],
@@ -28,5 +48,28 @@ return [
         'delivery' => [
             'timeout' => env('LOOPS_FED_DELIVERY_TIMEOUT', 10),
         ],
+    ],
+
+    'registration' => [
+        'min_years_old' => env('LOOPS_REG_MIN_YEARS_OLD', 16),
+        'max_resend_email_verify' => (int) env('LOOPS_REG_MAX_RESEND_EMAIL_VERIFY', 2),
+    ],
+
+    'autolinker' => [
+        'mentions' => [
+            // If true, remove_domain takes precidence over hide_domain
+            'remove_domain' => env('LOOPS_AL_MEN_REMOVE_DOMAINS', true),
+            'hide_domain' => env('LOOPS_AL_MEN_HIDE_DOMAINS', false),
+            'target_blank' => env('LOOPS_AL_MEN_TARGET_BLANK', false),
+            'max_length' => env('LOOPS_AL_MEN_MAX_LENGTH', 64),
+        ],
+    ],
+
+    'backups' => [
+        'enabled' => env('LOOPS_BACKUPS_ENABLED', false),
+    ],
+
+    'admin_dashboard' => [
+        'autoUpdate' => (bool) env('LOOPS_ADMIN_DASHBOARD_AUTOUPDATE', true),
     ],
 ];

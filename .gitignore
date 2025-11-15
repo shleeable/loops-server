@@ -25,4 +25,9 @@ yarn-error.log
 /app/Console/Commands/FindMissingTranslations.php
 /app/Console/Commands/FindDuplicateLangKeys.php
 /app/Console/Commands/SortLangFiles.php
+/app/Console/Commands/AnalyzeLangKeys.php
+/app/Console/Commands/CrawlProfilesForInstances.php
+/app/Console/Commands/FixDomains.php
 _ide_helper.php
+_ide_helper_models.php
+api.json

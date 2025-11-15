@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreReportRequest;
 use App\Models\Comment;
 use App\Models\CommentReply;
+use App\Models\Hashtag;
 use App\Models\Profile;
 use App\Models\Report;
 use App\Models\Video;
@@ -39,7 +40,7 @@ class ReportController extends Controller
         ];
 
         if ($request->filled('comment')) {
-            $extra['user_message'] = $this->purify($request->input('comment'));
+            $extra['user_message'] = $this->purifyText($request->input('comment'));
         }
 
         if ($type === 'video') {
@@ -65,6 +66,12 @@ class ReportController extends Controller
             Report::firstOrCreate([
                 'reporter_profile_id' => $pid,
                 'reported_comment_reply_id' => $id,
+            ], $extra);
+        } elseif ($type === 'hashtag') {
+            $tag = Hashtag::where('name', $id)->firstOrFail();
+            Report::firstOrCreate([
+                'reporter_profile_id' => $pid,
+                'reported_hashtag_id' => $tag->id,
             ], $extra);
         }
 

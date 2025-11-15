@@ -9,15 +9,19 @@ use App\Http\Resources\CommentResource;
 use App\Http\Resources\FollowerResource;
 use App\Http\Resources\FollowingResource;
 use App\Http\Resources\ProfileResource;
+use App\Http\Resources\VideoHashtagResource;
 use App\Http\Resources\VideoResource;
 use App\Models\Comment;
 use App\Models\CommentReply;
 use App\Models\Follower;
+use App\Models\Hashtag;
 use App\Models\Page;
 use App\Models\Profile;
 use App\Models\Video;
+use App\Models\VideoHashtag;
 use App\Services\AccountService;
 use App\Services\FeedService;
+use App\Services\IntlService;
 use App\Services\ReportService;
 use Cache;
 use Illuminate\Http\Request;
@@ -57,7 +61,9 @@ class WebPublicController extends Controller
 
     public function showVideo(Request $request, $id)
     {
-        $video = Video::published()->find($id);
+        $video = Video::with('profile')->published()->find($id);
+
+        abort_if($video->profile->status != 1, 400, 'Resource not available');
 
         if (! $video || ($request->user() && $request->user()->cannot('view', $video))) {
             return $this->error('Video not found or is unavailable', 404);
@@ -71,7 +77,9 @@ class WebPublicController extends Controller
      */
     public function comments(Request $request, $id)
     {
-        $video = Video::published()->canComment()->find($id);
+        $video = Video::with('profile')->published()->canComment()->find($id);
+
+        abort_if($video->profile->status != 1, 400, 'Resource not available');
 
         if (! $video || ($request->user() && $request->user()->cannot('view', [Video::class, $video]))) {
             return $this->error('Video not found or is unavailable or has comments disabled', 404);
@@ -85,6 +93,54 @@ class WebPublicController extends Controller
         return CommentResource::collection($comments);
     }
 
+    public function getCommentById(Request $request, $videoId, $commentId)
+    {
+        $video = Video::with('profile')->published()->canComment()->find($videoId);
+
+        abort_if($video->profile->status != 1, 400, 'Resource not available');
+
+        $comment = Comment::withTrashed()
+            ->whereVideoId($video->id)
+            ->findOrFail($commentId);
+
+        return new CommentResource($comment);
+    }
+
+    public function getReplyById(Request $request, $videoId, $replyId)
+    {
+        $video = Video::with('profile')->published()->canComment()->find($videoId);
+
+        if (! $video) {
+            return response()->json([
+                'error' => 'Video not found or comments are disabled',
+            ], 404);
+        }
+
+        abort_if($video->profile->status != 1, 400, 'Resource not available');
+
+        $reply = CommentReply::withTrashed()
+            ->with(['profile', 'parent'])
+            ->whereVideoId($video->id)
+            ->findOrFail($replyId);
+
+        $parentComment = $reply->parent;
+
+        if (! $parentComment) {
+            return response()->json([
+                'error' => 'Parent comment not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'data' => new CommentReplyResource($reply),
+            'meta' => [
+                'type' => 'reply',
+                'video_id' => $video->id,
+                'parent_comment' => new CommentResource($parentComment),
+            ],
+        ]);
+    }
+
     /**
      * Get video comment replies.
      */
@@ -94,7 +150,9 @@ class WebPublicController extends Controller
             'cr' => 'required|integer',
         ]);
 
-        $video = Video::published()->canComment()->find($id);
+        $video = Video::with('profile')->published()->canComment()->find($id);
+
+        abort_if($video->profile->status != 1, 400, 'Resource not available');
 
         if (! $video || ($request->user() && $request->user()->cannot('view', [Video::class, $video]))) {
             return $this->error('Video not found or is unavailable or has comments disabled', 404);
@@ -122,6 +180,11 @@ class WebPublicController extends Controller
         }
 
         $profile = Profile::whereUsername($id)->firstOrFail();
+
+        if ($profile->status != 1) {
+            return $this->error('This resource is not available', 403);
+        }
+
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_owner'] = false;
         $res['likes_count'] = AccountService::getAccountLikesCount($profile->id);
@@ -133,13 +196,15 @@ class WebPublicController extends Controller
     {
         $profile = Profile::findOrFail($id);
 
+        if ($profile->status != 1) {
+            return $this->error('This resource is not available', 403);
+        }
+
         if ($request->user() && $request->user()->cannot('viewAny', [Profile::class])) {
             return $this->error('Unavailable', 403);
         }
 
-        $followers = $request->user() ?
-            Follower::whereFollowingId($id)->orderByDesc('id')->cursorPaginate(15) :
-            Follower::whereFollowingId($id)->orderBy('id')->limit(15)->get();
+        $followers = Follower::whereFollowingId($id)->orderBy('id')->limit(15)->get();
 
         return FollowerResource::collection($followers);
     }
@@ -148,13 +213,15 @@ class WebPublicController extends Controller
     {
         $profile = Profile::findOrFail($id);
 
+        if ($profile->status != 1) {
+            return $this->error('This resource is not available', 403);
+        }
+
         if ($request->user() && $request->user()->cannot('viewAny', [Profile::class])) {
             return $this->error('Unavailable', 403);
         }
 
-        $followers = $request->user() ?
-            Follower::whereProfileId($id)->orderByDesc('id')->cursorPaginate(15) :
-            Follower::whereProfileId($id)->orderBy('id')->limit(15)->get();
+        $followers = Follower::whereProfileId($id)->orderBy('id')->limit(15)->get();
 
         return FollowingResource::collection($followers);
     }
@@ -172,6 +239,10 @@ class WebPublicController extends Controller
         $sort = $request->input('sort', 'Latest');
 
         $profile = Profile::findOrFail($id);
+
+        if ($profile->status != 1) {
+            return $this->error('This resource is not available', 400);
+        }
 
         return FeedService::getAccountFeed($id, 10, $sort);
     }
@@ -212,5 +283,48 @@ class WebPublicController extends Controller
         ];
 
         return $this->data($res);
+    }
+
+    public function getVideoTags(Request $request, $id)
+    {
+        $tag = Hashtag::where('name', $id)->firstOrFail();
+        abort_if((bool) $tag->is_banned, 404);
+        $guest = $request->user() === null;
+
+        if ($guest && $tag->is_nsfw) {
+            return $this->defaultCollection(['is_nsfw' => true, 'is_guest' => true]);
+        }
+
+        if ($guest) {
+
+            $tags = VideoHashtag::whereHashtagId($tag->id)->orderByDesc('id')->limit(30)->get();
+        } else {
+            $tags = VideoHashtag::whereHashtagId($tag->id)->orderByDesc('id')->cursorPaginate(10);
+        }
+
+        return VideoHashtagResource::collection($tags)->additional(['meta' => ['total_results' => $tag->count]]);
+    }
+
+    public function authStartFallback(Request $request)
+    {
+        $res = [
+            'errors' => 'This app is outdated. Get the new version: loops.video/app-update',
+        ];
+
+        return response()->json($res);
+    }
+
+    public function getLanguagesList(Request $request)
+    {
+        return $this->data(app(IntlService::class)->get());
+    }
+
+    private function defaultCollection($meta = [])
+    {
+        return [
+            'data' => [],
+            'links' => [],
+            'meta' => $meta,
+        ];
     }
 }

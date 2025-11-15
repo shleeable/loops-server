@@ -1,6 +1,5 @@
 import { ref, computed, inject } from "vue";
 import { useRoute } from "vue-router";
-import { useHead } from "@unhead/vue";
 
 export function useDynamicPage() {
     const route = useRoute();
@@ -72,17 +71,6 @@ export function useDynamicPage() {
         const description =
             pageData.value.meta_description ||
             extractDescription(pageData.value.content);
-
-        useHead({
-            title: `${title} | Your App Name`,
-            meta: [
-                { name: "description", content: description },
-                { property: "og:title", content: title },
-                { property: "og:description", content: description },
-                { property: "og:type", content: "article" },
-                { property: "og:url", content: window.location.href },
-            ],
-        });
     };
 
     const extractDescription = (content) => {

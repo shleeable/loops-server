@@ -112,21 +112,23 @@
                                     <label
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                     >
-                                        Email
+                                        {{ t("common.email") }}
                                     </label>
                                     <input
                                         v-model="form.email"
                                         type="email"
                                         required
                                         class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
-                                        placeholder="Enter your email"
+                                        :placeholder="
+                                            t('common.enterYourEmail')
+                                        "
                                     />
                                 </div>
                                 <div>
                                     <label
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                     >
-                                        Password
+                                        {{ t("common.password") }}
                                     </label>
                                     <div class="relative">
                                         <input
@@ -138,7 +140,9 @@
                                             "
                                             required
                                             class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
-                                            placeholder="Enter your password"
+                                            :placeholder="
+                                                t('common.enterYourPassword')
+                                            "
                                         />
                                         <button
                                             type="button"
@@ -167,7 +171,7 @@
                                         />
                                         <span
                                             class="ml-2 text-sm text-gray-700 dark:text-gray-300"
-                                            >Remember me</span
+                                            >{{ t("common.rememberMe") }}</span
                                         >
                                     </label>
                                     <button
@@ -175,7 +179,7 @@
                                         @click="currentMode = 'password-reset'"
                                         class="text-sm font-medium text-[#F02C56] hover:text-[#D7284A] dark:hover:text-[#D7284A] transition-colors cursor-pointer"
                                     >
-                                        Forgot password?
+                                        {{ t("common.forgotPassword") }}
                                     </button>
                                 </div>
 
@@ -216,7 +220,7 @@
                                     class="w-full"
                                     variant="primary"
                                 >
-                                    Sign In
+                                    {{ t("common.signIn") }}
                                 </AnimatedButton>
                             </form>
 
@@ -227,13 +231,13 @@
                                     >
                                         <span
                                             >Step {{ registrationStep }} of
-                                            4</span
+                                            5</span
                                         >
                                         <span
                                             >{{
                                                 Math.round(
                                                     ((registrationStep - 1) /
-                                                        4) *
+                                                        5) *
                                                         100,
                                                 )
                                             }}% complete</span
@@ -260,14 +264,16 @@
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                         >
-                                            Email Address
+                                            {{ t("common.email") }}
                                         </label>
                                         <input
                                             v-model="form.email"
                                             type="email"
                                             required
                                             class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
-                                            placeholder="Enter your email address"
+                                            :placeholder="
+                                                t('common.enterYourEmail')
+                                            "
                                         />
                                     </div>
 
@@ -310,7 +316,7 @@
                                         class="w-full"
                                         variant="primary"
                                     >
-                                        Continue
+                                        {{ t("common.continue") }}
                                     </AnimatedButton>
 
                                     <button
@@ -319,7 +325,7 @@
                                         @click="handleOtpAlreadyHaveCode"
                                         class="mt-5 w-full text-center text-sm font-bold text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 transition-colors cursor-pointer"
                                     >
-                                        I already have the code
+                                        {{ t("common.iAlreadyHaveTheCode") }}
                                     </button>
                                 </form>
 
@@ -332,7 +338,7 @@
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                         >
-                                            Verification Code
+                                            {{ t("common.verificationCode") }}
                                         </label>
                                         <input
                                             v-model="form.verificationCode"
@@ -345,7 +351,11 @@
                                         <p
                                             class="mt-2 text-sm text-gray-600 dark:text-gray-400"
                                         >
-                                            Enter the 6-digit code sent to
+                                            {{
+                                                t(
+                                                    "common.enterTheSixDigitCodeSentTo",
+                                                )
+                                            }}
                                             {{ registrationData.email }}
                                         </p>
                                     </div>
@@ -363,8 +373,8 @@
                                         >
                                             {{
                                                 resendCooldown > 0
-                                                    ? `Resend in ${resendCooldown}s`
-                                                    : "Resend code"
+                                                    ? `${t("common.resendIn")} ${resendCooldown}s`
+                                                    : t("common.resendCode")
                                             }}
                                         </button>
                                     </div>
@@ -376,7 +386,7 @@
                                             variant="outline"
                                             class="flex-1"
                                         >
-                                            Back
+                                            {{ t("settings.back") }}
                                         </AnimatedButton>
                                         <AnimatedButton
                                             type="submit"
@@ -384,13 +394,142 @@
                                             class="flex-1"
                                             variant="primary"
                                         >
-                                            Verify
+                                            {{ t("common.verify") }}
                                         </AnimatedButton>
                                     </div>
                                 </form>
 
                                 <form
                                     v-if="registrationStep === 3"
+                                    @submit.prevent="handleBirthdateNext"
+                                    class="space-y-6"
+                                >
+                                    <div>
+                                        <label
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                        >
+                                            {{
+                                                t("common.birthdate") ||
+                                                "Birth date"
+                                            }}
+                                        </label>
+
+                                        <div class="grid grid-cols-3 gap-3">
+                                            <div>
+                                                <select
+                                                    v-model="birth.month"
+                                                    required
+                                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
+                                                >
+                                                    <option value="" disabled>
+                                                        {{
+                                                            t("common.month") ||
+                                                            "Month"
+                                                        }}
+                                                    </option>
+                                                    <option
+                                                        v-for="m in months"
+                                                        :key="m.value"
+                                                        :value="m.value"
+                                                    >
+                                                        {{ m.label }}
+                                                    </option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <select
+                                                    v-model="birth.day"
+                                                    required
+                                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
+                                                >
+                                                    <option value="" disabled>
+                                                        {{
+                                                            t("common.day") ||
+                                                            "Day"
+                                                        }}
+                                                    </option>
+                                                    <option
+                                                        v-for="d in days"
+                                                        :key="d"
+                                                        :value="d"
+                                                    >
+                                                        {{ d }}
+                                                    </option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <select
+                                                    v-model="birth.year"
+                                                    required
+                                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
+                                                >
+                                                    <option value="" disabled>
+                                                        {{
+                                                            t("common.year") ||
+                                                            "Year"
+                                                        }}
+                                                    </option>
+                                                    <option
+                                                        v-for="y in years"
+                                                        :key="y"
+                                                        :value="y"
+                                                    >
+                                                        {{ y }}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            class="mt-3 text-sm text-gray-600 dark:text-gray-400"
+                                        >
+                                            {{
+                                                t(
+                                                    "common.weUseThisToVerifyAge",
+                                                ) ||
+                                                "We use this to verify your age. It won’t be public."
+                                            }}
+                                        </div>
+
+                                        <div
+                                            v-if="birthdateFormatted"
+                                            class="mt-2 text-xs text-gray-500 dark:text-gray-400"
+                                        >
+                                            {{
+                                                t("common.formattedAs") ||
+                                                "Formatted as"
+                                            }}:
+                                            <code
+                                                class="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded"
+                                                >{{ birthdateFormatted }}</code
+                                            >
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-3">
+                                        <AnimatedButton
+                                            type="button"
+                                            @click="goBackStep"
+                                            variant="outline"
+                                            class="flex-1"
+                                        >
+                                            {{ t("settings.back") }}
+                                        </AnimatedButton>
+                                        <AnimatedButton
+                                            type="submit"
+                                            :loading="loading"
+                                            class="flex-1"
+                                            variant="primary"
+                                        >
+                                            {{ t("common.continue") }}
+                                        </AnimatedButton>
+                                    </div>
+                                </form>
+
+                                <form
+                                    v-if="registrationStep === 4"
                                     @submit.prevent="handleSetProfile"
                                     class="space-y-6"
                                 >
@@ -398,14 +537,16 @@
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                         >
-                                            Username
+                                            {{ t("common.username") }}
                                         </label>
                                         <input
                                             v-model="form.username"
                                             type="text"
                                             required
                                             class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
-                                            placeholder="Choose a username"
+                                            :placeholder="
+                                                t('common.chooseAUsername')
+                                            "
                                         />
                                     </div>
 
@@ -413,7 +554,7 @@
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                         >
-                                            Password
+                                            {{ t("common.password") }}
                                         </label>
                                         <div class="relative">
                                             <input
@@ -425,7 +566,11 @@
                                                 "
                                                 required
                                                 class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
-                                                placeholder="Create a strong password"
+                                                :placeholder="
+                                                    t(
+                                                        'common.createAStrongPassword',
+                                                    )
+                                                "
                                             />
                                             <button
                                                 type="button"
@@ -477,7 +622,11 @@
                                             >
                                                 <span
                                                     class="text-gray-600 dark:text-gray-400"
-                                                    >Password strength</span
+                                                    >{{
+                                                        t(
+                                                            "common.passwordStrength",
+                                                        )
+                                                    }}</span
                                                 >
                                                 <span
                                                     :class="`text-${passwordStrength.color}-600 dark:text-${passwordStrength.color}-400 font-medium`"
@@ -503,14 +652,18 @@
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                         >
-                                            Confirm Password
+                                            {{ t("common.confirmPassword") }}
                                         </label>
                                         <input
                                             v-model="form.confirmPassword"
                                             type="password"
                                             required
                                             class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
-                                            placeholder="Confirm your password"
+                                            :placeholder="
+                                                t(
+                                                    'settings.confirmYourPassword',
+                                                )
+                                            "
                                         />
                                     </div>
 
@@ -521,7 +674,7 @@
                                             variant="outline"
                                             class="flex-1"
                                         >
-                                            Back
+                                            {{ t("settings.back") }}
                                         </AnimatedButton>
                                         <AnimatedButton
                                             type="submit"
@@ -529,13 +682,13 @@
                                             class="flex-1"
                                             variant="primary"
                                         >
-                                            Continue
+                                            {{ t("common.continue") }}
                                         </AnimatedButton>
                                     </div>
                                 </form>
 
                                 <div
-                                    v-if="registrationStep === 4"
+                                    v-if="registrationStep === 5"
                                     class="space-y-6"
                                 >
                                     <div
@@ -562,7 +715,7 @@
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3"
                                         >
-                                            Upload your avatar
+                                            {{ t("common.uploadYourAvatar") }}
                                         </label>
                                         <input
                                             type="file"
@@ -576,7 +729,7 @@
                                             @click="$refs.avatarInput.click()"
                                             class="w-full px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-blue-500 dark:hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                                         >
-                                            Click to upload image
+                                            {{ t("common.clickToUploadImage") }}
                                         </button>
                                     </div>
 
@@ -587,7 +740,7 @@
                                             class="flex-1"
                                             variant="primary"
                                         >
-                                            Finish sign-up
+                                            {{ t("common.finishSignUp") }}
                                         </AnimatedButton>
                                     </div>
                                 </div>
@@ -602,14 +755,16 @@
                                     <label
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                     >
-                                        Email
+                                        {{ t("common.email") }}
                                     </label>
                                     <input
                                         v-model="form.email"
                                         type="email"
                                         required
                                         class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
-                                        placeholder="Enter your email"
+                                        :placeholder="
+                                            t('common.enterYourEmail')
+                                        "
                                     />
                                 </div>
                                 <template v-if="appCaptcha.enabled">
@@ -648,14 +803,14 @@
                                     class="w-full"
                                     variant="primary"
                                 >
-                                    Send Reset Link
+                                    {{ t("common.sendResetLink") }}
                                 </AnimatedButton>
                                 <button
                                     type="button"
                                     @click="currentMode = 'login'"
                                     class="mt-5 w-full text-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors cursor-pointer"
                                 >
-                                    Back to Sign In
+                                    {{ t("common.backToSignIn") }}
                                 </button>
                             </form>
 
@@ -668,7 +823,7 @@
                                     <label
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                     >
-                                        Authentication Code
+                                        {{ t("common.authenticationCode") }}
                                     </label>
                                     <TwoFactorInput
                                         v-model="form.twoFactorCode"
@@ -684,7 +839,7 @@
                                     class="w-full"
                                     variant="primary"
                                 >
-                                    Verify Code
+                                    {{ t("common.verifyCode") }}
                                 </AnimatedButton>
                                 <button
                                     v-if="otpAttempts > 1"
@@ -692,7 +847,7 @@
                                     @click="handleOtpBackup"
                                     class="mt-5 w-full text-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors cursor-pointer"
                                 >
-                                    Use a different method
+                                    {{ t("common.useADifferentMethod") }}
                                 </button>
                             </form>
 
@@ -722,19 +877,25 @@
                                     <h3
                                         class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2"
                                     >
-                                        Email Verification
+                                        {{ t("common.emailVerification") }}
                                     </h3>
                                     <p
                                         class="text-sm text-gray-600 dark:text-gray-400 mb-1"
                                     >
-                                        We'll send a verification code to:
+                                        {{
+                                            t(
+                                                "common.wellSendAVerificationCodeTo",
+                                            )
+                                        }}:
                                     </p>
                                     <p
                                         class="text-sm font-medium text-gray-900 dark:text-gray-100"
                                     >
                                         {{
                                             form.email ||
-                                            "your registered email address"
+                                            t(
+                                                "common.yourRegisteredEmailAddress",
+                                            )
                                         }}
                                     </p>
                                 </div>
@@ -743,7 +904,7 @@
                                     <label
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                                     >
-                                        Email Verification Code
+                                        {{ t("common.verifyEmailCode") }}
                                     </label>
                                     <TwoFactorInput
                                         v-model="form.emailCode"
@@ -774,8 +935,8 @@
                                     >
                                         {{
                                             emailCodeLoading
-                                                ? "Sending..."
-                                                : "Send Code"
+                                                ? t("settings.sendingDotDotDot")
+                                                : t("common.sendCode")
                                         }}
                                     </button>
                                 </div>
@@ -784,18 +945,23 @@
                                     <p
                                         class="text-sm text-green-600 dark:text-green-400 mb-2"
                                     >
-                                        ✓ Verification code sent to your email
+                                        ✓
+                                        {{
+                                            t(
+                                                "common.verificationCodeSentToYourEmail",
+                                            )
+                                        }}
                                     </p>
                                     <button
                                         type="button"
                                         @click="resendEmailCode"
                                         :disabled="resendCooldown > 0"
-                                        class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                                     >
                                         {{
                                             resendCooldown > 0
-                                                ? `Resend in ${resendCooldown}s`
-                                                : "Resend code"
+                                                ? `${t("common.resendIn")} ${resendCooldown}s`
+                                                : t("common.resendCode")
                                         }}
                                     </button>
                                 </div>
@@ -805,7 +971,7 @@
                                     @click="currentMode = 'two-factor'"
                                     class="w-full text-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors cursor-pointer"
                                 >
-                                    ← Back to authenticator app
+                                    ← {{ t("common.backToAuthenticatorApp") }}
                                 </button>
                             </form>
 
@@ -821,8 +987,8 @@
                                 <p class="text-gray-600 dark:text-gray-400">
                                     {{
                                         currentMode === "login"
-                                            ? "Don't have an account?"
-                                            : "Already have an account?"
+                                            ? t("common.dontHaveAnAccount")
+                                            : t("common.alreadyHaveAnAccount")
                                     }}
                                     <button
                                         @click="toggleMode"
@@ -830,8 +996,8 @@
                                     >
                                         {{
                                             currentMode === "login"
-                                                ? "Sign up"
-                                                : "Sign in"
+                                                ? t("common.signUp")
+                                                : t("common.signIn")
                                         }}
                                     </button>
                                 </p>
@@ -849,6 +1015,7 @@ import { ref, computed, watch, nextTick, inject } from "vue";
 import { useAuthStore } from "~/stores/auth";
 import CloudflareTurnstile from "@/components/Captcha/CloudflareTurnstile.vue";
 import HCaptcha from "@/components/Captcha/HCaptcha.vue";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps({
     mode: {
@@ -867,6 +1034,7 @@ const authStore = useAuthStore();
 const axios = inject("axios");
 const appConfig = inject("appConfig");
 const appCaptcha = inject("appCaptcha");
+const { t } = useI18n();
 
 const currentMode = ref(props.mode);
 const loading = ref(false);
@@ -876,6 +1044,7 @@ const hasOtpError = ref(false);
 const otpErrorMessage = ref("");
 const success = ref("");
 const showPassword = ref(false);
+const minimumAge = ref(13);
 
 const registrationStep = ref(1);
 const resendCooldown = ref(0);
@@ -889,6 +1058,23 @@ const captchaType = ref(appCaptcha.provider);
 const captchaToken = ref("");
 const turnstileRef = ref(null);
 const hcaptchaRef = ref(null);
+const birth = ref({ day: "", month: "", year: "" });
+const registrationBirthdate = ref("");
+
+const months = [
+    { value: 1, label: t("common.months.jan") || "January" },
+    { value: 2, label: t("common.months.feb") || "February" },
+    { value: 3, label: t("common.months.mar") || "March" },
+    { value: 4, label: t("common.months.apr") || "April" },
+    { value: 5, label: t("common.months.may") || "May" },
+    { value: 6, label: t("common.months.jun") || "June" },
+    { value: 7, label: t("common.months.jul") || "July" },
+    { value: 8, label: t("common.months.aug") || "August" },
+    { value: 9, label: t("common.months.sep") || "September" },
+    { value: 10, label: t("common.months.oct") || "October" },
+    { value: 11, label: t("common.months.nov") || "November" },
+    { value: 12, label: t("common.months.dec") || "December" },
+];
 
 const onCaptchaSuccess = (token) => {
     captchaToken.value = token;
@@ -905,6 +1091,12 @@ const onCaptchaError = (error) => {
 const onCaptchaExpired = () => {
     captchaToken.value = "";
     form.value.captcha_token = "";
+
+    if (appCaptcha.provider === "turnstile" && turnstileRef.value) {
+        turnstileRef.value.reset();
+    } else if (appCaptcha.provider === "hcaptcha" && hcaptchaRef.value) {
+        hcaptchaRef.value.reset();
+    }
 };
 
 const form = ref({
@@ -921,6 +1113,7 @@ const form = ref({
     verificationCode: "",
     avatar: null,
     selectedAvatarUrl: "",
+    birthdate: "",
 });
 
 const registrationData = ref({
@@ -938,50 +1131,54 @@ const openRegistration = computed(() => {
 const getTitle = () => {
     switch (currentMode.value) {
         case "login":
-            return "Welcome back";
+            return t("common.welcomeBack");
         case "register":
             switch (registrationStep.value) {
                 case 1:
-                    return "Create account";
+                    return t("common.createAccount");
                 case 2:
-                    return "Verify your email";
+                    return t("common.verifyYourEmail");
                 case 3:
-                    return "Set up your profile";
+                    return t("common.confirmYourBirthdate");
                 case 4:
-                    return "Choose your avatar";
+                    return t("common.setUpYourProfile");
+                case 5:
+                    return t("common.chooseYourAvatar");
                 default:
-                    return "Create account";
+                    return t("common.createAccount");
             }
         case "password-reset":
-            return "Reset password";
+            return t("common.resetPassword");
         case "two-factor":
-            return "Verify 2FA";
+            return t("common.verifyTwoFactor");
         case "two-factor-backup":
-            return "Verify another way";
+            return t("common.verifyAnotherWay");
         default:
-            return "Welcome";
+            return t("common.welcome");
     }
 };
 
 const getSubtitle = () => {
     switch (currentMode.value) {
         case "login":
-            return "Sign in to your account to continue";
+            return t("common.signIntoYourAccountToContinue");
         case "register":
             switch (registrationStep.value) {
                 case 1:
-                    return "Enter your email to get started";
+                    return t("common.enterYourEmailToGetStarted");
                 case 2:
-                    return "We sent a verification code to your email";
+                    return t("common.weSentAVerificationCodeToYourEmail");
                 case 3:
-                    return "Choose a username and secure password";
+                    return t("common.weNeedYourBirthdateToVerifyAge");
                 case 4:
-                    return "Pick an avatar to personalize your profile";
+                    return t("common.chooseAUsernameAndSecurePassword");
+                case 5:
+                    return t("common.uploadAnAvatarToPersonalizeYourProfile");
                 default:
-                    return "Create a new account to get started";
+                    return t("common.createANewAccountToGetStarted");
             }
         case "password-reset":
-            return "We'll send you a link to reset your password";
+            return t("common.wellSendYouALinkToResetYourPassword");
         case "two-factor":
             return "";
         case "two-factor-backup":
@@ -990,6 +1187,42 @@ const getSubtitle = () => {
             return "";
     }
 };
+
+const years = computed(() => {
+    const now = new Date().getFullYear();
+    const span = 120;
+    return Array.from({ length: span }, (_, i) => now - i);
+});
+
+function daysInMonth(y, m) {
+    if (!y || !m) return 31;
+    return new Date(y, m, 0).getDate();
+}
+const days = computed(() => {
+    const y = Number(birth.value.year) || 2000;
+    const m = Number(birth.value.month) || 1;
+    const max = daysInMonth(y, m);
+    return Array.from({ length: max }, (_, i) => i + 1);
+});
+
+const birthdateFormatted = computed(() => {
+    const y = birth.value.year;
+    const m = birth.value.month;
+    const d = birth.value.day;
+    if (!y || !m || !d) return "";
+    const mm = String(m).padStart(2, "0");
+    const dd = String(d).padStart(2, "0");
+    return `${y}-${mm}-${dd}`;
+});
+
+function isOldEnough(ymd, minYears) {
+    const [y, m, d] = ymd.split("-").map(Number);
+    const today = new Date();
+    let age = today.getFullYear() - y;
+    const mdiff = today.getMonth() + 1 - m;
+    if (mdiff < 0 || (mdiff === 0 && today.getDate() < d)) age--;
+    return age >= minYears;
+}
 
 const passwordStrength = computed(() => {
     const password = form.value.password;
@@ -1012,6 +1245,23 @@ const passwordStrength = computed(() => {
     return { score, text: "Strong", color: "green" };
 });
 
+async function verifyAgeApi(ymd) {
+    try {
+        const res = await axios.post("/api/v1/auth/register/verify-age", {
+            birthdate: ymd,
+            minAge: minimumAge.value,
+        });
+        if (typeof res?.data?.data?.allowed === "boolean") {
+            minimumAge.value = res.data.data.minAge;
+            await nextTick();
+            return res.data.data.allowed;
+        }
+        return isOldEnough(ymd, minimumAge.value);
+    } catch (e) {
+        return isOldEnough(ymd, minimumAge.value);
+    }
+}
+
 const closeModal = () => {
     authStore.closeAuthModal();
     clearForm();
@@ -1033,7 +1283,10 @@ const clearForm = () => {
         verificationCode: "",
         avatar: null,
         selectedAvatarUrl: "",
+        birthdate: "",
     };
+    birth.value = { day: "", month: "", year: "" };
+    registrationBirthdate.value = "";
 };
 
 const clearMessages = () => {
@@ -1078,7 +1331,7 @@ const handleSendCode = async () => {
     loading.value = true;
 
     try {
-        let data = {
+        const data = {
             email: form.value.email,
             captcha_type: form.value.captcha_type,
             captcha_token: form.value.captcha_token,
@@ -1086,14 +1339,14 @@ const handleSendCode = async () => {
         await authStore.registerEmailVerification(data).then((res) => {
             registrationData.value.email = form.value.email;
             registrationStep.value = 2;
-            setSuccess("Verification code sent to your email!");
+            setSuccess(t("common.verificationCodeSentToYourEmail"));
             startResendCooldown();
         });
     } catch (err) {
         setError(
             err.response?.data?.error?.message ||
                 err.response?.data?.message ||
-                "Failed to send verification code. Please try again.",
+                t("common.failedToSendVerificationCode"),
         );
         throw err;
     } finally {
@@ -1106,7 +1359,7 @@ const handleVerifyCode = async () => {
     loading.value = true;
 
     if (form.value.verificationCode?.length != 6) {
-        setError("Invalid code length");
+        setError(t("common.invalidCodeLength"));
         setTimeout(() => {
             clearMessages();
             loading.value = false;
@@ -1122,12 +1375,12 @@ const handleVerifyCode = async () => {
             )
             .then((res) => {
                 registrationStep.value = 3;
-                setSuccess("Email verified successfully!");
+                setSuccess(t("common.emailVerifiedSuccessfully"));
             });
     } catch (err) {
         setError(
             err.response?.data?.error?.message ||
-                "Invalid verification code. Please try again.",
+                t("common.invalidVerificationCode"),
         );
         throw err;
     } finally {
@@ -1140,12 +1393,53 @@ const handleResendCode = async () => {
 
     loading.value = true;
     try {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        setSuccess("New verification code sent!");
-        startResendCooldown();
+        await authStore
+            .registerResendEmailVerification({ email: form.value.email })
+            .then((res) => {
+                setSuccess(t("common.newVerificationCodeSent"));
+                startResendCooldown();
+            });
     } catch (err) {
-        setError("Failed to resend code. Please try again.");
+        if (err?.response?.data?.message) {
+            console.log(err?.response?.data?.message);
+            setError(err?.response?.data?.message);
+        } else {
+            setError(t("common.failedToResendVerificationCode"));
+        }
+    } finally {
+        loading.value = false;
+    }
+};
+
+const handleBirthdateNext = async () => {
+    clearMessages();
+    loading.value = true;
+
+    try {
+        if (!birthdateFormatted.value) {
+            setError(t("common.pleaseSelectYourBirthdate"));
+            return;
+        }
+
+        const ok = await verifyAgeApi(birthdateFormatted.value);
+        if (!ok) {
+            errorPreventsRegistration.value = true;
+            setError(
+                t("common.youMustBeAtLeastXYearsOld", {
+                    years: minimumAge.value,
+                }),
+            );
+            return;
+        }
+
+        registrationBirthdate.value = birthdateFormatted.value;
+        registrationData.value.birthdate = registrationBirthdate.value;
+        form.value.birthdate = registrationBirthdate.value;
+
+        setSuccess(t("common.birthdateVerified") || "Birthdate verified!");
+        registrationStep.value = 4;
+    } catch (err) {
+        setError(err?.message || t("common.failedToVerifyAgePleaseTryAgain"));
     } finally {
         loading.value = false;
     }
@@ -1156,13 +1450,13 @@ const handleSetProfile = async () => {
     loading.value = true;
 
     if (form.value.password !== form.value.confirmPassword) {
-        setError("Passwords do not match");
+        setError(t("common.passwordsDoNotMatch"));
         loading.value = false;
         return;
     }
 
     if (passwordStrength.value.score < 3) {
-        setError("Please choose a stronger password");
+        setError(t("common.pleaseChooseAStrongerPassword"));
         loading.value = false;
         return;
     }
@@ -1173,18 +1467,19 @@ const handleSetProfile = async () => {
                 form.value.username,
                 form.value.password,
                 form.value.confirmPassword,
+                birthdateFormatted.value,
             )
             .then((res) => {
                 registrationData.value.username = form.value.username;
                 registrationData.value.password = form.value.password;
-                registrationStep.value = 4;
-                setSuccess("Profile information saved!");
+                registrationStep.value = 5;
+                setSuccess(t("common.profileInformationSaved"));
             });
     } catch (err) {
         setError(
             err.response?.data?.error?.message ||
                 err.response?.data?.message ||
-                "An unexpected error occurred. Please try again.",
+                t("common.anUnexpectedErrorOccuredPleaseTryAgain"),
         );
         throw err;
     } finally {
@@ -1205,13 +1500,13 @@ const handleCompleteRegistration = async () => {
                 console.log(err);
             });
         }
-        setSuccess("Account created successfully! Welcome aboard!");
+        setSuccess(t("common.accountCreatedSuccessfullyWelcomeAboard"));
         setTimeout(() => {
             window.location.reload();
             closeModal();
         }, 2000);
     } catch (err) {
-        setError(err.message || "Registration failed. Please try again.");
+        setError(err.message || t("common.registrationFailedPleaseTryAgain"));
     } finally {
         loading.value = false;
     }
@@ -1244,25 +1539,34 @@ const goBackStep = () => {
 
 const handleLogin = async () => {
     clearMessages();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.value.email)) {
+        setError("Please enter a valid email address.");
+        return;
+    }
     loading.value = true;
 
     try {
         const res = await authStore.login({
             email: form.value.email,
             password: form.value.password,
+            remember: form.value.remember,
             captcha_type: form.value.captcha_type,
             captcha_token: form.value.captcha_token,
         });
 
         if (res.data.has_2fa) {
             currentMode.value = "two-factor";
-            setSuccess("Please enter your two-factor authentication code");
+            setSuccess(t("common.pleaseEnterYour2FACode"));
+        } else if (res.data.redirect) {
+            window.location.href = res.data.redirect;
         } else {
             closeModal();
         }
     } catch (err) {
         setError(
-            err?.response?.data?.message || "Login failed. Please try again.",
+            err?.response?.data?.message ||
+                t("common.loginFailedPleaseTryAgain"),
         );
     } finally {
         loading.value = false;
@@ -1280,13 +1584,15 @@ const handlePasswordReset = async () => {
             captcha_token: form.value.captcha_token,
         });
 
-        setSuccess("Password reset link has been sent to your email.");
+        setSuccess(t("common.passwordResetLinkHasBeenSentToYourEmail"));
         setTimeout(() => {
             currentMode.value = "login";
             clearMessages();
         }, 2000);
     } catch (err) {
-        setError(err.message || "Failed to send reset link. Please try again.");
+        setError(
+            err.message || t("common.failedToSendResetLinkPleaseTryAgain"),
+        );
     } finally {
         loading.value = false;
     }
@@ -1311,7 +1617,7 @@ const handleTwoFactor = async () => {
     loading.value = true;
 
     if (form.value.twoFactorCode?.length != 6) {
-        setError("Invalid code length");
+        setError(t("common.invalidCodeLength"));
         setTimeout(() => {
             clearMessages();
             loading.value = false;
@@ -1323,19 +1629,23 @@ const handleTwoFactor = async () => {
         const res = await authStore.validateOTP(form.value.twoFactorCode);
         otpAttempts.value++;
         if (res.data.success) {
-            setSuccess("Authentication successful!");
-            setTimeout(() => {
-                window.location.reload();
-            }, 500);
+            setSuccess(t("common.authenticationSuccessful"));
+            if (res.data.redirect) {
+                window.location.href = res.data.redirect;
+            } else {
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            }
         } else if (res.data.force_relogin) {
-            setError("Too many failed attempts, please try again later");
+            setError(t("common.tooManyFailedAttemptsPleaseTryAgainLater"));
             clearForm();
             currentMode.value = "login";
         } else {
             const msg =
                 res.data?.error ||
                 res.data?.message ||
-                "Authentication failed. Please try again.";
+                t("common.loginFailedPleaseTryAgain");
             //  hasOtpError.value = true;
             //  otpErrorMessage.value = msg
             throw new Error(msg);

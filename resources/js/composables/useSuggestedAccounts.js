@@ -6,20 +6,16 @@ export function useSuggestedAccounts(options = {}) {
         queryKey: ["suggested-accounts"],
         queryFn: async () => {
             const axiosInstance = axios.getAxiosInstance();
-            try {
-                const response = await axiosInstance.get(
-                    "/api/v1/accounts/suggested",
-                    {
-                        params: {
-                            limit: options.limit ?? 10,
-                            ...options.params,
-                        },
+            const response = await axiosInstance.get(
+                "/api/v1/accounts/suggested",
+                {
+                    params: {
+                        limit: options.limit ?? 10,
+                        ...options.params,
                     },
-                );
-                return response.data;
-            } catch (error) {
-                throw error;
-            }
+                },
+            );
+            return response.data;
         },
         enabled: options.enabled ?? true,
         staleTime: 5 * 60 * 1000,

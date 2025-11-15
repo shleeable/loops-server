@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
+use App\Observers\CommentLikeObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy([CommentLikeObserver::class])]
 /**
  * @property int $id
  * @property int $profile_id
@@ -30,6 +34,7 @@ class CommentLike extends Model
 
     public $fillable = ['profile_id', 'comment_id'];
 
+    /** @return BelongsTo<Comment, $this> */
     public function comment()
     {
         return $this->belongsTo(Comment::class);

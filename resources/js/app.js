@@ -8,6 +8,7 @@ import "./bootstrap";
 import { createApp } from "vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 import { createPinia } from "pinia";
+import { createHead } from "@unhead/vue/client";
 import axiosPlugin from "./plugins/axios";
 import { VueQueryPlugin } from "@tanstack/vue-query";
 import AlertModalPlugin from "@/composables/useAlertModal.js";
@@ -21,6 +22,7 @@ import "../sass/next.css";
 import i18n from "./i18n/locales";
 
 const app = createApp(App);
+const head = createHead();
 const pinia = createPinia();
 
 Object.entries(import.meta.glob("./**/*.vue", { eager: true })).forEach(
@@ -40,6 +42,7 @@ app.provide("appConfig", window.appConfig);
 app.provide("appCaptcha", window.appCaptcha);
 
 app.use(pinia)
+    .use(head)
     .use(axiosPlugin)
     .use(router)
     .use(storePlugin)

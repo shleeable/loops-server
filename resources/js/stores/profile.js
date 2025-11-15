@@ -24,6 +24,7 @@ export const useProfileStore = defineStore("profile", {
         followersNextCursor: null,
         followingNextCursor: null,
         isFollowing: null,
+        isFollowingRequestPending: null,
         isSelf: null,
         isBlocking: null,
         relationship: {
@@ -33,6 +34,7 @@ export const useProfileStore = defineStore("profile", {
         allLikes: 0,
         isLoadingMorePosts: false,
         hasMorePosts: true,
+        isPollingFollowState: false,
     }),
     actions: {
         async updateSort(type) {
@@ -61,6 +63,21 @@ export const useProfileStore = defineStore("profile", {
                 this.followingCount = res.data.data.following_count;
                 this.allLikes = res.data.data.likes_count;
                 this.posts = [];
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+                throw error;
+            }
+        },
+
+        async getProfilePartialFollowStats(id) {
+            const axiosInstance = axios.getAxiosInstance();
+            try {
+                const res = await axiosInstance.get(
+                    `/api/v1/account/info/${id}`,
+                );
+
+                this.followerCount = res.data.data.follower_count;
+                this.followingCount = res.data.data.following_count;
             } catch (error) {
                 console.error("Error fetching profile:", error);
                 throw error;
@@ -128,6 +145,8 @@ export const useProfileStore = defineStore("profile", {
                 );
                 this.id = id;
                 this.relationship = relationship.data.data;
+                this.isFollowingRequestPending =
+                    relationship.data.data.pending_follow_request;
                 this.isFollowing = relationship.data.data.following;
                 this.isBlocking = relationship.data.data.blocking;
             } catch (error) {
@@ -172,14 +191,17 @@ export const useProfileStore = defineStore("profile", {
         },
 
         async getFollowers(id, cursor = null) {
+            const authStore = useAuthStore();
             const axiosInstance = axios.getAxiosInstance();
+
+            const baseUrl = authStore.isAuthenticated
+                ? `/api/v1/account/followers/${id}`
+                : `/api/v1/web/account/followers/${id}`;
+
             try {
-                const response = await axiosInstance.get(
-                    `/api/v1/account/followers/${id}`,
-                    {
-                        params: cursor ? { cursor } : {},
-                    },
-                );
+                const response = await axiosInstance.get(baseUrl, {
+                    params: cursor ? { cursor } : {},
+                });
                 if (!cursor) {
                     this.followers = response.data.data;
                 } else {
@@ -196,14 +218,16 @@ export const useProfileStore = defineStore("profile", {
         },
 
         async getFollowing(id, cursor = null) {
+            const authStore = useAuthStore();
             const axiosInstance = axios.getAxiosInstance();
+
+            const baseUrl = authStore.isAuthenticated
+                ? `/api/v1/account/following/${id}`
+                : `/api/v1/web/account/following/${id}`;
             try {
-                const response = await axiosInstance.get(
-                    `/api/v1/account/following/${id}`,
-                    {
-                        params: cursor ? { cursor } : {},
-                    },
-                );
+                const response = await axiosInstance.get(baseUrl, {
+                    params: cursor ? { cursor } : {},
+                });
                 if (!cursor) {
                     this.following = response.data.data;
                 } else {
@@ -263,11 +287,35 @@ export const useProfileStore = defineStore("profile", {
                 this.url = res.url;
                 this.postCount = res.post_count;
                 this.allLikes = res.likes_count;
-                this.isFollowing = !prevState;
                 this.followingCount = res.following_count;
                 this.followerCount = res.follower_count;
+                await nextTick();
+                await this.getProfileState(this.id);
+                if (!prevState && this.isFollowingRequestPending) {
+                    this.pollFollowRequestState().catch((err) => {
+                        console.error(
+                            "Error polling follow request state:",
+                            err,
+                        );
+                    });
+                }
             } catch (error) {
                 console.error("Error toggling follow:", error);
+            }
+        },
+
+        async undoFollowRequest() {
+            const axiosInstance = axios.getAxiosInstance();
+
+            try {
+                await axiosInstance
+                    .post(`/api/v1/account/undo-follow-request/${this.id}`)
+                    .finally(async () => {
+                        await nextTick();
+                        await this.getProfileState(this.id);
+                    });
+            } catch (error) {
+                console.error("Error toggling undoFollowRequest:", error);
             }
         },
 
@@ -305,6 +353,47 @@ export const useProfileStore = defineStore("profile", {
             }
         },
 
+        async pollFollowRequestState(maxAttempts = 6, initialDelay = 1000) {
+            if (this.isPollingFollowState) {
+                return;
+            }
+
+            this.isPollingFollowState = true;
+            let attempt = 0;
+
+            try {
+                while (attempt < maxAttempts) {
+                    if (!this.isFollowingRequestPending) {
+                        return;
+                    }
+
+                    const delay = initialDelay * Math.pow(2, attempt);
+
+                    console.log(
+                        `Polling follow request state (attempt ${attempt + 1}/${maxAttempts}, waiting ${delay}ms)`,
+                    );
+
+                    await new Promise((resolve) => setTimeout(resolve, delay));
+
+                    await this.getProfileState(this.id);
+                    await this.getProfilePartialFollowStats(this.id);
+
+                    if (this.isFollowing && !this.isFollowingRequestPending) {
+                        console.log("Follow request accepted!");
+                        return;
+                    }
+
+                    attempt++;
+                }
+
+                console.log(
+                    "Max polling attempts reached, follow request still pending",
+                );
+            } finally {
+                this.isPollingFollowState = false;
+            }
+        },
+
         resetUser() {
             this.id = "";
             this.name = "";
@@ -323,6 +412,7 @@ export const useProfileStore = defineStore("profile", {
             this.followersNextCursor = [];
             this.followingNextCursor = [];
             this.isSelf = null;
+            this.isFollowingRequestPending = null;
             this.relationship = {
                 blocking: false,
             };
@@ -331,6 +421,7 @@ export const useProfileStore = defineStore("profile", {
             this.allLikes = 0;
             this.isLoadingMorePosts = false;
             this.hasMorePosts = true;
+            this.isPollingFollowState = false;
         },
     },
     persist: true,

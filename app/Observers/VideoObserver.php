@@ -12,7 +12,7 @@ class VideoObserver
      */
     public function created(Video $video): void
     {
-        Profile::where('id', $video->profile_id)->increment('video_count');
+        $this->updateProfileVideoCount($video->profile_id);
     }
 
     /**
@@ -20,7 +20,7 @@ class VideoObserver
      */
     public function updated(Video $video): void
     {
-        //
+        $this->updateProfileVideoCount($video->profile_id);
     }
 
     /**
@@ -28,7 +28,7 @@ class VideoObserver
      */
     public function deleted(Video $video): void
     {
-        Profile::where('id', $video->profile_id)->decrement('video_count');
+        $this->updateProfileVideoCount($video->profile_id);
     }
 
     /**
@@ -36,7 +36,7 @@ class VideoObserver
      */
     public function restored(Video $video): void
     {
-        //
+        $this->updateProfileVideoCount($video->profile_id);
     }
 
     /**
@@ -44,6 +44,15 @@ class VideoObserver
      */
     public function forceDeleted(Video $video): void
     {
-        Profile::where('id', $video->profile_id)->decrement('video_count');
+        $this->updateProfileVideoCount($video->profile_id);
+    }
+
+    /**
+     * Update the video count for a profile based on actual Video table count
+     */
+    protected function updateProfileVideoCount(int $profileId): void
+    {
+        $count = Video::where('profile_id', $profileId)->count();
+        Profile::where('id', $profileId)->update(['video_count' => $count]);
     }
 }

@@ -23,7 +23,7 @@ const router = createRouter({
             path: "/explore",
             name: "explorePage",
             component: () => import("~/pages/explore.vue"),
-            meta: { requiresAuth: true },
+            meta: { requiresAuth: false },
         },
         {
             path: "/notifications",
@@ -35,6 +35,12 @@ const router = createRouter({
             path: "/v/:id",
             name: "videoPage",
             component: () => import("~/pages/v/index.vue"),
+            meta: { requiresAuth: false, params: true },
+        },
+        {
+            path: "/tag/:id",
+            name: "tagPage",
+            component: () => import("~/pages/tag/index.vue"),
             meta: { requiresAuth: false, params: true },
         },
         {
@@ -208,16 +214,18 @@ const router = createRouter({
             meta: { requiresAuth: true },
         },
         // {
-        //   path: '/dashboard/account/deactivate',
-        //   name: 'dashboardAccountDeactivate',
-        //   component: () => import('~/pages/dashboard/account/AccountDeactivate.vue'),
-        //   meta: { requiresAuth: true },
+        //     path: "/dashboard/account/deactivate",
+        //     name: "dashboardAccountDeactivate",
+        //     component: () =>
+        //         import("~/pages/dashboard/account/AccountDeactivate.vue"),
+        //     meta: { requiresAuth: true },
         // },
         // {
-        //   path: '/dashboard/account/delete',
-        //   name: 'dashboardAccountDelete',
-        //   component: () => import('~/pages/dashboard/account/AccountDelete.vue'),
-        //   meta: { requiresAuth: true },
+        //     path: "/dashboard/account/delete",
+        //     name: "dashboardAccountDelete",
+        //     component: () =>
+        //         import("~/pages/dashboard/account/AccountDelete.vue"),
+        //     meta: { requiresAuth: true },
         // },
         {
             path: "/dashboard/safety",
@@ -269,12 +277,24 @@ const router = createRouter({
             children: [
                 {
                     path: "",
-                    redirect: "/admin/settings",
+                    redirect: "/admin/dashboard",
+                },
+                {
+                    path: "dashboard",
+                    name: "Dashboard",
+                    component: () => import("~/pages/admin/Dashboard.vue"),
+                    meta: { requiresAdmin: true },
                 },
                 {
                     path: "comments",
                     name: "Comments",
                     component: () => import("~/pages/admin/Comments.vue"),
+                    meta: { requiresAdmin: true },
+                },
+                {
+                    path: "replies",
+                    name: "Replies",
+                    component: () => import("~/pages/admin/Replies.vue"),
                     meta: { requiresAdmin: true },
                 },
                 {
@@ -320,6 +340,18 @@ const router = createRouter({
                     name: "VideoShow",
                     component: () => import("~/pages/admin/VideoShow.vue"),
                     params: true,
+                    meta: { requiresAdmin: true },
+                },
+                {
+                    path: "instances",
+                    name: "instances",
+                    component: () => import("~/pages/admin/Instances.vue"),
+                    meta: { requiresAdmin: true },
+                },
+                {
+                    path: "instances/:id",
+                    name: "InstancesShow",
+                    component: () => import("~/pages/admin/InstanceShow.vue"),
                     meta: { requiresAdmin: true },
                 },
                 {

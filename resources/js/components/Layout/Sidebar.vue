@@ -294,7 +294,7 @@ const mainLinks = computed(() => {
         if (authStore.isAdmin) {
             links.push({
                 name: t("nav.admin"),
-                path: "/admin",
+                path: "/admin/dashboard",
                 icon: "bx bx-badge",
             });
         }
@@ -314,7 +314,11 @@ const mainLinks = computed(() => {
     } else {
         links = [
             { name: t("nav.popular"), path: "/", icon: "bx bx-trending-up" },
-            { name: t("nav.about"), path: "/about", icon: "bx bx-info-circle" },
+            {
+                name: t("common.explore"),
+                path: "/explore",
+                icon: "bx bx-compass",
+            },
         ];
 
         const guestCustomPages = filterNavItemsByLocation("side_menu_guest");
@@ -335,7 +339,7 @@ const mainLinks = computed(() => {
 });
 
 const footerLinks = computed(() => {
-    let links = [
+    const links = [
         { name: t("nav.about"), path: "/about" },
         { name: t("nav.contact"), path: "/contact" },
         { name: t("nav.community"), path: "/community-guidelines" },

@@ -16,6 +16,8 @@ export const useCommentStore = defineStore("comment", {
         pendingPosts: new Map(),
         lastSubmittedKeyAt: new Map(),
         cooldownMs: 1500,
+        highlightedCommentMap: new Map(),
+        highlightedCommentDataMap: new Map(),
     }),
 
     getters: {
@@ -31,7 +33,6 @@ export const useCommentStore = defineStore("comment", {
             return (videoId) => this.hasMoreMap.get(videoId) || false;
         },
 
-        // New getters for reply pagination
         isLoadingReplies() {
             return (videoId, parentId) => {
                 const key = `${videoId}-${parentId}`;
@@ -61,12 +62,20 @@ export const useCommentStore = defineStore("comment", {
             };
         },
 
-        // New getter for like loading state
         isLikeLoading() {
             return (videoId, commentId) => {
                 const key = `${videoId}-${commentId}`;
                 return this.likeLoadingStates.get(key) || false;
             };
+        },
+
+        getHighlightedComment() {
+            return (videoId) => this.highlightedCommentMap.get(videoId) || null;
+        },
+
+        getHighlightedCommentData() {
+            return (videoId) =>
+                this.highlightedCommentDataMap.get(videoId) || null;
         },
     },
 
@@ -94,6 +103,14 @@ export const useCommentStore = defineStore("comment", {
             return `${videoId}:${text}`;
         },
 
+        _makeCommentUpdateKey(videoId, commentId, text) {
+            return `${videoId}:${commentId}:${text}`;
+        },
+
+        _makeCommentReplyUpdateKey(videoId, parentId, commentId, text) {
+            return `${videoId}:${parentId}:${commentId}:${text}`;
+        },
+
         findCommentById(comments, commentId) {
             if (!Array.isArray(comments)) return null;
 
@@ -115,7 +132,6 @@ export const useCommentStore = defineStore("comment", {
         },
 
         findAndUpdateComment(comments, parentId, updateFn) {
-            // Ensure comments is an array
             if (!Array.isArray(comments)) {
                 console.warn("Comments is not an array:", comments);
                 return [];
@@ -162,6 +178,61 @@ export const useCommentStore = defineStore("comment", {
 
                 return true;
             });
+        },
+
+        async fetchCommentById(videoId, commentId) {
+            try {
+                const axiosInstance = axios.getAxiosInstance();
+                const response = await axiosInstance.get(
+                    `/api/v1/video/comments/${videoId}/comment/${commentId}`,
+                );
+
+                const { data, meta } = response.data;
+
+                this.highlightedCommentMap.set(videoId, {
+                    commentId: data.id,
+                    type: "comment",
+                });
+                this.highlightedCommentDataMap.set(videoId, data);
+
+                return data;
+            } catch (error) {
+                console.error("Error fetching comment by ID:", error);
+                throw error;
+            }
+        },
+
+        async fetchReplyById(videoId, replyId) {
+            try {
+                const axiosInstance = axios.getAxiosInstance();
+                const response = await axiosInstance.get(
+                    `/api/v1/video/comments/${videoId}/reply/${replyId}`,
+                );
+
+                const { data, meta } = response.data;
+
+                const parentWithReply = {
+                    ...meta.parent_comment,
+                    children: [data],
+                };
+
+                this.highlightedCommentMap.set(videoId, {
+                    commentId: data.id,
+                    type: "reply",
+                    parentId: meta.parent_comment.id,
+                });
+                this.highlightedCommentDataMap.set(videoId, parentWithReply);
+
+                return { reply: data, parent: meta.parent_comment };
+            } catch (error) {
+                console.error("Error fetching reply by ID:", error);
+                throw error;
+            }
+        },
+
+        clearHighlightedComment(videoId) {
+            this.highlightedCommentMap.delete(videoId);
+            this.highlightedCommentDataMap.delete(videoId);
         },
 
         async fetchComments(videoId, reset = false) {
@@ -316,10 +387,6 @@ export const useCommentStore = defineStore("comment", {
                     const res = await axiosInstance.post(
                         `/api/v1/video/comments/${String(videoId)}`,
                         { comment: content },
-                        {
-                            // todo: Add idempotency support
-                            // headers: { 'Idempotency-Key': key },
-                        },
                     );
 
                     const payload = res?.data?.data?.[0] ?? {};
@@ -339,6 +406,221 @@ export const useCommentStore = defineStore("comment", {
                     return serverComment;
                 } catch (err) {
                     this._removeById(videoId, tempId);
+                    throw err;
+                } finally {
+                    this.pendingPosts.delete(key);
+                }
+            })();
+
+            this.pendingPosts.set(key, promise);
+            return promise;
+        },
+
+        async updateComment(videoId, commentId, rawContent) {
+            const content = String(rawContent ?? "").trim();
+            if (!content) return null;
+
+            const key = this._makeCommentUpdateKey(videoId, commentId, content);
+            const now = Date.now();
+
+            const lastAt = this.lastSubmittedKeyAt.get(key);
+
+            if (lastAt && now - lastAt < this.cooldownMs) {
+                return null;
+            }
+
+            if (this.pendingPosts.has(key)) {
+                return this.pendingPosts.get(key);
+            }
+
+            const existingComments = this.commentsMap.get(videoId) || [];
+            const existingComment = this.findCommentById(
+                existingComments,
+                commentId,
+            );
+
+            if (!existingComment) {
+                const err = Object.assign(
+                    new Error(`Comment not found for update (id=${commentId})`),
+                    { code: "COMMENT_NOT_FOUND", commentId },
+                );
+                console.error(err);
+                throw err;
+            }
+
+            const originalCaption = existingComment.caption;
+
+            const updatedComments = this.findAndUpdateComment(
+                existingComments,
+                commentId,
+                (comment) => ({
+                    ...comment,
+                    caption: content,
+                    pending: true,
+                }),
+            );
+            this.commentsMap.set(videoId, updatedComments);
+
+            const promise = (async () => {
+                try {
+                    const axiosInstance = axios.getAxiosInstance();
+                    const res = await axiosInstance.post(
+                        `/api/v1/video/comments/edit/${String(videoId)}`,
+                        { comment: content, id: commentId },
+                    );
+
+                    const payload = res?.data?.data?.[0] ?? {};
+
+                    const currentComments = this.commentsMap.get(videoId) || [];
+                    const finalComments = this.findAndUpdateComment(
+                        currentComments,
+                        commentId,
+                        (comment) => ({
+                            ...comment,
+                            ...payload,
+                            caption: payload.caption || content,
+                            likes: payload?.likes ?? comment.likes,
+                            dislikes: payload?.dislikes ?? comment.dislikes,
+                            liked: payload?.liked ?? comment.liked,
+                            children: comment.children,
+                            pending: false,
+                        }),
+                    );
+                    this.commentsMap.set(videoId, finalComments);
+
+                    this.lastSubmittedKeyAt.set(key, Date.now());
+
+                    return payload;
+                } catch (err) {
+                    const currentComments = this.commentsMap.get(videoId) || [];
+                    const rolledBackComments = this.findAndUpdateComment(
+                        currentComments,
+                        commentId,
+                        (comment) => ({
+                            ...comment,
+                            caption: originalCaption,
+                            pending: false,
+                        }),
+                    );
+                    this.commentsMap.set(videoId, rolledBackComments);
+
+                    console.error("Error updating comment:", err);
+                    throw err;
+                } finally {
+                    this.pendingPosts.delete(key);
+                }
+            })();
+
+            this.pendingPosts.set(key, promise);
+            return promise;
+        },
+
+        async updateCommentReply(
+            videoId,
+            parentCommentId,
+            commentId,
+            rawContent,
+        ) {
+            const content = String(rawContent ?? "").trim();
+            if (!content) return null;
+
+            const key = this._makeCommentReplyUpdateKey(
+                videoId,
+                parentCommentId,
+                commentId,
+                content,
+            );
+            const now = Date.now();
+
+            const lastAt = this.lastSubmittedKeyAt.get(key);
+
+            if (lastAt && now - lastAt < this.cooldownMs) {
+                return null;
+            }
+
+            if (this.pendingPosts.has(key)) {
+                return this.pendingPosts.get(key);
+            }
+
+            const existingComments = this.commentsMap.get(videoId) || [];
+            const existingComment = this.findCommentById(
+                existingComments,
+                commentId,
+            );
+
+            if (!existingComment) {
+                const err = Object.assign(
+                    new Error(
+                        `Comment reply not found for update (id=${commentId})`,
+                    ),
+                    { code: "COMMENT_NOT_FOUND", commentId },
+                );
+                console.error(err);
+                throw err;
+            }
+
+            const originalCaption = existingComment.caption;
+
+            const updatedComments = this.findAndUpdateComment(
+                existingComments,
+                commentId,
+                (comment) => ({
+                    ...comment,
+                    caption: content,
+                    pending: true,
+                }),
+            );
+            this.commentsMap.set(videoId, updatedComments);
+
+            const promise = (async () => {
+                try {
+                    const axiosInstance = axios.getAxiosInstance();
+                    const res = await axiosInstance.post(
+                        `/api/v1/video/comments/reply/edit/${String(videoId)}`,
+                        {
+                            comment: content,
+                            id: commentId,
+                            parent_id: parentCommentId,
+                        },
+                    );
+
+                    const payload = res?.data?.data?.[0] ?? {};
+
+                    const currentComments = this.commentsMap.get(videoId) || [];
+                    const finalComments = this.findAndUpdateComment(
+                        currentComments,
+                        commentId,
+                        (comment) => ({
+                            ...comment,
+                            ...payload,
+                            caption: payload.caption || content,
+                            likes: payload?.likes ?? comment.likes,
+                            dislikes: payload?.dislikes ?? comment.dislikes,
+                            liked: payload?.liked ?? comment.liked,
+                            children: comment.children,
+                            in_reply_to: parentCommentId.toString(),
+                            pending: false,
+                        }),
+                    );
+                    this.commentsMap.set(videoId, finalComments);
+
+                    this.lastSubmittedKeyAt.set(key, Date.now());
+
+                    return payload;
+                } catch (err) {
+                    const currentComments = this.commentsMap.get(videoId) || [];
+                    const rolledBackComments = this.findAndUpdateComment(
+                        currentComments,
+                        commentId,
+                        (comment) => ({
+                            ...comment,
+                            caption: originalCaption,
+                            pending: false,
+                        }),
+                    );
+                    this.commentsMap.set(videoId, rolledBackComments);
+
+                    console.error("Error updating comment reply:", err);
                     throw err;
                 } finally {
                     this.pendingPosts.delete(key);
@@ -508,7 +790,6 @@ export const useCommentStore = defineStore("comment", {
                     `/api/v1/comments/like/${videoId}/${parentCommentId}/${commentId}`,
                 );
 
-                // Update nested comment in store
                 const existingComments = this.commentsMap.get(videoId) || [];
                 const updatedComments = this.findAndUpdateComment(
                     existingComments,
@@ -588,6 +869,8 @@ export const useCommentStore = defineStore("comment", {
             likeKeysToDelete.forEach((key) => {
                 this.likeLoadingStates.delete(key);
             });
+
+            this.clearHighlightedComment(videoId);
         },
 
         clearReplies(videoId, parentId) {
@@ -619,6 +902,8 @@ export const useCommentStore = defineStore("comment", {
             this.replyHasMoreMap.clear();
             this.repliesLoadedMap.clear();
             this.likeLoadingStates.clear();
+            this.highlightedCommentMap.clear();
+            this.highlightedCommentDataMap.clear();
         },
     },
 });

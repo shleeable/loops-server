@@ -1,31 +1,21 @@
 import axios from "~/plugins/axios";
 
-const API_BASE_URL = "/api/admin";
-
-// Cursor pagination utility
-const createCursorPagination = (data, currentCursor, limit = 15) => {
-    const startIndex = currentCursor ? parseInt(currentCursor) : 0;
-    const endIndex = startIndex + limit;
-    const paginatedData = data.slice(startIndex, endIndex);
-
-    return {
-        data: paginatedData,
-        pagination: {
-            currentCursor: currentCursor,
-            nextCursor: endIndex < data.length ? endIndex.toString() : null,
-            previousCursor:
-                startIndex > 0
-                    ? Math.max(0, startIndex - limit).toString()
-                    : null,
-            hasNext: endIndex < data.length,
-            hasPrevious: startIndex > 0,
-            total: data.length,
-        },
-    };
+// Dashboard API
+export const dashboardApi = {
+    getDashboardStats: async (period = "30d", shouldRefresh = false) => {
+        const params = shouldRefresh
+            ? {
+                  period: period,
+                  refresh: true,
+              }
+            : { period };
+        const response = await apiClient.get(
+            "/api/v1/admin/dashboard/stats",
+            params,
+        );
+        return response;
+    },
 };
-
-// API delay simulation
-const delay = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Pages API
 export const pagesApi = {
@@ -70,16 +60,52 @@ export const commentsApi = {
         direction = "next",
         search = "",
         limit = 15,
+        local = false,
     } = {}) {
-        return await apiClient.get("/api/v1/admin/comments", {
+        const params = {
             cursor: cursor,
             limit: limit,
             q: search,
-        });
+        };
+
+        if (local) {
+            params.local = 1;
+        }
+        return await apiClient.get("/api/v1/admin/comments", params);
     },
 
     async deleteComment(id) {
         return await apiClient.post(`/api/v1/admin/comments/${id}/delete`);
+    },
+};
+
+// Comment Replies API
+export const repliesApi = {
+    async getComments({
+        cursor = null,
+        direction = "next",
+        search = "",
+        limit = 15,
+        local = false,
+    } = {}) {
+        const params = {
+            cursor: cursor,
+            limit: limit,
+            q: search,
+        };
+
+        if (local) {
+            params.local = 1;
+        }
+        return await apiClient.get("/api/v1/admin/replies", params);
+    },
+
+    async getParentComment(id) {
+        return await apiClient.get(`/api/v1/admin/comment/${id}`);
+    },
+
+    async deleteComment(id) {
+        return await apiClient.post(`/api/v1/admin/replies/${id}/delete`);
     },
 };
 
@@ -97,6 +123,17 @@ export const hashtagsApi = {
             q: search,
             sort: sort,
         });
+    },
+
+    async getHashtag(id) {
+        return await apiClient.get(`/api/v1/admin/hashtag/${id}`);
+    },
+
+    async updateHashtag(id, params = {}) {
+        return await apiClient.post(
+            `/api/v1/admin/hashtags/${id}/update`,
+            params,
+        );
     },
 };
 
@@ -167,13 +204,20 @@ export const profilesApi = {
         search = "",
         limit = 15,
         sort = null,
+        local = false,
     } = {}) {
-        return await apiClient.get("/api/v1/admin/profiles", {
+        const params = {
             cursor: cursor,
             limit: limit,
             q: search,
             sort: sort,
-        });
+        };
+
+        if (local) {
+            params.local = 1;
+        }
+
+        return await apiClient.get("/api/v1/admin/profiles", params);
     },
 
     async getProfile(id) {
@@ -181,7 +225,6 @@ export const profilesApi = {
     },
 
     async updateProfile(id, data) {
-        await delay(200);
         return { success: true, data: { id, ...data } };
     },
 
@@ -200,7 +243,6 @@ export const profilesApi = {
     },
 
     async deleteProfile(id) {
-        await delay(200);
         return { success: true };
     },
 };
@@ -248,7 +290,6 @@ export const videosApi = {
     },
 
     async deleteVideo(id) {
-        await delay(200);
         return { success: true };
     },
 };
@@ -269,6 +310,97 @@ export const settingsApi = {
 
     async deleteLogo() {
         return await apiClient.post("/api/v1/admin/settings/delete-logo");
+    },
+};
+
+// Instances API
+export const instancesApi = {
+    async getInstances({
+        cursor = null,
+        direction = "next",
+        search = "",
+        limit = 15,
+        sort = null,
+    } = {}) {
+        return await apiClient.get("/api/v1/admin/instances", {
+            cursor: cursor,
+            limit: limit,
+            q: search,
+            sort: sort,
+        });
+    },
+
+    async getInstanceStats() {
+        return await apiClient.get(`/api/v1/admin/instances/stats`);
+    },
+
+    async getInstance(id) {
+        return await apiClient.get(`/api/v1/admin/instances/${id}`);
+    },
+
+    async getInstanceUsers(id, params) {
+        return await apiClient.get(
+            `/api/v1/admin/instances/${id}/users`,
+            params,
+        );
+    },
+
+    async getInstanceVideos(id, params) {
+        return await apiClient.get(
+            `/api/v1/admin/instances/${id}/videos`,
+            params,
+        );
+    },
+
+    async getInstanceComments(id, params) {
+        return await apiClient.get(
+            `/api/v1/admin/instances/${id}/comments`,
+            params,
+        );
+    },
+
+    async getInstanceReports(id, params) {
+        return await apiClient.get(
+            `/api/v1/admin/instances/${id}/reports`,
+            params,
+        );
+    },
+
+    async updateInstanceNotes(id, params) {
+        return await apiClient.post(
+            `/api/v1/admin/instances/${id}/update-admin-notes`,
+            params,
+        );
+    },
+
+    async updateInstanceSettings(id, params) {
+        return await apiClient.post(
+            `/api/v1/admin/instances/${id}/settings`,
+            params,
+        );
+    },
+
+    async suspendInstance(id) {
+        return await apiClient.post(`/api/v1/admin/instances/${id}/suspend`);
+    },
+
+    async activateInstance(id) {
+        return await apiClient.post(`/api/v1/admin/instances/${id}/activate`);
+    },
+
+    async refreshInstanceData(id) {
+        return await apiClient.post(`/api/v1/admin/instances/${id}/refresh`);
+    },
+
+    async createInstance(data) {
+        return await apiClient.post(`/api/v1/admin/instances/create`, data);
+    },
+
+    async createInstances(data) {
+        return await apiClient.post(
+            `/api/v1/admin/instances/bulk-create`,
+            data,
+        );
     },
 };
 

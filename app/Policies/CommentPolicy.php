@@ -51,6 +51,14 @@ class CommentPolicy
      */
     public function update(User $user, Comment $comment): bool
     {
+        if ($user->is_admin) {
+            return true;
+        }
+
+        if ($user->profile_id == $comment->profile_id) {
+            return true;
+        }
+
         return false;
     }
 

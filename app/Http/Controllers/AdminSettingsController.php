@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Middleware\AdminOnlyAccess;
+use App\Jobs\Federation\DiscoverInstance;
 use App\Models\AdminSetting;
+use App\Services\SanitizeService;
 use App\Services\SettingsFileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\File;
 use Intervention\Image\Laravel\Facades\Image;
@@ -51,12 +55,29 @@ class AdminSettingsController extends Controller
             'general.emailVerification' => 'required|accepted',
         ]);
 
+        $handleSubmit = false;
         foreach ($validated as $section => $settings) {
             foreach ($settings as $key => $value) {
                 $settingKey = "{$section}.{$key}";
                 $isPublic = $this->isPublicSetting($settingKey);
                 if ($section == 'general' && $key == 'instanceUrl') {
                     $value = config('app.url');
+                }
+                if ($section === 'federation' && $key == 'authorizedFetch') {
+                    if ($settings['federationMode'] !== 'open') {
+                        $value = true;
+                    }
+                }
+                if ($section === 'federation' && $key == 'enableFederation' && $value) {
+                    $handleSubmit = true;
+                }
+                if ($section === 'federation' && $key == 'autoAcceptFollows') {
+                    $value = true;
+                }
+                if ($section === 'federation' && $key == 'allowedInstances') {
+                    foreach ($value as $dom) {
+                        DiscoverInstance::dispatch('https://'.$dom);
+                    }
                 }
                 AdminSetting::set(
                     $settingKey,
@@ -69,6 +90,10 @@ class AdminSettingsController extends Controller
         }
 
         (new SettingsFileService)->flush();
+
+        if ($handleSubmit) {
+            $this->handleSubmitToServerList();
+        }
 
         return response()->json([
             'success' => true,
@@ -184,5 +209,39 @@ class AdminSettingsController extends Controller
         (new SettingsFileService)->flush();
 
         return $this->data(['logo_url' => $url]);
+    }
+
+    public function handleSubmitToServerList()
+    {
+        if (Storage::disk('local')->exists('fedidb_submit.json')) {
+            return;
+        }
+
+        if (config('logging.dev_log')) {
+            Log::info('Submitting server to global directory', [
+                'app_url' => config('app.url'),
+            ]);
+        }
+
+        $validUrl = app(SanitizeService::class)->url(config('app.url'), true, false);
+
+        if (! $validUrl) {
+            if (config('logging.dev_log')) {
+                Log::error('Failed to submit server listing, invalid `APP_URL` found. This could mean you have a typo or your domain does not have a valid A/AAAA record.', [
+                    'app_url' => config('app.url'),
+                ]);
+            }
+
+            return;
+        }
+
+        $response = Http::retry(3, 100, throw: false)->post('https://api.fedidb.org/v1/servers/submit', [
+            'domains' => config('app.url'),
+        ]);
+
+        if ($response->successful()) {
+            $res = ['domain' => config('app.url'), 'submitted_at' => now()->format('c')];
+            Storage::disk('local')->put('fedidb_submit.json', json_encode($res, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
     }
 }

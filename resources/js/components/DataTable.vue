@@ -8,6 +8,21 @@
                     {{ title }}
                 </h3>
                 <div class="flex items-center space-x-3">
+                    <label
+                        v-if="showLocalFilter"
+                        class="flex items-center space-x-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                    >
+                        <input
+                            v-model="localFilter"
+                            type="checkbox"
+                            class="w-4 h-6 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                            @change="handleLocalChange"
+                        />
+                        <span class="text-sm text-gray-700 dark:text-gray-300">
+                            Local Only
+                        </span>
+                    </label>
+
                     <div
                         v-if="sortOptions && sortOptions.length > 0"
                         class="relative"
@@ -200,12 +215,24 @@ const props = defineProps({
         type: String,
         default: "",
     },
+    showLocalFilter: {
+        type: Boolean,
+        default: false,
+    },
 });
 
-const emit = defineEmits(["search", "refresh", "previous", "next", "sort"]);
+const emit = defineEmits([
+    "search",
+    "refresh",
+    "previous",
+    "next",
+    "sort",
+    "localChange",
+]);
 
 const searchQuery = ref(props.initialSearchQuery);
 const selectedSort = ref("");
+const localFilter = ref(false);
 
 watch(
     () => props.initialSearchQuery,
@@ -216,5 +243,9 @@ watch(
 
 const handleSortChange = () => {
     emit("sort", selectedSort.value);
+};
+
+const handleLocalChange = () => {
+    emit("localChange", localFilter.value);
 };
 </script>

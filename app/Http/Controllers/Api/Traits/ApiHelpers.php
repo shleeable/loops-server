@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Traits;
 
+use App\Services\SanitizeService;
 use Stevebauman\Purify\Facades\Purify;
 
 trait ApiHelpers
@@ -30,6 +31,11 @@ trait ApiHelpers
     public static function purify($text)
     {
         return Purify::clean($text);
+    }
+
+    public static function purifyText($text)
+    {
+        return app(SanitizeService::class)->cleanPlainText($text);
     }
 
     public function success()

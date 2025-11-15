@@ -2,7 +2,7 @@
     <MainLayout>
         <div
             v-if="!isLoading && !error && profileStore.id"
-            class="pt-[30px] px-5 overflow-hidden"
+            class="pt-[30px] px-5"
         >
             <ProfileHeader />
 
@@ -17,9 +17,10 @@
             />
 
             <div
-                class="mt-4 grid 2xl:grid-cols-6 xl:grid-cols-5 lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-3"
+                v-if="show"
+                class="mt-4 grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-3"
             >
-                <div v-if="show" v-for="post in posts" :key="post.id">
+                <div v-for="post in posts" :key="post.id">
                     <ProfileVideoCard :post="post" />
                 </div>
             </div>
@@ -133,7 +134,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch, nextTick } from "vue";
+import { ref, onMounted, onUnmounted, watch, nextTick, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 import MainLayout from "~/layouts/MainLayout.vue";
@@ -142,6 +143,7 @@ import { useProfileStore } from "~/stores/profile";
 import { useAuthStore } from "~/stores/auth";
 import { useUtils } from "@/composables/useUtils";
 import { useI18n } from "vue-i18n";
+import { useHead } from "@unhead/vue";
 
 const { formatCount } = useUtils();
 const authStore = useAuthStore();
@@ -162,6 +164,90 @@ const currentFilter = ref("Latest");
 const tabBarRef = ref(null);
 
 const { posts, allLikes } = storeToRefs(profileStore);
+
+const metaTitle = computed(() => {
+    if (!profileStore.name) return "Loops";
+    return `${profileStore.name} (@${profileStore.username}) | Loops`;
+});
+
+const metaDescription = computed(() => {
+    if (!profileStore.username) return "Watch videos on Loops";
+
+    const parts = [];
+
+    if (profileStore.bio) {
+        parts.push(profileStore.bio);
+    }
+
+    const stats = [
+        `${formatCount(profileStore.postCount)} videos`,
+        `${formatCount(profileStore.followerCount)} followers`,
+        `${formatCount(profileStore.allLikes)} likes`,
+    ];
+
+    parts.push(stats.join(" · "));
+
+    return parts.join(" | ");
+});
+
+const profileUrl = computed(() => {
+    if (!profileStore.username) return "";
+    return `${window.location.origin}/@${profileStore.username}`;
+});
+
+const profileAvatar = computed(() => {
+    return profileStore.avatar || "/storage/avatars/default.jpg";
+});
+
+useHead({
+    title: metaTitle,
+    meta: [
+        {
+            name: "description",
+            content: metaDescription,
+        },
+        {
+            property: "og:title",
+            content: metaTitle,
+        },
+        {
+            property: "og:description",
+            content: metaDescription,
+        },
+        {
+            property: "og:image",
+            content: profileAvatar,
+        },
+        {
+            property: "og:url",
+            content: profileUrl,
+        },
+        {
+            property: "og:type",
+            content: "profile",
+        },
+        {
+            property: "profile:username",
+            content: () => profileStore.username || "",
+        },
+        {
+            name: "twitter:card",
+            content: "summary",
+        },
+        {
+            name: "twitter:title",
+            content: metaTitle,
+        },
+        {
+            name: "twitter:description",
+            content: metaDescription,
+        },
+        {
+            name: "twitter:image",
+            content: profileAvatar,
+        },
+    ],
+});
 
 let scrollTimeout = null;
 

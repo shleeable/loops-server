@@ -18,6 +18,8 @@
             :has-next="pagination.next_cursor"
             :has-actions="false"
             :sort-options="sortOptions"
+            :show-local-filter="true"
+            @local-change="handleLocalChange"
             @sort="handleSort"
             @search="handleSearch"
             @refresh="fetchProfiles"
@@ -108,6 +110,7 @@ const pagination = ref({
 
 const searchQuery = ref("");
 const sortBy = ref("");
+const localOnly = ref(false);
 const DEBOUNCE_DELAY = 300;
 let searchTimeout = null;
 
@@ -143,6 +146,10 @@ const fetchProfiles = async (cursor = null, direction = "next") => {
             params.sort = sortBy.value;
         }
 
+        if (localOnly.value) {
+            params.local = true;
+        }
+
         const response = await profilesApi.getProfiles(params);
         profiles.value = response.data;
         pagination.value = response.meta;
@@ -160,6 +167,16 @@ const viewProfile = (profile) => {
 const manageProfile = (profile) => {
     router.push(`/admin/profiles/${profile.id}`);
 };
+
+watch(localOnly, () => {
+    if (searchTimeout) {
+        clearTimeout(searchTimeout);
+    }
+
+    searchTimeout = setTimeout(() => {
+        fetchProfiles();
+    }, DEBOUNCE_DELAY);
+});
 
 watch(searchQuery, (newQuery) => {
     if (searchTimeout) {
@@ -187,6 +204,10 @@ const handleSort = (sortValue) => {
 
 const handleSearch = (query) => {
     searchQuery.value = query;
+};
+
+const handleLocalChange = (value) => {
+    localOnly.value = value;
 };
 
 const nextPage = () => {
