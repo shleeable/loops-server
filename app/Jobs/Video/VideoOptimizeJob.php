@@ -89,7 +89,6 @@ class VideoOptimizeJob implements ShouldQueue
                 '-level', '4.0',
                 '-movflags', '+faststart',
                 '-pix_fmt', 'yuv420p',
-                '-af', 'aformat=channel_layouts=stereo',
                 '-ac', '2',
             ]);
 
@@ -97,6 +96,8 @@ class VideoOptimizeJob implements ShouldQueue
         $media = FFMpeg::fromDisk('s3')
             ->open($video->vid)
             ->addFilter(['-vf', "scale={$width}:-2"])
+            ->addFilter('-err_detect', 'ignore_err')
+            ->addFilter('-fflags', '+genpts')
             ->export()
             ->toDisk('s3')
             ->inFormat($format)
