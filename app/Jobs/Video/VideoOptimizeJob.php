@@ -70,8 +70,7 @@ class VideoOptimizeJob implements ShouldQueue
         }
 
         $width = 720;
-        $videoBitrate = 1200;
-        $crf = 28;
+        $crf = 26;
 
         $ext = pathinfo($video->vid, PATHINFO_EXTENSION);
         $name = str_replace('.'.$ext, '.720p.mp4', $video->vid);
@@ -82,7 +81,6 @@ class VideoOptimizeJob implements ShouldQueue
 
         $format = new X264('aac');
         $format
-            ->setKiloBitrate($videoBitrate)
             ->setAudioKiloBitrate(128)
             ->setAudioChannels(2)
             ->setAdditionalParameters([
