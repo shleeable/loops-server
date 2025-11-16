@@ -84,6 +84,7 @@ class VideoOptimizeJob implements ShouldQueue
         $format
             ->setKiloBitrate($videoBitrate)
             ->setAudioKiloBitrate(128)
+            ->setAudioChannels(2)
             ->setAdditionalParameters([
                 '-preset', 'slow',
                 '-crf', (string) $crf,
