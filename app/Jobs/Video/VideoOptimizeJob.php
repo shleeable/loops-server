@@ -82,7 +82,6 @@ class VideoOptimizeJob implements ShouldQueue
         $format = new X264('aac');
         $format
             ->setAudioKiloBitrate(128)
-            ->setAudioChannels(2)
             ->setAdditionalParameters([
                 '-preset', 'slow',
                 '-crf', (string) $crf,
@@ -90,6 +89,7 @@ class VideoOptimizeJob implements ShouldQueue
                 '-level', '4.0',
                 '-movflags', '+faststart',
                 '-pix_fmt', 'yuv420p',
+                '-ac', '2',
             ]);
 
         // @phpstan-ignore-next-line
