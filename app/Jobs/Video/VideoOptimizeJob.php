@@ -89,6 +89,7 @@ class VideoOptimizeJob implements ShouldQueue
                 '-level', '4.0',
                 '-movflags', '+faststart',
                 '-pix_fmt', 'yuv420p',
+                '-af', 'aformat=channel_layouts=stereo',
                 '-ac', '2',
             ]);
 
