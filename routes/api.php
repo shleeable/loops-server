@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StudioController;
 use App\Http\Controllers\Api\VideoController;
 use App\Http\Controllers\Api\WebPublicController;
+use App\Http\Controllers\Api\DuetController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailChangeController;
 use App\Http\Controllers\InboxController;
@@ -83,6 +84,7 @@ Route::prefix('api')->group(function () {
     // Studio
     Route::get('/v1/studio/posts', [StudioController::class, 'getPosts'])->middleware('auth:web,api');
     Route::post('/v1/studio/upload', [VideoController::class, 'store'])->middleware('auth:web,api');
+    Route::post('/v1/studio/duet/upload', [DuetController::class, 'store'])->middleware('auth:web,api');
 
     // Search
     Route::get('/v1/search', [SearchController::class, 'search'])->middleware(['auth:web,api', 'throttle:searchV1']);

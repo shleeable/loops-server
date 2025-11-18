@@ -56,6 +56,10 @@ use Storage;
  * @property int $has_hls
  * @property int $can_download
  * @property int $can_duet
+ * @property bool $is_duet
+ * @property string|null $original_duet_id
+ * @property string|null $duet_path
+ * @property int $duet_layout
  * @property int $can_stitch
  * @property int $is_pinned
  * @property int|null $pinned_order
