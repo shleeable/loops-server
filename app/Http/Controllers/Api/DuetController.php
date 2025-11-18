@@ -120,7 +120,7 @@ class DuetController extends Controller
                 [
                     new VideoDuetNotification($model),
                 ],
-            ])->finally(function (Batch $batch) {
+            ])->finally(function (Batch $batch) use($model) {
                 $config = app(ConfigService::class);
                 if ($config->federation()) {
                     app(FederationDispatcher::class)->dispatchVideoCreation($model);

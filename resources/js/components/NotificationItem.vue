@@ -145,7 +145,7 @@ const notificationConfig = {
         bgColor: "bg-purple-100 dark:bg-purple-900/30",
     },
     "video.duet": {
-        message: 'dueted your video',
+        message: "dueted your video",
         icon: ArrowPathIcon,
         iconColor: "text-purple-500",
         bgColor: "bg-purple-100 dark:bg-purple-900/30",

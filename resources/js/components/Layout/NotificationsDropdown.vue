@@ -216,7 +216,7 @@ const getNotificationText = (notification) => {
         case "video.commentReply":
             return t("notifications.messageTypes.videoCommentReply");
         case "video.duet":
-            return 'dueted your video';
+            return "dueted your video";
         case "comment.like":
             return t("notifications.messageTypes.videoCommentLike");
         case "commentReply.like":
