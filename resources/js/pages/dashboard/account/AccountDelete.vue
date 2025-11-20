@@ -211,7 +211,8 @@
                                     </h4>
                                     <p class="text-sm text-gray-600">
                                         Your data is marked for deletion but not
-                                        yet removed. Simply log back in if you change your mind.
+                                        yet removed. Simply log back in if you
+                                        change your mind.
                                     </p>
                                 </div>
                             </div>
