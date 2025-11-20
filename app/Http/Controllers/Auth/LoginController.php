@@ -168,7 +168,7 @@ class LoginController extends Controller
 
         if (in_array($user->status, [7, 8])) {
             $hasRecovered = true;
-            $user->update(['status' => 1]);
+            $user->update(['status' => 1, 'delete_after' => null]);
             $user->profile->update(['status' => 1]);
         }
 
