@@ -2,12 +2,12 @@
     <SettingsLayout>
         <div class="p-6">
             <div class="flex items-center gap-3 mb-6">
-                <button
+                <router-link
                     class="flex items-center text-gray-500 hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-300 cursor-pointer"
-                    @click="$router.back()"
+                    to="/dashboard/account"
                 >
                     <i class="bx bx-arrow-back text-[20px] mr-1"></i>
-                </button>
+                </router-link>
                 <h1
                     class="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100"
                 >
@@ -438,12 +438,88 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import SettingsLayout from "~/layouts/SettingsLayout.vue";
+import { useAlertModal } from "@/composables/useAlertModal.js";
+
+const { alertModal, confirmModal } = useAlertModal();
+const route = useRoute();
+const router = useRouter();
 
 const activityStats = ref({
     reports: 0,
     violations: 0,
     warnings: 0,
+});
+
+const showRestoredModal = async () => {
+    await alertModal(
+        "Account restored",
+        `
+        <div class="space-y-4 text-left">
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-1">
+                    <svg
+                        class="h-6 w-6 text-emerald-500"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                    >
+                        <path
+                            d="M9 12.75 11.25 15 15 9.75m4.5 2.25a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-700 dark:text-gray-200">
+                        Your Loops account has been
+                        <span class="font-semibold text-emerald-600 dark:text-emerald-400">
+                            successfully restored
+                        </span>
+                        and is now active again.
+                    </p>
+
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                        You can now:
+                    </p>
+                    <ul class="mt-1 text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1">
+                        <li>Post new Loops and interact with your feed</li>
+                        <li>Receive notifications and participate in conversations</li>
+                        <li>Access your profile, posts, and previous activity</li>
+                    </ul>
+                </div>
+            </div>
+
+            <p class="text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-800 pt-3">
+                If you didn’t request this change, go to
+                <span class="font-medium text-gray-800 dark:text-gray-200">
+                    Settings → Security
+                </span>
+                to update your password.
+            </p>
+        </div>
+        `,
+    );
+};
+
+onMounted(() => {
+    const restored = route.query.restored;
+
+    if (restored === "true" || restored === "1" || restored === true) {
+        showRestoredModal();
+
+        router.replace({
+            query: {
+                ...route.query,
+                restored: undefined,
+            },
+        });
+    }
 });
 </script>

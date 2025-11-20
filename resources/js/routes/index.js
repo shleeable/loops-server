@@ -219,20 +219,20 @@ const router = createRouter({
                 import("~/pages/dashboard/account/AccountEmail.vue"),
             meta: { requiresAuth: true },
         },
-        // {
-        //     path: "/dashboard/account/deactivate",
-        //     name: "dashboardAccountDeactivate",
-        //     component: () =>
-        //         import("~/pages/dashboard/account/AccountDeactivate.vue"),
-        //     meta: { requiresAuth: true },
-        // },
-        // {
-        //     path: "/dashboard/account/delete",
-        //     name: "dashboardAccountDelete",
-        //     component: () =>
-        //         import("~/pages/dashboard/account/AccountDelete.vue"),
-        //     meta: { requiresAuth: true },
-        // },
+        {
+            path: "/dashboard/account/deactivate",
+            name: "dashboardAccountDeactivate",
+            component: () =>
+                import("~/pages/dashboard/account/AccountDeactivate.vue"),
+            meta: { requiresAuth: true },
+        },
+        {
+            path: "/dashboard/account/delete",
+            name: "dashboardAccountDelete",
+            component: () =>
+                import("~/pages/dashboard/account/AccountDelete.vue"),
+            meta: { requiresAuth: true },
+        },
         {
             path: "/dashboard/safety",
             name: "dashboardSafety",

@@ -7,19 +7,37 @@
                 {{ t("settings.manageYourLoopsAccount") }}
             </h1>
             <hr class="border-gray-300 dark:border-gray-700" />
-            <!-- <section class="my-8">
-                <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">{{ t('settings.accountControl') }}</h2>
+            <section class="my-8">
+                <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">
+                    {{ t("settings.accountControl") }}
+                </h2>
                 <div class="flex gap-3">
-                    <div class="flex w-full justify-between items-center p-4 bg-white dark:bg-slate-950 rounded-lg shadow-sm">
-                    <span class="text-sm text-gray-600 font-light">{{ t('settings.deactivateAccount') }}</span>
-                    <router-link to="/dashboard/account/deactivate" class="font-medium text-sm text-red-500">{{ t('settings.deactivate') }}</router-link>
+                    <div
+                        class="flex w-full justify-between items-center p-4 bg-white dark:bg-slate-950 rounded-lg shadow-sm"
+                    >
+                        <span class="text-sm text-gray-600 font-light">{{
+                            t("settings.deactivateAccount")
+                        }}</span>
+                        <router-link
+                            to="/dashboard/account/deactivate"
+                            class="font-medium text-sm text-red-500"
+                            >{{ t("settings.deactivate") }}</router-link
+                        >
                     </div>
-                    <div class="flex w-full justify-between items-center p-4 bg-white dark:bg-slate-950 rounded-lg shadow-sm">
-                    <span class="text-sm text-gray-600 font-light">{{ t('settings.deleteAccount') }}</span>
-                    <router-link to="/dashboard/account/delete" class="font-medium text-sm text-red-500">{{ t('settings.delete') }}</router-link>
+                    <div
+                        class="flex w-full justify-between items-center p-4 bg-white dark:bg-slate-950 rounded-lg shadow-sm"
+                    >
+                        <span class="text-sm text-gray-600 font-light">{{
+                            t("settings.deleteAccount")
+                        }}</span>
+                        <router-link
+                            to="/dashboard/account/delete"
+                            class="font-medium text-sm text-red-500"
+                            >{{ t("settings.delete") }}</router-link
+                        >
                     </div>
                 </div>
-            </section> -->
+            </section>
 
             <section class="my-8">
                 <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">

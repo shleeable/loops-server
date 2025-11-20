@@ -141,7 +141,8 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/account/settings/email/cancel', [EmailChangeController::class, 'cancelEmailChange'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/email/verify', [EmailChangeController::class, 'verifyEmailChange'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/email/resend', [EmailChangeController::class, 'resendEmailChange'])->middleware(['auth:web,api']);
-    // Route::post('/v1/account/settings/account/disable', [SettingsController::class, 'confirmDisableAccount'])->middleware(['auth:web']);
+    Route::post('/v1/account/settings/account/disable', [SettingsController::class, 'confirmDisableAccount'])->middleware(['auth:web']);
+    Route::post('/v1/account/settings/account/delete', [SettingsController::class, 'confirmDeleteAccount'])->middleware(['auth:web']);
 
     // Account Data
     Route::get('/v1/account/data/insights', [AccountDataController::class, 'getDataInsights'])->middleware(['auth:web,api']);

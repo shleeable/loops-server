@@ -207,13 +207,56 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import axios from "~/plugins/axios";
+import { ref, inject } from "vue";
+import { useRouter } from "vue-router";
 import SettingsLayout from "~/layouts/SettingsLayout.vue";
+import { useAlertModal } from "@/composables/useAlertModal.js";
 
 const confirmUnderstand = ref(false);
 const passwordConfirm = ref("");
+const { alertModal, confirmModal } = useAlertModal();
+const router = useRouter();
+const authStore = inject("authStore");
 
-const deactivateAccount = () => {
+const axiosInstance = axios.getAxiosInstance();
+
+const deactivateAccount = async () => {
+    await axiosInstance
+        .post("/api/v1/account/settings/account/disable", {
+            password: passwordConfirm.value,
+        })
+        .then((res) => {
+            alertModal(
+                "Successfully disabled account.",
+                "Your account is now disabled until you log in again!",
+                [
+                    {
+                        text: "Ok",
+                        type: "cancel",
+                        callback: () => {
+                            authStore.resetUser();
+                            router.push("/");
+                        },
+                    },
+                ],
+            );
+            console.log(res);
+        })
+        .catch((error) => {
+            if (
+                error.response &&
+                error.response.data &&
+                error.response.data.message
+            ) {
+                alertModal("Error", error.response.data.message);
+            } else {
+                alertModal(
+                    "Oops!",
+                    "An unexpected error occured. Please try again.",
+                );
+            }
+        });
     console.log("Deactivating account...");
 };
 </script>

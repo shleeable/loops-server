@@ -336,14 +336,22 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import axios from "~/plugins/axios";
+import { ref, computed, inject } from "vue";
+import { useRouter } from "vue-router";
 import SettingsLayout from "~/layouts/SettingsLayout.vue";
+import { useAlertModal } from "@/composables/useAlertModal.js";
 
 const confirmPermanent = ref(false);
 const confirmDataLoss = ref(false);
 const confirmBackup = ref(false);
 const deleteConfirmText = ref("");
 const passwordConfirm = ref("");
+const { alertModal, confirmModal } = useAlertModal();
+const router = useRouter();
+const authStore = inject("authStore");
+
+const axiosInstance = axios.getAxiosInstance();
 
 const canDelete = computed(() => {
     return (
@@ -355,9 +363,41 @@ const canDelete = computed(() => {
     );
 });
 
-const deleteAccount = () => {
-    // Handle account deletion logic here
-    console.log("Deleting account...");
-    // Show final confirmation modal or redirect
+const deleteAccount = async () => {
+    await axiosInstance
+        .post("/api/v1/account/settings/account/delete", {
+            password: passwordConfirm.value,
+        })
+        .then((res) => {
+            alertModal(
+                "Successfully deleted account.",
+                "Your account is now pending deletion in 30 days, or until you log in again!",
+                [
+                    {
+                        text: "Ok",
+                        type: "cancel",
+                        callback: () => {
+                            authStore.resetUser();
+                            router.push("/");
+                        },
+                    },
+                ],
+            );
+            console.log(res);
+        })
+        .catch((error) => {
+            if (
+                error.response &&
+                error.response.data &&
+                error.response.data.message
+            ) {
+                alertModal("Error", error.response.data.message);
+            } else {
+                alertModal(
+                    "Oops!",
+                    "An unexpected error occured. Please try again.",
+                );
+            }
+        });
 };
 </script>

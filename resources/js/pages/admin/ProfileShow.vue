@@ -85,12 +85,7 @@
                                     <span
                                         :class="[
                                             'px-3 py-2 text-xs font-bold rounded-full uppercase',
-                                            profile?.status === 'active'
-                                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                : profile?.status ===
-                                                    'suspended'
-                                                  ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+                                            statusBadgeStyle[profile?.status],
                                         ]"
                                     >
                                         {{ profile?.status }}
@@ -105,7 +100,7 @@
                                     v-if="profile.local"
                                     @click="toggleVerification"
                                     :class="[
-                                        'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                                        'px-6 py-3 text-sm font-medium rounded-lg transition-colors',
                                         profile.verified
                                             ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                                             : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800',
@@ -117,7 +112,19 @@
                                             : "Verify Email"
                                     }}
                                 </button>
-                                <AnimatedButton> Suspend User </AnimatedButton>
+                                <AnimatedButton
+                                    v-if="profile.status === 'active'"
+                                    @click="handleSuspend"
+                                >
+                                    Suspend User
+                                </AnimatedButton>
+                                <AnimatedButton
+                                    v-else-if="profile.status === 'suspended'"
+                                    variant="primaryOutline"
+                                    @click="handleUnsuspend"
+                                >
+                                    Unsuspend User
+                                </AnimatedButton>
                             </div>
                         </div>
                     </div>
@@ -544,13 +551,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, nextTick } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { profilesApi } from "@/services/adminApi";
 import { useUtils } from "@/composables/useUtils";
 import { UserIcon, ArrowLeftIcon } from "@heroicons/vue/24/outline";
+import { useAlertModal } from "@/composables/useAlertModal.js";
 
 const { formatNumber, formatDate } = useUtils();
+const { alertModal, confirmModal } = useAlertModal();
 
 const router = useRouter();
 const route = useRoute();
@@ -578,6 +587,57 @@ const isDeleting = ref(false);
 
 const goBack = () => {
     router.replace("/admin/profiles");
+};
+
+const statusBadgeStyle = {
+    active: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+    disabled: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
+    deleted: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
+    suspended: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+};
+
+const handleSuspend = async () => {
+    const userState = profile.value.local
+        ? `This will not delete this account, or existing connections and associated profile data. This will prevent <strong>${profile.value.username}</strong> from logging in and hide all activity, interactions, profile and videos. You can safely unsuspend to restore their account.`
+        : `This will not delete this account, or existing connections and associated profile data. This will hide all activity, interactions, profile and videos from <strong>${profile.value.username}</strong>. You can safely unsuspend to restore their account.`;
+    const message = `<div class="space-y-4">
+            <p class="text-gray-800 dark:text-gray-300">Are you sure you want to suspend <span class="font-semibold text-gray-900 dark:text-gray-400">${profile.value.username}</span>?</p>
+
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <div class="flex items-start space-x-2">
+                    <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <p class="text-sm text-amber-800">${userState}</p>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p class="text-sm text-blue-800">
+                    <span class="font-medium">Note:</span> If you want to delete this account permanently, you need to use the Delete Account button in the Danger Zone at the bottom of the page.
+                </p>
+            </div>
+        </div>`;
+    const result = await confirmModal("Confirm Suspend", message);
+
+    if (result) {
+        await profilesApi.updateProfileSuspend(profile.value.id);
+        await nextTick();
+        await fetchProfile(profile.value.id);
+    }
+};
+
+const handleUnsuspend = async () => {
+    const result = await confirmModal(
+        "Confirm Unsuspend",
+        `Are you sure you want to unsuspend <strong>${profile.value.username}</strong>?`,
+    );
+
+    if (result) {
+        await profilesApi.updateProfileUnsuspend(profile.value.id);
+        await nextTick();
+        await fetchProfile(profile.value.id);
+    }
 };
 
 const toggleVerification = async () => {
