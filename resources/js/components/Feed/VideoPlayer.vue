@@ -16,8 +16,6 @@
                 >
                     <div
                         class="relative flex items-center h-full w-full lg:max-w-sm xl:max-w-md 2xl:max-w-lg lg:aspect-[9/16] bg-black border-0 lg:border lg:border-black lg:dark:border-slate-800 overflow-hidden rounded-none lg:rounded-xl video-container"
-                        @mouseover="pauseOverlay = true"
-                        @mouseleave="pauseOverlay = false"
                         @touchstart="handleTouchStart"
                         @touchmove="handleTouchMove"
                         @touchend="handleTouchEnd"
@@ -76,22 +74,6 @@
 
                         <div
                             v-if="
-                                !showPlayButton &&
-                                pauseOverlay &&
-                                !isMobile &&
-                                canInteract
-                            "
-                            class="play-overlay"
-                        >
-                            <button class="play-button" @click.stop="pause">
-                                <i
-                                    class="bx bx-pause text-[40px] sm:text-[60px] -ml-2 text-white"
-                                ></i>
-                            </button>
-                        </div>
-
-                        <div
-                            v-if="
                                 !isPaused &&
                                 showMobilePauseButton &&
                                 isMobile &&
@@ -130,13 +112,20 @@
                             v-if="canInteract"
                             class="absolute bottom-2 left-2 right-20 lg:right-4 p-2 lg:p-4 text-white pointer-events-none"
                         >
-                            <div class="mb-2">
+                            <div class="mb-0">
                                 <span class="text-base sm:text-lg font-semibold"
                                     >@{{ username }}</span
                                 >
                             </div>
-                            <div class="mb-4">
-                                <p class="text-sm">{{ caption }}</p>
+                            <div class="mb-2">
+                                <AutolinkedText
+                                    :caption="caption"
+                                    :mentions="mentions"
+                                    :tags="hashtags"
+                                    text-size="text-[14px]"
+                                    root-class="text-gray-300 dark:text-slate-300 whitespace-pre-wrap leading-relaxed pointer-events-auto"
+                                    :max-char-limit="80"
+                                />
                             </div>
                         </div>
 
@@ -147,7 +136,7 @@
                             <div class="flex flex-col items-center">
                                 <router-link :to="`/@${username}`">
                                     <div
-                                        class="h-10 w-10 sm:h-12 sm:w-12 overflow-hidden shadow rounded-full bg-gray-2 00 dark:border-slate-800"
+                                        class="h-10 w-10 sm:h-12 sm:w-12 overflow-hidden shadow rounded-full bg-gray-200 dark:border-slate-800"
                                     >
                                         <img
                                             :src="profileImage"
@@ -293,7 +282,6 @@
                                 </div>
                             </router-link>
                         </div>
-
                         <div class="flex flex-col items-center">
                             <button
                                 @click="toggleLike"
@@ -568,6 +556,7 @@ const props = defineProps({
     username: { type: String, default: "username" },
     caption: { type: String, default: "" },
     hashtags: { type: Array, default: () => [] },
+    mentions: { type: Array, default: () => [] },
     profileImage: { type: String, default: "" },
     profileId: { type: String, default: "" },
     likes: { type: Number, default: 0 },
@@ -587,7 +576,6 @@ const emit = defineEmits(["interaction"]);
 const authStore = inject("authStore");
 const videoStore = inject("videoStore");
 const showMenu = ref(false);
-const pauseOverlay = ref(false);
 const showComments = ref(false);
 const commentStore = useCommentStore();
 const comments = computed(() => commentStore.getComments(props.videoId));
@@ -1096,11 +1084,10 @@ defineExpose({
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 2;
+    z-index: 1;
 }
 
 .mobile-pause-overlay {
