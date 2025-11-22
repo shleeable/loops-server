@@ -65,6 +65,13 @@
                 ></div>
 
                 <div
+                    v-if="post.pinned"
+                    class="absolute top-2 left-2 flex items-center gap-1 text-white bg-red-500 px-3 py-1 text-xs rounded font-bold"
+                >
+                    <span>{{ $t("post.pinned") }}</span>
+                </div>
+
+                <div
                     class="absolute bottom-3 left-3 flex items-center gap-1 text-white text-sm font-bold drop-shadow"
                 >
                     <HeartIcon class="w-5 h-5 text-white" />
