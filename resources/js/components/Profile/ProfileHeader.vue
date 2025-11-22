@@ -20,13 +20,15 @@
                     >
                         <div
                             class="text-lg sm:text-[20px] font-bold truncate dark:text-slate-50"
+                            :title="profile.name"
                         >
-                            {{ profile.name }}
+                            {{ textTruncate(profile.name, 30) }}
                         </div>
                         <div
                             class="text-base sm:text-[20px] text-gray-600 dark:text-slate-400"
+                            :title="profile.username"
                         >
-                            &commat;{{ profile.username }}
+                            &commat;{{ textTruncate(profile.username, 50) }}
                         </div>
                     </div>
 
@@ -244,6 +246,7 @@ import { useReportModal } from "@/composables/useReportModal";
 const { openReportModal } = useReportModal();
 import { useI18n } from "vue-i18n";
 import { storeToRefs } from "pinia";
+
 import {
     CogIcon,
     PhotoIcon,
@@ -261,7 +264,7 @@ const { isPollingFollowState } = storeToRefs(profile);
 const { toggleFollow } = useProfileStore();
 const { alertModal, confirmModal } = useAlertModal();
 
-const { formatCount } = useUtils();
+const { formatCount, textTruncate } = useUtils();
 const authStore = useAuthStore();
 const showFollowersModal = ref(false);
 const showEditModal = ref(false);
