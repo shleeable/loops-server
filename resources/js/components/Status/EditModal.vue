@@ -382,7 +382,7 @@ watch(
             formData.value = {
                 caption: video.caption || "",
                 altText: video.media.alt_text || "",
-                pinToProfile: video.is_pinned || false,
+                pinToProfile: video.pinned || false,
                 lang: video.lang || "",
                 downloadsEnabled: video.permissions.can_download || false,
                 commentsEnabled: video.permissions.can_comment !== false,
