@@ -332,6 +332,12 @@
                             {{ currentVideo.account.name }}</span
                         >
                     </div>
+                    <div
+                        v-if="currentVideo?.meta.contains_ai"
+                        class="mt-3 text-xs bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded inline-flex px-3 py-1"
+                    >
+                        Creator labelled as AI-generated
+                    </div>
                 </div>
             </div>
 
