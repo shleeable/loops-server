@@ -6,7 +6,7 @@
         :class="[
             notification.read_at
                 ? 'bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-750'
-                : 'bg-blue-50 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:hover:bg-blue-900/30',
+                : 'bg-blue-50 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:hover:bg-blue-900/30'
         ]"
     >
         <div class="flex-shrink-0">
@@ -22,9 +22,7 @@
             <div class="flex items-start justify-between">
                 <div class="flex-1">
                     <p class="text-sm text-gray-900 dark:text-gray-100">
-                        <span class="font-medium">{{
-                            notification.actor.name
-                        }}</span>
+                        <span class="font-medium">{{ notification.actor.name }}</span>
                         <span class="text-gray-600 dark:text-gray-400 ml-1">{{
                             getNotificationMessage()
                         }}</span>
@@ -54,10 +52,7 @@
             </div>
 
             <div
-                v-if="
-                    notification.type === 'video.like' &&
-                    notification.video_thumbnail
-                "
+                v-if="notification.type === 'video.like' && notification.video_thumbnail"
                 class="mt-3"
             >
                 <img
@@ -77,156 +72,150 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { useRouter } from "vue-router";
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import {
     HeartIcon,
     UserPlusIcon,
     ChatBubbleLeftIcon,
     ArrowPathIcon,
-    BellIcon,
-} from "@heroicons/vue/24/solid";
-import { useHashids } from "@/composables/useHashids";
-import { useI18n } from "vue-i18n";
+    BellIcon
+} from '@heroicons/vue/24/solid'
+import { useHashids } from '@/composables/useHashids'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
     notification: {
         type: Object,
-        required: true,
-    },
-});
+        required: true
+    }
+})
 
-const emit = defineEmits(["mark-as-read"]);
-const router = useRouter();
-const { encodeHashid } = useHashids();
-const { t } = useI18n();
+const emit = defineEmits(['mark-as-read'])
+const router = useRouter()
+const { encodeHashid } = useHashids()
+const { t } = useI18n()
 
 const notificationConfig = {
-    "video.like": {
-        message: t("notifications.messageTypes.videoLike"),
+    'video.like': {
+        message: t('notifications.messageTypes.videoLike'),
         icon: HeartIcon,
-        iconColor: "text-red-500",
-        bgColor: "bg-red-100 dark:bg-red-900/30",
+        iconColor: 'text-red-500',
+        bgColor: 'bg-red-100 dark:bg-red-900/30'
     },
     new_follower: {
-        message: t("notifications.messageTypes.newFollower"),
+        message: t('notifications.messageTypes.newFollower'),
         icon: UserPlusIcon,
-        iconColor: "text-blue-500",
-        bgColor: "bg-blue-100 dark:bg-blue-900/30",
+        iconColor: 'text-blue-500',
+        bgColor: 'bg-blue-100 dark:bg-blue-900/30'
     },
-    "video.commentReply": {
-        message: t("notifications.messageTypes.videoCommentReply"),
+    'video.commentReply': {
+        message: t('notifications.messageTypes.videoCommentReply'),
         icon: ChatBubbleLeftIcon,
-        iconColor: "text-green-500",
-        bgColor: "bg-green-100 dark:bg-green-900/30",
+        iconColor: 'text-green-500',
+        bgColor: 'bg-green-100 dark:bg-green-900/30'
     },
-    "video.comment": {
-        message: t("notifications.messageTypes.videoComment"),
+    'video.comment': {
+        message: t('notifications.messageTypes.videoComment'),
         icon: ChatBubbleLeftIcon,
-        iconColor: "text-green-500",
-        bgColor: "bg-green-100 dark:bg-green-900/30",
+        iconColor: 'text-green-500',
+        bgColor: 'bg-green-100 dark:bg-green-900/30'
     },
-    "comment.like": {
-        message: t("notifications.messageTypes.videoCommentLike"),
+    'comment.like': {
+        message: t('notifications.messageTypes.videoCommentLike'),
         icon: HeartIcon,
-        iconColor: "text-red-500",
-        bgColor: "bg-red-100 dark:bg-red-900/30",
+        iconColor: 'text-red-500',
+        bgColor: 'bg-red-100 dark:bg-red-900/30'
     },
-    "commentReply.like": {
-        message: t("notifications.messageTypes.videoCommentReplyLike"),
+    'commentReply.like': {
+        message: t('notifications.messageTypes.videoCommentReplyLike'),
         icon: HeartIcon,
-        iconColor: "text-red-500",
-        bgColor: "bg-red-100 dark:bg-red-900/30",
+        iconColor: 'text-red-500',
+        bgColor: 'bg-red-100 dark:bg-red-900/30'
     },
-    "video.share": {
-        message: t("notifications.messageTypes.videoShare"),
+    'video.share': {
+        message: t('notifications.messageTypes.videoShare'),
         icon: ArrowPathIcon,
-        iconColor: "text-purple-500",
-        bgColor: "bg-purple-100 dark:bg-purple-900/30",
+        iconColor: 'text-purple-500',
+        bgColor: 'bg-purple-100 dark:bg-purple-900/30'
     },
-    "video.duet": {
-        message: "dueted your video",
+    'video.duet': {
+        message: 'dueted your video',
         icon: ArrowPathIcon,
-        iconColor: "text-purple-500",
-        bgColor: "bg-purple-100 dark:bg-purple-900/30",
-    },
-};
+        iconColor: 'text-purple-500',
+        bgColor: 'bg-purple-100 dark:bg-purple-900/30'
+    }
+}
 
 const getNotificationMessage = () => {
-    const config = notificationConfig[props.notification.type];
-    return config?.message || t("notifications.messageTypes.default");
-};
+    const config = notificationConfig[props.notification.type]
+    return config?.message || t('notifications.messageTypes.default')
+}
 
 const getNotificationIcon = () => {
-    const config = notificationConfig[props.notification.type];
-    return config?.icon || BellIcon;
-};
+    const config = notificationConfig[props.notification.type]
+    return config?.icon || BellIcon
+}
 
 const getIconColorClass = () => {
-    const config = notificationConfig[props.notification.type];
-    return config?.iconColor || "text-gray-500";
-};
+    const config = notificationConfig[props.notification.type]
+    return config?.iconColor || 'text-gray-500'
+}
 
 const getIconBackgroundClass = () => {
-    const config = notificationConfig[props.notification.type];
-    return config?.bgColor || "bg-gray-100 dark:bg-gray-800";
-};
+    const config = notificationConfig[props.notification.type]
+    return config?.bgColor || 'bg-gray-100 dark:bg-gray-800'
+}
 
 const handleClick = () => {
     if (!props.notification.read_at) {
-        emit("mark-as-read", props.notification.id);
+        emit('mark-as-read', props.notification.id)
     }
 
     try {
-        if (
-            props.notification.type === "video.like" &&
-            props.notification.video_id
-        ) {
-            const vid = encodeHashid(props.notification.video_id);
-            router.push(`/v/${vid}`);
-        } else if (props.notification.type === "new_follower") {
-            router.push(`/@${props.notification.actor.username}`);
+        if (props.notification.type === 'video.like' && props.notification.video_id) {
+            const vid = encodeHashid(props.notification.video_id)
+            router.push(`/v/${vid}`)
+        } else if (props.notification.type === 'new_follower') {
+            router.push(`/@${props.notification.actor.username}`)
         }
     } catch (error) {
-        console.error("Navigation error:", error);
+        console.error('Navigation error:', error)
     }
-};
+}
 
 const formatTimeAgo = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInSeconds = Math.floor((now - date) / 1000)
 
     if (diffInSeconds < 60) {
-        return "just now";
+        return 'just now'
     } else if (diffInSeconds < 3600) {
-        const minutes = Math.floor(diffInSeconds / 60);
-        return `${minutes}m ago`;
+        const minutes = Math.floor(diffInSeconds / 60)
+        return `${minutes}m ago`
     } else if (diffInSeconds < 86400) {
-        const hours = Math.floor(diffInSeconds / 3600);
-        return `${hours}h ago`;
+        const hours = Math.floor(diffInSeconds / 3600)
+        return `${hours}h ago`
     } else if (diffInSeconds < 604800) {
-        const days = Math.floor(diffInSeconds / 86400);
-        return `${days}d ago`;
+        const days = Math.floor(diffInSeconds / 86400)
+        return `${days}d ago`
     } else {
-        return date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year:
-                date.getFullYear() !== now.getFullYear()
-                    ? "numeric"
-                    : undefined,
-        });
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+        })
     }
-};
+}
 
 const handleImageError = (event) => {
-    event.target.src = "/storage/avatars/default.jpg";
-};
+    event.target.src = '/storage/avatars/default.jpg'
+}
 
 const handleVideoImageError = (event) => {
-    event.target.src = "/storage/videos/video-placeholder.jpg";
-};
+    event.target.src = '/storage/videos/video-placeholder.jpg'
+}
 </script>
 
 <style scoped>

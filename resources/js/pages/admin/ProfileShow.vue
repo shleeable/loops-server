@@ -12,21 +12,16 @@
             </div>
 
             <div class="space-y-2">
-                <h1
-                    class="text-2xl font-semibold text-gray-900 dark:text-gray-200"
-                >
+                <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-200">
                     Profile Not Found
                 </h1>
                 <p class="text-gray-600 dark:text-gray-500 max-w-md mx-auto">
-                    The profile you're looking for doesn't exist or may have
-                    been removed. Please check the URL or search for a different
-                    profile.
+                    The profile you're looking for doesn't exist or may have been removed. Please
+                    check the URL or search for a different profile.
                 </p>
             </div>
 
-            <div
-                class="flex flex-col sm:flex-row gap-3 justify-center items-center"
-            >
+            <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
                 <button
                     @click="goBack"
                     class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 hover:dark:bg-gray-950 transition-colors duration-200 cursor-pointer"
@@ -44,18 +39,13 @@
         >
             <div class="bg-gradient-to-r from-blue-500 to-sky-400 h-32"></div>
             <div class="relative px-6 pb-6">
-                <div
-                    class="flex flex-col sm:flex-row sm:items-end sm:space-x-6"
-                >
+                <div class="flex flex-col sm:flex-row sm:items-end sm:space-x-6">
                     <div class="relative -mt-18 mb-4 sm:mb-0">
                         <img
                             :src="profile.avatar"
                             :alt="profile.username"
                             class="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 bg-white shadow-lg"
-                            @error="
-                                $event.target.src =
-                                    '/storage/avatars/default.jpg'
-                            "
+                            @error="$event.target.src = '/storage/avatars/default.jpg'"
                         />
                     </div>
 
@@ -64,9 +54,7 @@
                             class="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-2"
                         >
                             <div>
-                                <h1
-                                    class="text-2xl font-bold text-gray-900 dark:text-white"
-                                >
+                                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                                     {{ profile.name || profile.username }}
                                 </h1>
                                 <router-link
@@ -85,7 +73,7 @@
                                     <span
                                         :class="[
                                             'px-3 py-2 text-xs font-bold rounded-full uppercase',
-                                            statusBadgeStyle[profile?.status],
+                                            statusBadgeStyle[profile?.status]
                                         ]"
                                     >
                                         {{ profile?.status }}
@@ -93,9 +81,7 @@
                                 </div>
                             </div>
 
-                            <div
-                                class="flex items-center space-x-3 mt-4 sm:mt-0"
-                            >
+                            <div class="flex items-center space-x-3 mt-4 sm:mt-0">
                                 <button
                                     v-if="profile.local"
                                     @click="toggleVerification"
@@ -103,13 +89,13 @@
                                         'px-6 py-3 text-sm font-medium rounded-lg transition-colors',
                                         profile.verified
                                             ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-                                            : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800',
+                                            : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800'
                                     ]"
                                 >
                                     {{
                                         profile?.email_verified
-                                            ? "Remove Email Verification"
-                                            : "Verify Email"
+                                            ? 'Remove Email Verification'
+                                            : 'Verify Email'
                                     }}
                                 </button>
                                 <AnimatedButton
@@ -133,10 +119,7 @@
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <router-link
-                :to="`/admin/videos?q=${profile.username}`"
-                class="cursor-pointer"
-            >
+            <router-link :to="`/admin/videos?q=${profile.username}`" class="cursor-pointer">
                 <div class="card-info">
                     <div class="card-info-value">
                         {{ formatNumber(profile.post_count) }}
@@ -162,10 +145,7 @@
                 </div>
                 <div class="card-info-label">Total Likes</div>
             </div>
-            <router-link
-                :to="`/admin/comments?q=user:${profile.username}`"
-                class="cursor-pointer"
-            >
+            <router-link :to="`/admin/comments?q=user:${profile.username}`" class="cursor-pointer">
                 <div class="card-info">
                     <div class="card-info-value">
                         {{ formatNumber(profile.comments_count) }}
@@ -179,10 +159,7 @@
                 </div>
                 <div class="card-info-label">Comment Replies</div>
             </div>
-            <router-link
-                :to="`/admin/reports?q=reported_by:${profile.id}`"
-                class="cursor-pointer"
-            >
+            <router-link :to="`/admin/reports?q=reported_by:${profile.id}`" class="cursor-pointer">
                 <div class="card-info">
                     <div class="card-info-value">
                         {{ formatNumber(profile.reports_created_count) }}
@@ -207,15 +184,12 @@
             <div
                 class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
             >
-                <h3
-                    class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
-                >
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     Account Information
                 </h3>
                 <div class="space-y-4">
                     <div>
-                        <label
-                            class="block text-xs font-medium text-gray-500 dark:text-gray-400"
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400"
                             >Email</label
                         >
                         <div class="mt-1 text-sm text-gray-900 dark:text-white">
@@ -223,8 +197,7 @@
                         </div>
                     </div>
                     <div>
-                        <label
-                            class="block text-xs font-medium text-gray-500 dark:text-gray-400"
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400"
                             >Joined</label
                         >
                         <div class="mt-1 text-sm text-gray-900 dark:text-white">
@@ -232,12 +205,11 @@
                         </div>
                     </div>
                     <div>
-                        <label
-                            class="block text-xs font-medium text-gray-500 dark:text-gray-400"
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400"
                             >Bio</label
                         >
                         <div class="mt-1 text-sm text-gray-900 dark:text-white">
-                            {{ profile.bio || "No bio set" }}
+                            {{ profile.bio || 'No bio set' }}
                         </div>
                     </div>
                 </div>
@@ -246,23 +218,17 @@
             <div
                 class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
             >
-                <h3
-                    class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
-                >
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     Permissions & Restrictions
                 </h3>
                 <div class="space-y-6">
                     <div>
                         <div class="flex items-center justify-between mb-3">
                             <div>
-                                <h4
-                                    class="text-sm font-medium text-gray-900 dark:text-white"
-                                >
+                                <h4 class="text-sm font-medium text-gray-900 dark:text-white">
                                     Comment Permissions
                                 </h4>
-                                <p
-                                    class="text-xs text-gray-600 dark:text-gray-400"
-                                >
+                                <p class="text-xs text-gray-600 dark:text-gray-400">
                                     Control user's ability to comment on videos
                                 </p>
                             </div>
@@ -273,15 +239,13 @@
                                     'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
                                     profile.can_comment
                                         ? 'bg-blue-600'
-                                        : 'bg-gray-200 dark:bg-gray-600',
+                                        : 'bg-gray-200 dark:bg-gray-600'
                                 ]"
                             >
                                 <span
                                     :class="[
                                         'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                                        profile.can_comment
-                                            ? 'translate-x-5'
-                                            : 'translate-x-0',
+                                        profile.can_comment ? 'translate-x-5' : 'translate-x-0'
                                     ]"
                                 ></span>
                             </button>
@@ -297,14 +261,10 @@
                     <div>
                         <div class="flex items-center justify-between mb-3">
                             <div>
-                                <h4
-                                    class="text-sm font-medium text-gray-900 dark:text-white"
-                                >
+                                <h4 class="text-sm font-medium text-gray-900 dark:text-white">
                                     Video Upload Permissions
                                 </h4>
-                                <p
-                                    class="text-xs text-gray-600 dark:text-gray-400"
-                                >
+                                <p class="text-xs text-gray-600 dark:text-gray-400">
                                     Control user's ability to upload videos
                                 </p>
                             </div>
@@ -315,15 +275,13 @@
                                     'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
                                     profile.can_upload
                                         ? 'bg-blue-600'
-                                        : 'bg-gray-200 dark:bg-gray-600',
+                                        : 'bg-gray-200 dark:bg-gray-600'
                                 ]"
                             >
                                 <span
                                     :class="[
                                         'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                                        profile.can_upload
-                                            ? 'translate-x-5'
-                                            : 'translate-x-0',
+                                        profile.can_upload ? 'translate-x-5' : 'translate-x-0'
                                     ]"
                                 ></span>
                             </button>
@@ -339,14 +297,10 @@
                     <div>
                         <div class="flex items-center justify-between mb-3">
                             <div>
-                                <h4
-                                    class="text-sm font-medium text-gray-900 dark:text-white"
-                                >
+                                <h4 class="text-sm font-medium text-gray-900 dark:text-white">
                                     Follow Permissions
                                 </h4>
-                                <p
-                                    class="text-xs text-gray-600 dark:text-gray-400"
-                                >
+                                <p class="text-xs text-gray-600 dark:text-gray-400">
                                     Control user's ability to follow accounts
                                 </p>
                             </div>
@@ -357,15 +311,13 @@
                                     'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
                                     profile.can_follow
                                         ? 'bg-blue-600'
-                                        : 'bg-gray-200 dark:bg-gray-600',
+                                        : 'bg-gray-200 dark:bg-gray-600'
                                 ]"
                             >
                                 <span
                                     :class="[
                                         'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                                        profile.can_follow
-                                            ? 'translate-x-5'
-                                            : 'translate-x-0',
+                                        profile.can_follow ? 'translate-x-5' : 'translate-x-0'
                                     ]"
                                 ></span>
                             </button>
@@ -381,14 +333,10 @@
                     <div>
                         <div class="flex items-center justify-between mb-3">
                             <div>
-                                <h4
-                                    class="text-sm font-medium text-gray-900 dark:text-white"
-                                >
+                                <h4 class="text-sm font-medium text-gray-900 dark:text-white">
                                     Like Permissions
                                 </h4>
-                                <p
-                                    class="text-xs text-gray-600 dark:text-gray-400"
-                                >
+                                <p class="text-xs text-gray-600 dark:text-gray-400">
                                     Control user's ability to like content
                                 </p>
                             </div>
@@ -399,15 +347,13 @@
                                     'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
                                     profile.can_like
                                         ? 'bg-blue-600'
-                                        : 'bg-gray-200 dark:bg-gray-600',
+                                        : 'bg-gray-200 dark:bg-gray-600'
                                 ]"
                             >
                                 <span
                                     :class="[
                                         'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                                        profile.can_like
-                                            ? 'translate-x-5'
-                                            : 'translate-x-0',
+                                        profile.can_like ? 'translate-x-5' : 'translate-x-0'
                                     ]"
                                 ></span>
                             </button>
@@ -421,8 +367,7 @@
                     </div>
 
                     <div>
-                        <label
-                            class="block text-sm font-medium text-gray-900 dark:text-white mb-2"
+                        <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2"
                             >Admin Notes</label
                         >
                         <textarea
@@ -440,15 +385,10 @@
         <div
             class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6"
         >
-            <h3
-                class="text-lg font-semibold text-red-900 dark:text-red-200 mb-2"
-            >
-                Danger Zone
-            </h3>
+            <h3 class="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">Danger Zone</h3>
             <p class="text-sm text-red-700 dark:text-red-300 mb-4">
-                Once you delete this account, there is no going back. This will
-                permanently delete all user data, videos, and associated
-                content.
+                Once you delete this account, there is no going back. This will permanently delete
+                all user data, videos, and associated content.
             </p>
             <button
                 @click="showDeleteConfirmation = true"
@@ -458,10 +398,7 @@
             </button>
         </div>
 
-        <div
-            v-if="showDeleteConfirmation"
-            class="fixed inset-0 overflow-y-auto"
-        >
+        <div v-if="showDeleteConfirmation" class="fixed inset-0 overflow-y-auto">
             <div
                 class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0"
             >
@@ -497,13 +434,11 @@
                         Delete Account
                     </h3>
 
-                    <p
-                        class="text-sm text-gray-600 dark:text-gray-400 text-center mb-6"
-                    >
+                    <p class="text-sm text-gray-600 dark:text-gray-400 text-center mb-6">
                         Are you sure you want to delete
                         <strong>@{{ profile.username }}</strong
-                        >? This action cannot be undone and will permanently
-                        remove all associated data.
+                        >? This action cannot be undone and will permanently remove all associated
+                        data.
                     </p>
 
                     <div class="mb-4">
@@ -529,19 +464,15 @@
                         </button>
                         <button
                             @click="deleteAccount"
-                            :disabled="
-                                deleteConfirmationText !== 'DELETE' ||
-                                isDeleting
-                            "
+                            :disabled="deleteConfirmationText !== 'DELETE' || isDeleting"
                             :class="[
                                 'flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors',
-                                deleteConfirmationText === 'DELETE' &&
-                                !isDeleting
+                                deleteConfirmationText === 'DELETE' && !isDeleting
                                     ? 'bg-red-600 hover:bg-red-700'
-                                    : 'bg-gray-400 cursor-not-allowed',
+                                    : 'bg-gray-400 cursor-not-allowed'
                             ]"
                         >
-                            {{ isDeleting ? "Deleting..." : "Delete Account" }}
+                            {{ isDeleting ? 'Deleting...' : 'Delete Account' }}
                         </button>
                     </div>
                 </div>
@@ -551,55 +482,55 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from "vue";
-import { useRouter, useRoute } from "vue-router";
-import { profilesApi } from "@/services/adminApi";
-import { useUtils } from "@/composables/useUtils";
-import { UserIcon, ArrowLeftIcon } from "@heroicons/vue/24/outline";
-import { useAlertModal } from "@/composables/useAlertModal.js";
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { profilesApi } from '@/services/adminApi'
+import { useUtils } from '@/composables/useUtils'
+import { UserIcon, ArrowLeftIcon } from '@heroicons/vue/24/outline'
+import { useAlertModal } from '@/composables/useAlertModal.js'
 
-const { formatNumber, formatDate } = useUtils();
-const { alertModal, confirmModal } = useAlertModal();
+const { formatNumber, formatDate } = useUtils()
+const { alertModal, confirmModal } = useAlertModal()
 
-const router = useRouter();
-const route = useRoute();
-const profile = ref(false);
-const adminNotes = ref();
-const isLoading = ref(false);
-const notFound = ref(false);
+const router = useRouter()
+const route = useRoute()
+const profile = ref(false)
+const adminNotes = ref()
+const isLoading = ref(false)
+const notFound = ref(false)
 
 const fetchProfile = async (id) => {
-    isLoading.value = true;
+    isLoading.value = true
     try {
-        const response = await profilesApi.getProfile(id);
-        profile.value = response.data;
-        adminNotes.value = response.data?.admin_notes;
+        const response = await profilesApi.getProfile(id)
+        profile.value = response.data
+        adminNotes.value = response.data?.admin_notes
     } catch (error) {
-        notFound.value = true;
-        console.error("Error fetching profiles:", error);
+        notFound.value = true
+        console.error('Error fetching profiles:', error)
     } finally {
-        isLoading.value = false;
+        isLoading.value = false
     }
-};
-const showDeleteConfirmation = ref(false);
-const deleteConfirmationText = ref("");
-const isDeleting = ref(false);
+}
+const showDeleteConfirmation = ref(false)
+const deleteConfirmationText = ref('')
+const isDeleting = ref(false)
 
 const goBack = () => {
-    router.replace("/admin/profiles");
-};
+    router.replace('/admin/profiles')
+}
 
 const statusBadgeStyle = {
-    active: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-    disabled: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
-    deleted: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
-    suspended: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-};
+    active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    disabled: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+    deleted: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+    suspended: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+}
 
 const handleSuspend = async () => {
     const userState = profile.value.local
         ? `This will not delete this account, or existing connections and associated profile data. This will prevent <strong>${profile.value.username}</strong> from logging in and hide all activity, interactions, profile and videos. You can safely unsuspend to restore their account.`
-        : `This will not delete this account, or existing connections and associated profile data. This will hide all activity, interactions, profile and videos from <strong>${profile.value.username}</strong>. You can safely unsuspend to restore their account.`;
+        : `This will not delete this account, or existing connections and associated profile data. This will hide all activity, interactions, profile and videos from <strong>${profile.value.username}</strong>. You can safely unsuspend to restore their account.`
     const message = `<div class="space-y-4">
             <p class="text-gray-800 dark:text-gray-300">Are you sure you want to suspend <span class="font-semibold text-gray-900 dark:text-gray-400">${profile.value.username}</span>?</p>
 
@@ -617,127 +548,127 @@ const handleSuspend = async () => {
                     <span class="font-medium">Note:</span> If you want to delete this account permanently, you need to use the Delete Account button in the Danger Zone at the bottom of the page.
                 </p>
             </div>
-        </div>`;
-    const result = await confirmModal("Confirm Suspend", message);
+        </div>`
+    const result = await confirmModal('Confirm Suspend', message)
 
     if (result) {
-        await profilesApi.updateProfileSuspend(profile.value.id);
-        await nextTick();
-        await fetchProfile(profile.value.id);
+        await profilesApi.updateProfileSuspend(profile.value.id)
+        await nextTick()
+        await fetchProfile(profile.value.id)
     }
-};
+}
 
 const handleUnsuspend = async () => {
     const result = await confirmModal(
-        "Confirm Unsuspend",
-        `Are you sure you want to unsuspend <strong>${profile.value.username}</strong>?`,
-    );
+        'Confirm Unsuspend',
+        `Are you sure you want to unsuspend <strong>${profile.value.username}</strong>?`
+    )
 
     if (result) {
-        await profilesApi.updateProfileUnsuspend(profile.value.id);
-        await nextTick();
-        await fetchProfile(profile.value.id);
+        await profilesApi.updateProfileUnsuspend(profile.value.id)
+        await nextTick()
+        await fetchProfile(profile.value.id)
     }
-};
+}
 
 const toggleVerification = async () => {
     try {
-        profile.value.email_verified = !profile.value.email_verified;
+        profile.value.email_verified = !profile.value.email_verified
         console.log(
-            `Verification ${profile.value.email_verified ? "added" : "removed"} for user ${profile.value.username}`,
-        );
+            `Verification ${profile.value.email_verified ? 'added' : 'removed'} for user ${profile.value.username}`
+        )
     } catch (error) {
-        console.error("Error updating verification:", error);
+        console.error('Error updating verification:', error)
     }
-};
+}
 
 const toggleCommentPermission = async () => {
     try {
         await profilesApi.updateProfilePermissions(profile.value.id, {
-            can_comment: !profile.value.can_comment,
-        });
-        profile.value.can_comment = !profile.value.can_comment;
+            can_comment: !profile.value.can_comment
+        })
+        profile.value.can_comment = !profile.value.can_comment
     } catch (error) {
-        console.error("Error updating permission:", error);
+        console.error('Error updating permission:', error)
     }
-};
+}
 
 const toggleVideoPermission = async () => {
     try {
         await profilesApi.updateProfilePermissions(profile.value.id, {
-            can_upload: !profile.value.can_upload,
-        });
-        profile.value.can_upload = !profile.value.can_upload;
+            can_upload: !profile.value.can_upload
+        })
+        profile.value.can_upload = !profile.value.can_upload
     } catch (error) {
-        console.error("Error updating permission:", error);
+        console.error('Error updating permission:', error)
     }
-};
+}
 
 const toggleFollowPermission = async () => {
     try {
         await profilesApi.updateProfilePermissions(profile.value.id, {
-            can_follow: !profile.value.can_follow,
-        });
-        profile.value.can_follow = !profile.value.can_follow;
+            can_follow: !profile.value.can_follow
+        })
+        profile.value.can_follow = !profile.value.can_follow
     } catch (error) {
-        console.error("Error updating permission:", error);
+        console.error('Error updating permission:', error)
     }
-};
+}
 
 const toggleLikePermission = async () => {
     try {
         await profilesApi.updateProfilePermissions(profile.value.id, {
-            can_like: !profile.value.can_like,
-        });
-        profile.value.can_like = !profile.value.can_like;
+            can_like: !profile.value.can_like
+        })
+        profile.value.can_like = !profile.value.can_like
     } catch (error) {
-        console.error("Error updating permission:", error);
+        console.error('Error updating permission:', error)
     }
-};
+}
 
 const saveAdminNotes = async () => {
     try {
         await profilesApi.updateProfileNotes(profile.value.id, {
-            admin_note: adminNotes.value,
-        });
-        profile.value.admin_note = adminNotes.value;
-        console.log("Admin notes saved for", profile.value.username);
+            admin_note: adminNotes.value
+        })
+        profile.value.admin_note = adminNotes.value
+        console.log('Admin notes saved for', profile.value.username)
     } catch (error) {
-        console.error("Error saving admin notes:", error);
+        console.error('Error saving admin notes:', error)
     }
-};
+}
 
 const deleteAccount = async () => {
-    if (deleteConfirmationText.value !== "DELETE" || isDeleting.value) return;
+    if (deleteConfirmationText.value !== 'DELETE' || isDeleting.value) return
 
-    isDeleting.value = true;
+    isDeleting.value = true
 
     try {
         // API call would go here
-        await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API delay
+        await new Promise((resolve) => setTimeout(resolve, 2000)) // Simulate API delay
 
-        console.log(`Account ${profile.value.username} deleted successfully`);
-        showDeleteConfirmation.value = false;
+        console.log(`Account ${profile.value.username} deleted successfully`)
+        showDeleteConfirmation.value = false
     } catch (error) {
-        console.error("Error deleting account:", error);
+        console.error('Error deleting account:', error)
     } finally {
-        isDeleting.value = false;
-        deleteConfirmationText.value = "";
+        isDeleting.value = false
+        deleteConfirmationText.value = ''
     }
-};
+}
 
 onMounted(async () => {
-    await fetchProfile(route.params.id);
-});
+    await fetchProfile(route.params.id)
+})
 
 watch(
     () => route.params.id,
     (newId) => {
         if (newId) {
-            fetchProfile(newId);
+            fetchProfile(newId)
         }
-    },
-);
+    }
+)
 </script>
 
 <style scoped>

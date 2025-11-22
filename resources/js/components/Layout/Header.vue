@@ -2,9 +2,7 @@
     <div
         class="fixed bg-white dark:bg-slate-950 flex items-center w-full h-[70px] z-10 border-b border-gray-200 dark:border-slate-800 loops-layout-header"
     >
-        <div
-            class="flex items-center justify-between w-full px-4 lg:px-6 mx-auto"
-        >
+        <div class="flex items-center justify-between w-full px-4 lg:px-6 mx-auto">
             <div class="flex items-center lg:w-[30%] w-auto">
                 <button
                     @click="toggleMobileDrawer"
@@ -65,16 +63,14 @@
                         <div
                             class="flex items-center justify-between px-4 py-2 border-b border-gray-100 dark:border-b-gray-800"
                         >
-                            <h3
-                                class="text-sm font-medium text-gray-700 dark:text-gray-400"
-                            >
-                                {{ t("nav.recentSearches") }}
+                            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-400">
+                                {{ t('nav.recentSearches') }}
                             </h3>
                             <button
                                 @click="searchStore.clearRecentSearches"
                                 class="text-xs text-[#F02C56] hover:underline"
                             >
-                                {{ t("nav.clearAll") }}
+                                {{ t('nav.clearAll') }}
                             </button>
                         </div>
                         <div
@@ -84,9 +80,7 @@
                             class="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer"
                         >
                             <i class="ri-history-line mr-2 text-gray-400"></i>
-                            <span class="text-sm dark:text-slate-200">{{
-                                query
-                            }}</span>
+                            <span class="text-sm dark:text-slate-200">{{ query }}</span>
                         </div>
                     </div>
 
@@ -105,15 +99,10 @@
                                 :src="result.avatar"
                                 class="w-12 h-12 rounded-full mr-3"
                                 :alt="result.title"
-                                @error="
-                                    $event.target.src =
-                                        '/storage/avatars/default.jpg'
-                                "
+                                @error="$event.target.src = '/storage/avatars/default.jpg'"
                             />
                             <div class="flex flex-col space-y-0.5">
-                                <div
-                                    class="font-bold text-[15px] text-black dark:text-slate-300"
-                                >
+                                <div class="font-bold text-[15px] text-black dark:text-slate-300">
                                     @{{ result.username }}
                                 </div>
                                 <div class="flex items-center space-x-1">
@@ -131,7 +120,7 @@
                                         class="font-medium text-xs text-gray-400 dark:text-slate-600"
                                     >
                                         {{ formatCount(result.post_count) }}
-                                        {{ t("common.videos") }}
+                                        {{ t('common.videos') }}
                                     </div>
                                     <div
                                         class="font-medium text-xs text-gray-400 dark:text-slate-600"
@@ -142,7 +131,7 @@
                                         class="font-medium text-xs text-gray-400 dark:text-slate-600"
                                     >
                                         {{ formatCount(result.follower_count) }}
-                                        {{ t("common.followers") }}
+                                        {{ t('common.followers') }}
                                     </div>
                                 </div>
                             </div>
@@ -157,7 +146,7 @@
                         "
                         class="px-4 py-3 text-sm text-gray-500 text-center"
                     >
-                        {{ t("nav.noResultsFound") }}
+                        {{ t('nav.noResultsFound') }}
                     </div>
                 </div>
             </div>
@@ -179,26 +168,19 @@
                 >
                     <i class="bx bx-upload text-white text-[22px]"></i>
                     <span class="px-2 font-medium tracking-tight text-[15px]">{{
-                        t("nav.upload")
+                        t('nav.upload')
                     }}</span>
                 </button>
 
-                <div
-                    v-if="!authStore.isAuthenticated"
-                    class="hidden lg:flex items-center"
-                >
+                <div v-if="!authStore.isAuthenticated" class="hidden lg:flex items-center">
                     <ThemeToggleButton class="mr-1" />
 
                     <button
-                        v-if="
-                            !authStore.isAuthenticated && appConfig.registration
-                        "
+                        v-if="!authStore.isAuthenticated && appConfig.registration"
                         @click="authStore.openAuthModal('register')"
                         class="flex items-center border-[#F02C56] text-[#F02C56] border dark:border-red-400 rounded-md px-3 py-[6px] cursor-pointer mr-3"
                     >
-                        <span class="mx-4 font-medium text-[15px]">{{
-                            t("nav.join")
-                        }}</span>
+                        <span class="mx-4 font-medium text-[15px]">{{ t('nav.join') }}</span>
                     </button>
 
                     <button
@@ -206,16 +188,11 @@
                         @click="authStore.openAuthModal('login')"
                         class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 rounded-md px-3 py-[6px] cursor-pointer"
                     >
-                        <span class="mx-4 font-medium text-[15px]">{{
-                            t("nav.logIn")
-                        }}</span>
+                        <span class="mx-4 font-medium text-[15px]">{{ t('nav.logIn') }}</span>
                     </button>
                 </div>
 
-                <div
-                    v-if="authStore.isAuthenticated"
-                    class="hidden lg:flex items-center"
-                >
+                <div v-if="authStore.isAuthenticated" class="hidden lg:flex items-center">
                     <ThemeToggleButton class="mr-1" />
 
                     <NotificationsDropdown>
@@ -258,10 +235,7 @@
                                 width="33"
                                 :src="authStore.user.avatar"
                                 alt="User avatar"
-                                @error="
-                                    $event.target.src =
-                                        '/storage/avatars/default.jpg'
-                                "
+                                @error="$event.target.src = '/storage/avatars/default.jpg'"
                             />
                         </button>
 
@@ -276,7 +250,7 @@
                             >
                                 <i class="ph-user text-[20px]"></i>
                                 <span class="pl-2 font-semibold text-sm">{{
-                                    t("nav.profile")
+                                    t('nav.profile')
                                 }}</span>
                             </router-link>
                             <div
@@ -285,7 +259,7 @@
                             >
                                 <i class="ic-outline-login text-[20px]"></i>
                                 <span class="pl-2 font-semibold text-sm">{{
-                                    t("nav.logOut")
+                                    t('nav.logOut')
                                 }}</span>
                             </div>
                         </div>
@@ -301,9 +275,7 @@
                         class="rounded-full"
                         width="32"
                         :src="authStore.user.avatar"
-                        @error="
-                            $event.target.src = '/storage/avatars/default.jpg'
-                        "
+                        @error="$event.target.src = '/storage/avatars/default.jpg'"
                         alt="User avatar"
                     />
                 </button>
@@ -313,7 +285,7 @@
                     @click="authStore.openAuthModal('login')"
                     class="lg:hidden bg-[#F02C56] text-white rounded-md px-3 py-2 text-sm font-medium"
                 >
-                    {{ t("nav.loginOrRegister") }}
+                    {{ t('nav.loginOrRegister') }}
                 </button>
             </div>
         </div>
@@ -322,9 +294,7 @@
             v-if="showMobileSearch"
             class="md:hidden absolute top-full left-0 w-full bg-white dark:bg-slate-950 border-b border-gray-100 dark:border-slate-800 p-4 z-50"
         >
-            <div
-                class="flex items-center bg-[#F1F1F2] dark:bg-slate-900 p-1 rounded-lg relative"
-            >
+            <div class="flex items-center bg-[#F1F1F2] dark:bg-slate-900 p-1 rounded-lg relative">
                 <div
                     class="px-3 py-1 flex items-center border-r border-r-gray-300 dark:border-r-slate-800"
                 >
@@ -350,8 +320,7 @@
             <div
                 v-if="
                     showDropdown &&
-                    (searchStore.recentSearches.length ||
-                        searchStore.searchResults.length)
+                    (searchStore.recentSearches.length || searchStore.searchResults.length)
                 "
                 class="mt-2 bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-800 max-h-[300px] overflow-y-auto"
             >
@@ -363,13 +332,13 @@
                         class="flex items-center justify-between px-4 py-2 border-b border-gray-100 dark:border-b-gray-800"
                     >
                         <h3 class="text-sm font-medium text-gray-700">
-                            {{ t("nav.recentSearches") }}
+                            {{ t('nav.recentSearches') }}
                         </h3>
                         <button
                             @mousedown="searchStore.clearRecentSearches"
                             class="text-xs text-[#F02C56] hover:underline cursor-pointer"
                         >
-                            {{ t("nav.clearAll") }}
+                            {{ t('nav.clearAll') }}
                         </button>
                     </div>
                     <div
@@ -379,9 +348,7 @@
                         class="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer"
                     >
                         <i class="ri-history-line mr-2 text-gray-400"></i>
-                        <span class="text-sm dark:text-slate-200">{{
-                            query
-                        }}</span>
+                        <span class="text-sm dark:text-slate-200">{{ query }}</span>
                     </div>
                 </div>
 
@@ -400,15 +367,10 @@
                             :src="result.avatar"
                             class="w-12 h-12 rounded-full mr-3"
                             :alt="result.title"
-                            @error="
-                                $event.target.src =
-                                    '/storage/avatars/default.jpg'
-                            "
+                            @error="$event.target.src = '/storage/avatars/default.jpg'"
                         />
                         <div class="flex flex-col space-y-0.5">
-                            <div
-                                class="font-bold text-[15px] text-black dark:text-slate-300"
-                            >
+                            <div class="font-bold text-[15px] text-black dark:text-slate-300">
                                 @{{ result.username }}
                             </div>
                             <div class="flex items-center space-x-1">
@@ -417,27 +379,19 @@
                                 >
                                     {{ result.name }}
                                 </div>
-                                <div
-                                    class="font-medium text-xs text-gray-400 dark:text-slate-600"
-                                >
+                                <div class="font-medium text-xs text-gray-400 dark:text-slate-600">
                                     ·
                                 </div>
-                                <div
-                                    class="font-medium text-xs text-gray-400 dark:text-slate-600"
-                                >
+                                <div class="font-medium text-xs text-gray-400 dark:text-slate-600">
                                     {{ formatCount(result.post_count) }}
-                                    {{ t("common.videos") }}
+                                    {{ t('common.videos') }}
                                 </div>
-                                <div
-                                    class="font-medium text-xs text-gray-400 dark:text-slate-600"
-                                >
+                                <div class="font-medium text-xs text-gray-400 dark:text-slate-600">
                                     ·
                                 </div>
-                                <div
-                                    class="font-medium text-xs text-gray-400 dark:text-slate-600"
-                                >
+                                <div class="font-medium text-xs text-gray-400 dark:text-slate-600">
                                     {{ formatCount(result.follower_count) }}
-                                    {{ t("common.followers") }}
+                                    {{ t('common.followers') }}
                                 </div>
                             </div>
                         </div>
@@ -449,125 +403,125 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject, nextTick } from "vue";
-import { useRouter } from "vue-router";
-import { useSearchStore } from "@/stores/search";
-import { useAuthStore } from "@/stores/auth";
-import { debounce } from "lodash";
-import { useNotificationStore } from "~/stores/notifications";
-import { useUtils } from "@/composables/useUtils";
-import { useI18n } from "vue-i18n";
-const { t } = useI18n();
+import { ref, onMounted, inject, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
+import { useSearchStore } from '@/stores/search'
+import { useAuthStore } from '@/stores/auth'
+import { debounce } from 'lodash'
+import { useNotificationStore } from '~/stores/notifications'
+import { useUtils } from '@/composables/useUtils'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
-const emit = defineEmits(["toggleMobileDrawer", "openLogin"]);
+const emit = defineEmits(['toggleMobileDrawer', 'openLogin'])
 
-const { formatCount } = useUtils();
-const router = useRouter();
-const authStore = useAuthStore();
-const searchStore = useSearchStore();
-const notificationsStore = useNotificationStore();
-const appConfig = inject("appConfig");
+const { formatCount } = useUtils()
+const router = useRouter()
+const authStore = useAuthStore()
+const searchStore = useSearchStore()
+const notificationsStore = useNotificationStore()
+const appConfig = inject('appConfig')
 
-const showMenu = ref(false);
-const searchQuery = ref("");
-const showDropdown = ref(false);
-const showMobileSearch = ref(false);
-const mobileSearchInput = ref(null);
+const showMenu = ref(false)
+const searchQuery = ref('')
+const showDropdown = ref(false)
+const showMobileSearch = ref(false)
+const mobileSearchInput = ref(null)
 
 const appLogoUrl = () => {
-    return appConfig.branding.logo || `/nav-logo.png`;
-};
+    return appConfig.branding.logo || `/nav-logo.png`
+}
 
 const toggleMobileDrawer = () => {
-    emit("toggleMobileDrawer");
-};
+    emit('toggleMobileDrawer')
+}
 
 const toggleMobileSearch = async () => {
-    searchStore.clearSearchResults();
-    showMobileSearch.value = !showMobileSearch.value;
+    searchStore.clearSearchResults()
+    showMobileSearch.value = !showMobileSearch.value
     if (showMobileSearch.value) {
-        await nextTick();
-        mobileSearchInput.value?.focus();
+        await nextTick()
+        mobileSearchInput.value?.focus()
     }
-};
+}
 
 const closeMobileSearch = () => {
-    searchStore.clearSearchResults();
-    showMobileSearch.value = false;
-    searchQuery.value = "";
-    showDropdown.value = false;
-};
+    searchStore.clearSearchResults()
+    showMobileSearch.value = false
+    searchQuery.value = ''
+    showDropdown.value = false
+}
 
 // Load recent searches on component mount
 onMounted(() => {
-    searchStore.loadRecentSearches();
+    searchStore.loadRecentSearches()
 
     // Close dropdowns when clicking outside
-    document.addEventListener("mouseup", (e) => {
-        const searchContainer = document.querySelector(".search-container");
-        const popupMenu = document.getElementById("PopupMenu");
+    document.addEventListener('mouseup', (e) => {
+        const searchContainer = document.querySelector('.search-container')
+        const popupMenu = document.getElementById('PopupMenu')
 
         if (searchContainer && !searchContainer.contains(e.target)) {
-            showDropdown.value = false;
+            showDropdown.value = false
         }
 
         if (popupMenu && !popupMenu.contains(e.target)) {
-            showMenu.value = false;
+            showMenu.value = false
         }
 
         // Close mobile search when clicking outside
-        if (showMobileSearch.value && !e.target.closest(".absolute.top-full")) {
-            closeMobileSearch();
+        if (showMobileSearch.value && !e.target.closest('.absolute.top-full')) {
+            closeMobileSearch()
         }
-    });
-});
+    })
+})
 
 // Debounced search function
 const handleSearch = debounce(() => {
-    searchStore.searchQuery(searchQuery.value);
-}, 300);
+    searchStore.searchQuery(searchQuery.value)
+}, 300)
 
 const handleFocus = () => {
-    showDropdown.value = true;
-};
+    showDropdown.value = true
+}
 
 const handleRecentSearchClick = (query) => {
-    searchQuery.value = query;
-    searchStore.searchQuery(query);
+    searchQuery.value = query
+    searchStore.searchQuery(query)
     if (showMobileSearch.value) {
-        closeMobileSearch();
+        closeMobileSearch()
     }
-};
+}
 
 const handleResultClick = (result) => {
-    console.log("result", result);
-    searchQuery.value = result.title;
-    showDropdown.value = false;
-    router.push(`/@${result.username}`);
+    console.log('result', result)
+    searchQuery.value = result.title
+    showDropdown.value = false
+    router.push(`/@${result.username}`)
     if (showMobileSearch.value) {
-        closeMobileSearch();
+        closeMobileSearch()
     }
-};
+}
 
 const displayCount = (count) => {
-    return count > 99 ? "99+" : count.toString();
-};
+    return count > 99 ? '99+' : count.toString()
+}
 
 const isLoggedIn = () => {
     if (authStore.isAuthenticated) {
-        router.push("/studio/upload");
+        router.push('/studio/upload')
     } else {
-        router.push("/login?redirect=/login");
+        router.push('/login?redirect=/login')
     }
-};
+}
 
 const logout = async () => {
     try {
-        await authStore.logout();
-        router.push("/");
-        showMenu.value = false;
+        await authStore.logout()
+        router.push('/')
+        showMenu.value = false
     } catch (error) {
-        console.log(error);
+        console.log(error)
     }
-};
+}
 </script>

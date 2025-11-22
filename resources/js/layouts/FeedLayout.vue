@@ -1,8 +1,5 @@
 <template>
-    <Header
-        @toggleMobileDrawer="toggleMobileDrawer"
-        @openLogin="openLoginModal"
-    />
+    <Header @toggleMobileDrawer="toggleMobileDrawer" @openLogin="openLoginModal" />
     <div
         class="flex justify-between mx-auto w-full bg-white dark:bg-slate-950 px-0 loops-feed-layout"
     >
@@ -26,45 +23,45 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
-import Header from "~/components/Layout/Header.vue";
-import Sidebar from "~/components/Layout/Sidebar.vue";
-import LoginModal from "~/components/Layout/LoginModal.vue";
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import Header from '~/components/Layout/Header.vue'
+import Sidebar from '~/components/Layout/Sidebar.vue'
+import LoginModal from '~/components/Layout/LoginModal.vue'
 
-const isMobileDrawerOpen = ref(false);
-const showLoginModal = ref(false);
-const windowWidth = ref(window.innerWidth);
+const isMobileDrawerOpen = ref(false)
+const showLoginModal = ref(false)
+const windowWidth = ref(window.innerWidth)
 
-const isMobile = computed(() => windowWidth.value < 1024);
+const isMobile = computed(() => windowWidth.value < 1024)
 
 const toggleMobileDrawer = () => {
-    isMobileDrawerOpen.value = !isMobileDrawerOpen.value;
-};
+    isMobileDrawerOpen.value = !isMobileDrawerOpen.value
+}
 
 const closeMobileDrawer = () => {
-    isMobileDrawerOpen.value = false;
-};
+    isMobileDrawerOpen.value = false
+}
 
 const openLoginModal = () => {
-    showLoginModal.value = true;
-};
+    showLoginModal.value = true
+}
 
 const closeLoginModal = () => {
-    showLoginModal.value = false;
-};
+    showLoginModal.value = false
+}
 
 const handleResize = () => {
-    windowWidth.value = window.innerWidth;
+    windowWidth.value = window.innerWidth
     if (windowWidth.value >= 1024) {
-        isMobileDrawerOpen.value = false;
+        isMobileDrawerOpen.value = false
     }
-};
+}
 
 onMounted(() => {
-    window.addEventListener("resize", handleResize);
-});
+    window.addEventListener('resize', handleResize)
+})
 
 onUnmounted(() => {
-    window.removeEventListener("resize", handleResize);
-});
+    window.removeEventListener('resize', handleResize)
+})
 </script>
