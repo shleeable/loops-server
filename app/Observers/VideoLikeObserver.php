@@ -15,7 +15,7 @@ class VideoLikeObserver implements ShouldHandleEventsAfterCommit
     {
         $video = $videoLike->video;
 
-        if ($video->is_local && $video->profile_id !== $videoLike->profile_id) {
+        if ($video->is_local && (int) $video->profile_id !== (int) $videoLike->profile_id) {
             NotificationService::newVideoLike(
                 $video->profile_id,
                 $video->id,
@@ -39,7 +39,7 @@ class VideoLikeObserver implements ShouldHandleEventsAfterCommit
     {
         $video = $videoLike->video;
 
-        if ($video->is_local && $video->profile_id !== $videoLike->profile_id) {
+        if ($video->is_local && (int) $video->profile_id !== (int) $videoLike->profile_id) {
             NotificationService::deleteVideoLike(
                 $video->profile_id,
                 $video->id,
@@ -63,7 +63,7 @@ class VideoLikeObserver implements ShouldHandleEventsAfterCommit
     {
         $video = $videoLike->video;
 
-        if ($video->is_local && $video->profile_id !== $videoLike->profile_id) {
+        if ($video->is_local && (int) $video->profile_id !== (int) $videoLike->profile_id) {
             NotificationService::deleteVideoLike(
                 $video->profile_id,
                 $video->id,
