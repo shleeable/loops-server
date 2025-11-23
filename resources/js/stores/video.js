@@ -70,7 +70,9 @@ export const useVideoStore = defineStore('video', {
                     .then((res) => {
                         this.currentVideo = res.data
                     })
-            } catch (error) {}
+            } catch (error) {
+                throw error
+            }
         },
 
         async decrementCommentCount() {

@@ -888,7 +888,11 @@ const unlikePost = async () => {
 }
 
 const handleSaveVideo = async (data) => {
-    await videoStore.updateVideoStore(data)
+    try {
+        await videoStore.updateVideoStore(data)
+    } catch (error) {
+        await alertModal('Error', error?.response?.data?.message)
+    }
 }
 
 const handleDeleteVideo = async (id) => {

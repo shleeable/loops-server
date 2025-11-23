@@ -373,7 +373,6 @@ const fetchDashboardData = async () => {
 
 const initializeCharts = () => {
     if (!dashboardData.value) return
-
     ;[userGrowthInstance, videoUploadsInstance, engagementInstance, contentDistInstance].forEach(
         (instance) => instance?.dispose()
     )
