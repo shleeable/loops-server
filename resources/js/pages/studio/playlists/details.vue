@@ -252,8 +252,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { usePlaylistStore } from '@/stores/playlist'
 import { useUtils } from '@/composables/useUtils'
-import PlaylistModal from '@/components/studio/PlaylistModal.vue'
-import AddVideoModal from '@/components/studio/PlaylistAddVideoModal.vue'
+import PlaylistModal from '@/components/Studio/PlaylistModal.vue'
+import AddVideoModal from '@/components/Studio/PlaylistAddVideoModal.vue'
 import {
     EyeIcon,
     TrashIcon,
