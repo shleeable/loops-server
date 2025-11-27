@@ -97,6 +97,20 @@ use Illuminate\Support\Facades\DB;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Profile whereUsername($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Profile whereVideoCount($value)
  *
+ * @property bool $discoverable
+ * @property int $has_playlists
+ * @property-read int|null $followers_count
+ * @property-read int|null $following_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Playlist> $playlists
+ * @property-read int|null $playlists_count
+ * @property-read \App\Models\ProfileAvatar|null $profileAvatar
+ *
+ * @method static Builder<static>|Profile active()
+ * @method static Builder<static>|Profile whereDiscoverable($value)
+ * @method static Builder<static>|Profile whereHasPlaylists($value)
+ * @method static Builder<static>|Profile whereManuallyApprovesFollowers($value)
+ * @method static Builder<static>|Profile withFollowingStatus($authProfileId = null)
+ *
  * @mixin \Eloquent
  */
 class Profile extends Model
@@ -150,6 +164,7 @@ class Profile extends Model
         'local',
         'discoverable',
         'status',
+        'has_playlists',
     ];
 
     protected $guarded = [];
@@ -201,6 +216,22 @@ class Profile extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return HasMany<Follower, $this>
+     */
+    public function followers()
+    {
+        return $this->hasMany(Follower::class, 'following_id');
+    }
+
+    /**
+     * @return HasMany<Follower, $this>
+     */
+    public function following()
+    {
+        return $this->hasMany(Follower::class, 'profile_id');
+    }
+
     public function getStatusDescription()
     {
         return match ($this->status) {
@@ -243,6 +274,12 @@ class Profile extends Model
     public function profileAvatar()
     {
         return $this->hasOne(ProfileAvatar::class);
+    }
+
+    /** @return HasMany<Playlist, $this> */
+    public function playlists(): HasMany
+    {
+        return $this->hasMany(Playlist::class);
     }
 
     /**

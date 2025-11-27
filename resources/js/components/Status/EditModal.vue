@@ -1,11 +1,22 @@
 <template>
-    <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90" @click.self="closeModal">
-        <div class="bg-white dark:bg-slate-900 rounded-lg shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700">
+    <div
+        v-if="isOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+        @click.self="closeModal"
+    >
+        <div
+            class="bg-white dark:bg-slate-900 rounded-lg shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto"
+        >
+            <div
+                class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700"
+            >
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
                     {{ $t('post.editVideo') }}
                 </h2>
-                <button @click="closeModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <button
+                    @click="closeModal"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
                     <XMarkIcon class="h-6 w-6" />
                 </button>
             </div>
@@ -15,24 +26,40 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {{ $t('post.caption') }}
                     </label>
-                    <textarea v-model="formData.caption"
+                    <textarea
+                        v-model="formData.caption"
                         class="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F02C56] focus:border-[#F02C56] dark:bg-slate-800 dark:text-white resize-none"
-                        rows="4" :placeholder="$t('post.writeYourCaptionDotDotDot')" maxlength="500" />
+                        rows="4"
+                        :placeholder="$t('post.writeYourCaptionDotDotDot')"
+                        maxlength="500"
+                    />
                     <div class="text-right text-sm text-gray-500 dark:text-gray-400 mt-1">
                         {{ formData.caption.length }}/240
                     </div>
                 </div>
 
                 <div>
-                    <AnimatedButton @click="showAltText = !showAltText" type="button" variant="light"
-                        class="flex w-full">
+                    <AnimatedButton
+                        @click="showAltText = !showAltText"
+                        type="button"
+                        variant="light"
+                        class="flex w-full"
+                    >
                         <div class="flex items-center gap-2 text-sm font-medium">
                             <div>
-                                <svg :class="{ 'rotate-90': showAltText }"
-                                    class="h-4 w-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5l7 7-7 7" />
+                                <svg
+                                    :class="{ 'rotate-90': showAltText }"
+                                    class="h-4 w-4 transition-transform duration-200"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M9 5l7 7-7 7"
+                                    />
                                 </svg>
                             </div>
                             <div>
@@ -48,9 +75,13 @@
                         <p class="text-xs text-gray-500 dark:text-gray-400">
                             {{ $t('studio.altTextHelp') }}
                         </p>
-                        <textarea v-model="formData.altText"
+                        <textarea
+                            v-model="formData.altText"
                             class="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F02C56] focus:border-[#F02C56] dark:bg-slate-800 dark:text-white resize-none"
-                            rows="3" :placeholder="$t('studio.describeYourVideoDotDotDotAltText')" maxlength="2000" />
+                            rows="3"
+                            :placeholder="$t('studio.describeYourVideoDotDotDotAltText')"
+                            maxlength="2000"
+                        />
                         <div class="text-right text-sm text-gray-500 dark:text-gray-400">
                             {{ formData.altText.length }}/2000
                         </div>
@@ -124,8 +155,10 @@
                         {{ $t('studio.language') }}
                     </label>
                     <div class="relative">
-                        <select v-model="formData.lang"
-                            class="block w-full px-4 py-2 pr-8 text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                        <select
+                            v-model="formData.lang"
+                            class="block w-full px-4 py-2 pr-8 text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        >
                             <option value="" disabled selected>
                                 {{ $t('studio.selectLanguage') }}
                             </option>
@@ -134,10 +167,21 @@
                                 {{ lang.name }}
                             </option>
                         </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7" />
+                        <div
+                            class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none"
+                        >
+                            <svg
+                                class="w-5 h-5 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M19 9l-7 7-7-7"
+                                />
                             </svg>
                         </div>
                     </div>
@@ -168,7 +212,10 @@
                                 {{ $t('studio.disclosePostContentHelp') }}
                             </p>
                         </div>
-                        <ToggleSwitch v-model="formData.containsAds" :disabled="formData.containsAds" />
+                        <ToggleSwitch
+                            v-model="formData.containsAds"
+                            :disabled="formData.containsAds"
+                        />
                     </div>
 
                     <div class="flex items-start justify-between gap-5">
@@ -180,7 +227,10 @@
                                 {{ $t('studio.containsAlteredContentHelp') }}
                             </p>
                         </div>
-                        <ToggleSwitch v-model="formData.containsAiContent" :disabled="formData.containsAiContent" />
+                        <ToggleSwitch
+                            v-model="formData.containsAiContent"
+                            :disabled="formData.containsAiContent"
+                        />
                     </div>
                 </div>
 
@@ -195,8 +245,10 @@
                                 <p class="text-sm text-red-700 dark:text-red-300 mt-1">
                                     {{ $t('post.thisActionCannotBeUndone') }}
                                 </p>
-                                <button @click="confirmDelete"
-                                    class="mt-3 bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-4 rounded-md transition-colors duration-200">
+                                <button
+                                    @click="confirmDelete"
+                                    class="mt-3 bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-4 rounded-md transition-colors duration-200"
+                                >
                                     {{ $t('post.deleteVideo') }}
                                 </button>
                             </div>
@@ -206,13 +258,19 @@
             </div>
 
             <div
-                class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 rounded-b-lg">
-                <button @click="closeModal"
-                    class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors duration-200 cursor-pointer">
+                class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 rounded-b-lg"
+            >
+                <button
+                    @click="closeModal"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors duration-200 cursor-pointer"
+                >
                     {{ $t('common.cancel') }}
                 </button>
-                <button @click="saveChanges" :disabled="isSaving"
-                    class="px-4 py-2 text-sm font-medium text-white bg-[#F02C56] hover:bg-red-600 disabled:bg-red-300 disabled:cursor-not-allowed rounded-md transition-colors duration-200 flex items-center cursor-pointer">
+                <button
+                    @click="saveChanges"
+                    :disabled="isSaving"
+                    class="px-4 py-2 text-sm font-medium text-white bg-[#F02C56] hover:bg-red-600 disabled:bg-red-300 disabled:cursor-not-allowed rounded-md transition-colors duration-200 flex items-center cursor-pointer"
+                >
                     <Spinner v-if="isSaving" size="sm" class="mr-2" />
                     {{ isSaving ? $t('common.savingDotDotDot') : $t('post.saveChanges') }}
                 </button>

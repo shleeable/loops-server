@@ -15,6 +15,7 @@
             <div
                 class="flex items-center justify-end gap-2 lg:gap-3 lg:min-w-[275px] lg:max-w-[320px] w-auto"
             >
+                <ThemeToggleButton class="mr-1" />
                 <div v-if="authStore.isAuthenticated" class="hidden lg:flex items-center">
                     <div class="relative">
                         <button

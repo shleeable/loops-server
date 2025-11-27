@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountDataController;
 use App\Http\Controllers\ActorController;
+use App\Http\Controllers\PlaylistController;
 use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AdminController;
@@ -83,8 +84,14 @@ Route::prefix('api')->group(function () {
 
     // Studio
     Route::get('/v1/studio/posts', [StudioController::class, 'getPosts'])->middleware('auth:web,api');
+    Route::get('/v1/studio/playlist-posts', [StudioController::class, 'getAvailableVideosForPlaylists'])->middleware('auth:web,api');
     Route::post('/v1/studio/upload', [VideoController::class, 'store'])->middleware('auth:web,api');
     Route::post('/v1/studio/duet/upload', [DuetController::class, 'store'])->middleware('auth:web,api');
+    Route::apiResource('/v1/studio/playlists', PlaylistController::class)->middleware('auth:web,api');
+    Route::get('/v1/studio/playlists/{playlist}/videos', [PlaylistController::class, 'videos'])->middleware('auth:web,api');
+    Route::post('/v1/studio/playlists/{playlist}/videos', [PlaylistController::class, 'addVideo'])->middleware('auth:web,api');
+    Route::delete('/v1/studio/playlists/{playlist}/videos/{video}', [PlaylistController::class, 'removeVideo'])->middleware('auth:web,api');
+    Route::put('/v1/studio/playlists/{playlist}/reorder', [PlaylistController::class, 'reorder'])->middleware('auth:web,api');
 
     // Search
     Route::get('/v1/search', [SearchController::class, 'search'])->middleware(['auth:web,api', 'throttle:searchV1']);
