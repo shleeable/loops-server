@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\AccountDataController;
 use App\Http\Controllers\ActorController;
-use App\Http\Controllers\PlaylistController;
 use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AdminController;
@@ -23,6 +22,7 @@ use App\Http\Controllers\InstanceActorController;
 use App\Http\Controllers\NodeInfoController;
 use App\Http\Controllers\ObjectController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PlaylistController;
 use App\Http\Controllers\SharedInboxController;
 use App\Http\Controllers\UserRegisterVerifyController;
 use App\Http\Controllers\WebfingerController;

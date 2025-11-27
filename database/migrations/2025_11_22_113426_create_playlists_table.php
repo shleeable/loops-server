@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('cover_image')->nullable();
             $table->unsignedInteger('videos_count')->default(0);
             $table->timestamps();
-            
+
             $table->index(['profile_id', 'created_at']);
         });
 
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->foreignId('video_id')->constrained()->onDelete('cascade');
             $table->unsignedInteger('position')->default(0);
             $table->timestamps();
-            
+
             $table->primary(['playlist_id', 'video_id']);
             $table->unique('video_id');
             $table->index('position');
