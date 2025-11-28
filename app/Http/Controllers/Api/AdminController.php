@@ -635,7 +635,7 @@ class AdminController extends Controller
         $search = $request->query('q');
         $sort = $request->query('sort', 'active');
 
-        $query = Instance::whereNotNull('software')->when($sort == 'is_blocked', function ($query, $sort) {
+        $query = Instance::when($sort == 'is_blocked', function ($query, $sort) {
             $query->whereFederationState(2);
         }, function ($query, $sort) {
             $query->whereFederationState(5);

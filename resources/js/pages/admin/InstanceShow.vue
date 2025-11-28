@@ -24,13 +24,22 @@
                                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                                     {{ instance.domain }}
                                 </h1>
-                                <div class="text-gray-600 dark:text-gray-400 font-light">
+                                <div
+                                    v-if="instance.software"
+                                    class="text-gray-600 dark:text-gray-400 font-light"
+                                >
                                     <span class="text-gray-400 dark:text-gray-500"
                                         >Powered by
                                     </span>
                                     <span class="font-semibold capitalize">{{
                                         instance.software
                                     }}</span>
+                                </div>
+                                <div v-else class="text-gray-600 dark:text-gray-400 font-light">
+                                    <span class="text-gray-400 dark:text-gray-500"
+                                        >Powered by
+                                    </span>
+                                    <span class="font-semibold capitalize">Unknown</span>
                                 </div>
                                 <div class="flex items-center mt-2 space-x-4">
                                     <span
@@ -218,7 +227,7 @@
                                     <div
                                         class="mt-1 text-sm text-gray-900 dark:text-white capitalize"
                                     >
-                                        {{ instance.software }}
+                                        {{ instance.software || 'Unknown' }}
                                     </div>
                                 </div>
                                 <div v-if="instance.version">
@@ -1236,12 +1245,15 @@ onMounted(async () => {
 
 <style scoped>
 @reference "../../../sass/next.css";
+
 .card-info {
     @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6;
 }
+
 .card-info-value {
     @apply text-2xl font-bold text-gray-900 dark:text-white;
 }
+
 .card-info-label {
     @apply text-sm text-gray-600 dark:text-gray-400;
 }
