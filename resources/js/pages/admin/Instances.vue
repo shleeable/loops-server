@@ -122,7 +122,7 @@
                 <span v-else class="text-xs text-gray-400 dark:text-gray-500">—</span>
             </template>
 
-            <template #cell-status="{ value, item }">
+            <template #cell-status="{ value }">
                 <div class="inline-flex items-center gap-1.5">
                     <span class="relative flex h-2 w-2">
                         <span
