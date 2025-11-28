@@ -101,7 +101,10 @@
                                             :src="video.media.thumbnail"
                                             :alt="video.caption"
                                             class="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                                            onerror="this.src='/storage/videos/video-placeholder.jpg';this.onerror=null;"
+                                            onerror="
+                                                this.src = '/storage/videos/video-placeholder.jpg'
+                                                this.onerror = null
+                                            "
                                         />
                                         <div class="flex-1 min-w-0">
                                             <p

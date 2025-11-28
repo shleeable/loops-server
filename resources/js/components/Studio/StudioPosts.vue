@@ -85,7 +85,10 @@
                                         :src="post.media.thumbnail"
                                         :alt="`${post.caption} thumbnail`"
                                         class="w-12 h-12 rounded-lg object-cover"
-                                        onerror="this.src='/storage/videos/video-placeholder.jpg';this.onerror=null;"
+                                        onerror="
+                                            this.src = '/storage/videos/video-placeholder.jpg'
+                                            this.onerror = null
+                                        "
                                     />
                                     <div>
                                         <div

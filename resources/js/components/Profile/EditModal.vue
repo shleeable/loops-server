@@ -50,7 +50,10 @@
                                             height="95"
                                             :src="userImage"
                                             :alt="`${userName || 'User'}'s avatar`"
-                                            onerror="this.src='/storage/avatars/default.jpg';this.onerror=null;"
+                                            onerror="
+                                                this.src = '/storage/avatars/default.jpg'
+                                                this.onerror = null
+                                            "
                                         />
                                         <div
                                             class="absolute bottom-0 right-0 rounded-full bg-white shadow-xl border p-2 border-gray-300 inline-flex items-center justify-center"
