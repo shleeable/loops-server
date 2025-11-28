@@ -1,12 +1,8 @@
 <template>
     <div class="max-w-6xl mx-auto px-4 py-8">
-        <div
-            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6"
-        >
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
             <div class="p-6">
-                <div
-                    class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0"
-                >
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
                     <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                         <div class="text-xl font-bold dark:text-white">
                             {{ $t('studio.myPosts') }}
@@ -14,83 +10,58 @@
                     </div>
 
                     <div class="relative">
-                        <div
-                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                        >
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" />
                         </div>
-                        <input
-                            v-model="searchQuery"
-                            @input="handleSearch"
-                            type="text"
+                        <input v-model="searchQuery" @input="handleSearch" type="text"
                             :placeholder="$t('studio.searchByPostCaption')"
-                            class="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-transparent w-full sm:w-80"
-                        />
+                            class="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-transparent w-full sm:w-80" />
                     </div>
                 </div>
             </div>
         </div>
 
-        <div
-            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
-        >
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-900">
                         <tr>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                            >
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 {{ $t('studio.contentCreatedOn') }}
-                                <button
-                                    @click="sortBy('created_at')"
-                                    class="ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                                >
+                                <button @click="sortBy('created_at')"
+                                    class="ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                                     <ArrowsUpDownIcon class="w-4 h-4" />
                                 </button>
                             </th>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                            >
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 {{ $t('common.status') }}
                             </th>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                            >
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 {{ $t('studio.likes') }}
                             </th>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                            >
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 {{ $t('studio.comments') }}
                             </th>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                            >
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 {{ $t('studio.actions') }}
                             </th>
                         </tr>
                     </thead>
-                    <tbody
-                        class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
-                    >
-                        <tr
-                            v-for="post in posts"
-                            :key="post.id"
-                            class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                        >
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tr v-for="post in posts" :key="post.id"
+                            class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                             <td class="px-6 py-4">
                                 <div class="flex items-center space-x-3">
-                                    <img
-                                        :src="post.media.thumbnail"
-                                        :alt="`${post.caption} thumbnail`"
+                                    <img :src="post.media.thumbnail" :alt="`${post.caption} thumbnail`"
                                         class="w-12 h-12 rounded-lg object-cover"
-                                        onerror="this.src='/storage/videos/video-placeholder.jpg';this.onerror=null;"
-                                    />
+                                        onerror="this.src='/storage/videos/video-placeholder.jpg';this.onerror=null;" />
                                     <div>
-                                        <div
-                                            class="text-sm font-medium text-gray-900 dark:text-gray-100"
-                                        >
+                                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
                                             {{ post.caption }}
                                         </div>
                                         <div class="text-sm text-gray-500 dark:text-gray-400">
@@ -112,18 +83,12 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center space-x-5">
-                                    <router-link
-                                        v-if="post.status === 'published'"
-                                        :to="`/v/${post.hid}`"
-                                        class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors cursor-pointer"
-                                    >
+                                    <router-link v-if="post.status === 'published'" :to="`/v/${post.hid}`"
+                                        class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors cursor-pointer">
                                         {{ $t('studio.view') }}
                                     </router-link>
-                                    <button
-                                        v-if="post.status === 'published'"
-                                        @click="editPost(post)"
-                                        class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300 text-sm font-medium transition-colors cursor-pointer"
-                                    >
+                                    <button v-if="post.status === 'published'" @click="editPost(post)"
+                                        class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300 text-sm font-medium transition-colors cursor-pointer">
                                         {{ $t('common.edit') }}
                                     </button>
                                 </div>
@@ -143,18 +108,15 @@
                 <p class="text-gray-500 dark:text-gray-400 mb-6">
                     {{ $t('studio.yourPostedAndProcessingVideos') }}
                 </p>
-                <button
-                    @click="uploadVideo"
-                    class="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-medium transition-colors"
-                >
+                <button @click="uploadVideo"
+                    class="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-medium transition-colors">
                     {{ $t('studio.uploadFirstVideo') }}
                 </button>
             </div>
 
             <div v-if="loading" class="text-center py-16">
-                <div
-                    class="animate-spin mx-auto w-8 h-8 border-4 border-gray-300 border-t-red-500 rounded-full mb-4"
-                ></div>
+                <div class="animate-spin mx-auto w-8 h-8 border-4 border-gray-300 border-t-red-500 rounded-full mb-4">
+                </div>
                 <p class="text-gray-500 dark:text-gray-400">Loading posts...</p>
             </div>
         </div>
@@ -164,30 +126,19 @@
                 Showing {{ showingFrom }} to {{ showingTo }} of {{ totalCount }} results
             </div>
             <div class="flex space-x-2">
-                <button
-                    @click="previousPage"
-                    :disabled="!canGoPrevious"
-                    class="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                >
+                <button @click="previousPage" :disabled="!canGoPrevious"
+                    class="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer">
                     Previous
                 </button>
-                <button
-                    @click="nextPage"
-                    :disabled="!canGoNext"
-                    class="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                >
+                <button @click="nextPage" :disabled="!canGoNext"
+                    class="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer">
                     Next
                 </button>
             </div>
         </div>
 
-        <EditModal
-            :is-open="showEditModal"
-            :video="currentVideo"
-            @close="showEditModal = false"
-            @save="handleSaveVideo"
-            @delete="handleDeleteVideo"
-        />
+        <EditModal :is-open="showEditModal" :video="currentVideo" @close="showEditModal = false" @save="handleSaveVideo"
+            @delete="handleDeleteVideo" />
     </div>
 </template>
 
