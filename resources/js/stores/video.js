@@ -52,27 +52,22 @@ export const useVideoStore = defineStore('video', {
             lang
         }) {
             const axiosInstance = axios.getAxiosInstance()
-            try {
-                const res = await axiosInstance
-                    .post('/api/v1/video/edit/' + this.currentVideo.id, {
-                        caption: caption,
-                        is_pinned: is_pinned,
-                        can_download: can_download,
-                        can_comment: can_comment,
-                        alt_text: alt_text,
-                        can_duet: can_duet,
-                        can_stitch: can_stitch,
-                        is_sensitive: is_sensitive,
-                        contains_ad: contains_ad,
-                        contains_ai: contains_ai,
-                        lang: lang
-                    })
-                    .then((res) => {
-                        this.currentVideo = res.data
-                    })
-            } catch (error) {
-                throw error
-            }
+
+            const res = await axiosInstance.post('/api/v1/video/edit/' + this.currentVideo.id, {
+                caption,
+                is_pinned,
+                can_download,
+                can_comment,
+                alt_text,
+                can_duet,
+                can_stitch,
+                is_sensitive,
+                contains_ad,
+                contains_ai,
+                lang
+            })
+
+            this.currentVideo = res.data
         },
 
         async decrementCommentCount() {
