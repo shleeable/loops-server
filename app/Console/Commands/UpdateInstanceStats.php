@@ -47,6 +47,7 @@ class UpdateInstanceStats extends Command
         $this->updateCommentCounts($domain);
         $this->updateReplyCounts($domain);
         $this->updateFollowerCounts($domain);
+        $this->updateFollowingCounts($domain);
         $this->updateReportCounts($domain);
 
         $this->info('Instance statistics updated successfully!');
@@ -258,7 +259,6 @@ class UpdateInstanceStats extends Command
     {
         $this->info('Updating follower counts...');
 
-        // Count followers from remote instances (where the folower is from a remote instance)
         $query = "
             UPDATE instances i
             INNER JOIN (
@@ -283,6 +283,39 @@ class UpdateInstanceStats extends Command
         }
 
         $this->line('✓ Follower counts updated');
+    }
+
+    /**
+     * Update following counts for each instance
+     */
+    protected function updateFollowingCounts($domain = null)
+    {
+        $this->info('Updating following counts...');
+
+        $query = "
+            UPDATE instances i
+            INNER JOIN (
+                SELECT 
+                    p.domain,
+                    COUNT(*) as following_count
+                FROM followers f
+                INNER JOIN profiles p ON f.following_id = p.id
+                WHERE p.domain IS NOT NULL
+                AND p.domain != ''
+                AND f.profile_is_local = 1
+                GROUP BY p.domain
+            ) f ON i.domain = f.domain
+            SET i.following_count = f.following_count
+        ";
+
+        if ($domain) {
+            $query .= ' WHERE i.domain = ?';
+            DB::update($query, [$domain]);
+        } else {
+            DB::update($query);
+        }
+
+        $this->line('✓ Following counts updated');
     }
 
     /**
