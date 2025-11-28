@@ -2,7 +2,7 @@
     <div class="relative">
         <slot
             name="trigger"
-            :unread-count="notificationsStore.unreadCount"
+            :unread-count="unreadCount"
             :is-open="isOpen"
             :toggle="() => (isOpen = !isOpen)"
         />
@@ -17,9 +17,19 @@
                 <div
                     class="fixed w-[400px] p-4 mb-3 border-b border-gray-200 dark:border-slate-800 shadow dark:shadow-slate-900 rounded-lg z-30 backdrop-blur-lg bg-white/60 dark:bg-slate-950/60"
                 >
-                    <h3 class="text-lg font-semibold dark:text-slate-500">
-                        {{ t('common.notifications') }}
-                    </h3>
+                    <div class="flex justify-between">
+                        <h3 class="text-lg font-semibold dark:text-slate-500">
+                            {{ t('common.notifications') }}
+                        </h3>
+
+                        <button
+                            v-if="unreadCount"
+                            class="text-xs font-bold bg-[#F02C56] border border-[#F02C56] text-white rounded-lg px-5 py-2 hover:bg-[#F02C56]/90 hover:border-[#F02C5699] cursor-pointer"
+                            @click="markAllRead"
+                        >
+                            {{ $t('common.markAllRead') }}
+                        </button>
+                    </div>
                 </div>
 
                 <div class="relative top-[60px]">
@@ -132,27 +142,47 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useNotificationStore } from '~/stores/notifications'
 import { useNotifications } from '~/composables/useNotifications'
 import { format } from 'date-fns'
 import { useRouter } from 'vue-router'
 import LoopLink from '../LoopLink.vue'
 import { useI18n } from 'vue-i18n'
+import { useAlertModal } from '@/composables/useAlertModal.js'
 const { t } = useI18n()
 import { useUtils } from '@/composables/useUtils'
 
 const isOpen = ref(false)
-const notificationsStore = useNotificationStore()
+const notificationStore = useNotificationStore()
 const router = useRouter()
 const { truncateMiddle, formatNumber, formatDate } = useUtils()
+const { alertModal, confirmModal } = useAlertModal()
 
 const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } =
     useNotifications()
 
+const { fetchNotifications, loadMore, refresh, markAllAsRead } = notificationStore
+const unreadCount = computed(() => notificationStore.unreadCount)
+
 const gotoProfile = (notification) => {
     isOpen.value = false
     router.push(`/@${notification.actor.username}`)
+}
+
+const markAllRead = async () => {
+    const result = await confirmModal(
+        t('common.markAsRead'),
+        t('common.markAllAsReadConfirmMessage'),
+        t('common.markAllRead'),
+        t('common.cancel')
+    )
+
+    if (result) {
+        await markAllAsRead().finally(async () => {
+            await fetchNotifications()
+        })
+    }
 }
 
 const getNotificationText = (notification) => {
