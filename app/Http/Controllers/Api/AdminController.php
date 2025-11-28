@@ -235,6 +235,7 @@ class AdminController extends Controller
             $res['is_admin'] = (bool) $user->is_admin;
             $res['email'] = $user->email;
             $res['email_verified'] = (bool) $user->email_verified_at;
+            $res['delete_after'] = $user->delete_after;
         }
         $res['comments_count'] = Comment::whereProfileId($profile->id)->count();
         $res['comment_replies_count'] = CommentReply::whereProfileId($profile->id)->count();
@@ -301,6 +302,9 @@ class AdminController extends Controller
         $profile->update(['status' => 6]);
 
         if ($profile->local) {
+            DB::table('oauth_access_tokens')->where('user_id', $profile->user_id)->delete();
+            DB::table('oauth_auth_codes')->where('user_id', $profile->user_id)->delete();
+            DB::table('sessions')->where('user_id', $profile->user_id)->delete();
             $profile->user->update(['status' => 6]);
         }
 

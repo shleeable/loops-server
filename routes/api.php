@@ -251,6 +251,8 @@ Route::prefix('api')->group(function () {
         Route::get('/profiles/{id}', [AdminController::class, 'profileShow'])->middleware('auth:web,api');
         Route::post('/profiles/{id}/permissions', [AdminController::class, 'profilePermissionUpdate'])->middleware('auth:web,api');
         Route::post('/profiles/{id}/admin_note', [AdminController::class, 'profileAdminNoteUpdate'])->middleware('auth:web,api');
+        Route::post('/profiles/{id}/suspend', [AdminController::class, 'profileSuspend'])->middleware('auth:web,api');
+        Route::post('/profiles/{id}/unsuspend', [AdminController::class, 'profileUnsuspend'])->middleware('auth:web,api');
         Route::get('/settings', [AdminSettingsController::class, 'index'])->middleware('auth:web,api');
         Route::put('/settings', [AdminSettingsController::class, 'update'])->middleware('auth:web,api');
         Route::post('/settings/update-logo', [AdminSettingsController::class, 'updateLogo'])->middleware('auth:web,api');

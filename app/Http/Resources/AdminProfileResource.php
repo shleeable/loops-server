@@ -30,6 +30,12 @@ class AdminProfileResource extends JsonResource
             $avatarUrl = AvatarService::remote($this->id);
         }
 
+        $deleteAfter = null;
+
+        if ($this->local && $this->status === 8) {
+            $deleteAfter = $this->user->delete_after;
+        }
+
         return [
             'id' => (string) $this->id,
             'name' => $this->name ?? 'user'.$this->id,
@@ -53,6 +59,7 @@ class AdminProfileResource extends JsonResource
             'can_like' => $this->can_like,
             'can_comment' => $this->can_comment,
             'can_follow' => $this->can_follow,
+            'delete_after' => $deleteAfter,
             'created_at' => $this->created_at->format('c'),
         ];
     }
