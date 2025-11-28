@@ -83,7 +83,7 @@
 
                             <div class="flex items-center space-x-3 mt-4 sm:mt-0">
                                 <button
-                                    v-if="profile.local"
+                                    v-if="profile.local && profile.status != 'deleted'"
                                     @click="toggleVerification"
                                     :class="[
                                         'px-6 py-3 text-sm font-medium rounded-lg transition-colors',
@@ -118,7 +118,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div v-if="profile?.status != 'deleted'" class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <router-link :to="`/admin/videos?q=${profile.username}`" class="cursor-pointer">
                 <div class="card-info">
                     <div class="card-info-value">
@@ -188,7 +188,7 @@
                     Account Information
                 </h3>
                 <div class="space-y-4">
-                    <div>
+                    <div v-if="profile?.email">
                         <label class="block text-xs font-medium text-gray-500 dark:text-gray-400"
                             >Email</label
                         >
@@ -222,7 +222,7 @@
                     Permissions & Restrictions
                 </h3>
                 <div class="space-y-6">
-                    <div>
+                    <div v-if="profile.status != 'deleted'">
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <h4 class="text-sm font-medium text-gray-900 dark:text-white">
@@ -258,7 +258,7 @@
                         </div>
                     </div>
 
-                    <div>
+                    <div v-if="profile.status != 'deleted'">
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <h4 class="text-sm font-medium text-gray-900 dark:text-white">
@@ -294,7 +294,7 @@
                         </div>
                     </div>
 
-                    <div>
+                    <div v-if="profile.status != 'deleted'">
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <h4 class="text-sm font-medium text-gray-900 dark:text-white">
@@ -330,7 +330,7 @@
                         </div>
                     </div>
 
-                    <div>
+                    <div v-if="profile.status != 'deleted'">
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <h4 class="text-sm font-medium text-gray-900 dark:text-white">
@@ -383,6 +383,7 @@
         </div>
 
         <div
+            v-if="profile.status != 'deleted'"
             class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6"
         >
             <h3 class="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">Danger Zone</h3>
@@ -677,9 +678,11 @@ watch(
 .card-info {
     @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6;
 }
+
 .card-info-value {
     @apply text-2xl font-bold text-gray-900 dark:text-white;
 }
+
 .card-info-label {
     @apply text-sm text-gray-600 dark:text-gray-400;
 }

@@ -173,6 +173,13 @@ class Profile extends Model
         'status' => 'integer',
         'links' => 'array',
         'local' => 'boolean',
+        'is_suspended' => 'boolean',
+        'is_hidden' => 'boolean',
+        'can_upload' => 'boolean',
+        'can_follow' => 'boolean',
+        'can_comment' => 'boolean',
+        'can_share' => 'boolean',
+        'can_like' => 'boolean',
         'discoverable' => 'boolean',
         'manuallyApprovesFollowers' => 'boolean',
     ];

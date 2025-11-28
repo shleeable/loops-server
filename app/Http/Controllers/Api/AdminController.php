@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AdminHashtagResource;
 use App\Http\Resources\AdminInstanceResource;
+use App\Http\Resources\AdminProfileResource;
 use App\Http\Resources\CommentReplyResource;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\ProfileResource;
@@ -191,6 +192,10 @@ class AdminController extends Controller
             $query->where('local', true);
         }
 
+        if (! in_array($sort, ['disabled', 'suspended', 'deleted'])) {
+            $query->where('status', 1);
+        }
+
         if (! empty($search)) {
             if (str_starts_with($search, 'bio:')) {
                 $bio = trim(substr($search, 4));
@@ -216,7 +221,7 @@ class AdminController extends Controller
 
         $profiles = $query->cursorPaginate(10)->withQueryString();
 
-        return ProfileResource::collection($profiles);
+        return AdminProfileResource::collection($profiles);
     }
 
     public function profileShow(Request $request, $id)
@@ -264,20 +269,21 @@ class AdminController extends Controller
         ]);
 
         $profile = Profile::find($id);
-        $user = User::whereProfileId($id)->firstOrFail();
 
         if (! $profile) {
             return $this->error('Ooops!');
         }
 
-        if ($profile->user && $profile->user->is_admin) {
-            return $this->success();
-        }
-
         $oldValues = $profile->only(['can_upload', 'can_follow', 'can_comment', 'can_like', 'can_share']);
 
         $profile->update($validated);
-        $user->update($userValidated);
+        if ($profile->local) {
+            if ($profile->user && $profile->user->is_admin) {
+                return $this->success();
+            }
+            $user = User::whereProfileId($id)->firstOrFail();
+            $user->update($userValidated);
+        }
 
         app(AdminAuditLogService::class)->logProfileAdminPermissionUpdate($request->user(), $profile, ['old' => $oldValues, 'new' => $validated]);
 
@@ -1063,7 +1069,19 @@ class AdminController extends Controller
             'count_desc' => ['count', 'desc'],
         ];
 
-        if ($sort && isset($sortOptions[$sort])) {
+        if ($sort && $sort == 'suspended') {
+            $query->where('status', 6);
+
+            return $query;
+        } elseif ($sort && $sort == 'disabled') {
+            $query->where('status', 7);
+
+            return $query;
+        } elseif ($sort && $sort == 'deleted') {
+            $query->where('status', 8);
+
+            return $query;
+        } elseif ($sort && isset($sortOptions[$sort])) {
             [$column, $direction] = $sortOptions[$sort];
 
             $tablePrefix = $columnTableMap[$column].'.';
