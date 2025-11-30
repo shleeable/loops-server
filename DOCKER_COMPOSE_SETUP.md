@@ -48,13 +48,18 @@ This setup uses `serversideup/php:8.4-fpm-nginx` as the base image and is design
    # Wait 30 seconds for them to complete first boot.
    docker compose up -d
    ```
+   
+5. **Generate application "admin defaults":**
+   ```bash
+   docker compose exec loops php artisan db:seed --class=AdminSettingsSeeder
+   ```
 
-5. **Generate application keys:**
+6. **Generate application keys:**
    ```bash
    docker compose exec loops php artisan passport:keys
    ```
 
-6. **Create admin user:**
+7. **Create admin user:**
    ```bash
    docker compose exec loops php artisan create-admin-account
    ```
