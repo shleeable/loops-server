@@ -1,6 +1,6 @@
 <template>
     <div
-        class="relative flex justify-center h-[100dvh] lg:h-[calc(100dvh-130px)] w-full overflow-hidden video-wrapper"
+        class="relative flex justify-center h-[100dvh] lg:h-[calc(100dvh-60px)] w-full overflow-hidden video-wrapper"
     >
         <div class="flex items-center h-full w-full lg:max-w-7xl lg:mx-auto px-0 lg:px-4 lg:py-4">
             <div
@@ -69,7 +69,7 @@
                         <button
                             v-if="!isPaused && hasGlobalInteraction && isMuted && canInteract"
                             @click.stop="toggleMute"
-                            class="absolute bottom-22 left-4 lg:bottom-4 lg:right-auto lg:left-4 z-10 bg-black/50 rounded-full p-2 text-white flex items-center justify-center hover:bg-black/70"
+                            class="absolute bottom-[106px] left-4 lg:bottom-4 lg:right-auto lg:left-4 z-10 bg-black/50 rounded-full p-2 text-white flex items-center justify-center hover:bg-black/70"
                         >
                             <i
                                 :class="isMuted ? 'bx bx-volume-mute' : 'bx bx-volume-full'"
@@ -78,11 +78,15 @@
                         </button>
 
                         <div
+                            class="absolute bottom-10 lg:bottom-0 left-0 right-0 h-30 bg-gradient-to-t from-black/80 via-black/50 to-transparent pointer-events-none z-0"
+                        ></div>
+
+                        <div
                             v-if="canInteract"
-                            class="absolute bottom-2 left-2 right-20 lg:right-4 p-2 lg:p-4 text-white pointer-events-none"
+                            class="absolute bottom-10 left-2 right-20 lg:bottom-2 lg:right-4 p-2 lg:p-4 text-white pointer-events-none z-10"
                         >
                             <div class="mb-0">
-                                <span class="text-base sm:text-lg font-semibold"
+                                <span class="text-base sm:text-lg font-semibold drop-shadow-lg"
                                     >@{{ username }}</span
                                 >
                             </div>
@@ -92,7 +96,7 @@
                                     :mentions="mentions"
                                     :tags="hashtags"
                                     text-size="text-[14px]"
-                                    root-class="text-gray-300 dark:text-slate-300 whitespace-pre-wrap leading-relaxed pointer-events-auto"
+                                    root-class="text-gray-300 dark:text-slate-300 whitespace-pre-wrap leading-relaxed pointer-events-auto drop-shadow-md"
                                     :max-char-limit="80"
                                 />
                             </div>
@@ -100,7 +104,7 @@
 
                         <div
                             v-if="canInteract"
-                            class="absolute right-2 bottom-4 flex flex-col items-center space-y-6 lg:hidden pointer-events-auto z-10"
+                            class="absolute right-2 bottom-15 lg:bottom-4 flex flex-col items-center space-y-6 lg:hidden pointer-events-auto z-10"
                         >
                             <div class="flex flex-col items-center">
                                 <router-link :to="`/@${username}`">
@@ -376,7 +380,9 @@
                     :videoId="videoId"
                 />
 
-                <div v-if="isLoading" class="p-4 text-center"><Spinner /></div>
+                <div v-if="isLoading" class="p-4 text-center">
+                    <Spinner />
+                </div>
             </div>
 
             <div
@@ -897,11 +903,33 @@ defineExpose({
         height: calc(100dvh - 70px);
     }
 
+    @media (max-width: 767px) {
+        .video-wrapper {
+            height: calc(100dvh - 80px);
+        }
+    }
+
     @media (min-width: 1024px) {
         .video-wrapper {
             height: calc(100vh - 130px);
             height: calc(100dvh - 130px);
         }
+    }
+}
+
+.video-wrapper {
+    height: 100dvh;
+}
+
+@media (max-width: 767px) {
+    .video-wrapper {
+        height: calc(100dvh - 80px);
+    }
+}
+
+@media (min-width: 1024px) {
+    .video-wrapper {
+        height: calc(100dvh - 60px);
     }
 }
 

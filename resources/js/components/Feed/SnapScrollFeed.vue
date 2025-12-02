@@ -1,6 +1,7 @@
 <template>
     <div
         class="scroll-container"
+        :class="{ 'mobile-navbar-padding': isMobileView }"
         style="scroll-snap-type: y mandatory"
         @scroll="handleScroll"
         ref="scrollContainerRef"
@@ -119,6 +120,7 @@ const itemRefs = shallowRef({})
 const currentItemIndex = ref(0)
 const isChangingItem = ref(false)
 const lastActionTime = ref(0)
+const isMobileView = ref(false)
 
 const scrollState = markRaw({
     isScrolling: false,
@@ -336,9 +338,16 @@ const checkLoadMore = () => {
     }
 }
 
+const checkMobileView = () => {
+    isMobileView.value = window.innerWidth < 768
+}
+
 let dataWatcher = null
 onMounted(async () => {
     if (!scrollContainerRef.value) return
+
+    checkMobileView()
+    window.addEventListener('resize', checkMobileView)
 
     scrollContainerRef.value.addEventListener('scroll', handleScroll, {
         passive: true
@@ -370,6 +379,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+    window.removeEventListener('resize', checkMobileView)
+
     if (scrollDebounceTimer) {
         clearTimeout(scrollDebounceTimer)
     }
@@ -425,6 +436,12 @@ defineExpose({
     overscroll-behavior-y: contain;
 }
 
+@media (max-width: 767px) {
+    .scroll-container.mobile-navbar-padding {
+        height: calc(100dvh - 80px);
+    }
+}
+
 @supports (-webkit-touch-callout: none) {
     .scroll-container {
         height: 100vh;
@@ -432,6 +449,13 @@ defineExpose({
         height: 100dvh;
         padding-top: env(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    @media (max-width: 767px) {
+        .scroll-container.mobile-navbar-padding {
+            height: calc(100dvh - 80px);
+            padding-bottom: calc(env(safe-area-inset-bottom));
+        }
     }
 }
 
@@ -452,11 +476,17 @@ defineExpose({
     position: relative;
 }
 
+@media (max-width: 767px) {
+    .mobile-navbar-padding .snap-item {
+        height: calc(100dvh - 80px);
+    }
+}
+
 @media (hover: none) and (pointer: coarse) {
     .scroll-container {
         scroll-snap-type: y mandatory;
         -webkit-scroll-snap-type: y mandatory;
-        scroll-behavior: auto; /* Let snap handle smooth scrolling */
+        scroll-behavior: auto;
     }
 
     .snap-item {
@@ -465,7 +495,6 @@ defineExpose({
     }
 }
 
-/* iOS specific fixes */
 @supports (-webkit-touch-callout: none) {
     .scroll-container {
         -webkit-scroll-snap-type: y mandatory;
@@ -475,6 +504,12 @@ defineExpose({
     .snap-item {
         height: 100vh;
         height: 100dvh;
+    }
+
+    @media (max-width: 767px) {
+        .scroll-container.mobile-navbar-padding .snap-item {
+            height: calc(100dvh - 80px);
+        }
     }
 }
 </style>

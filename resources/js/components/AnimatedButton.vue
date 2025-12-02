@@ -3,7 +3,7 @@
         <button
             v-bind="$attrs"
             :disabled="loading || disabled"
-            :class="buttonClasses"
+            :class="[buttonClasses, sizeClasses]"
             :type="type"
             class="relative overflow-hidden transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 cursor-pointer disabled:cursor-not-allowed group"
         >
@@ -12,7 +12,8 @@
             <div class="relative flex items-center justify-center space-x-2">
                 <svg
                     v-if="loading"
-                    class="animate-spin h-5 w-5"
+                    class="animate-spin"
+                    :class="spinnerClasses"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -59,14 +60,47 @@ export default {
                     value
                 )
         },
+        size: {
+            type: String,
+            default: 'md',
+            validator: (value) => ['xs', 'sm', 'md', 'lg'].includes(value)
+        },
         loading: { type: Boolean, default: false },
         disabled: { type: Boolean, default: false },
         type: { type: String, default: 'button' }
     },
     setup(props) {
+        const sizeClasses = computed(() => {
+            switch (props.size) {
+                case 'xs':
+                    return 'px-3 py-1.5 text-xs rounded-md'
+                case 'sm':
+                    return 'px-4 py-2 text-sm rounded-md'
+                case 'lg':
+                    return 'px-8 py-3.5 text-base rounded-xl'
+                case 'md':
+                default:
+                    return 'px-6 py-3 text-sm rounded-lg'
+            }
+        })
+
+        const spinnerClasses = computed(() => {
+            switch (props.size) {
+                case 'xs':
+                    return 'h-3 w-3'
+                case 'sm':
+                    return 'h-4 w-4'
+                case 'lg':
+                    return 'h-6 w-6'
+                case 'md':
+                default:
+                    return 'h-5 w-5'
+            }
+        })
+
         const buttonClasses = computed(() => {
             const baseClasses =
-                'px-6 py-3 rounded-lg font-medium text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900'
+                'font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900'
 
             switch (props.variant) {
                 case 'primary':
@@ -106,7 +140,7 @@ export default {
             }
         })
 
-        return { buttonClasses }
+        return { buttonClasses, sizeClasses, spinnerClasses }
     }
 }
 </script>

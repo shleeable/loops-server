@@ -25,7 +25,7 @@
                 </div>
 
                 <div v-if="hashtags && hashtags.length" class="relative">
-                    <div class="mr-4 flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-3">
+                    <div class="mr-4 flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-1 px-3">
                         <button
                             v-for="hashtag in hashtags"
                             :key="hashtag.id"

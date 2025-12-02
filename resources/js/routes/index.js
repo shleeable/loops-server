@@ -32,6 +32,12 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
+            path: '/search',
+            name: 'search',
+            component: () => import('~/pages/search.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/v/:id',
             name: 'videoPage',
             component: () => import('~/pages/v/index.vue'),

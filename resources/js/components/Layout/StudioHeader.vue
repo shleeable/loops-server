@@ -116,7 +116,7 @@ const closeMobileSearch = () => {
 
 // Load recent searches on component mount
 onMounted(() => {
-    searchStore.loadRecentSearches()
+    // searchStore.loadRecentSearches()
 
     // Close dropdowns when clicking outside
     document.addEventListener('mouseup', (e) => {

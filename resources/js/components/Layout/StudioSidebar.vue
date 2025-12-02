@@ -23,8 +23,8 @@
             </div>
             <button
                 v-if="isMobile && isOpen"
-                @click="closeMobileDrawer"
-                class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800"
+                @click="closeMobile"
+                class="rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800"
             >
                 <i class="bx bx-x text-xl dark:text-slate-400"></i>
             </button>

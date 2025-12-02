@@ -4,6 +4,7 @@ import { useProfileStore } from '~/stores/profile'
 import { useAppStore } from '~/stores/app'
 import { useExploreStore } from '~/stores/explore'
 import { useVideoStore } from '~/stores/video'
+import { useSearchStore } from '~/stores/search'
 import { useEditHistoryStore } from '~/stores/editHistory'
 import { useTagFeedStore } from '~/stores/tagFeed'
 
@@ -17,6 +18,7 @@ export default {
         const videoStore = useVideoStore()
         const editHistoryStore = useEditHistoryStore()
         const tagFeedStore = useTagFeedStore()
+        const searchStore = useSearchStore()
 
         app.provide('authStore', authStore)
         app.provide('adminStore', adminStore)
@@ -26,6 +28,7 @@ export default {
         app.provide('videoStore', videoStore)
         app.provide('editHistoryStore', editHistoryStore)
         app.provide('tagFeedStore', tagFeedStore)
+        app.provide('searchStore', searchStore)
 
         app.config.globalProperties.$authStore = authStore
         app.config.globalProperties.$adminStore = adminStore
@@ -35,5 +38,6 @@ export default {
         app.config.globalProperties.$videoStore = videoStore
         app.config.globalProperties.$editHistoryStore = editHistoryStore
         app.config.globalProperties.$tagFeedStore = tagFeedStore
+        app.config.globalProperties.$searchStore = searchStore
     }
 }

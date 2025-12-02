@@ -114,7 +114,7 @@
             v-else
             class="container mx-auto min-h-screen bg-white dark:bg-gray-900 transition-colors"
         >
-            <header class="relative overflow-hidden py-20">
+            <header class="relative overflow-hidden pb-20">
                 <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
                 <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="text-center mt-16">

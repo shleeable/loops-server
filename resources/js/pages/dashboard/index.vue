@@ -9,7 +9,7 @@
                 <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">
                     {{ t('settings.accountControl') }}
                 </h2>
-                <div class="flex gap-3">
+                <div class="flex gap-3 flex-col lg:flex-row">
                     <div
                         class="flex w-full justify-between items-center p-4 bg-white dark:bg-slate-950 rounded-lg shadow-sm"
                     >
@@ -51,7 +51,7 @@
                                 <h3 class="font-medium mb-0 dark:text-gray-300">
                                     {{ t('settings.status') }}
                                 </h3>
-                                <p class="text-xs text-gray-500 -mb-1 font-light">
+                                <p class="hidden lg:block text-xs text-gray-500 -mb-1 font-light">
                                     {{ t('settings.weMayRestrictAccounts') }}
                                     <a href="#" class="text-blue-500 font-medium text-xs">{{
                                         t('common.learnMore')
@@ -75,7 +75,7 @@
                                 <h3 class="font-medium mb-0 dark:text-gray-300">
                                     {{ t('settings.email') }}
                                 </h3>
-                                <p class="text-xs text-gray-500 -mb-1 font-light">
+                                <p class="hidden lg:block text-xs text-gray-500 -mb-1 font-light">
                                     {{ t('settings.manageYourAccountEmail') }}
                                 </p>
                             </div>
@@ -93,7 +93,7 @@
                                 <h3 class="font-medium mb-0 dark:text-gray-300">
                                     {{ t('settings.security') }}
                                 </h3>
-                                <p class="text-xs text-gray-500 -mb-1 font-light">
+                                <p class="hidden lg:block text-xs text-gray-500 -mb-1 font-light">
                                     {{ t('settings.manageYourAccountSecuritySettings') }}
                                 </p>
                             </div>
@@ -111,8 +111,27 @@
                                 <h3 class="font-medium mb-0 dark:text-gray-300">
                                     {{ t('settings.accountData') }}
                                 </h3>
-                                <p class="text-xs text-gray-500 -mb-1 font-light">
+                                <p class="hidden lg:block text-xs text-gray-500 -mb-1 font-light">
                                     {{ t('settings.downloadYourAccountDataExport') }}
+                                </p>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="bx bx-chevron-right text-[20px] text-gray-400"></i>
+                            </div>
+                        </div>
+                    </router-link>
+
+                    <router-link
+                        to="/dashboard/safety/blocked-accounts"
+                        class="lg:hidden bg-white dark:bg-slate-950 dark:hover:bg-slate-800 transition-colors hover:bg-gray-50 rounded-lg shadow-lg"
+                    >
+                        <div class="flex justify-between items-center p-4">
+                            <div class="flex items-center gap-5">
+                                <h3 class="font-medium mb-0 dark:text-gray-300">
+                                    Blocked accounts
+                                </h3>
+                                <p class="hidden lg:block text-xs text-gray-500 -mb-1 font-light">
+                                    Manage users you've blocked.
                                 </p>
                             </div>
                             <div class="flex items-center">

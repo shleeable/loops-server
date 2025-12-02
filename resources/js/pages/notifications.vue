@@ -1,7 +1,7 @@
 <template>
     <MainLayout>
         <div class="max-w-2xl mx-auto px-5">
-            <div class="flex flex-col lg:flex-row items-center justify-between mb-6 mt-3">
+            <div class="flex flex-col lg:flex-row items-center justify-between py-6">
                 <div class="flex items-center">
                     <h1 class="text-2xl font-semibold tracking-tight dark:text-gray-100">
                         {{ $t('common.notifications') }}
