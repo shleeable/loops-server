@@ -158,13 +158,22 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
     {
         $this->validateUrlHost($url);
 
-        $tempPath = sys_get_temp_dir().'/'.Str::random(40).'.mp4';
+        $tempFilename = Str::random(40).'.mp4';
+        $tempStoragePath = 'tmp-removide/'.$tempFilename;
+
+        $tempPath = storage_path('app/private/'.$tempStoragePath);
+
+        $tmpDir = dirname($tempPath);
+        if (! is_dir($tmpDir)) {
+            mkdir($tmpDir, 0755, true);
+        }
+
         $maxSize = 100 * 1024 * 1024;
 
         $fileHandle = fopen($tempPath, 'w+');
 
         $response = Http::timeout(120)
-            ->withHeaders(['User-Agent' => config('app.user_agent', 'Laravel/1.0')])
+            ->withHeaders(['User-Agent' => app('user_agent')])
             ->withOptions([
                 'sink' => $fileHandle,
                 'progress' => function ($downloadTotal, $downloadedBytes) use ($maxSize) {
@@ -182,6 +191,10 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
         if (! $response->successful()) {
             @unlink($tempPath);
             throw new Exception('HTTP Error during download: '.$response->status());
+        }
+
+        if (! file_exists($tempPath)) {
+            throw new Exception("File was not created at: {$tempPath}");
         }
 
         $mimeType = mime_content_type($tempPath);
