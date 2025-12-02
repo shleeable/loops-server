@@ -55,7 +55,7 @@ class CreateHandler extends BaseHandler
                     'actor' => $actor->username,
                     'object_id' => $object['id'] ?? 'unknown',
                     'type' => $hasVideoAttachment ? 'video_post' : 'reply',
-                    'created_type' => get_class($result),
+                    'created_type' => class_exists($result) ? get_class($result) : json_encode($result),
                 ]);
             }
 
