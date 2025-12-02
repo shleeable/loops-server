@@ -88,7 +88,7 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
 
             $media = FFMpeg::open($relativeTempPath);
 
-            $fullTempPath = storage_path('app/'.$relativeTempPath);
+            $fullTempPath = storage_path('app/private/'.$relativeTempPath);
             $duration = $media->getDurationInSeconds();
             $sizeKb = (int) round(filesize($fullTempPath) / 1024);
 
@@ -121,7 +121,7 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
             $this->handleFailure($e, $video, $remoteUrl);
         } finally {
             if ($relativeTempPath) {
-                $fullTempPath = storage_path('app/'.$relativeTempPath);
+                $fullTempPath = storage_path('app/private/'.$relativeTempPath);
                 if (file_exists($fullTempPath)) {
                     @unlink($fullTempPath);
                 }
@@ -163,9 +163,9 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
         $this->validateUrlHost($url);
 
         $tempFilename = Str::random(40).'.mp4';
-        $relativePath = 'private/tmp/'.$tempFilename;
+        $relativePath = 'tmp/'.$tempFilename;
 
-        $fullPath = storage_path('app/'.$relativePath);
+        $fullPath = storage_path('app/private/'.$relativePath);
 
         $tmpDir = dirname($fullPath);
         if (! is_dir($tmpDir)) {
