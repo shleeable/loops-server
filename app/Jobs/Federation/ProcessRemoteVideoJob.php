@@ -69,7 +69,7 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
     {
         $remoteUrl = $this->attachment['url'];
         $apId = $this->object['id'] ?? null;
-        $tempPath = null;
+        $relativeTempPath = null;
         $video = null;
 
         try {
@@ -84,12 +84,13 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
 
             $video = $this->initializeVideoModel($profile);
 
-            $tempPath = $this->downloadVideo($remoteUrl);
+            $relativeTempPath = $this->downloadVideo($remoteUrl);
 
-            $media = FFMpeg::open($tempPath);
+            $media = FFMpeg::open($relativeTempPath);
 
+            $fullTempPath = storage_path('app/'.$relativeTempPath);
             $duration = $media->getDurationInSeconds();
-            $sizeKb = (int) round(filesize($tempPath) / 1024);
+            $sizeKb = (int) round(filesize($fullTempPath) / 1024);
 
             $filename = Str::random(40).'.mp4';
             $s3Path = "videos/{$profile->id}/{$video->id}/{$filename}";
@@ -119,8 +120,11 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
         } catch (Throwable $e) {
             $this->handleFailure($e, $video, $remoteUrl);
         } finally {
-            if ($tempPath && file_exists($tempPath)) {
-                @unlink($tempPath);
+            if ($relativeTempPath) {
+                $fullTempPath = storage_path('app/'.$relativeTempPath);
+                if (file_exists($fullTempPath)) {
+                    @unlink($fullTempPath);
+                }
             }
         }
     }
@@ -159,21 +163,21 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
         $this->validateUrlHost($url);
 
         $tempFilename = Str::random(40).'.mp4';
-        $tempStoragePath = 'tmp-removide/'.$tempFilename;
+        $relativePath = 'private/tmp/'.$tempFilename;
 
-        $tempPath = storage_path('app/private/'.$tempStoragePath);
+        $fullPath = storage_path('app/'.$relativePath);
 
-        $tmpDir = dirname($tempPath);
+        $tmpDir = dirname($fullPath);
         if (! is_dir($tmpDir)) {
             mkdir($tmpDir, 0755, true);
         }
 
         $maxSize = 100 * 1024 * 1024;
 
-        $fileHandle = fopen($tempPath, 'w+');
+        $fileHandle = fopen($fullPath, 'w+');
 
         $response = Http::timeout(120)
-            ->withHeaders(['User-Agent' => app('user_agent')])
+            ->withHeaders(['User-Agent' => config('app.user_agent', 'Laravel/1.0')])
             ->withOptions([
                 'sink' => $fileHandle,
                 'progress' => function ($downloadTotal, $downloadedBytes) use ($maxSize) {
@@ -189,21 +193,21 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
         }
 
         if (! $response->successful()) {
-            @unlink($tempPath);
+            @unlink($fullPath);
             throw new Exception('HTTP Error during download: '.$response->status());
         }
 
-        if (! file_exists($tempPath)) {
-            throw new Exception("File was not created at: {$tempPath}");
+        if (! file_exists($fullPath)) {
+            throw new Exception("File was not created at: {$fullPath}");
         }
 
-        $mimeType = mime_content_type($tempPath);
+        $mimeType = mime_content_type($fullPath);
         if (! str_starts_with($mimeType, 'video/')) {
-            @unlink($tempPath);
+            @unlink($fullPath);
             throw new Exception("Invalid mime type: {$mimeType}");
         }
 
-        return $tempPath;
+        return $relativePath;
     }
 
     /**

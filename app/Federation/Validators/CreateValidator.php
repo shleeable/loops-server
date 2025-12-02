@@ -40,6 +40,10 @@ class CreateValidator extends BaseValidator
 
         $object = $activity['object'];
 
+        if (app(SanitizeService::class)->isLocalObject($object['id'])) {
+            throw new \Exception('Invalid create activity origin.');
+        }
+
         if (empty($object['type']) || $object['type'] !== 'Note') {
             throw new \Exception("Create activity 'object' type must be 'Note'. Got '{$object['type']}'.");
         }
