@@ -52,6 +52,7 @@ class FeedService
             ->whereNull('blocked.account_id')
             ->orderBy('videos.id', 'desc')
             ->where('videos.status', 2)
+            ->where('is_local', true)
             ->whereNotNull('videos.vid_optimized')
             ->select('videos.*')
             ->cursorPaginate($limit)
