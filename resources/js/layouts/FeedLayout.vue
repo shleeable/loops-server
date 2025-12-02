@@ -17,10 +17,6 @@
     </div>
 
     <ReportModal />
-
-    <Teleport to="body">
-        <LoginModal v-if="isLoginOpen" @close="closeLoginModal" />
-    </Teleport>
 </template>
 
 <script setup>
@@ -31,7 +27,9 @@ import Sidebar from '~/components/Layout/Sidebar.vue'
 import LoginModal from '~/components/Layout/LoginModal.vue'
 import MobileNav from '@/components/Layout/MobileNav.vue'
 import MobileHeader from '@/components/Layout/MobileHeader.vue'
+import { useAuthStore } from '@/stores/auth'
 
+const authStore = useAuthStore()
 const appStore = inject('appStore')
 const isMobileDrawerOpen = ref(false)
 const showLoginModal = ref(false)
@@ -49,7 +47,7 @@ const closeMobileDrawer = () => {
 }
 
 const openLoginModal = () => {
-    appStore.toggleLoginForm()
+    authStore.openAuthModal()
 }
 
 const closeLoginModal = () => {

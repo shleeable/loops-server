@@ -217,7 +217,7 @@
 
                         <button
                             v-if="!authStore.isAuthenticated && appConfig.registration"
-                            @click="handleLogout"
+                            @click="handleJoinClick"
                             class="w-full flex items-center justify-center border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 rounded-lg px-4 py-3 font-medium hover:bg-gray-50 dark:hover:bg-slate-800"
                         >
                             {{ t('nav.join') }}
@@ -565,7 +565,12 @@ const handleUploadClick = () => {
 }
 
 const handleLoginClick = () => {
-    emit('openLogin')
+    authStore.openAuthModal('login')
+    closeMobileDrawer()
+}
+
+const handleJoinClick = () => {
+    authStore.openAuthModal('register')
     closeMobileDrawer()
 }
 
