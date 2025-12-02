@@ -99,6 +99,7 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
             $media->export()
                 ->toDisk($disk)
                 ->inFormat(new X264('aac', 'libx264'))
+                ->withVisibility('public')
                 ->save($s3Path);
 
             $video->update([
