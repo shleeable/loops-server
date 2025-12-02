@@ -224,7 +224,7 @@ class ProcessSharedInboxActivity implements ShouldQueue
 
                     $followerQuery = $remoteProfile->followers()->where('profile_is_local', true)->limit($maxFollowers);
 
-                    $followerIds = $followerQuery->pluck('profiles.id');
+                    $followerIds = $followerQuery->pluck('followers.profile_id');
 
                     if ($followerIds->isNotEmpty()) {
                         $localTargetIds = $localTargetIds->merge($followerIds);
