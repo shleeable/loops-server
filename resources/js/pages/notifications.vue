@@ -1,33 +1,35 @@
 <template>
     <MainLayout>
-        <div class="max-w-2xl mx-auto px-5">
-            <div class="flex flex-col lg:flex-row items-center justify-between py-6">
-                <div class="flex items-center">
-                    <h1 class="text-2xl font-semibold tracking-tight dark:text-gray-100">
+        <div class="max-w-2xl mx-auto md:px-5">
+            <div class="flex items-center justify-between px-3 md:px-0 py-6 gap-3">
+                <div class="flex items-center min-w-0 flex-1">
+                    <h1 class="text-2xl font-semibold tracking-tight dark:text-gray-100 truncate">
                         {{ $t('common.notifications') }}
                     </h1>
                     <span
                         v-if="unreadCount > 0"
-                        class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 flex-shrink-0"
                     >
                         {{ formatNumber(unreadCount) }}
-                        {{ $t('common.unread') }}
+                        <span class="hidden sm:inline ml-1">{{ $t('common.unread') }}</span>
                     </span>
                 </div>
 
-                <div class="hidden lg:flex items-center space-x-3">
+                <div class="flex items-center gap-2 flex-shrink-0">
                     <button
                         v-if="unreadCount"
-                        class="text-xs font-bold bg-[#F02C56] border border-[#F02C56] text-white rounded-lg px-5 py-2 hover:bg-[#F02C56]/90 hover:border-[#F02C5699] cursor-pointer"
+                        class="inline-flex items-center justify-center font-bold bg-[#F02C56] border border-[#F02C56] text-white rounded-lg hover:bg-[#F02C56]/90 hover:border-[#F02C5699] cursor-pointer transition-colors px-3 py-2 text-xs sm:px-5 sm:py-2 sm:text-sm"
                         @click="markAllRead"
                     >
-                        {{ $t('common.markAllRead') }}
+                        <span class="hidden sm:inline">{{ $t('common.markAllRead') }}</span>
+                        <span class="sm:hidden">{{ $t('common.markAllRead') }}</span>
                     </button>
 
                     <button
                         @click="refresh"
                         :disabled="loading && safeNotifications.length === 0"
-                        class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        class="hidden md:inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                        :aria-label="$t('common.refresh')"
                     >
                         <ArrowPathIcon
                             class="w-4 h-4"
@@ -75,7 +77,7 @@
             <div v-else-if="safeNotifications.length > 0" class="space-y-6">
                 <div v-for="(groupNotifications, date) in groupedNotifications" :key="date">
                     <h3
-                        class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 sticky top-17 bg-gray-50 dark:bg-gray-900 py-2 z-1 p-3 rounded"
+                        class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 sticky top-17 lg:top-0 bg-gray-50 dark:bg-gray-900 py-2 z-1 p-3"
                     >
                         {{ formatDate(date) }} ({{ groupNotifications.length }})
                     </h3>
