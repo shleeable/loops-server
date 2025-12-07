@@ -41,11 +41,11 @@ class AccountService
         });
     }
 
-    public static function compact($id)
+    public static function compact($id, $grace = true)
     {
         $res = self::get($id);
         if (! $res) {
-            return [];
+            return $grace ? [] : false;
         }
 
         return [
