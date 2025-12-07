@@ -50,9 +50,14 @@
         <div class="flex-shrink-0">
             <div
                 v-if="
-                    ['video.like', 'video.comment', 'video.share', 'video.commentReply'].includes(
-                        notification.type
-                    ) && notification.video_thumbnail
+                    [
+                        'video.like',
+                        'video.comment',
+                        'video.share',
+                        'video.commentReply',
+                        'comment.share',
+                        'commentReply.share'
+                    ].includes(notification.type) && notification.video_thumbnail
                 "
             >
                 <img
@@ -72,6 +77,7 @@
 import { useRouter } from 'vue-router'
 import {
     HeartIcon,
+    ArrowPathRoundedSquareIcon,
     UserPlusIcon,
     ChatBubbleLeftIcon,
     ArrowPathIcon,
@@ -99,6 +105,12 @@ const notificationConfig = {
         iconColor: 'text-white',
         bgColor: 'bg-red-500'
     },
+    'video.share': {
+        message: t('notifications.messageTypes.videoShare'),
+        icon: ArrowPathRoundedSquareIcon,
+        iconColor: 'text-white',
+        bgColor: 'bg-red-500'
+    },
     new_follower: {
         message: t('notifications.messageTypes.newFollower'),
         icon: UserPlusIcon,
@@ -123,11 +135,23 @@ const notificationConfig = {
         iconColor: 'text-white',
         bgColor: 'bg-red-500'
     },
+    'comment.share': {
+        message: t('notifications.messageTypes.videoCommentShare'),
+        icon: ArrowPathRoundedSquareIcon,
+        iconColor: 'text-white',
+        bgColor: 'bg-green-500'
+    },
     'commentReply.like': {
         message: t('notifications.messageTypes.videoCommentReplyLike'),
         icon: HeartIcon,
         iconColor: 'text-white',
         bgColor: 'bg-red-500'
+    },
+    'commentReply.share': {
+        message: t('notifications.messageTypes.videoCommentReplyShare'),
+        icon: ArrowPathRoundedSquareIcon,
+        iconColor: 'text-white',
+        bgColor: 'bg-green-500'
     },
     'video.share': {
         message: t('notifications.messageTypes.videoShare'),
@@ -170,12 +194,20 @@ const handleClick = () => {
 
     try {
         if (
-            ['video.comment', 'video.commentReply', 'commentReply.like', 'comment.like'].includes(
-                props.notification.type
-            )
+            [
+                'video.comment',
+                'video.commentReply',
+                'commentReply.like',
+                'comment.like',
+                'comment.share',
+                'commentReply.share'
+            ].includes(props.notification.type)
         ) {
             router.push(`${props.notification.url}`)
-        } else if (props.notification.type === 'video.like' && props.notification.video_id) {
+        } else if (
+            ['video.like', 'video.share'].includes(props.notification.type) &&
+            props.notification.video_id
+        ) {
             const vid = encodeHashid(props.notification.video_id)
             router.push(`/v/${vid}`)
         } else if (props.notification.type === 'new_follower') {
@@ -190,7 +222,6 @@ const formatTimeAgo = (dateString) => {
     const date = new Date(dateString)
     const now = new Date()
     const diffInSeconds = Math.floor((now - date) / 1000)
-
     if (diffInSeconds < 60) return 'now'
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`
