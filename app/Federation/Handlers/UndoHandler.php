@@ -13,6 +13,7 @@ use App\Models\Profile;
 use App\Models\Video;
 use App\Models\VideoLike;
 use App\Models\VideoRepost;
+use App\Services\NotificationService;
 use App\Services\SanitizeService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -98,6 +99,8 @@ class UndoHandler extends BaseHandler
             $actor->decrement('following');
         }
 
+        NotificationService::unFollow($targetProfile->id, $actor->id);
+
         if (config('logging.dev_log')) {
             Log::info('Successfully processed Undo Follow', [
                 'actor' => $actor->username,
@@ -152,6 +155,14 @@ class UndoHandler extends BaseHandler
             $status->decrement('likes');
         }
 
+        if ($actor->id !== $status->profile_id) {
+            NotificationService::deleteVideoLike(
+                $status->profile_id,
+                $status->id,
+                $actor->id
+            );
+        }
+
         if (config('logging.dev_log')) {
             Log::info('Successfully processed Undo Like', [
                 'actor' => $actor->username,
@@ -183,6 +194,14 @@ class UndoHandler extends BaseHandler
 
         if ($status->likes > 0) {
             $status->decrement('likes');
+        }
+
+        if ($actor->id !== $status->profile_id) {
+            NotificationService::deleteCommentLike(
+                $status->profile_id,
+                $status->id,
+                $actor->id
+            );
         }
 
         if (config('logging.dev_log')) {
@@ -218,6 +237,15 @@ class UndoHandler extends BaseHandler
             $status->decrement('likes');
         }
 
+        if ($actor->id !== $status->profile_id) {
+            NotificationService::deleteCommentReplyLike(
+                $status->profile_id,
+                $actor->id,
+                $status->id,
+                $status->video_id
+            );
+        }
+
         if (config('logging.dev_log')) {
             Log::info('Successfully processed Undo Like', [
                 'actor' => $actor->username,
@@ -249,6 +277,14 @@ class UndoHandler extends BaseHandler
 
         if ($status->shares > 0) {
             $status->decrement('shares');
+        }
+
+        if ($actor->id !== $status->profile_id) {
+            NotificationService::deleteVideoShare(
+                $status->profile_id,
+                $status->id,
+                $actor->id
+            );
         }
 
         if (config('logging.dev_log')) {
@@ -284,6 +320,15 @@ class UndoHandler extends BaseHandler
             $status->decrement('shares');
         }
 
+        if ($actor->id !== $status->profile_id) {
+            NotificationService::deleteVideoCommentShare(
+                $status->profile_id,
+                $status->id,
+                $status->video_id,
+                $actor->id
+            );
+        }
+
         if (config('logging.dev_log')) {
             Log::info('Successfully processed Undo Comment Repost', [
                 'actor' => $actor->username,
@@ -315,6 +360,15 @@ class UndoHandler extends BaseHandler
 
         if ($status->shares > 0) {
             $status->decrement('shares');
+        }
+
+        if ($actor->id !== $status->profile_id) {
+            NotificationService::deleteVideoReplyShare(
+                $status->profile_id,
+                $status->id,
+                $status->video_id,
+                $actor->id
+            );
         }
 
         if (config('logging.dev_log')) {

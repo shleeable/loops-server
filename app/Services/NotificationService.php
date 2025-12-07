@@ -101,6 +101,22 @@ class NotificationService
         return $res;
     }
 
+    public static function deleteCommentReplyLike($uid, $pid, $crid, $vid)
+    {
+        $res = Notification::where([
+            'type' => Notification::VIDEO_COMMENT_REPLY_LIKE,
+            'user_id' => $uid,
+            'profile_id' => $pid,
+            'comment_reply_id' => $crid,
+            'video_id' => $vid,
+        ])->first();
+
+        if ($res) {
+            $res->delete();
+            self::clearUnreadCount($uid);
+        }
+    }
+
     public static function newFollower($uid, $pid)
     {
         return Notification::updateOrCreate([
@@ -200,6 +216,85 @@ class NotificationService
             'video_id' => $vid,
             'comment_id' => $cid,
             'comment_reply_id' => $crid,
+        ])->first();
+
+        if ($res) {
+            $res->delete();
+            self::clearUnreadCount($uid);
+        }
+    }
+
+    public static function newVideoShare($uid, $vid, $pid)
+    {
+        return Notification::updateOrCreate([
+            'type' => Notification::VIDEO_SHARE,
+            'user_id' => $uid,
+            'video_id' => $vid,
+            'profile_id' => $pid,
+        ]);
+    }
+
+    public static function deleteVideoShare($uid, $vid, $pid)
+    {
+        $res = Notification::where([
+            'type' => Notification::VIDEO_SHARE,
+            'user_id' => $uid,
+            'video_id' => $vid,
+            'profile_id' => $pid,
+        ])->first();
+
+        if ($res) {
+            $res->delete();
+            self::clearUnreadCount($uid);
+        }
+    }
+
+    public static function newVideoCommentShare($uid, $cid, $vid, $pid)
+    {
+        return Notification::updateOrCreate([
+            'type' => Notification::VIDEO_COMMENT_SHARE,
+            'user_id' => $uid,
+            'comment_id' => $cid,
+            'video_id' => $vid,
+            'profile_id' => $pid,
+        ]);
+    }
+
+    public static function deleteVideoCommentShare($uid, $cid, $vid, $pid)
+    {
+        $res = Notification::where([
+            'type' => Notification::VIDEO_COMMENT_SHARE,
+            'user_id' => $uid,
+            'comment_id' => $cid,
+            'video_id' => $vid,
+            'profile_id' => $pid,
+        ])->first();
+
+        if ($res) {
+            $res->delete();
+            self::clearUnreadCount($uid);
+        }
+    }
+
+    public static function newVideoReplyShare($uid, $cid, $vid, $pid)
+    {
+        return Notification::updateOrCreate([
+            'type' => Notification::VIDEO_REPLY_SHARE,
+            'user_id' => $uid,
+            'comment_reply_id' => $cid,
+            'video_id' => $vid,
+            'profile_id' => $pid,
+        ]);
+    }
+
+    public static function deleteVideoReplyShare($uid, $cid, $vid, $pid)
+    {
+        $res = Notification::where([
+            'type' => Notification::VIDEO_REPLY_SHARE,
+            'user_id' => $uid,
+            'comment_reply_id' => $cid,
+            'video_id' => $vid,
+            'profile_id' => $pid,
         ])->first();
 
         if ($res) {

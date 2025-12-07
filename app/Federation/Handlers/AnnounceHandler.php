@@ -10,6 +10,7 @@ use App\Models\Profile;
 use App\Models\UserFilter;
 use App\Models\Video;
 use App\Models\VideoRepost;
+use App\Services\NotificationService;
 use App\Services\SanitizeService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -50,7 +51,6 @@ class AnnounceHandler extends BaseHandler
 
             if ($modelClass === 'App\Models\Video') {
                 $video = $modelObject;
-                $statusOwner = $video->profile;
 
                 $existingShare = VideoRepost::where('profile_id', $actor->id)
                     ->where('video_id', $video->id)
@@ -70,20 +70,30 @@ class AnnounceHandler extends BaseHandler
                 }
 
                 $share = $this->createVideoRepostAnnounce($actor, $modelObject, $activity);
-
                 $this->updateVideoShareCount($modelObject);
 
+                if ($actor->id !== $video->profile_id) {
+                    NotificationService::newVideoShare(
+                        $video->profile_id,
+                        $video->id,
+                        $actor->id
+                    );
+                    NotificationService::clearUnreadCount($video->profile_id);
+                }
+
             } elseif ($modelClass === 'App\Models\Comment') {
+                $comment = $modelObject;
+
                 $existingShare = CommentRepost::where('profile_id', $actor->id)
-                    ->where('video_id', $modelObject->video_id)
-                    ->where('comment_id', $modelObject->id)
+                    ->where('video_id', $comment->video_id)
+                    ->where('comment_id', $comment->id)
                     ->first();
 
                 if ($existingShare) {
                     if (config('logging.dev_log')) {
                         Log::info('Announce already exists', [
                             'actor' => $actor->username,
-                            'comment_id' => $modelObject->id,
+                            'comment_id' => $comment->id,
                         ]);
                     }
 
@@ -92,19 +102,31 @@ class AnnounceHandler extends BaseHandler
                     return $existingShare;
                 }
 
-                $share = $this->createCommentRepostAnnounce($actor, $modelObject, $activity);
+                $share = $this->createCommentRepostAnnounce($actor, $comment, $activity);
+
+                if ($actor->id !== $comment->profile_id) {
+                    NotificationService::newVideoCommentShare(
+                        $comment->profile_id,
+                        $comment->id,
+                        $comment->video_id,
+                        $actor->id
+                    );
+                    NotificationService::clearUnreadCount($comment->profile_id);
+                }
 
             } elseif ($modelClass === 'App\Models\CommentReply') {
+                $reply = $modelObject;
+
                 $existingShare = CommentReplyRepost::where('profile_id', $actor->id)
-                    ->where('video_id', $modelObject->video_id)
-                    ->where('reply_id', $modelObject->id)
+                    ->where('video_id', $reply->video_id)
+                    ->where('reply_id', $reply->id)
                     ->first();
 
                 if ($existingShare) {
                     if (config('logging.dev_log')) {
                         Log::info('Announce already exists', [
                             'actor' => $actor->username,
-                            'reply_id' => $modelObject->id,
+                            'reply_id' => $reply->id,
                         ]);
                     }
 
@@ -113,7 +135,17 @@ class AnnounceHandler extends BaseHandler
                     return $existingShare;
                 }
 
-                $share = $this->createCommentReplyRepostAnnounce($actor, $modelObject, $activity);
+                $share = $this->createCommentReplyRepostAnnounce($actor, $reply, $activity);
+
+                if ($actor->id !== $reply->profile_id) {
+                    NotificationService::newVideoReplyShare(
+                        $reply->profile_id,
+                        $reply->id,
+                        $reply->video_id,
+                        $actor->id
+                    );
+                    NotificationService::clearUnreadCount($reply->profile_id);
+                }
             }
 
             DB::commit();
