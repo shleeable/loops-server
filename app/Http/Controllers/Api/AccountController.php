@@ -327,7 +327,8 @@ class AccountController extends Controller
         $hasSearch = $request->filled('search');
 
         $query = Follower::where('followers.following_id', $id)
-            ->join('profiles', 'followers.profile_id', '=', 'profiles.id');
+            ->join('profiles', 'followers.profile_id', '=', 'profiles.id')
+            ->where('profiles.status', 1);
 
         if ($request->filled('search')) {
             $search = $request->validated()['search'];
@@ -383,7 +384,8 @@ class AccountController extends Controller
         $hasSearch = $request->filled('search');
 
         $query = Follower::where('followers.profile_id', $id)
-            ->join('profiles', 'followers.following_id', '=', 'profiles.id');
+            ->join('profiles', 'followers.following_id', '=', 'profiles.id')
+            ->where('profiles.status', 1);
 
         if ($request->filled('search')) {
             $search = $request->validated()['search'];
@@ -505,6 +507,7 @@ class AccountController extends Controller
                     ->whereColumn('user_filters.profile_id', 'profiles.id')
                     ->where('user_filters.account_id', $authProfileId);
             })
+            ->where('profiles.status', 1)
             ->where('profiles.id', '!=', $authProfileId)
             ->groupBy('profiles.id')
             ->orderByDesc('followers_count')
