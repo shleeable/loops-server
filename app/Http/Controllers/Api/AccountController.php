@@ -74,12 +74,12 @@ class AccountController extends Controller
     {
         $pid = $request->user()->profile_id;
 
-        return NotificationResource::collection(
-            Notification::whereUserId($pid)
-                ->whereIn('type', [11, 15, 16, 21, 22, 23, 26, 27, 28, 31])
-                ->orderByDesc('id')
-                ->cursorPaginate(20)
-        );
+        $res = Notification::whereUserId($pid)
+            ->whereIn('type', [11, 15, 16, 21, 22, 23, 26, 27, 28, 31])
+            ->orderByDesc('created_at')
+            ->cursorPaginate(20);
+
+        return NotificationResource::collection($res);
     }
 
     public function notificationUnreadCount(Request $request)
