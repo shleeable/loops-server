@@ -1,7 +1,7 @@
 <template>
     <div
         :data-notification-item="notification.id"
-        @click="handleClick"
+        @click="handleNotificationClick"
         class="group relative flex items-center gap-3 py-3 px-4 transition-all cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5"
         :class="[
             !notification.read_at
@@ -14,13 +14,22 @@
             class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"
         ></div>
 
-        <div class="relative flex-shrink-0">
+        <router-link
+            :to="`/@${notification.actor.username}`"
+            @click.stop="markAsRead"
+            class="relative flex-shrink-0 group/avatar"
+        >
             <img
                 :src="notification.actor.avatar"
                 :alt="notification.actor.name"
-                class="w-10 h-10 rounded-full object-cover ring-2 ring-white dark:ring-gray-900"
+                class="w-10 h-10 rounded-full object-cover ring-2 ring-white dark:ring-gray-900 transition-transform group-hover/avatar:scale-105"
                 @error="handleImageError"
             />
+            <span
+                class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 dark:bg-gray-700 rounded opacity-0 pointer-events-none group-hover/avatar:opacity-100 transition-opacity whitespace-nowrap z-10"
+            >
+                @{{ notification.actor.username }}
+            </span>
             <div
                 class="absolute -bottom-1 -right-1 flex items-center justify-center w-5 h-5 rounded-full ring-2 ring-white dark:ring-gray-900"
                 :class="getIconBackgroundClass()"
@@ -31,13 +40,23 @@
                     :class="getIconColorClass()"
                 />
             </div>
-        </div>
+        </router-link>
 
         <div class="flex-1 min-w-0 pr-2">
             <p class="text-sm leading-snug text-gray-900 dark:text-gray-100">
-                <span :class="!notification.read_at ? 'font-bold' : 'font-semibold'">
+                <router-link
+                    :to="`/@${notification.actor.username}`"
+                    @click.stop="markAsRead"
+                    class="hover:underline group/name relative"
+                    :class="!notification.read_at ? 'font-bold' : 'font-semibold'"
+                >
                     {{ notification.actor.name }}
-                </span>
+                    <span
+                        class="absolute bottom-full left-0 mb-2 px-2 py-1 text-xs text-white bg-gray-900 dark:bg-gray-700 rounded opacity-0 pointer-events-none group-hover/name:opacity-100 transition-opacity whitespace-nowrap z-10"
+                    >
+                        @{{ notification.actor.username }}
+                    </span>
+                </router-link>
                 <span class="text-gray-600 dark:text-gray-400 font-normal">
                     {{ ' ' + getNotificationMessage() }}
                 </span>
@@ -153,12 +172,6 @@ const notificationConfig = {
         iconColor: 'text-white',
         bgColor: 'bg-green-500'
     },
-    'video.share': {
-        message: t('notifications.messageTypes.videoShare'),
-        icon: ArrowPathIcon,
-        iconColor: 'text-white',
-        bgColor: 'bg-purple-500'
-    },
     'video.duet': {
         message: 'dueted your video',
         icon: ArrowPathIcon,
@@ -187,10 +200,14 @@ const getIconBackgroundClass = () => {
     return config?.bgColor || 'bg-gray-400'
 }
 
-const handleClick = () => {
+const markAsRead = () => {
     if (!props.notification.read_at) {
         emit('mark-as-read', props.notification.id)
     }
+}
+
+const handleNotificationClick = () => {
+    markAsRead()
 
     try {
         if (

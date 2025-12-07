@@ -8,7 +8,7 @@
                     </h1>
                     <span
                         v-if="unreadCount > 0"
-                        class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 flex-shrink-0"
+                        class="ml-2 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-500 text-red-100 dark:bg-red-600 dark:text-white flex-shrink-0"
                     >
                         {{ formatNumber(unreadCount) }}
                         <span class="hidden sm:inline ml-1">{{ $t('common.unread') }}</span>
