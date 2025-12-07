@@ -56,7 +56,13 @@ class Notification extends Model
      * 21 = Video Like
      * 22 = Comment Like
      * 23 = Comment Reply Like
-     * 24 - 30 = Reserved
+     * 24 = Reserved
+     * 25 = Reserved
+     * 26 = Shared your video
+     * 27 = Shared your comment
+     * 28 = Shared your reply
+     * 29 = Reserved
+     * 30 = Reserved
      * 31 - Duet your video
      **/
     public const NEW_FOLLOWER = 11;
@@ -72,6 +78,12 @@ class Notification extends Model
     public const VIDEO_COMMENT_LIKE = 22;
 
     public const VIDEO_COMMENT_REPLY_LIKE = 23;
+
+    public const VIDEO_SHARE = 26;
+
+    public const VIDEO_COMMENT_SHARE = 27;
+
+    public const VIDEO_REPLY_SHARE = 28;
 
     public const DUET_YOUR_VIDEO = 31;
 
