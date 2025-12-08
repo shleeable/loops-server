@@ -74,12 +74,12 @@ class AccountController extends Controller
     {
         $pid = $request->user()->profile_id;
 
-        return NotificationResource::collection(
-            Notification::whereUserId($pid)
-                ->whereIn('type', [11, 15, 16, 21, 22, 23, 31])
-                ->orderByDesc('id')
-                ->cursorPaginate(20)
-        );
+        $res = Notification::whereUserId($pid)
+            ->whereIn('type', [11, 15, 16, 21, 22, 23, 26, 27, 28, 31])
+            ->orderByDesc('created_at')
+            ->cursorPaginate(20);
+
+        return NotificationResource::collection($res);
     }
 
     public function notificationUnreadCount(Request $request)
@@ -327,7 +327,8 @@ class AccountController extends Controller
         $hasSearch = $request->filled('search');
 
         $query = Follower::where('followers.following_id', $id)
-            ->join('profiles', 'followers.profile_id', '=', 'profiles.id');
+            ->join('profiles', 'followers.profile_id', '=', 'profiles.id')
+            ->where('profiles.status', 1);
 
         if ($request->filled('search')) {
             $search = $request->validated()['search'];
@@ -383,7 +384,8 @@ class AccountController extends Controller
         $hasSearch = $request->filled('search');
 
         $query = Follower::where('followers.profile_id', $id)
-            ->join('profiles', 'followers.following_id', '=', 'profiles.id');
+            ->join('profiles', 'followers.following_id', '=', 'profiles.id')
+            ->where('profiles.status', 1);
 
         if ($request->filled('search')) {
             $search = $request->validated()['search'];
@@ -505,6 +507,7 @@ class AccountController extends Controller
                     ->whereColumn('user_filters.profile_id', 'profiles.id')
                     ->where('user_filters.account_id', $authProfileId);
             })
+            ->where('profiles.status', 1)
             ->where('profiles.id', '!=', $authProfileId)
             ->groupBy('profiles.id')
             ->orderByDesc('followers_count')
