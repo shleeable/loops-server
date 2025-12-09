@@ -5,8 +5,8 @@ namespace App\Services;
 use App\Http\Resources\ProfileResource;
 use App\Models\Profile;
 use App\Models\Video;
-use Cache;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class AccountService
 {
@@ -14,7 +14,7 @@ class AccountService
 
     const ACCOUNT_LIKES_CACHE_KEY = 'api:s:account:likes_count:';
 
-    public static function get($id)
+    public static function get($id, $grace = true)
     {
         $res = Cache::remember(self::CACHE_KEY.$id, now()->addDays(7), function () use ($id) {
             $req = new Request;
@@ -26,7 +26,11 @@ class AccountService
             return (new ProfileResource($profile))->toArray($req);
         });
 
-        return $res ? $res : [];
+        if($res) {
+            return $res;
+        }
+
+        return $grace ? [] : false;
     }
 
     public static function getActorId($id)
