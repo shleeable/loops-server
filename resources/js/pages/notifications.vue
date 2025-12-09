@@ -87,6 +87,7 @@
                             v-for="notification in groupNotifications"
                             :key="notification.id"
                             :notification="notification"
+                            :current-user-id="authStore?.user?.id"
                             @mark-as-read="markAsRead"
                         />
                     </div>
