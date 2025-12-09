@@ -26,7 +26,7 @@ class AccountService
             return (new ProfileResource($profile))->toArray($req);
         });
 
-        if($res) {
+        if ($res) {
             return $res;
         }
 
