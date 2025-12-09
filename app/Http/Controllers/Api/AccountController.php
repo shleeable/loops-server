@@ -263,7 +263,7 @@ class AccountController extends Controller
             ]);
         }
 
-        $account = AccountService::get($id);
+        $account = AccountService::get($id, false);
 
         if (! $account) {
             return $this->error('Record not found');
@@ -271,6 +271,7 @@ class AccountController extends Controller
 
         $res = [
             'pending_follow_request' => false,
+            'followed_by' => (bool) FollowerService::follows($id, $pid),
             'following' => (bool) FollowerService::follows($pid, $id),
             'blocking' => (bool) UserFilterService::isBlocking($pid, $id),
         ];
