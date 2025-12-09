@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'accountUnavailable' => 'Account Unavailable',
     'applyingDotDotDot' => 'Applying...',
     'avatarFailedToUploadError' => 'Failed to update avatar. Please try again.',
     'avatarFileSizeError' => 'Image file size must be less than 5MB.',
@@ -43,4 +44,5 @@ return [
     'whenThisAccountFollowsSomeone' => 'When this account follows someone, they\'ll appear here.',
     'youHaventPostedAnyVideosYet' => 'You haven\'t posted any videos yet',
     'youveReachedTheEndOfThisList' => 'You\'ve reached the end of this list',
+    'thisAccountIsNotAvailable' => 'This account is not available',
 ];
