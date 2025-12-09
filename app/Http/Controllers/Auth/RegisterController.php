@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\UsernameService;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 class RegisterController extends Controller
 {
@@ -56,7 +56,11 @@ class RegisterController extends Controller
                 'min:2',
                 'max:30',
                 'unique:users,username',
-                Rule::notIn(['admin', 'dansup', 'support', 'loops', 'official', 'team', 'teamLoops', 'new', 'discover', 'explore']),
+                function ($attribute, $value, $fail) {
+                    if (app(UsernameService::class)->isReserved($value)) {
+                        $fail('This username is reserved.');
+                    }
+                },
             ],
             'email' => ['required', 'string', 'email:rfc,dns,spoof,strict', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
