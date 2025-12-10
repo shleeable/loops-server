@@ -1,10 +1,5 @@
 <template>
-    <div
-        @click="handleClick"
-        @mouseenter="isHover(true)"
-        @mouseleave="isHover(false)"
-        class="relative brightness-90 hover:brightness-[1.1] cursor-pointer"
-    >
+    <div @click="handleClick" class="relative brightness-90 hover:brightness-[1.1] cursor-pointer">
         <div
             v-if="!isLoaded"
             class="absolute flex items-center justify-center top-0 left-0 aspect-[3/4] w-full object-cover rounded-md bg-black overflow-hidden z-20"
@@ -41,18 +36,17 @@
         </div>
 
         <div class="relative rounded-md overflow-hidden">
-            <video
-                ref="videoRef"
-                muted
-                loop
+            <img
+                :src="post.media.thumbnail"
+                @load="isLoaded = true"
                 :class="[
-                    'aspect-[3/4] object-cover transition-all duration-300',
+                    'aspect-[3/4] w-full object-cover transition-all duration-300',
                     {
                         'blur-lg': post.is_sensitive && !isSensitiveRevealed,
                         'blur-none': !post.is_sensitive || isSensitiveRevealed
                     }
                 ]"
-                :src="post.media.src_url"
+                alt=""
             />
 
             <div class="pointer-events-none absolute inset-0">
@@ -86,13 +80,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useHashids } from '@/composables/useHashids'
 import { useUtils } from '@/composables/useUtils'
+import { HeartIcon, ChatBubbleOvalLeftIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 
 const { formatCount } = useUtils()
-import { HeartIcon, ChatBubbleOvalLeftIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
     post: {
@@ -101,9 +95,7 @@ const props = defineProps({
     }
 })
 
-const route = useRoute()
 const router = useRouter()
-const videoRef = ref(null)
 const isLoaded = ref(false)
 const isSensitiveRevealed = ref(false)
 
@@ -122,33 +114,4 @@ const handleClick = (event) => {
 
     displayPost(props.post)
 }
-
-const isHover = (bool) => {
-    if (!videoRef.value) return
-
-    if (props.post.is_sensitive && !isSensitiveRevealed.value) return
-
-    if (bool) videoRef.value.play()
-    else videoRef.value.pause()
-}
-
-onMounted(() => {
-    if (videoRef.value) {
-        videoRef.value.addEventListener('loadeddata', (e) => {
-            if (e.target) {
-                setTimeout(() => {
-                    isLoaded.value = true
-                }, 200)
-            }
-        })
-    }
-})
-
-onBeforeUnmount(() => {
-    if (videoRef.value) {
-        videoRef.value.pause()
-        videoRef.value.currentTime = 0
-        videoRef.value.src = ''
-    }
-})
 </script>
