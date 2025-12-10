@@ -166,22 +166,12 @@ const setupIntersectionObserver = () => {
     }
 
     if (!loadMoreTrigger.value) {
-        console.log('loadMoreTrigger not available yet')
         return
     }
-
-    console.log('Setting up IntersectionObserver')
 
     observer = new IntersectionObserver(
         (entries) => {
             const [entry] = entries
-            console.log('IntersectionObserver triggered', {
-                isIntersecting: entry.isIntersecting,
-                loadingMore: loadingMore.value,
-                loading: loading.value,
-                hasMore: hasMore.value,
-                authenticated: authStore.authenticated
-            })
 
             if (entry.isIntersecting && !loadingMore.value && !loading.value && hasMore.value) {
                 if (!authStore.authenticated) {
@@ -189,7 +179,6 @@ const setupIntersectionObserver = () => {
                     return
                 }
 
-                console.log('Calling loadMore()')
                 loadMore()
             }
         },
@@ -201,7 +190,6 @@ const setupIntersectionObserver = () => {
     )
 
     observer.observe(loadMoreTrigger.value)
-    console.log('Observer attached to element')
 }
 
 watch(
