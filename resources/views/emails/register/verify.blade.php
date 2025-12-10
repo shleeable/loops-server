@@ -1,6 +1,10 @@
 <x-mail::message>
 # Verify Your Email Address
 
+<p style="font-size: 0; line-height: 0; max-height: 0; overflow: hidden; mso-hide: all;">
+    Your verification code is: {{ $verify->verify_code }}
+</p>
+
 Welcome! Please verify your email address to complete your account setup on [Loops]({{ config('app.url') }}).
 
 ## <center>Your Verification Code</center>
@@ -29,11 +33,6 @@ Welcome! Please verify your email address to complete your account setup on [Loo
         @endforeach
     </div>
 </div>
-
-<!-- Hidden plan text version for Apple AutoFill -->
-<p style="font-size: 1px; line-height: 1px; color:transparent; mso-hide: all;" aria-hidden="true">
-    {{ implode('', $digits) }}
-</p>
 
 **Having trouble?**
 - Make sure you're using the latest verification code
