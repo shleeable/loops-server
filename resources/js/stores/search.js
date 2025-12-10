@@ -15,9 +15,12 @@ export const useSearchStore = defineStore('search', () => {
     const error = ref(null)
     const hasMore = ref(false)
     const nextCursor = ref(null)
+    const remoteLookupLoading = ref(false)
+    const showRemoteLookupCta = ref(false)
 
     const setSearchQuery = (query) => {
         searchQuery.value = query
+        showRemoteLookupCta.value = false
     }
 
     const setActiveTab = async (tab) => {
@@ -25,10 +28,23 @@ export const useSearchStore = defineStore('search', () => {
         activeTab.value = tab
         nextCursor.value = null
         hasMore.value = false
+        showRemoteLookupCta.value = false
 
         if (searchQuery.value && tab !== 'top' && previousTab !== tab) {
             await performSearch(false)
         }
+    }
+
+    const isRemoteQuery = (query) => {
+        if (!query) return false
+        const trimmed = query.trim()
+
+        if (trimmed.startsWith('https://')) {
+            return true
+        }
+
+        const webfingerPattern = /^@?[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+        return webfingerPattern.test(trimmed)
     }
 
     const performSearch = async (append = false) => {
@@ -42,6 +58,7 @@ export const useSearchStore = defineStore('search', () => {
         } else {
             loading.value = true
             nextCursor.value = null
+            showRemoteLookupCta.value = false
         }
 
         error.value = null
@@ -99,12 +116,54 @@ export const useSearchStore = defineStore('search', () => {
 
             nextCursor.value = data.meta?.next_cursor || null
             hasMore.value = !!data.meta?.next_cursor
+
+            const hasResults =
+                searchResults.value.users?.length > 0 ||
+                searchResults.value.videos?.length > 0 ||
+                searchResults.value.hashtags?.length > 0
+
+            if (!hasResults && isRemoteQuery(searchQuery.value)) {
+                showRemoteLookupCta.value = true
+            }
         } catch (err) {
             console.error('Search error:', err)
             error.value = err.response?.data?.message || 'Failed to perform search'
         } finally {
             loading.value = false
             loadingMore.value = false
+        }
+    }
+
+    const performRemoteLookup = async () => {
+        if (!searchQuery.value.trim()) {
+            return
+        }
+
+        remoteLookupLoading.value = true
+        showRemoteLookupCta.value = false
+        error.value = null
+
+        const axiosInstance = axios.getAxiosInstance()
+        try {
+            const response = await axiosInstance.post('/api/v1/search/users', {
+                q: searchQuery.value
+            })
+
+            const users = response.data.data || []
+
+            if (users.length > 0) {
+                searchResults.value.users = users
+                if (activeTab.value === 'top') {
+                    activeTab.value = 'users'
+                }
+            } else {
+                error.value = 'No remote account found with that address'
+            }
+        } catch (err) {
+            console.error('Remote lookup error:', err)
+            error.value = err.response?.data?.message || 'Failed to lookup remote account'
+        } finally {
+            remoteLookupLoading.value = false
         }
     }
 
@@ -168,6 +227,8 @@ export const useSearchStore = defineStore('search', () => {
         error.value = null
         nextCursor.value = null
         hasMore.value = false
+        showRemoteLookupCta.value = false
+        remoteLookupLoading.value = false
     }
 
     return {
@@ -178,11 +239,15 @@ export const useSearchStore = defineStore('search', () => {
         loadingMore,
         error,
         hasMore,
+        remoteLookupLoading,
+        showRemoteLookupCta,
 
         setSearchQuery,
         setActiveTab,
         performSearch,
         loadMore,
+        performRemoteLookup,
+        isRemoteQuery,
         followUser,
         unfollowUser,
         clearSearch

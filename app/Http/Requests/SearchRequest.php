@@ -32,24 +32,22 @@ class SearchRequest extends FormRequest
                 'min:1',
                 'max:255',
                 function ($attribute, $value, $fail) {
-                    if (preg_match('/^@?[a-zA-Z0-9._-]+$/', $value)) {
+                    $trimmed = trim($value);
+
+                    if (preg_match('/^@?[a-zA-Z0-9._-]+$/', $trimmed)) {
                         return;
                     }
 
-                    if (preg_match('/^@?[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $value)) {
+                    if (preg_match('/^@?[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $trimmed)) {
                         return;
                     }
 
-                    if (filter_var($value, FILTER_VALIDATE_URL)) {
-                        $parsed = parse_url($value);
+                    if (filter_var($trimmed, FILTER_VALIDATE_URL)) {
+                        $parsed = parse_url($trimmed);
 
-                        if (! isset($parsed['scheme']) || ! in_array($parsed['scheme'], ['https', 'http'])) {
-                            $fail('The query must be a valid username, mention, or URL.');
-
+                        if (isset($parsed['scheme']) && in_array($parsed['scheme'], ['https', 'http'])) {
                             return;
                         }
-
-                        return;
                     }
 
                     $fail('The query must be a valid username (e.g., username, @username@domain.com, or https://domain.com/user).');
