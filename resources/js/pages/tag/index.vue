@@ -166,15 +166,13 @@ const setupIntersectionObserver = () => {
     observer = new IntersectionObserver(
         (entries) => {
             const [entry] = entries
-            if (entry.isIntersecting && !loadingMore.value && !loading.value) {
+            if (entry.isIntersecting && !loadingMore.value && !loading.value && hasMore.value) {
                 if (!authStore.authenticated) {
                     showGuestModal.value = true
                     return
                 }
 
-                if (hasMore.value) {
-                    loadMore()
-                }
+                loadMore()
             }
         },
         {
