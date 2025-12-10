@@ -124,7 +124,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, inject, ref, watch } from 'vue'
+import { onMounted, onUnmounted, inject, ref, watch, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { HeartIcon, ChatBubbleOvalLeftIcon } from '@heroicons/vue/24/outline'
 import { useRouter, useRoute } from 'vue-router'
@@ -161,17 +161,35 @@ const handleLoadMore = () => {
 }
 
 const setupIntersectionObserver = () => {
-    if (!loadMoreTrigger.value) return
+    if (observer) {
+        observer.disconnect()
+    }
+
+    if (!loadMoreTrigger.value) {
+        console.log('loadMoreTrigger not available yet')
+        return
+    }
+
+    console.log('Setting up IntersectionObserver')
 
     observer = new IntersectionObserver(
         (entries) => {
             const [entry] = entries
+            console.log('IntersectionObserver triggered', {
+                isIntersecting: entry.isIntersecting,
+                loadingMore: loadingMore.value,
+                loading: loading.value,
+                hasMore: hasMore.value,
+                authenticated: authStore.authenticated
+            })
+
             if (entry.isIntersecting && !loadingMore.value && !loading.value && hasMore.value) {
                 if (!authStore.authenticated) {
                     showGuestModal.value = true
                     return
                 }
 
+                console.log('Calling loadMore()')
                 loadMore()
             }
         },
@@ -183,7 +201,19 @@ const setupIntersectionObserver = () => {
     )
 
     observer.observe(loadMoreTrigger.value)
+    console.log('Observer attached to element')
 }
+
+watch(
+    () => feed.value,
+    async (newFeed) => {
+        if (newFeed && newFeed.length > 0) {
+            await nextTick()
+            setupIntersectionObserver()
+        }
+    },
+    { immediate: true }
+)
 
 watch(
     () => route.params.id,
@@ -199,10 +229,6 @@ watch(
 onMounted(() => {
     id.value = route.params.id
     handleFetch()
-
-    setTimeout(() => {
-        setupIntersectionObserver()
-    }, 100)
 })
 
 onUnmounted(() => {
