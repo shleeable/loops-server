@@ -13,9 +13,10 @@
             />
 
             <div v-if="show" class="mt-4 grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-3">
-                <div v-for="post in posts" :key="post.id">
+                <div v-for="post in displayPosts" :key="post.id">
                     <ProfileVideoCard :post="post" />
                 </div>
+                <div class="w-full h-20"></div>
             </div>
 
             <div v-if="profileStore.isLoadingMorePosts" class="flex justify-center py-8">
@@ -27,7 +28,7 @@
             </div>
 
             <div
-                v-else-if="posts && posts.length > 0 && !profileStore.hasMorePosts"
+                v-else-if="displayPosts && displayPosts.length > 0 && !profileStore.hasMorePosts"
                 class="flex justify-center py-8"
             >
                 <p class="text-gray-500 dark:text-gray-400 text-sm">
@@ -36,7 +37,29 @@
             </div>
 
             <div
-                v-else-if="posts && posts.length === 0 && !profileStore.isLoadingMorePosts"
+                v-else-if="
+                    currentTab === 'bookmarks' &&
+                    displayPosts &&
+                    displayPosts.length === 0 &&
+                    !profileStore.isLoadingMorePosts
+                "
+                class="flex flex-col items-center justify-center py-16"
+            >
+                <div class="text-6xl mb-4">
+                    <BookmarkIcon class="w-20 h-20" />
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                    {{ $t('profile.favouritePosts') }}
+                </h3>
+                <p class="text-gray-500 dark:text-gray-400 text-center">
+                    {{ $t('profile.yourFavouritePostsWillAppearHere') }}
+                </p>
+            </div>
+
+            <div
+                v-else-if="
+                    displayPosts && displayPosts.length === 0 && !profileStore.isLoadingMorePosts
+                "
                 class="flex flex-col items-center justify-center py-16"
             >
                 <div class="text-6xl mb-4">📹</div>
@@ -115,6 +138,7 @@ import { useAuthStore } from '~/stores/auth'
 import { useUtils } from '@/composables/useUtils'
 import { useI18n } from 'vue-i18n'
 import { useHead } from '@unhead/vue'
+import { BookmarkIcon } from '@heroicons/vue/24/outline'
 
 const { formatCount } = useUtils()
 const authStore = useAuthStore()
@@ -134,7 +158,14 @@ const currentTab = ref('videos')
 const currentFilter = ref('Latest')
 const tabBarRef = ref(null)
 
-const { posts, allLikes } = storeToRefs(profileStore)
+const { posts, allLikes, bookmarkedPosts } = storeToRefs(profileStore)
+
+const displayPosts = computed(() => {
+    if (currentTab.value === 'bookmarks') {
+        return bookmarkedPosts.value || []
+    }
+    return posts.value || []
+})
 
 const metaTitle = computed(() => {
     if (!profileStore.name) return 'Loops'
@@ -222,16 +253,34 @@ useHead({
 
 let scrollTimeout = null
 
-const handleTabChange = (tab) => {
+const handleTabChange = async (tab) => {
     currentTab.value = tab
+
+    if (tab === 'bookmarks' && profileStore.isSelf) {
+        try {
+            profileStore.isLoadingMorePosts = true
+            await profileStore.getBookmarkedPosts()
+        } catch (error) {
+            console.error('Error loading bookmarked posts:', error)
+        } finally {
+            profileStore.isLoadingMorePosts = false
+        }
+    }
 }
 
 const handleFilterChange = async (filter) => {
     profileStore.isLoadingMorePosts = true
     currentFilter.value = filter
-    await profileStore.updateSort(filter).finally(() => {
-        profileStore.isLoadingMorePosts = false
-    })
+
+    if (currentTab.value === 'bookmarks') {
+        await profileStore.getBookmarkedPosts(filter).finally(() => {
+            profileStore.isLoadingMorePosts = false
+        })
+    } else {
+        await profileStore.updateSort(filter).finally(() => {
+            profileStore.isLoadingMorePosts = false
+        })
+    }
 }
 
 const openEditProfile = () => {
@@ -317,7 +366,11 @@ const loadMorePosts = async () => {
     if (!profileStore.id) return
 
     try {
-        await profileStore.loadMorePosts(profileStore.id)
+        if (currentTab.value === 'bookmarks') {
+            await profileStore.loadMoreBookmarkedPosts()
+        } else {
+            await profileStore.loadMorePosts(profileStore.id)
+        }
     } catch (error) {
         console.error('Error loading more posts:', error)
     }
@@ -340,12 +393,13 @@ watch(
     (newId) => {
         if (newId) {
             loadProfileData(newId)
+            currentTab.value = 'videos'
         }
     }
 )
 
 watch(
-    () => posts.value,
+    () => displayPosts.value,
     () => {
         setTimeout(() => (show.value = true), 300)
     }

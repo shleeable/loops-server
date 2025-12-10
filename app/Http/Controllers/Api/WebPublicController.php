@@ -18,6 +18,7 @@ use App\Models\Hashtag;
 use App\Models\Page;
 use App\Models\Profile;
 use App\Models\Video;
+use App\Models\VideoBookmark;
 use App\Models\VideoHashtag;
 use App\Services\AccountService;
 use App\Services\FeedService;
@@ -68,6 +69,11 @@ class WebPublicController extends Controller
 
         if (! $video || ($request->user() && $request->user()->cannot('view', $video))) {
             return $this->error('Video not found or is unavailable', 404);
+        }
+
+        if ($request->user()) {
+            // @phpstan-ignore-next-line
+            $video->is_bookmarked = VideoBookmark::whereProfileId($request->user()->profile_id)->whereVideoId($video->id)->exists();
         }
 
         return new VideoResource($video);
@@ -187,7 +193,7 @@ class WebPublicController extends Controller
         }
 
         $res = (new ProfileResource($profile))->toArray($request);
-        $res['is_owner'] = false;
+        $res['is_owner'] = $request->user()?->profile_id == $profile->id;
         $res['likes_count'] = AccountService::getAccountLikesCount($profile->id);
 
         return response()->json(['data' => $res]);

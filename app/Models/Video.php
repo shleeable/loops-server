@@ -184,6 +184,7 @@ class Video extends Model
             'can_stitch' => 'boolean',
             'can_download' => 'boolean',
             'can_comment' => 'boolean',
+            'bookmarks' => 'integer',
             'contains_ai' => 'boolean',
             'contains_ad' => 'boolean',
         ];

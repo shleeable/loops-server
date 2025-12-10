@@ -26,6 +26,7 @@ use App\Http\Controllers\PlaylistController;
 use App\Http\Controllers\SharedInboxController;
 use App\Http\Controllers\UserRegisterVerifyController;
 use App\Http\Controllers\WebfingerController;
+use App\Http\Controllers\VideoBookmarkController;
 use App\Http\Middleware\AdminOnlyAccess;
 use App\Http\Middleware\AuthorizedFetch;
 use App\Http\Middleware\FederationEnabled;
@@ -121,6 +122,9 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/account/unfollow/{id}', [AccountController::class, 'unfollow'])->middleware('auth:web,api');
     Route::post('/v1/account/undo-follow-request/{id}', [AccountController::class, 'undoFollowRequest'])->middleware('auth:web,api');
 
+    // Bookmarks
+    Route::get('/v1/account/favourites', [VideoBookmarkController::class, 'bookmarks'])->middleware('auth:web,api');
+
     // Notifications
     Route::get('/v1/account/notifications', [AccountController::class, 'notifications'])->middleware('auth:web,api');
     Route::get('/v1/account/notifications/count', [AccountController::class, 'notificationUnreadCount'])->middleware('auth:web,api');
@@ -197,6 +201,8 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/video/delete/{id}', [VideoController::class, 'destroy'])->middleware('auth:web,api');
     Route::post('/v1/video/like/{id}', [VideoController::class, 'like'])->middleware('auth:web,api');
     Route::post('/v1/video/unlike/{id}', [VideoController::class, 'unlike'])->middleware('auth:web,api');
+    Route::post('/v1/video/bookmark/{id}', [VideoController::class, 'bookmark'])->middleware('auth:web,api');
+    Route::post('/v1/video/unbookmark/{id}', [VideoController::class, 'unbookmark'])->middleware('auth:web,api');
     Route::get('/v1/video/history/{id}', [VideoController::class, 'showVideoHistory'])->middleware('throttle:api');
     Route::get('/v1/video/likes/{id}', [VideoController::class, 'showVideoLikes'])->middleware('auth:web,api');
     Route::get('/v1/video/shares/{id}', [VideoController::class, 'showVideoShares'])->middleware('auth:web,api');

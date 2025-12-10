@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Http\Resources\VideoResource;
 use App\Models\Video;
+use App\Models\VideoBookmark;
 use Exception;
+use Illuminate\Pagination\CursorPaginator;
 
 class FeedService
 {
@@ -38,6 +40,8 @@ class FeedService
             $feed->setCollection($items);
         }
 
+        self::loadBookmarkStatus($feed->items(), auth('web')->user() ?? auth('api')->user());
+
         return VideoResource::collection($feed);
     }
 
@@ -58,18 +62,97 @@ class FeedService
             ->cursorPaginate($limit)
             ->withQueryString();
 
+        self::loadBookmarkStatus($videos->items(), auth('web')->user() ?? auth('api')->user());
+
+        return $videos;
+    }
+
+    public static function getNetworkFeedOg($profileId, $limit = 10)
+    {
+        $blockedSubquery = UserFilterService::getFilters($profileId);
+
+        $videos = Video::join('profiles', 'videos.profile_id', '=', 'profiles.id')
+            ->leftJoinSub($blockedSubquery, 'blocked', function ($join) {
+                $join->on('videos.profile_id', '=', 'blocked.account_id');
+            })
+            ->whereNull('blocked.account_id')
+            ->orderBy('videos.id', 'desc')
+            ->where('videos.status', 2)
+            ->where('is_local', false)
+            ->whereNotNull('videos.vid_optimized')
+            ->select('videos.*')
+            ->cursorPaginate($limit)
+            ->withQueryString();
+
+        self::loadBookmarkStatus($videos->items(), auth('web')->user() ?? auth('api')->user());
+
+        return $videos;
+    }
+
+    public static function getNetworkFeedPager(int $profileId, int $limit = 10, ?string $decodedCursor = null): CursorPaginator
+    {
+        $blockedSubquery = UserFilterService::getFilters($profileId);
+
+        $videos = Video::query()
+            ->join('profiles', 'videos.profile_id', '=', 'profiles.id')
+            ->leftJoinSub($blockedSubquery, 'blocked', function ($join) {
+                $join->on('videos.profile_id', '=', 'blocked.account_id');
+            })
+            ->whereNull('blocked.account_id')
+            ->where('videos.status', 2)
+            ->where('videos.is_local', false)
+            ->whereNotNull('videos.vid_optimized')
+            ->orderByDesc('videos.id')
+            ->select('videos.*')
+            ->cursorPaginate(
+                perPage: $limit,
+                columns: ['*'],
+                cursorName: 'cursor',
+                cursor: $decodedCursor
+            );
+
+        self::loadBookmarkStatus($videos->items(), auth('web')->user() ?? auth('api')->user());
+
         return $videos;
     }
 
     public static function getPublicVideoFeed($limit = 10)
     {
         $videos = Video::published()
+            ->where('is_local', true)
             ->where('created_at', '>', now()->subDays(93))
             ->orderBy('videos.likes', 'desc')
             ->limit($limit)
             ->get();
 
+        self::loadBookmarkStatus($videos, auth('web')->user() ?? auth('api')->user());
+
         return $videos;
+    }
+
+    /**
+     * Load bookmark status for a collection of videos
+     */
+    private static function loadBookmarkStatus($videos, $user)
+    {
+        $videosCollection = is_array($videos) ? collect($videos) : $videos;
+
+        if (! $user || $videosCollection->isEmpty()) {
+            return;
+        }
+
+        $profileId = $user->profile_id;
+        $videoIds = $videosCollection->pluck('id')->toArray();
+
+        $bookmarkedVideoIds = VideoBookmark::where('profile_id', $profileId)
+            ->whereIn('video_id', $videoIds)
+            ->pluck('video_id')
+            ->flip()
+            ->toArray();
+
+        foreach ($videosCollection as $video) {
+            $video->is_bookmarked = isset($bookmarkedVideoIds[$video->id]);
+        }
     }
 
     public static function emptyCursor($request)

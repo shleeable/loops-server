@@ -155,6 +155,22 @@
                             </div>
 
                             <div class="flex flex-col items-center text-white hover:text-red-500">
+                                <button @click.stop="toggleBookmark" class="mobile-interaction-btn">
+                                    <i
+                                        class="bx text-[24px] sm:text-[28px]"
+                                        :class="[
+                                            videoBookmarked
+                                                ? 'bxs-bookmark text-red-500'
+                                                : 'bx-bookmark'
+                                        ]"
+                                    ></i>
+                                </button>
+                                <span class="mt-1 text-xs font-medium">{{
+                                    formatCount(bookmarksCount)
+                                }}</span>
+                            </div>
+
+                            <div class="flex flex-col items-center text-white hover:text-red-500">
                                 <ShareModal :url="shareUrl">
                                     <button class="mobile-interaction-btn" @click.stop>
                                         <i class="bx bx-share text-[24px] sm:text-[28px]"></i>
@@ -252,6 +268,24 @@
                             </button>
                             <span class="mt-1 text-sm font-medium">{{
                                 formatCount(commentCount)
+                            }}</span>
+                        </div>
+
+                        <div
+                            class="flex flex-col items-center text-dark hover:text-red-500 dark:text-white"
+                        >
+                            <button @click="toggleBookmark">
+                                <i
+                                    class="bx text-[24px] sm:text-[28px]"
+                                    :class="[
+                                        videoBookmarked
+                                            ? 'bxs-bookmark text-red-500'
+                                            : 'bx-bookmark'
+                                    ]"
+                                ></i>
+                            </button>
+                            <span class="mt-1 text-sm font-medium">{{
+                                formatCount(bookmarksCount)
                             }}</span>
                         </div>
 
@@ -467,7 +501,9 @@ const props = defineProps({
     profileImage: { type: String, default: '' },
     profileId: { type: String, default: '' },
     likes: { type: Number, default: 0 },
+    bookmarks: { type: Number, default: 0 },
     hasLiked: { type: Boolean, default: false },
+    hasBookmarked: { type: Boolean, default: false },
     canComment: { type: Boolean, default: true },
     bookmarks: { type: Number, default: 0 },
     shares: { type: Number, default: 0 },
@@ -492,7 +528,9 @@ const videoRef = ref(null)
 const isPaused = ref(true)
 const newComment = ref('')
 const likeCount = ref(0)
+const bookmarksCount = ref(0)
 const videoLiked = ref(false)
+const videoBookmarked = ref(false)
 const selectedEmoji = ref('')
 const isVisible = ref(false)
 const playerReady = ref(false)
@@ -630,6 +668,10 @@ const submitComment = async () => {
 }
 
 const toggleLike = async () => {
+    if (!authStore.authenticated) {
+        authStore.openAuthModal()
+        return
+    }
     const state = videoLiked.value
 
     if (state) {
@@ -643,6 +685,29 @@ const toggleLike = async () => {
             videoStore.setVideo(res.data)
             videoLiked.value = true
             likeCount.value = res.data.likes
+        })
+    }
+}
+
+const toggleBookmark = async () => {
+    if (!authStore.authenticated) {
+        authStore.openAuthModal()
+        return
+    }
+    const state = videoBookmarked.value
+
+    if (state) {
+        await videoStore.unbookmarkVideo(props.videoId).then((res) => {
+            videoStore.setVideo(res.data)
+            console.log(res.data)
+            videoBookmarked.value = false
+            bookmarksCount.value = res.data.bookmarks
+        })
+    } else {
+        await videoStore.bookmarkVideo(props.videoId).then((res) => {
+            videoStore.setVideo(res.data)
+            videoBookmarked.value = true
+            bookmarksCount.value = res.data.bookmarks
         })
     }
 }
@@ -663,10 +728,14 @@ onMounted(async () => {
         account: { id: props.profileId },
         comments: props.commentCount,
         likes: props.likesCount,
-        has_liked: props.hasLiked
+        bookmarks: props.bookmarks,
+        has_liked: props.hasLiked,
+        has_bookmarked: props.hasBookmarked
     })
     likeCount.value = props.likes
     videoLiked.value = props.hasLiked
+    videoBookmarked.value = props.hasBookmarked
+    bookmarksCount.value = props.bookmarks
     if (videoRef.value) {
         player = videojs(videoRef.value, {
             controls: false,
