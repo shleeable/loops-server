@@ -91,7 +91,7 @@ export const useExploreStore = defineStore('explore', () => {
                 }
             )
 
-            videos.value = [...videos.value, ...res.data.data]
+            videos.value = [...videos.value, ...res.data.data.filter((v) => v.id && v.account)]
 
             cursor.value = res.data.meta?.next_cursor
             hasMore.value = res.data.meta?.next_cursor != undefined
