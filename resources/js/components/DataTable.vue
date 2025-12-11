@@ -203,6 +203,10 @@ const props = defineProps({
     showLocalFilter: {
         type: Boolean,
         default: false
+    },
+    initialLocalFilter: {
+        type: Boolean,
+        default: false
     }
 })
 
@@ -210,7 +214,7 @@ const emit = defineEmits(['search', 'refresh', 'previous', 'next', 'sort', 'loca
 
 const searchQuery = ref(props.initialSearchQuery)
 const selectedSort = ref('')
-const localFilter = ref(false)
+const localFilter = ref(props.initialLocalFilter)
 
 watch(
     () => props.initialSearchQuery,
