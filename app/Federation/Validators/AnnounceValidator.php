@@ -36,9 +36,5 @@ class AnnounceValidator extends BaseValidator
         if (! app(SanitizeService::class)->url($activity['object'], true)) {
             throw new \Exception('Announce activity "object" URI is invalid.');
         }
-
-        if (! $this->isLocalStatus($activity['object'])) {
-            throw new \Exception("Announce activity rejected: target status '{$activity['object']}' is not a local status.");
-        }
     }
 }
