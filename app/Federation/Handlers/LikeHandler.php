@@ -10,6 +10,7 @@ use App\Models\Profile;
 use App\Models\UserFilter;
 use App\Models\Video;
 use App\Models\VideoLike;
+use App\Services\HashidService;
 use App\Services\SanitizeService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -157,6 +158,20 @@ class LikeHandler extends BaseHandler
 
             if ($statusMatch && isset($statusMatch['userId'], $statusMatch['videoId'])) {
                 return Video::whereProfileId($statusMatch['userId'])->whereKey($statusMatch['videoId'])->first();
+            }
+
+            $videoHashIdMatch = app(SanitizeService::class)->matchUrlTemplate(
+                url: $url,
+                templates: ['/v/{hashId}'],
+                useAppHost: true,
+                constraints: ['hashId' => '[0-9a-zA-Z_-]{1,11}']
+            );
+
+            if ($videoHashIdMatch && isset($videoHashIdMatch['hashId'])) {
+                $decodedId = HashidService::safeDecode($videoHashIdMatch['hashId']);
+                if ($decodedId !== null) {
+                    return Video::whereStatus(2)->whereKey($decodedId)->first();
+                }
             }
 
             $commentMatch = app(SanitizeService::class)->matchUrlTemplate(
