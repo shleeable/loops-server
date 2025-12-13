@@ -71,6 +71,7 @@ class VideoOptimizeJob implements ShouldQueue
 
         $width = 720;
         $crf = 23;
+        $maxDuration = 61;
 
         $ext = pathinfo($video->vid, PATHINFO_EXTENSION);
         $name = str_replace('.'.$ext, '.720p.mp4', $video->vid);
@@ -90,6 +91,7 @@ class VideoOptimizeJob implements ShouldQueue
                 '-movflags', '+faststart',
                 '-pix_fmt', 'yuv420p',
                 '-ac', '2',
+                '-t', (string) $maxDuration,
             ]);
 
         // @phpstan-ignore-next-line
