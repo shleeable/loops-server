@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class VideoBookmark extends Model
 {
@@ -22,7 +23,7 @@ class VideoBookmark extends Model
     /**
      * Get the profile that bookmarked the video.
      */
-    public function profile()
+    public function profile(): BelongsTo
     {
         return $this->belongsTo(Profile::class);
     }
@@ -30,7 +31,8 @@ class VideoBookmark extends Model
     /**
      * Get the bookmarked video.
      */
-    public function video()
+    /** @return BelongsTo<Video, $this> */
+    public function video(): BelongsTo
     {
         return $this->belongsTo(Video::class);
     }
