@@ -243,7 +243,7 @@
                                         :placeholder="$t('studio.describeYourVideoDotDotDot')"
                                         rows="4"
                                         class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                        maxlength="2200"
+                                        maxlength="200"
                                     ></textarea>
 
                                     <div
@@ -377,7 +377,7 @@
                                     <div
                                         class="absolute bottom-2 right-2 text-xs text-gray-400 dark:text-gray-500"
                                     >
-                                        {{ description.length }}/240
+                                        {{ description.length }}/200
                                     </div>
                                 </div>
                                 <div class="flex space-x-4 -mt-1">

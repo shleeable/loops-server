@@ -31,10 +31,10 @@
                         class="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F02C56] focus:border-[#F02C56] dark:bg-slate-800 dark:text-white resize-none"
                         rows="4"
                         :placeholder="$t('post.writeYourCaptionDotDotDot')"
-                        maxlength="500"
+                        maxlength="200"
                     />
                     <div class="text-right text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {{ formData.caption.length }}/240
+                        {{ formData.caption.length }}/200
                     </div>
                 </div>
 
