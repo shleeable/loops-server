@@ -7,7 +7,6 @@ use App\Concerns\HasSyncHashtagsFromCaption;
 use App\Concerns\HasSyncMentionsFromCaption;
 use App\Observers\VideoObserver;
 use App\Services\HashidService;
-use DB;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,7 +16,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 #[ObservedBy([VideoObserver::class])]
 /**
