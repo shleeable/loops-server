@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Mail\AdminReport;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * @property int $id
@@ -70,6 +72,15 @@ class Report extends Model
         return [
             'metadata' => 'array',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::created(function (Report $report) {
+            if (config('loops.admin_mails.to') && config('loops.admin_mails.reports') && filter_var(config('loops.admin_mails.to'), FILTER_VALIDATE_EMAIL)) {
+                Mail::to(config('loops.admin_mails.to'))->send(new AdminReport($report));
+            }
+        });
     }
 
     #[Scope]
