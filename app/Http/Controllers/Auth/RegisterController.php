@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Rules\ValidUsername;
 use App\Services\UsernameService;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
@@ -52,10 +53,10 @@ class RegisterController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'username' => [
                 'required',
-                'alpha_dash',
                 'min:2',
-                'max:30',
+                'max:24',
                 'unique:users,username',
+                new ValidUsername,
                 function ($attribute, $value, $fail) {
                     if (app(UsernameService::class)->isReserved($value)) {
                         $fail('This username is reserved.');

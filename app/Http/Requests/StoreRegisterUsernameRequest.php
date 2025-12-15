@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\AdminSetting;
+use App\Rules\ValidUsername;
 use App\Services\UsernameService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Http\FormRequest;
@@ -39,10 +40,10 @@ class StoreRegisterUsernameRequest extends FormRequest
         return [
             'username' => [
                 'required',
-                'alpha_dash',
                 'min:2',
-                'max:30',
+                'max:24',
                 'unique:users,username',
+                new ValidUsername,
                 function ($attribute, $value, $fail) {
                     if (app(UsernameService::class)->isReserved($value)) {
                         $fail('This username is reserved.');
