@@ -17,11 +17,11 @@ return new class extends Migration
             $table->unsignedInteger('interaction_count')->default(0);
             $table->timestamp('last_interaction_at')->nullable();
             $table->timestamps();
-            
+
             $table->unique(['profile_id', 'interest_type', 'interest_value']);
             $table->index(['profile_id', 'score']);
             $table->index(['profile_id', 'interest_type']);
-            
+
             $table->foreign('profile_id')
                 ->references('id')
                 ->on('profiles')

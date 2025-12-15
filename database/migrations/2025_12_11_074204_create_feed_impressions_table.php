@@ -15,16 +15,16 @@ return new class extends Migration
             $table->timestamp('viewed_at')->useCurrent();
             $table->smallInteger('watch_duration')->unsigned()->default(0);
             $table->boolean('completed')->default(false);
-            
+
             $table->unique(['profile_id', 'video_id']);
             $table->index(['profile_id', 'viewed_at']);
             $table->index('video_id');
-            
+
             $table->foreign('profile_id')
                 ->references('id')
                 ->on('profiles')
                 ->onDelete('cascade');
-            
+
             $table->foreign('video_id')
                 ->references('id')
                 ->on('videos')

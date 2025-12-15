@@ -1,9 +1,9 @@
 <?php
 
+use App\Models\AdminSetting;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\AdminSetting;
 
 return new class extends Migration
 {
