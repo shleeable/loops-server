@@ -8,7 +8,6 @@ use App\Models\FeedImpression;
 use App\Models\Profile;
 use App\Models\UserInterest;
 use App\Models\Video;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -123,41 +122,58 @@ class ForYouFeedService
         ?int $cursorId,
         int $limit
     ): Collection {
-        $query = Video::query()
-            ->select([
-                'videos.*',
-                DB::raw('0 as feed_score'),
-            ])
-            ->where('videos.status', 2)
-            ->where('videos.visibility', 1)
-            ->where('videos.created_at', '>=', now()->subDays(self::MAX_AGE_DAYS))
-            ->whereNotIn('videos.profile_id', $hiddenCreatorIds)
-            ->orderByDesc('videos.id')
-            ->with([
-                'profile:id,username',
-                'hashtags:hashtags.id,hashtags.name',
-            ]);
+        $scoredVideos = collect();
+        $lastId = $cursorId;
+        $maxAttempts = 5;
+        $attempts = 0;
+        $batchMultiplier = 3;
 
-        if ($cursorScore !== null && $cursorId !== null) {
-            $query->where(function (Builder $q) use ($cursorId) {
-                $q->where('videos.id', '<', $cursorId);
-            });
+        while ($scoredVideos->count() < $limit && $attempts < $maxAttempts) {
+            $attempts++;
+
+            $batchSize = $limit * $batchMultiplier * $attempts;
+
+            $query = Video::query()
+                ->select([
+                    'videos.*',
+                    DB::raw('0 as feed_score'),
+                ])
+                ->where('videos.status', 2)
+                ->where('videos.visibility', 1)
+                ->where('videos.created_at', '>=', now()->subDays(self::MAX_AGE_DAYS))
+                ->whereNotIn('videos.profile_id', $hiddenCreatorIds)
+                ->orderByDesc('videos.id')
+                ->with([
+                    'profile:id,username',
+                    'hashtags:hashtags.id,hashtags.name',
+                ]);
+
+            if ($lastId !== null) {
+                $query->where('videos.id', '<', $lastId);
+            }
+
+            $videos = $query->limit($batchSize)->get();
+
+            if ($videos->isEmpty()) {
+                break;
+            }
+
+            $lastId = $videos->last()->id;
+
+            $unviewedVideos = app(ImpressionBloomFilterService::class)
+                ->filterVideos($profile->id, $videos);
+
+            $batchScored = $unviewedVideos->map(function ($video) use ($profile, $interests) {
+                $score = $this->calculateVideoScore($video, $profile, $interests);
+                $video->feed_score = $score;
+
+                return $video;
+            })->filter(fn ($v) => $v->feed_score >= self::MIN_SCORE_THRESHOLD);
+
+            $scoredVideos = $scoredVideos->concat($batchScored);
         }
 
-        $videos = $query
-            ->limit($limit * 3)
-            ->get();
-
-        $videos = app(ImpressionBloomFilterService::class)->filterVideos($profile->id, $videos);
-
-        $scoredVideos = $videos->map(function ($video) use ($profile, $interests) {
-            $score = $this->calculateVideoScore($video, $profile, $interests);
-            $video->feed_score = $score;
-
-            return $video;
-        });
-
-        return $scoredVideos->filter(fn ($v) => $v->feed_score >= self::MIN_SCORE_THRESHOLD)
+        return $scoredVideos
             ->sortByDesc('feed_score')
             ->take($limit)
             ->values();
