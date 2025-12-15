@@ -1,6 +1,20 @@
 <template>
     <FeedLayout>
+        <div
+            v-if="showEmptyState"
+            class="flex h-screen flex-col items-center justify-center px-10 dark:bg-black z-50"
+        >
+            <div class="text-6xl mb-4">🌟</div>
+            <h2 class="dark:text-white text-2xl font-bold mb-2 text-center">
+                You're all caught up!
+            </h2>
+            <p class="dark:text-white/70 text-base text-center leading-relaxed">
+                We're curating more Loops for you. Check back soon.
+            </p>
+        </div>
+
         <SnapScrollFeed
+            v-else
             key="for-you-feed"
             :feed-data="feedData"
             :item-component="VideoPlayerTracking"
@@ -41,6 +55,23 @@ watch(
 
 const feedData = computed(() => {
     return activeFeed.value
+})
+
+const showEmptyState = computed(() => {
+    if (!feedData.value || !authStore.authenticated) {
+        return false
+    }
+
+    const isSuccess = feedData.value.isSuccess?.value ?? feedData.value.isSuccess
+    const isFetching = feedData.value.isFetching?.value ?? feedData.value.isFetching
+    const data = feedData.value.data?.value ?? feedData.value.data
+    const hasNextPage = feedData.value.hasNextPage?.value ?? feedData.value.hasNextPage
+
+    const pages = data?.pages || []
+    const firstPage = pages[0]
+    const hasNoPosts = firstPage?.data?.length === 0
+
+    return isSuccess && !isFetching && hasNoPosts && !hasNextPage
 })
 
 const getVideoProps = (post, index) => ({
