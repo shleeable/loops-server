@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\DuetController;
 use App\Http\Controllers\Api\ExploreController;
 use App\Http\Controllers\Api\FeedController;
+use App\Http\Controllers\Api\ForYouFeedController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\SettingsController;
@@ -67,6 +68,7 @@ Route::post('/auth/start', [WebPublicController::class, 'authStartFallback']);
 
 Route::prefix('api')->group(function () {
     Route::post('/v1/apps', [AuthController::class, 'registerApp']);
+    Route::get('/v1/config', [WebPublicController::class, 'appConfiguration']);
 
     Route::get('/v1/web/report-rules', [WebPublicController::class, 'reportTypes']);
 
@@ -179,6 +181,11 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/feed/for-you', [FeedController::class, 'getForYouFeed'])->middleware('auth:web,api');
     Route::get('/v1/feed/following', [FeedController::class, 'getFollowingFeed'])->middleware('auth:web,api');
 
+    Route::get('/v0/feed/recommended', [ForYouFeedController::class, 'index'])->middleware('auth:web,api');
+    Route::post('/v0/feed/recommended/impression', [ForYouFeedController::class, 'recordImpression'])->middleware('auth:web,api');
+    Route::post('/v0/feed/recommended/feedback', [ForYouFeedController::class, 'recordFeedback'])->middleware('auth:web,api');
+    Route::delete('/v0/feed/recommended/feedback/{videoId}', [ForYouFeedController::class, 'removeFeedback'])->middleware('auth:web,api');
+
     // Video Comments
     Route::post('/v1/comments/like/{vid}/{id}', [VideoController::class, 'storeCommentLike'])->middleware('auth:web,api');
     Route::post('/v1/comments/like/{vid}/{pid}/{id}', [VideoController::class, 'storeCommentReplyLike'])->middleware('auth:web,api');
@@ -263,6 +270,7 @@ Route::prefix('api')->group(function () {
         Route::put('/settings', [AdminSettingsController::class, 'update'])->middleware('auth:web,api');
         Route::post('/settings/update-logo', [AdminSettingsController::class, 'updateLogo'])->middleware('auth:web,api');
         Route::post('/settings/delete-logo', [AdminSettingsController::class, 'deleteLogo'])->middleware('auth:web,api');
+        Route::post('/settings/recheck-redis-bf-support', [AdminSettingsController::class, 'recheckRedisBloomFilterSupport'])->middleware('auth:web,api');
         Route::get('/instances', [AdminController::class, 'instances'])->middleware('auth:web,api');
         Route::get('/instances/stats', [AdminController::class, 'instanceStats'])->middleware('auth:web,api');
         Route::post('/instances/create', [AdminController::class, 'instanceCreate'])->middleware('auth:web,api');

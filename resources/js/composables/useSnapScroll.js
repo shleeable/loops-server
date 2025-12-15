@@ -5,7 +5,7 @@ export function useSnapScroll({
     totalItems,
     currentIndex,
     sensitivity = 50,
-    lockDuration = 600,
+    lockDuration = 800,
     onItemChange = null
 }) {
     const isScrolling = ref(false)
@@ -15,6 +15,7 @@ export function useSnapScroll({
     const isEnabled = ref(true)
     const lastScrollTime = ref(0)
     const targetIndex = ref(null)
+    const isProgrammaticScroll = ref(false)
 
     let touchStartY = 0
     let touchEndY = 0
@@ -43,23 +44,24 @@ export function useSnapScroll({
         const targetScroll = index * snapHeight
         const currentScroll = container.scrollTop
 
+        // Already at target position
         if (Math.abs(currentScroll - targetScroll) < 5) {
             return false
         }
 
         targetIndex.value = index
+        isProgrammaticScroll.value = true
 
         container.scrollTo({
             top: targetScroll,
             behavior: smooth ? 'smooth' : 'instant'
         })
 
-        setTimeout(
-            () => {
-                targetIndex.value = null
-            },
-            smooth ? 800 : 100
-        )
+        const duration = smooth ? 800 : 100
+        setTimeout(() => {
+            targetIndex.value = null
+            isProgrammaticScroll.value = false
+        }, duration)
 
         return true
     }
@@ -87,7 +89,7 @@ export function useSnapScroll({
         }
 
         const now = Date.now()
-        if (now - lastScrollTime.value < 300) {
+        if (now - lastScrollTime.value < 400) {
             return false
         }
 
@@ -121,12 +123,12 @@ export function useSnapScroll({
                 isScrolling.value = false
                 accumulatedDelta.value = 0
                 updateCurrentItem()
-            }, 600)
+            }, lockDuration)
 
             return true
         } else {
             isScrolling.value = false
-            lockScroll.value = false
+            scrollLocked.value = false
         }
 
         return false
@@ -191,6 +193,7 @@ export function useSnapScroll({
 
     const handleWheel = (container) => {
         let wheelLocked = false
+        let wheelTimeout = null
 
         const wheelHandler = (e) => {
             if (isInteractiveElement(e.target)) {
@@ -203,28 +206,37 @@ export function useSnapScroll({
 
             if (isScrolling.value || scrollLocked.value || wheelLocked) return
 
+            if (wheelTimeout) {
+                clearTimeout(wheelTimeout)
+            }
+
             accumulatedDelta.value += e.deltaY
 
-            if (Math.abs(accumulatedDelta.value) >= sensitivity) {
-                const direction = accumulatedDelta.value > 0 ? 1 : -1
+            wheelTimeout = setTimeout(() => {
+                if (Math.abs(accumulatedDelta.value) >= sensitivity) {
+                    const direction = accumulatedDelta.value > 0 ? 1 : -1
 
-                wheelLocked = true
-                setTimeout(() => {
-                    wheelLocked = false
-                }, 500)
+                    wheelLocked = true
+                    setTimeout(() => {
+                        wheelLocked = false
+                    }, 700)
 
-                if (performSnapScroll(direction)) {
-                    accumulatedDelta.value = 0
+                    if (performSnapScroll(direction)) {
+                        accumulatedDelta.value = 0
+                    } else {
+                        accumulatedDelta.value =
+                            Math.sign(accumulatedDelta.value) * (sensitivity / 2)
+                    }
                 } else {
-                    // Reset if scroll failed
-                    accumulatedDelta.value = Math.sign(accumulatedDelta.value) * (sensitivity / 2)
+                    accumulatedDelta.value = 0
                 }
-            }
+            }, 50)
         }
 
         container.addEventListener('wheel', wheelHandler, { passive: false })
 
         return () => {
+            if (wheelTimeout) clearTimeout(wheelTimeout)
             container.removeEventListener('wheel', wheelHandler)
         }
     }
@@ -274,7 +286,7 @@ export function useSnapScroll({
             const deltaX = Math.abs(touch.clientX - touchStartX)
 
             if (
-                (scrollLocked.value || isScrolling.value) &&
+                (scrollLocked.value || isScrolling.value || isProgrammaticScroll.value) &&
                 Math.abs(deltaY) > deltaX &&
                 Math.abs(deltaY) > 10
             ) {
@@ -326,7 +338,7 @@ export function useSnapScroll({
 
                 setTimeout(() => {
                     isProcessingSwipe = false
-                }, 300)
+                }, 400)
             }
 
             isTouchOnInteractiveElement = false
@@ -375,6 +387,7 @@ export function useSnapScroll({
         isScrolling: computed(() => isScrolling.value),
         scrollLocked: computed(() => scrollLocked.value),
         isEnabled: computed(() => isEnabled.value),
+        isProgrammaticScroll: computed(() => isProgrammaticScroll.value),
         handleWheel,
         handleTouch,
         updateCurrentItem,

@@ -153,9 +153,17 @@ const handleItemChange = async (newIndex, oldIndex) => {
     try {
         if (oldIndex >= 0 && oldIndex < totalItems.value) {
             const oldItem = itemRefs.value[oldIndex]
-            if (oldItem && typeof oldItem.pause === 'function') {
-                oldItem.pause()
+
+            if (!oldItem) {
+                console.warn(`[SnapScrollFeed] Could not find ref for index: ${oldIndex}`)
+            } else {
+                if (typeof oldItem.onHidden === 'function') {
+                    oldItem.onHidden()
+                } else if (typeof oldItem.pause === 'function') {
+                    oldItem.pause()
+                }
             }
+
             if (oldItem && typeof oldItem.cleanup === 'function') {
                 oldItem.cleanup()
             }
@@ -223,7 +231,8 @@ const {
     updateCurrentItem,
     enableSnapScroll,
     disableSnapScroll,
-    scrollToIndex
+    scrollToIndex,
+    isProgrammaticScroll
 } = useSnapScroll({
     containerRef: scrollContainerRef,
     totalItems: totalItems,
@@ -254,7 +263,13 @@ let scrollDebounceTimer = null
 let lastScrollTime = 0
 
 const handleScroll = (e) => {
-    if (!scrollContainerRef.value) return
+    if (!scrollContainerRef.value) {
+        return
+    }
+
+    if (isProgrammaticScroll.value) {
+        return
+    }
 
     const now = Date.now()
     const timeSinceLastScroll = now - lastScrollTime
@@ -274,7 +289,9 @@ const handleScroll = (e) => {
     scrollState.lastScrollTop = scrollTop
 
     scrollDebounceTimer = setTimeout(() => {
-        if (scrollState.isAnimating) return
+        if (scrollState.isAnimating || isProgrammaticScroll.value) {
+            return
+        }
 
         const containerHeight = scrollContainerRef.value?.clientHeight || 0
         const currentScrollTop = scrollContainerRef.value?.scrollTop || 0
@@ -292,7 +309,7 @@ const handleScroll = (e) => {
         }
 
         checkLoadMore()
-    }, 50)
+    }, 100)
 }
 
 const hideItemUI = () => {
@@ -387,6 +404,11 @@ onUnmounted(() => {
 
     if (scrollState.scrollTimeout) {
         clearTimeout(scrollState.scrollTimeout)
+    }
+
+    const currentItem = itemRefs.value[currentItemIndex.value]
+    if (currentItem && typeof currentItem.onHidden === 'function') {
+        currentItem.onHidden()
     }
 
     Object.values(itemRefs.value).forEach((item) => {

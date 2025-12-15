@@ -7,6 +7,7 @@
 
     <div
         :class="[
+            'group',
             'bg-white dark:bg-slate-950 lg:border-r-0 border-r dark:border-r-slate-800 overflow-auto loops-layout-sidebar no-scrollbar',
             isMobile
                 ? `fixed top-0 left-0 h-screen w-[280px] transition-transform duration-300 ease-in-out z-[60] ${isOpen ? 'translate-x-0' : '-translate-x-full'}`
@@ -75,7 +76,7 @@
                             @click="handleLinkClick"
                         >
                             <div
-                                class="w-full flex items-center hover:bg-gray-100 dark:hover:bg-slate-800 p-2.5 rounded-lg mb-1 transition-colors"
+                                class="w-full flex items-center hover:bg-gray-100 dark:hover:bg-slate-800 px-2.5 py-2 rounded-lg transition-colors"
                                 :class="{
                                     'justify-center lg:justify-start': !isMobile,
                                     'justify-start': isMobile
@@ -268,7 +269,9 @@
                 </div>
             </div>
 
-            <div class="flex justify-between flex-col gap-3 px-3 mt-5">
+            <div
+                class="flex justify-between flex-col gap-3 px-3 mt-5 transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100"
+            >
                 <div class="text-[10.5px] text-gray-400 font-light dbi">
                     {{ getCopyright() }}
                 </div>
@@ -304,6 +307,7 @@ import LanguagePicker from '@/components/Layout/LanguagePicker.vue'
 import { useLanguagePicker } from '@/composables/useLanguagePicker'
 import { useAlertModal } from '@/composables/useAlertModal.js'
 import AnimatedButton from '../AnimatedButton.vue'
+import SparklesAltIcon from '../Icons/SparklesAltIcon.vue'
 const { t } = useI18n()
 const { isLanguagePickerOpen, openLanguagePicker, closeLanguagePicker } = useLanguagePicker()
 
@@ -386,7 +390,7 @@ const mainLinks = computed(() => {
 
     if (authStore.getUser) {
         links = [
-            { id: 'home', name: t('nav.home'), path: '/', icon: 'bx bx-home' },
+            { id: 'home', name: t('nav.local'), path: '/', icon: 'bx bx-home' },
             {
                 id: 'following',
                 name: t('common.following'),
@@ -399,12 +403,24 @@ const mainLinks = computed(() => {
                 path: '/explore',
                 icon: 'bx bx-compass'
             },
+            // {
+            //     id: 'network',
+            //     name: 'Network',
+            //     path: '/feed/network',
+            //     icon: 'bx bx-globe'
+            // },
             {
                 id: 'activity',
                 name: t('nav.activity'),
                 path: `/notifications`,
                 icon: 'bx bx-bell'
             },
+            // {
+            //     id: 'messages',
+            //     name: 'Messages',
+            //     path: `/notifications`,
+            //     icon: 'bx bx-message-dots'
+            // },
             {
                 id: 'upload',
                 name: t('nav.upload'),
@@ -418,6 +434,15 @@ const mainLinks = computed(() => {
                 icon: 'bx bx-user'
             }
         ]
+
+        if (appConfig.fyf) {
+            links.splice(2, 0, {
+                id: 'forYou',
+                name: t('nav.forYou'),
+                path: '/feed/for-you',
+                icon: 'sparkles'
+            })
+        }
 
         const userCustomPages = filterNavItemsByLocation('side_menu_user')
         const allCustomPages = filterNavItemsByLocation('side_menu_all')
@@ -436,7 +461,7 @@ const mainLinks = computed(() => {
                 id: 'admin',
                 name: t('nav.admin'),
                 path: '/admin/dashboard',
-                icon: 'bx bx-badge'
+                icon: 'bx bx-shield'
             })
         }
     } else {
@@ -471,9 +496,8 @@ const footerLinks = computed(() => {
         { name: t('nav.about'), path: '/about' },
         { name: t('nav.contact'), path: '/contact' },
         { name: t('nav.community'), path: '/community-guidelines' },
-        // { name: t("nav.developers"), path: "/platform/developers" },
-        // { name: t("nav.federation"), path: "/federation" },
-        // { name: t("nav.help"), path: "/help-center" },
+        // { name: t('nav.developers'), path: '/platform/developers' },
+        // { name: t('nav.help'), path: '/help-center' },
         { name: t('nav.privacy'), path: '/privacy' },
         { name: t('nav.terms'), path: '/terms' }
     ]

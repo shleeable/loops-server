@@ -1,9 +1,9 @@
 <template>
     <FeedLayout>
         <SnapScrollFeed
-            key="local-feed"
+            key="for-you-feed"
             :feed-data="feedData"
-            :item-component="VideoPlayer"
+            :item-component="VideoPlayerTracking"
             :get-item-props="getVideoProps"
             :get-item-key="getVideoKey"
             :auto-play="hasInteracted"
@@ -18,12 +18,12 @@
 
 <script setup>
 import { inject, computed, shallowRef, watch } from 'vue'
-import { useFeed } from '~/composables/useFeed'
+import { useForYouFeed } from '~/composables/useForYouFeed'
 import { usePublicFeed } from '~/composables/usePublicFeed'
 import { useFeedInteraction } from '~/composables/useFeedInteraction'
 import FeedLayout from '~/layouts/FeedLayout.vue'
 import SnapScrollFeed from '~/components/Feed/SnapScrollFeed.vue'
-import VideoPlayer from '~/components/Feed/VideoPlayer.vue'
+import VideoPlayerTracking from '~/components/Feed/VideoPlayerTracking.vue'
 
 const authStore = inject('authStore')
 
@@ -34,7 +34,7 @@ const { hasInteracted, handleFirstInteraction, globalMuted } = useFeedInteractio
 watch(
     () => authStore.authenticated,
     (isAuthenticated, _, onCleanup) => {
-        activeFeed.value = isAuthenticated ? useFeed() : usePublicFeed()
+        activeFeed.value = isAuthenticated ? useForYouFeed() : usePublicFeed()
     },
     { immediate: true }
 )
@@ -44,6 +44,7 @@ const feedData = computed(() => {
 })
 
 const getVideoProps = (post, index) => ({
+    duration: post.media?.duration,
     'video-id': post.id,
     'video-url': post.media.src_url,
     'share-url': post.url,

@@ -286,6 +286,10 @@ export const settingsApi = {
 
     async deleteLogo() {
         return await apiClient.post('/api/v1/admin/settings/delete-logo')
+    },
+
+    async recheckRedisBfSupport() {
+        return await apiClient.post('/api/v1/admin/settings/recheck-redis-bf-support')
     }
 }
 

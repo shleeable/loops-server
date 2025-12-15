@@ -30,6 +30,19 @@
                 </button>
 
                 <button
+                    @click="setActiveTab('local')"
+                    class="relative px-3 py-2 text-base font-semibold transition-colors"
+                    :class="activeTab === 'local' ? 'text-white' : 'text-white/60'"
+                >
+                    {{ $t('nav.local') }}
+                    <div
+                        v-if="activeTab === 'local'"
+                        class="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full"
+                    ></div>
+                </button>
+
+                <button
+                    v-if="hasForYou"
                     @click="setActiveTab('foryou')"
                     class="relative px-3 py-2 text-base font-semibold transition-colors"
                     :class="activeTab === 'foryou' ? 'text-white' : 'text-white/60'"
@@ -55,21 +68,31 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, inject } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const appConfig = inject('appConfig')
 
 const isMobileView = ref(false)
-const activeTab = ref(route.path == '/' ? 'foryou' : 'following')
+const activeTab = ref(
+    route.path == '/' ? 'local' : route.path == '/feed/following' ? 'following' : 'foryou'
+)
+const hasForYou = computed(() => appConfig.fyf)
+
+const routePaths = {
+    local: '/',
+    foryou: '/feed/for-you',
+    following: '/feed/following'
+}
 
 const emit = defineEmits(['toggleMobileDrawer', 'openLogin'])
 
 const showTabsAndSearch = computed(() => {
-    return route.path === '/' || route.path === '/feed/following'
+    return route.path === '/' || route.path === '/feed/following' || route.path === '/feed/for-you'
 })
 
 const toggleMenu = () => {
@@ -83,7 +106,8 @@ const closeMenu = () => {
 
 const setActiveTab = (tab) => {
     activeTab.value = tab
-    router.push(tab === 'foryou' ? '/' : '/feed/following')
+
+    router.push(routePaths[tab])
 }
 
 const openSearch = () => {

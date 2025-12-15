@@ -22,6 +22,7 @@ use App\Models\VideoBookmark;
 use App\Models\VideoHashtag;
 use App\Services\AccountService;
 use App\Services\FeedService;
+use App\Services\FrontendService;
 use App\Services\IntlService;
 use App\Services\ReportService;
 use App\Support\CursorToken;
@@ -414,6 +415,16 @@ class WebPublicController extends Controller
     public function getLanguagesList(Request $request)
     {
         return $this->data(app(IntlService::class)->get());
+    }
+
+    public function appConfiguration()
+    {
+        $config = FrontendService::getCache();
+        $config['app']['software'] = 'loops';
+        $config['app']['version'] = app('app_version');
+        unset($config['branding']);
+
+        return response()->json($config);
     }
 
     private function defaultCollection($meta = [])

@@ -1,13 +1,14 @@
 <template>
     <div
-        class="w-full flex items-center hover:bg-gray-100 dark:hover:bg-slate-800 p-2.5 rounded-lg mb-1 transition-colors"
+        class="w-full flex items-center hover:bg-gray-100 dark:hover:bg-slate-800 px-2.5 rounded-lg py-2 transition-colors"
         :class="{
             'justify-center lg:justify-start': !isMobile,
             'justify-start': isMobile
         }"
     >
         <div class="flex items-center" :class="{ 'lg:mx-0 mx-auto': !isMobile }">
-            <i :class="iconClass" :style="`font-size: ${sizeString}px;`"></i>
+            <SparklesAltIcon v-if="iconClass === 'sparkles'" class="w-7 h-7" />
+            <i v-else :class="iconClass" :style="`font-size: ${sizeString}px;`"></i>
             <span
                 v-if="isMobile || isLargeScreen"
                 class="font-medium text-[17px] pl-[20px] pr-4"
@@ -21,6 +22,7 @@
 
 <script setup>
 import { computed, ref, onMounted, onUnmounted } from 'vue'
+import SparklesAltIcon from '../Icons/SparklesAltIcon.vue'
 
 defineProps({
     iconString: String,
