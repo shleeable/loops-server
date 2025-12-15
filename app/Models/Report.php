@@ -187,6 +187,6 @@ class Report extends Model
 
     public function adminUrl()
     {
-        return url('/admin/reports/show/'.$this->id);
+        return url('/admin/reports/'.$this->id);
     }
 }
