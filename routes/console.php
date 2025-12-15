@@ -7,6 +7,7 @@ Schedule::command(SnapshotUsage::class)->dailyAt('00:05')->timezone('UTC')->onOn
 Schedule::command('app:expire-user-register-verifications')->everyFiveMinutes()->onOneServer();
 Schedule::command('horizon:snapshot')->hourly()->onOneServer();
 Schedule::command('instances:update-stats --create-missing')->daily()->at('04:20')->onOneServer();
+Schedule::command('feed:update-interests')->hourly()->onOneServer();
 
 if (config('loops.admin_dashboard.autoUpdate')) {
     Schedule::command('admin:refresh-dashboard-30d')->everyThirtyMinutes()->onOneServer();
