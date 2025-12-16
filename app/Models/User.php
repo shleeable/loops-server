@@ -170,7 +170,7 @@ class User extends Authenticatable implements OAuthenticatable
      */
     public function videos(): HasMany
     {
-        return $this->hasMany(Video::class, 'profile_id');
+        return $this->hasMany(Video::class, 'profile_id', 'profile_id');
     }
 
     /** @return HasMany<Comment, $this> */

@@ -143,6 +143,7 @@ class Video extends Model
      * 6 = Admin unpublished
      * 7 = Account disabled
      * 8 = Account pending deletion
+     * 9 = Pending unavailable/deleted
      **/
 
     /**
