@@ -16,6 +16,8 @@ This setup uses `serversideup/php:8.4-fpm-nginx` as the base image and is design
     git clone https://github.com/joinloops/loops-server
     cd loops-server
     sudo chown -R www-data:www-data storage/ bootstrap/cache/
+    sudo find storage/ -type d -exec chmod 755 {} \; # set all directories to rwx by user/group
+    sudo find storage/ -type f -exec chmod 644 {} \; # set all files to rw by user/group
     ```
 
 2. **Copy the environment file, and Generate secure `.env` secrets:**
