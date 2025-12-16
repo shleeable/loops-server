@@ -1,9 +1,7 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use App\Models\User;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -13,17 +11,17 @@ return new class extends Migration
     public function up(): void
     {
         $users = User::whereIn('status', [6])->get();
-        foreach($users as $user) {
+        foreach ($users as $user) {
             $user->videos()->whereIn('status', [2])->update(['status' => 6]);
         }
 
         $users = User::whereIn('status', [7])->get();
-        foreach($users as $user) {
+        foreach ($users as $user) {
             $user->videos()->whereIn('status', [2])->update(['status' => 7]);
         }
 
         $users = User::whereIn('status', [8])->get();
-        foreach($users as $user) {
+        foreach ($users as $user) {
             $user->videos()->whereIn('status', [2])->update(['status' => 8]);
         }
     }
