@@ -91,7 +91,7 @@ class ActivityPubService
             return false;
         }
 
-        if (! $res->hasHeader('Content-Type')) {
+        if (! $res->header('Content-Type')) {
             return false;
         }
 
@@ -101,14 +101,16 @@ class ActivityPubService
             'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
         ];
 
-        $contentType = $res->getHeader('Content-Type')[0];
+        $contentType = $res->header('Content-Type')[0];
 
-        if ($validateContentType && ! $contentType) {
-            return false;
-        }
+        if ($validateContentType) {
+            if (! $contentType) {
+                return false;
+            }
 
-        if ($validateContentType && ! in_array($contentType, $acceptedTypes)) {
-            return false;
+            if (in_array($contentType, $acceptedTypes)) {
+                return false;
+            }
         }
 
         return $res->json();
