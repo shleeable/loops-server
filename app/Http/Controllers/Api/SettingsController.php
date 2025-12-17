@@ -308,6 +308,7 @@ class SettingsController extends Controller
 
         $request->user()->update(['status' => 7]);
         $request->user()->profile->update(['status' => 7]);
+        $request->user()->videos()->whereIn('status', [2])->update(['status' => 7]);
 
         Auth::logoutOtherDevices($request->input('password'));
         Auth::logout();
@@ -327,6 +328,7 @@ class SettingsController extends Controller
 
         $request->user()->update(['status' => 8, 'delete_after' => now()->addMonth()]);
         $request->user()->profile->update(['status' => 8]);
+        $request->user()->videos()->whereIn('status', [2])->update(['status' => 8]);
 
         Auth::logoutOtherDevices($request->input('password'));
         Auth::logout();
