@@ -1362,7 +1362,7 @@ const handleTranscode = async () => {
             },
             trim: {
                 start: 0,
-                end: 60
+                end: 180
             }
         })
 

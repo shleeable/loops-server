@@ -39,7 +39,7 @@ class SettingsFileService
             ],
             'media' => [
                 'max_video_size' => $settings['media.maxVideoSize'] ?? 100,
-                'max_video_duration' => $settings['media.maxVideoDuration'] ?? 300,
+                'max_video_duration' => $settings['media.maxVideoDuration'] ?? 180,
                 'allowed_video_formats' => $settings['media.allowedVideoFormats'] ?? ['mp4'],
             ],
             'fyf' => $settings['fyf.enabled'] ?? false,
