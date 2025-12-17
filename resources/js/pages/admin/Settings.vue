@@ -1682,7 +1682,7 @@ const settings = reactive({
     media: {
         maxVideoSize: 100,
         maxImageSize: 10,
-        maxVideoDuration: 300,
+        maxVideoDuration: 180,
         allowedVideoFormats: ['mp4', 'webm', 'mov'],
         storageDriver: 'local',
         bucketName: '',

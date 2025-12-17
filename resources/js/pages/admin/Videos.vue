@@ -38,11 +38,54 @@
                         :alt="item.caption"
                         class="w-16 h-12 rounded mr-3 object-cover"
                     />
-                    <div>
+                    <div class="flex gap-2 flex-col">
                         <div
+                            v-if="item.caption"
                             class="text-xs font-medium text-gray-900 dark:text-white max-w-xs truncate"
                         >
                             {{ item.caption }}
+                        </div>
+                        <div
+                            v-else
+                            class="text-xs font-medium italic text-gray-500 dark:text-gray-400 max-w-xs truncate"
+                        >
+                            Untitled Video
+                        </div>
+                        <div class="flex gap-2">
+                            <div
+                                v-if="item?.media?.duration"
+                                class="flex items-center gap-1 text-gray-500 dark:text-gray-400"
+                            >
+                                <span class="bx bx-timer text-base"></span>
+                                <span class="text-[12px]"> {{ item.media.duration }}s </span>
+                            </div>
+                            <span
+                                v-if="item.lang"
+                                class="inline-flex items-center rounded-md bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-400/10 dark:text-gray-300"
+                                >{{ item.lang }}</span
+                            >
+                            <span
+                                v-if="item.permissions.can_comment"
+                                class="inline-flex items-center rounded-full bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-400/10 dark:text-green-400 gap-1"
+                                ><span class="bx bx-check"></span>Comments
+                            </span>
+                            <span
+                                v-if="item.permissions.can_duet"
+                                class="inline-flex items-center rounded-full bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-400/10 dark:text-green-400 gap-1"
+                                ><span class="bx bx-check"></span>Duets
+                            </span>
+                            <span
+                                v-if="item.meta.contains_ai"
+                                class="inline-flex items-center rounded-full bg-indigo-100 px-1.5 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-400"
+                            >
+                                AI
+                            </span>
+                            <span
+                                v-if="item.meta.contains_ad"
+                                class="inline-flex items-center rounded-full bg-indigo-100 px-1.5 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-400"
+                            >
+                                Ad
+                            </span>
                         </div>
                     </div>
                 </div>
