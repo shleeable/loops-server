@@ -111,12 +111,14 @@ class InboxResolverService
 
                 foreach ($inboxGroup as $inboxUrl => $data) {
                     if ($processedInboxes->has($inboxUrl)) {
-                        $processedInboxes[$inboxUrl]['profile_ids'] = array_merge(
-                            $processedInboxes[$inboxUrl]['profile_ids'],
+                        $existing = $processedInboxes->get($inboxUrl);
+                        $existing['profile_ids'] = array_merge(
+                            $existing['profile_ids'],
                             $data['profile_ids']
                         );
+                        $processedInboxes->put($inboxUrl, $existing);
                     } else {
-                        $processedInboxes[$inboxUrl] = $data;
+                        $processedInboxes->put($inboxUrl, $data);
                     }
                 }
             }, 'profile_id');
@@ -185,12 +187,14 @@ class InboxResolverService
 
                 foreach ($inboxGroup as $inboxUrl => $data) {
                     if ($processedInboxes->has($inboxUrl)) {
-                        $processedInboxes[$inboxUrl]['profile_ids'] = array_merge(
-                            $processedInboxes[$inboxUrl]['profile_ids'],
+                        $existing = $processedInboxes->get($inboxUrl);
+                        $existing['profile_ids'] = array_merge(
+                            $existing['profile_ids'],
                             $data['profile_ids']
                         );
+                        $processedInboxes->put($inboxUrl, $existing);
                     } else {
-                        $processedInboxes[$inboxUrl] = $data;
+                        $processedInboxes->put($inboxUrl, $data);
                     }
                 }
             }, 'profile_id');
