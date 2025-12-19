@@ -221,18 +221,34 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
-        async registerUsername(username, password, passwordConfirmation, birthDate) {
+        async registerUsername(
+            username,
+            password,
+            passwordConfirmation,
+            birthDate,
+            isMobile = false
+        ) {
             const axiosInstance = axios.getAxiosInstance()
             try {
                 this.loading = true
                 this.error = null
 
-                const response = await axiosInstance.post('/api/v1/auth/register/username', {
-                    username: username,
-                    password: password,
-                    password_confirmation: passwordConfirmation,
-                    birth_date: birthDate
-                })
+                const params = isMobile
+                    ? {
+                          username: username,
+                          password: password,
+                          password_confirmation: passwordConfirmation,
+                          birth_date: birthDate,
+                          mobile: true
+                      }
+                    : {
+                          username: username,
+                          password: password,
+                          password_confirmation: passwordConfirmation,
+                          birth_date: birthDate
+                      }
+
+                const response = await axiosInstance.post('/api/v1/auth/register/username', params)
 
                 return response
             } catch (error) {
@@ -304,7 +320,7 @@ export const useAuthStore = defineStore('auth', {
                 this.authenticated = true
 
                 const notifyStore = useNotificationStore()
-                await notifyStore.fetchNotifications()
+                await notifyStore.fetchUnreadCount()
 
                 return response
             } catch (error) {

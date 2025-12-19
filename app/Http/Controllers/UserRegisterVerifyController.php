@@ -226,6 +226,19 @@ class UserRegisterVerifyController extends Controller
 
         $reg->delete();
 
+        if ($request->filled('mobile')) {
+            $token = $user->createToken('mobile-app')->accessToken;
+
+            return $this->data([
+                'mobile' => true,
+                'token' => $token,
+                'user' => [
+                    'id' => $user->id,
+                    'username' => $user->username,
+                ],
+            ]);
+        }
+
         return $this->success();
     }
 

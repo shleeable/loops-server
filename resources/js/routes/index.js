@@ -206,6 +206,12 @@ const router = createRouter({
             meta: { requiresAuth: false }
         },
         {
+            path: '/auth/app/register',
+            name: 'appRegister',
+            component: () => import('~/pages/auth/app-register.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
             path: '/dashboard',
             redirect: '/dashboard/account'
         },
