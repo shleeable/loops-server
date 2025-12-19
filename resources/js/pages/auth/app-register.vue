@@ -29,14 +29,14 @@
                         </button>
                         <div v-else class="w-8"></div>
                         <div class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                            {{ Math.round(((registrationStep - 1) / 4) * 100) }}%
+                            {{ Math.round(((registrationStep - 1) / 3) * 100) }}%
                         </div>
                     </div>
 
                     <div class="w-full bg-gray-100 dark:bg-gray-900 h-1">
                         <div
                             class="bg-gradient-to-r from-rose-500 to-red-600 h-1 transition-all duration-500 ease-out"
-                            :style="{ width: `${((registrationStep - 1) / 4) * 100}%` }"
+                            :style="{ width: `${((registrationStep - 1) / 3) * 100}%` }"
                         ></div>
                     </div>
                 </div>
@@ -421,85 +421,10 @@
                                     class="flex-1"
                                     variant="primary"
                                 >
-                                    {{ t('common.continue') }}
+                                    {{ t('common.finishSignUp') }}
                                 </AnimatedButton>
                             </div>
                         </form>
-
-                        <div v-if="registrationStep === 5" class="space-y-6">
-                            <div class="text-center">
-                                <div class="inline-flex items-center justify-center mb-6">
-                                    <div
-                                        v-if="form.selectedAvatarUrl"
-                                        class="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-1"
-                                    >
-                                        <img
-                                            :src="form.selectedAvatarUrl"
-                                            class="w-full h-full rounded-full object-cover"
-                                            @error="
-                                                $event.target.src = '/storage/avatars/default.jpg'
-                                            "
-                                        />
-                                    </div>
-                                    <div
-                                        v-else
-                                        class="w-24 h-24 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center"
-                                    >
-                                        <svg
-                                            class="w-12 h-12 text-gray-400 dark:text-gray-500"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                            />
-                                        </svg>
-                                    </div>
-                                </div>
-
-                                <input
-                                    type="file"
-                                    accept="image/jpg,image/jpeg,image/png"
-                                    @change="handleAvatarUpload"
-                                    class="hidden"
-                                    ref="avatarInput"
-                                />
-                                <button
-                                    type="button"
-                                    @click="$refs.avatarInput.click()"
-                                    class="w-full px-4 py-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl text-gray-600 dark:text-gray-400 hover:border-blue-500 dark:hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 active:bg-gray-50 dark:active:bg-gray-900 transition-colors font-medium"
-                                >
-                                    {{
-                                        form.selectedAvatarUrl
-                                            ? t('common.changeAvatar') || 'Change Avatar'
-                                            : t('common.clickToUploadImage')
-                                    }}
-                                </button>
-                            </div>
-
-                            <div class="space-y-3 pt-2">
-                                <AnimatedButton
-                                    @click="handleCompleteRegistration"
-                                    :loading="loading"
-                                    class="w-full"
-                                    variant="primary"
-                                >
-                                    {{ t('common.finishSignUp') }}
-                                </AnimatedButton>
-                                <button
-                                    v-if="!form.selectedAvatarUrl"
-                                    type="button"
-                                    @click="handleCompleteRegistration"
-                                    class="w-full text-center text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 py-2"
-                                >
-                                    {{ t('common.skipForNow') || 'Skip for now' }}
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -598,8 +523,6 @@ const form = ref({
     confirmPassword: '',
     username: '',
     verificationCode: '',
-    avatar: null,
-    selectedAvatarUrl: '',
     birthdate: '',
     captcha_type: '',
     captcha_token: ''
@@ -609,8 +532,8 @@ const registrationData = ref({
     email: '',
     username: '',
     password: '',
-    avatar: null,
-    avatarUrl: ''
+    token: '',
+    user: null
 })
 
 const openRegistration = computed(() => {
@@ -627,8 +550,6 @@ const getTitle = () => {
             return t('common.confirmYourBirthdate')
         case 4:
             return t('common.setUpYourProfile')
-        case 5:
-            return t('common.chooseYourAvatar')
         default:
             return t('common.createAccount')
     }
@@ -644,8 +565,6 @@ const getSubtitle = () => {
             return t('common.weNeedYourBirthdateToVerifyAge')
         case 4:
             return t('common.chooseAUsernameAndSecurePassword')
-        case 5:
-            return t('common.uploadAnAvatarToPersonalizeYourProfile')
         default:
             return t('common.createANewAccountToGetStarted')
     }
@@ -761,8 +680,6 @@ const clearForm = () => {
         confirmPassword: '',
         username: '',
         verificationCode: '',
-        avatar: null,
-        selectedAvatarUrl: '',
         birthdate: '',
         captcha_type: '',
         captcha_token: ''
@@ -957,35 +874,9 @@ const handleSetProfile = async () => {
                 }
                 registrationData.value.username = form.value.username
                 registrationData.value.password = form.value.password
-                registrationStep.value = 5
-                setSuccess(t('common.profileInformationSaved'))
             })
-    } catch (err) {
-        setError(
-            err.response?.data?.error?.message ||
-                err.response?.data?.message ||
-                t('common.anUnexpectedErrorOccuredPleaseTryAgain')
-        )
-        loading.value = false
-        throw err
-    } finally {
+
         await authStore.forceRegisterLogin()
-        loading.value = false
-    }
-}
-
-const handleCompleteRegistration = async () => {
-    clearMessages()
-    loading.value = true
-
-    try {
-        if (form.value.avatar) {
-            const data = new FormData()
-            data.append('avatar', form.value.avatar)
-            await authStore.updateAvatar(data).catch((err) => {
-                console.log('Avatar upload error:', err)
-            })
-        }
 
         if (isMobileAuth.value && redirectUri.value) {
             redirectToApp(registrationData.value.token, registrationData.value.user)
@@ -997,27 +888,14 @@ const handleCompleteRegistration = async () => {
             }, 2000)
         }
     } catch (err) {
-        setError(err.message || t('common.registrationFailedPleaseTryAgain'))
+        setError(
+            err.response?.data?.error?.message ||
+                err.response?.data?.message ||
+                t('common.anUnexpectedErrorOccuredPleaseTryAgain')
+        )
+        throw err
     } finally {
         loading.value = false
-    }
-}
-
-const handleAvatarUpload = (event) => {
-    const file = event.target.files[0]
-    if (file) {
-        if (file.size > 5 * 1024 * 1024) {
-            setError('Image must be less than 5MB')
-            return
-        }
-
-        const reader = new FileReader()
-        form.value.avatar = file
-        reader.onload = (e) => {
-            form.value.selectedAvatarUrl = e.target.result
-            registrationData.value.avatarUrl = e.target.result
-        }
-        reader.readAsDataURL(file)
     }
 }
 
