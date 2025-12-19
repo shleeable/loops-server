@@ -18,6 +18,7 @@ return [
     'browseTrendingTagsInstead' => 'Browse trending tags instead',
     'byContinuingYouAgreeToOur' => 'By continuing, you agree to our',
     'cancel' => 'Cancel',
+    'changeAvatar' => 'Change avatar',
     'chooseAUsername' => 'Choose a username',
     'chooseAUsernameAndSecurePassword' => 'Choose a username and secure password',
     'chooseYourAvatar' => 'Choose your avatar',
