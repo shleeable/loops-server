@@ -1,6 +1,7 @@
 <template>
     <BlankLayout>
         <RegistrationClosed v-if="registrationClosed" />
+        <RegistrationAlreadyAuthenticated v-else-if="!registrationClosed && isAuthed" />
         <div v-else class="min-h-screen bg-white dark:bg-gray-950">
             <div class="flex flex-col min-h-screen">
                 <div
@@ -515,13 +516,14 @@ import { useAuthStore } from '~/stores/auth'
 import CloudflareTurnstile from '@/components/Captcha/CloudflareTurnstile.vue'
 import HCaptcha from '@/components/Captcha/HCaptcha.vue'
 import { useI18n } from 'vue-i18n'
+import RegistrationAlreadyAuthenticated from '@/components/Layout/RegistrationAlreadyAuthenticated.vue'
 
 const appConfig = inject('appConfig')
 const authStore = useAuthStore()
 
 const route = useRoute()
 const router = useRouter()
-
+const isAuthed = ref(false)
 const registrationClosed = computed(() => appConfig && appConfig.registration === false)
 
 const axios = inject('axios')
@@ -1028,7 +1030,7 @@ const goBackStep = () => {
 
 onMounted(() => {
     if (authStore.authenticated) {
-        router.push('/')
+        isAuthed.value = true
     } else if (registrationClosed.value) {
         // Show registration closed message
     }
