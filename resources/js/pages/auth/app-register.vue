@@ -1027,7 +1027,7 @@ const goBackStep = () => {
 }
 
 onMounted(() => {
-    if (authStore.authenticated && !isMobileAuth.value) {
+    if (authStore.authenticated) {
         router.push('/')
     } else if (registrationClosed.value) {
         // Show registration closed message
