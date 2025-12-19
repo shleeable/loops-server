@@ -950,8 +950,8 @@ const handleSetProfile = async () => {
             )
             .then((res) => {
                 if (res.data?.data?.token) {
-                    registrationData.value.token = response.data.data.token
-                    registrationData.value.user = response.data.data.user
+                    registrationData.value.token = res.data.data.token
+                    registrationData.value.user = res.data.data.user
                 }
                 registrationData.value.username = form.value.username
                 registrationData.value.password = form.value.password
