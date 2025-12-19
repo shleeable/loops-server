@@ -8,11 +8,7 @@
             leave-from-class="opacity-100"
             leave-to-class="opacity-0"
         >
-            <div
-                v-if="authStore.isOpen"
-                class="fixed inset-0 z-50 overflow-y-auto"
-                @click="closeModal"
-            >
+            <div v-if="authStore.isOpen" class="fixed inset-0 z-50 overflow-y-auto">
                 <div class="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm"></div>
 
                 <div class="flex min-h-full items-center justify-center p-4">
@@ -403,17 +399,6 @@
                                                 t('common.weUseThisToVerifyAge') ||
                                                 'We use this to verify your age. It won’t be public.'
                                             }}
-                                        </div>
-
-                                        <div
-                                            v-if="birthdateFormatted"
-                                            class="mt-2 text-xs text-gray-500 dark:text-gray-400"
-                                        >
-                                            {{ t('common.formattedAs') || 'Formatted as' }}:
-                                            <code
-                                                class="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded"
-                                                >{{ birthdateFormatted }}</code
-                                            >
                                         </div>
                                     </div>
 
@@ -1222,8 +1207,22 @@ const handleVerifyCode = async () => {
                 setSuccess(t('common.emailVerifiedSuccessfully'))
             })
     } catch (err) {
-        setError(err.response?.data?.error?.message || t('common.invalidVerificationCode'))
-        throw err
+        console.error('Verification error:', err)
+
+        const errorMessage =
+            err.response?.data?.message ||
+            err.response?.data?.error?.message ||
+            err.message ||
+            t('common.invalidVerificationCode')
+
+        setError(errorMessage)
+
+        if (err.response?.status === 404) {
+            setTimeout(() => {
+                registrationStep.value = 1
+                clearMessages()
+            }, 2000)
+        }
     } finally {
         loading.value = false
     }

@@ -50,6 +50,7 @@
         "edit": "Edit",
         "edited": "Edited",
         "email": "Email",
+        "emailAlreadyVerified": "This email has already been verified.",
         "emailVerification": "Email Verification",
         "emailVerifiedSuccessfully": "Email verified successfully!",
         "enable": "Enable",
@@ -112,6 +113,7 @@
         "next": "Next",
         "noMoreResults": "No more results.",
         "noPostsYet": "No posts yet",
+        "noVerificationCodeSent": "No verification code has been sent for this email.",
         "notifications": "Notifications",
         "password": "Password",
         "passwordResetLinkHasBeenSentToYourEmail": "Password reset link has been sent to your email.",
@@ -164,7 +166,9 @@
         "useADifferentMethod": "Use a different method",
         "username": "Username",
         "verificationCode": "Verification Code",
+        "verificationCodeExpiredPleaseRequestNew": "Verification code has expired. Please request a new one.",
         "verificationCodeSentToYourEmail": "Verification code sent to your email!",
+        "verificationRecordNotFoundPleaseStartAgain": "Verification session not found. Please start registration again.",
         "verify": "Verify",
         "verifyAnotherWay": "Verify another way",
         "verifyCode": "Verify Code",
@@ -246,6 +250,7 @@
         "uploadLoop": "Upload Loop"
     },
     "notifications": {
+        "activity": "Activity",
         "allCaughtUp": "You're all caught up!",
         "errorLoadingNotifications": "Error loading notifications",
         "messageTypes": {
@@ -260,7 +265,16 @@
             "videoShare": "shared your video",
             "default": "interacted with your content"
         },
-        "noNotifications": "No notifications"
+        "messages": "Messages",
+        "messagesWillAppearHere": "Messages will appear here",
+        "newFollowers": "New Followers",
+        "newFollowersWillAppearHere": "New followers will appear here",
+        "noMessages": "No Messages",
+        "noNewFollowers": "No new followers",
+        "noNotifications": "No notifications",
+        "noSystemNotifications": "No System Notifications",
+        "system": "System",
+        "systemNotificationsWillAppearHere": "System notifications will appear here"
     },
     "pagination": {
         "next": "Next &raquo;",

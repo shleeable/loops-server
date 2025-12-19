@@ -21,19 +21,42 @@ class UserRegisterVerifyController extends Controller
 
     public function sendEmailVerification(StoreUserRegisterVerifyRequest $request)
     {
+        $email = $request->input('email');
+
+        $existing = UserRegisterVerify::whereEmail($email)
+            ->whereNull('verified_at')
+            ->latest()
+            ->first();
+
+        if ($existing) {
+            $sessionKey = Str::random(32);
+            $existing->update([
+                'session_key' => $sessionKey,
+                'verify_code' => (string) random_int(111111, 999999),
+                'resend_attempts' => 1,
+                'email_last_sent_at' => now(),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            $this->establishVerificationSession($request, $existing, $sessionKey);
+
+            NewAccountEmailVerifyJob::dispatch($existing);
+
+            return $this->success();
+        }
+
         $sessionKey = Str::random(32);
-        $request->session()->put('user:reg:session_key', $sessionKey);
         $reg = new UserRegisterVerify;
         $reg->session_key = $sessionKey;
-        $reg->email = $request->input('email');
+        $reg->email = $email;
         $reg->verify_code = (string) random_int(111111, 999999);
         $reg->ip_address = $request->ip();
         $reg->user_agent = $request->userAgent();
         $reg->email_last_sent_at = now();
         $reg->save();
-        $request->session()->put('user:reg:email', $request->input('email'));
-        $request->session()->put('user:reg:id', $reg->id);
-        $request->session()->put('user:reg:verify_attempts', 0);
+
+        $this->establishVerificationSession($request, $reg, $sessionKey);
 
         NewAccountEmailVerifyJob::dispatch($reg);
 
@@ -48,18 +71,55 @@ class UserRegisterVerifyController extends Controller
                 'email:rfc,dns,spoof,strict',
             ],
         ]);
-        $sEmail = $request->session()->get('user:reg:email');
+
         $email = $request->input('email');
-        abort_if($sEmail != $email, 400, 'Invalid request');
         $sKey = $request->session()->get('user:reg:session_key');
-        $res = UserRegisterVerify::whereEmail($email)->where('session_key', $sKey)->firstOrFail();
-        abort_if($res->resend_attempts >= config('loops.registration.max_resend_email_verify'), 400, __('common.maxResendLimitReachedPleaseContactSupport'));
-        $res->update(['verify_code' => (string) random_int(111111, 999999), 'resend_attempts' => $res->resend_attempts + 1, 'email_last_sent_at' => now()]);
+
+        $res = UserRegisterVerify::whereEmail($email)
+            ->whereNull('verified_at')
+            ->when($sKey, function ($query) use ($sKey) {
+                return $query->where('session_key', $sKey);
+            })
+            ->latest()
+            ->first();
+
+        abort_if(! $res, 404, __('common.noActiveVerificationFound'));
+
+        $this->establishVerificationSession($request, $res);
+
+        abort_if(
+            $res->resend_attempts >= config('loops.registration.max_resend_email_verify'),
+            400,
+            __('common.maxResendLimitReachedPleaseContactSupport')
+        );
+
+        $res->update([
+            'verify_code' => (string) random_int(111111, 999999),
+            'resend_attempts' => $res->resend_attempts + 1,
+            'email_last_sent_at' => now(),
+        ]);
+
         $request->session()->increment('user:reg:verify_attempts');
 
         NewAccountEmailVerifyJob::dispatch($res);
 
         return $this->success();
+    }
+
+    private function establishVerificationSession(Request $request, UserRegisterVerify $reg, ?string $sessionKey = null)
+    {
+        if ($sessionKey) {
+            $request->session()->put('user:reg:session_key', $sessionKey);
+        } else {
+            $request->session()->put('user:reg:session_key', $reg->session_key);
+        }
+
+        $request->session()->put('user:reg:email', $reg->email);
+        $request->session()->put('user:reg:id', $reg->id);
+
+        if (! $request->session()->has('user:reg:verify_attempts')) {
+            $request->session()->put('user:reg:verify_attempts', 0);
+        }
     }
 
     public function verifyEmailVerification(Request $request)
@@ -70,10 +130,14 @@ class UserRegisterVerifyController extends Controller
             'email' => [
                 'required',
                 'email:rfc,dns,spoof,strict',
-                'exists:user_register_verifies,email',
             ],
             'code' => 'required|digits:6',
         ]);
+
+        $email = $request->input('email');
+        $code = $request->input('code');
+        $sEmail = $request->session()->get('user:reg:email');
+        $sKey = $request->session()->get('user:reg:session_key');
 
         $request->session()->increment('user:reg:verify_attempts');
 
@@ -81,18 +145,45 @@ class UserRegisterVerifyController extends Controller
             return $this->error(__('common.tooManyFailedAttemptsPleaseTryAgainLater'));
         }
 
-        $sEmail = $request->session()->get('user:reg:email');
-        $email = $request->input('email');
-        abort_if($sEmail != $email, 400, 'Invalid request');
-        $sKey = $request->session()->get('user:reg:session_key');
-        abort_if(! $sKey, 400, 'Invalid request');
+        $reg = null;
 
-        $code = $request->input('code');
-        $reg = UserRegisterVerify::whereEmail($request->email)->whereVerifyCode($code)->first();
-        abort_if(! hash_equals($reg->session_key, $sKey), 400, 'Invalid request');
+        if ($sEmail === $email && $sKey) {
+            $reg = UserRegisterVerify::whereEmail($email)
+                ->where('session_key', $sKey)
+                ->whereNull('verified_at')
+                ->first();
+        }
 
-        if (! $reg || $reg->verified_at !== null || $reg->email_last_sent_at === null) {
-            return $this->error(__('common.invalidOrExpiredCode'));
+        if (! $reg) {
+            $reg = UserRegisterVerify::whereEmail($email)
+                ->whereNull('verified_at')
+                ->where('email_last_sent_at', '>=', now()->subHours(4))
+                ->latest()
+                ->first();
+
+            if ($reg) {
+                $this->establishVerificationSession($request, $reg);
+            }
+        }
+
+        if (! $reg) {
+            return $this->error(__('common.verificationRecordNotFoundPleaseStartAgain'));
+        }
+
+        if ($reg->verified_at !== null) {
+            return $this->error(__('common.emailAlreadyVerified'));
+        }
+
+        if ($reg->email_last_sent_at === null) {
+            return $this->error(__('common.noVerificationCodeSent'));
+        }
+
+        if ($reg->email_last_sent_at->lt(now()->subHour())) {
+            return $this->error(__('common.verificationCodeExpiredPleaseRequestNew'));
+        }
+
+        if ($reg->verify_code !== $code) {
+            return $this->error(__('common.invalidVerificationCode'));
         }
 
         $reg->verified_at = now();

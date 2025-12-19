@@ -3,11 +3,13 @@
 namespace App\Http\Requests;
 
 use App\Models\AdminSetting;
+use App\Models\UserRegisterVerify;
 use App\Rules\HCaptchaRule;
 use App\Rules\TurnstileRule;
 use App\Services\CaptchaService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class StoreUserRegisterVerifyRequest extends FormRequest
 {
@@ -45,7 +47,6 @@ class StoreUserRegisterVerifyRequest extends FormRequest
             'email' => [
                 'required',
                 'email:rfc,dns,spoof,strict',
-                'unique:user_register_verifies,email',
                 'unique:users,email',
             ],
         ];
@@ -69,5 +70,27 @@ class StoreUserRegisterVerifyRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function ($validator) {
+            $email = $this->input('email');
+
+            $recentVerification = UserRegisterVerify::whereEmail($email)
+                ->where('email_last_sent_at', '>=', now()->subMinutes(2))
+                ->whereNull('verified_at')
+                ->first();
+
+            if ($recentVerification) {
+                $validator->errors()->add(
+                    'email',
+                    __('common.verificationCodeRecentlySentPleaseCheckYourEmail')
+                );
+            }
+        });
     }
 }
