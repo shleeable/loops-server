@@ -75,7 +75,7 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/platform/contact', [WebPublicController::class, 'getContactInfo']);
     Route::get('/v1/page/content', [WebPublicController::class, 'getPageContent']);
 
-    Route::get('/v1/accounts/suggested', [AccountController::class, 'getSuggestedAccounts']);
+    Route::get('/v1/accounts/suggested', [AccountController::class, 'getSuggestedAccounts'])->middleware('auth:web,api');
 
     // Auth
     Route::post('/v1/auth/2fa/verify', [AuthController::class, 'verifyTwoFactor']);
