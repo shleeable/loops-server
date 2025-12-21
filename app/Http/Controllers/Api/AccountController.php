@@ -151,7 +151,7 @@ class AccountController extends Controller
         $systemMessage = SystemMessage::active()->published()->where('key_id', $id)->first();
         $cached = app(SystemMessageService::class)->getFull($systemMessage->id);
 
-        return $this->data($cached);
+        return response()->json(['data' => $cached]);
     }
 
     public function accountBlock(Request $request, $id)
