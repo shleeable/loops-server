@@ -9,6 +9,8 @@ class NotificationService
 {
     const NOTIFY_UNREAD_KEY = 'api:s:notify:unread:';
 
+    const NOTIFY_TOTAL_UNREAD_KEY = 'api:s:notify:unread:total_counts:';
+
     public static function getUnreadCount($profileId)
     {
         if (! $profileId) {
@@ -24,11 +26,32 @@ class NotificationService
         );
     }
 
+    public static function getTotalUnreadCount($profileId)
+    {
+        if (! $profileId) {
+            return 0;
+        }
+
+        return Cache::remember(
+            self::NOTIFY_TOTAL_UNREAD_KEY.$profileId,
+            now()->addHours(24),
+            function () use ($profileId) {
+                return [
+                    'activity' => Notification::whereUserId($profileId)->whereIn('type', Notification::activityTypes())->whereNull('read_at')->count(),
+                    'followers' => Notification::whereUserId($profileId)->whereIn('type', Notification::followerTypes())->whereNull('read_at')->count(),
+                    'system' => Notification::whereUserId($profileId)->whereIn('type', Notification::systemTypes())->whereNull('read_at')->count(),
+                ];
+            }
+        );
+    }
+
     public static function clearUnreadCount($profileId)
     {
         if (! $profileId) {
             return 0;
         }
+
+        Cache::forget(self::NOTIFY_TOTAL_UNREAD_KEY.$profileId);
 
         return Cache::forget(self::NOTIFY_UNREAD_KEY.$profileId);
     }
