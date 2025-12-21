@@ -108,7 +108,7 @@
                         :key="date"
                     >
                         <h3
-                            class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 sticky top-17 lg:top-0 bg-gray-50 dark:bg-gray-900 py-2 z-1 px-3 md:px-0"
+                            class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 sticky top-17 lg:top-0 bg-gray-50 dark:bg-gray-900 py-2 z-1 px-3"
                         >
                             {{ formatDate(date) }} ({{ groupNotifications.length }})
                         </h3>
