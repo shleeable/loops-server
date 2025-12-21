@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Follower;
+use App\Services\AccountSuggestionService;
 use App\Services\FollowerService;
 
 class FollowerObserver
@@ -13,6 +14,8 @@ class FollowerObserver
     public function created(Follower $follower): void
     {
         FollowerService::refreshAndSync($follower->profile_id, $follower->following_id);
+        AccountSuggestionService::removeForUser($follower->profile_id, $follower->following_id);
+        AccountSuggestionService::invalidate($follower->profile_id);
     }
 
     /**
@@ -21,6 +24,8 @@ class FollowerObserver
     public function updated(Follower $follower): void
     {
         FollowerService::refreshAndSync($follower->profile_id, $follower->following_id);
+        AccountSuggestionService::removeForUser($follower->profile_id, $follower->following_id);
+        AccountSuggestionService::invalidate($follower->profile_id);
     }
 
     /**
@@ -29,6 +34,8 @@ class FollowerObserver
     public function deleted(Follower $follower): void
     {
         FollowerService::refreshAndSync($follower->profile_id, $follower->following_id);
+        AccountSuggestionService::removeForUser($follower->profile_id, $follower->following_id);
+        AccountSuggestionService::invalidate($follower->profile_id);
     }
 
     /**
@@ -37,6 +44,8 @@ class FollowerObserver
     public function restored(Follower $follower): void
     {
         FollowerService::refreshAndSync($follower->profile_id, $follower->following_id);
+        AccountSuggestionService::removeForUser($follower->profile_id, $follower->following_id);
+        AccountSuggestionService::invalidate($follower->profile_id);
     }
 
     /**
@@ -45,5 +54,7 @@ class FollowerObserver
     public function forceDeleted(Follower $follower): void
     {
         FollowerService::refreshAndSync($follower->profile_id, $follower->following_id);
+        AccountSuggestionService::removeForUser($follower->profile_id, $follower->following_id);
+        AccountSuggestionService::invalidate($follower->profile_id);
     }
 }

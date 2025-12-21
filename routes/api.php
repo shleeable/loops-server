@@ -76,6 +76,8 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/page/content', [WebPublicController::class, 'getPageContent']);
 
     Route::get('/v1/accounts/suggested', [AccountController::class, 'getSuggestedAccounts'])->middleware('auth:web,api');
+    Route::post('/v1/accounts/suggested/hide', [AccountController::class, 'hideSuggestion'])->middleware('auth:web,api');
+    Route::post('/v1/accounts/suggested/unhide', [AccountController::class, 'unhideSuggestion'])->middleware('auth:web,api');
 
     // Auth
     Route::post('/v1/auth/2fa/verify', [AuthController::class, 'verifyTwoFactor']);
@@ -128,6 +130,7 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/account/favourites', [VideoBookmarkController::class, 'bookmarks'])->middleware('auth:web,api');
 
     // Notifications
+    Route::get('/v1/account/notifications/system/{id}', [AccountController::class, 'getSystemNotification'])->middleware('auth:web,api');
     Route::get('/v1/account/notifications', [AccountController::class, 'notifications'])->middleware('auth:web,api');
     Route::get('/v1/account/notifications/count', [AccountController::class, 'notificationUnreadCount'])->middleware('auth:web,api');
     Route::post('/v1/account/notifications/mark-all-read', [AccountController::class, 'markAllNotificationsAsRead'])->middleware('auth:web,api');

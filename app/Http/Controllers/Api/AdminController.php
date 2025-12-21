@@ -23,6 +23,7 @@ use App\Models\Report;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\AccountService;
+use App\Services\AccountSuggestionService;
 use App\Services\AdminAuditLogService;
 use App\Services\ExploreService;
 use App\Services\NodeinfoCrawlerService;
@@ -301,12 +302,18 @@ class AdminController extends Controller
 
         $profile->update(['status' => 6]);
 
+        AccountService::del($profile->id);
+
         if ($profile->local) {
             DB::table('oauth_access_tokens')->where('user_id', $profile->user_id)->delete();
             DB::table('oauth_auth_codes')->where('user_id', $profile->user_id)->delete();
             DB::table('sessions')->where('user_id', $profile->user_id)->delete();
             $profile->user->update(['status' => 6]);
         }
+
+        AccountSuggestionService::removeFromAll($profile->id);
+
+        app(AdminAuditLogService::class)->logProfileAdminSuspend($request->user(), $profile);
 
         return $this->success();
     }
@@ -324,6 +331,9 @@ class AdminController extends Controller
         if ($profile->local) {
             $profile->user->update(['status' => 1]);
         }
+
+        AccountService::del($profile->id);
+        app(AdminAuditLogService::class)->logProfileAdminUnsuspend($request->user(), $profile);
 
         return $this->success();
     }

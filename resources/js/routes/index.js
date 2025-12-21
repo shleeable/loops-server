@@ -32,9 +32,15 @@ const router = createRouter({
             meta: { requiresAuth: false }
         },
         {
+            path: '/notifications/system/:id',
+            name: 'notificationSystem',
+            component: () => import('~/pages/notifications/system.vue'),
+            meta: { requiresAuth: true, params: true }
+        },
+        {
             path: '/notifications',
             name: 'notifications',
-            component: () => import('~/pages/notifications.vue'),
+            component: () => import('~/pages/notifications/index.vue'),
             meta: { requiresAuth: true }
         },
         {
@@ -288,10 +294,10 @@ const router = createRouter({
         //   meta: { requiresAuth: true }
         // },
         // {
-        //   path: '/dashboard/screen-time',
-        //   name: 'dashboardScreenTime',
-        //   component: () => import('~/pages/dashboard/screen-time.vue'),
-        //   meta: { requiresAuth: true }
+        //     path: '/dashboard/screen-time',
+        //     name: 'dashboardScreenTime',
+        //     component: () => import('~/pages/dashboard/screen-time.vue'),
+        //     meta: { requiresAuth: true }
         // },
         // {
         //     path: "/dashboard/preferences",

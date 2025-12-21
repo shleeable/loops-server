@@ -8,6 +8,8 @@ Schedule::command('app:expire-user-register-verifications')->everyFiveMinutes()-
 Schedule::command('horizon:snapshot')->hourly()->onOneServer();
 Schedule::command('instances:update-stats --create-missing')->daily()->at('04:20')->onOneServer();
 Schedule::command('feed:update-interests')->hourly()->onOneServer();
+Schedule::command('app:system-message-seeder')->daily()->onOneServer();
+Schedule::command('app:system-message-garbage-collector')->daily()->onOneServer();
 
 if (config('loops.admin_dashboard.autoUpdate')) {
     Schedule::command('admin:refresh-dashboard-30d')->everyThirtyMinutes()->onOneServer();

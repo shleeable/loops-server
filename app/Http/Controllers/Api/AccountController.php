@@ -17,10 +17,13 @@ use App\Models\Follower;
 use App\Models\FollowRequest;
 use App\Models\Notification;
 use App\Models\Profile;
+use App\Models\SystemMessage;
 use App\Models\UserFilter;
 use App\Services\AccountService;
+use App\Services\AccountSuggestionService;
 use App\Services\FollowerService;
 use App\Services\NotificationService;
+use App\Services\SystemMessageService;
 use App\Services\UserFilterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -72,14 +75,35 @@ class AccountController extends Controller
 
     public function notifications(Request $request)
     {
+        $validated = $request->validate([
+            'type' => 'sometimes|in:all,activity,system,followers',
+        ]);
+
         $pid = $request->user()->profile_id;
+        $hasCursor = $request->filled('cursor');
+        $type = data_get($validated, 'type', 'all');
+        $types = match ($type) {
+            'all' => Notification::allTypes(),
+            'activity' => Notification::activityTypes(),
+            'followers' => Notification::followerTypes(),
+            'system' => Notification::systemTypes(),
+            default => Notification::allTypes()
+        };
 
         $res = Notification::whereUserId($pid)
-            ->whereIn('type', [11, 15, 16, 21, 22, 23, 26, 27, 28, 31])
+            ->whereIn('type', $types)
             ->orderByDesc('created_at')
             ->cursorPaginate(20);
 
-        return NotificationResource::collection($res);
+        if ($hasCursor) {
+            return NotificationResource::collection($res);
+        }
+
+        return NotificationResource::collection($res)->additional([
+            'meta' => [
+                'unread_counts' => NotificationService::getTotalUnreadCount($pid),
+            ],
+        ]);
     }
 
     public function notificationUnreadCount(Request $request)
@@ -104,11 +128,30 @@ class AccountController extends Controller
 
     public function markAllNotificationsAsRead(Request $request)
     {
+        $validated = $request->validate([
+            'type' => 'sometimes|in:all,activity,system,followers',
+        ]);
         $pid = $request->user()->profile_id;
-        Notification::whereUserId($pid)->update(['read_at' => now()]);
+        $type = data_get($validated, 'type', 'all');
+
+        match ($type) {
+            'all' => Notification::whereUserId($pid)->update(['read_at' => now()]),
+            'activity' => Notification::whereUserId($pid)->whereIn('type', Notification::activityTypes())->update(['read_at' => now()]),
+            'followers' => Notification::whereUserId($pid)->whereIn('type', Notification::followerTypes())->update(['read_at' => now()]),
+            'system' => Notification::whereUserId($pid)->whereIn('type', Notification::systemTypes())->update(['read_at' => now()]),
+            default => Notification::whereUserId($pid)->update(['read_at' => now()]),
+        };
         NotificationService::clearUnreadCount($pid);
 
         return $this->success();
+    }
+
+    public function getSystemNotification(Request $request, $id)
+    {
+        $systemMessage = SystemMessage::active()->published()->where('key_id', $id)->first();
+        $cached = app(SystemMessageService::class)->getFull($systemMessage->id);
+
+        return $this->data($cached);
     }
 
     public function accountBlock(Request $request, $id)
@@ -128,6 +171,8 @@ class AccountController extends Controller
         FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->delete();
         FollowRequest::whereProfileId($profile->id)->whereFollowingId($pid)->delete();
         FollowerService::refreshAndSync($pid, $profile->id);
+        AccountSuggestionService::removeForUser($pid, $profile->id);
+        AccountSuggestionService::invalidate($pid);
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_blocking'] = true;
 
@@ -144,7 +189,7 @@ class AccountController extends Controller
         UserFilter::whereProfileId($pid)
             ->whereAccountId($profile->id)
             ->delete();
-
+        AccountSuggestionService::invalidate($pid);
         FollowerService::refreshAndSync($pid, $profile->id);
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_blocking'] = false;
@@ -285,30 +330,51 @@ class AccountController extends Controller
 
     public function getSuggestedAccounts(Request $request)
     {
-        $pid = $request->user()->profile_id;
+        $validated = $request->validate([
+            'limit' => 'sometimes|integer|min:3|max:20',
+        ]);
 
-        $accounts = Profile::active()
-            ->whereLocal(true)
-            ->where('id', '!=', $pid)
-            ->orderByDesc('followers')
-            ->take(10)
-            ->pluck('id');
+        $pid = (int) $request->user()->profile_id;
+        $limit = data_get($validated, 'limit', 20);
+        $accounts = AccountSuggestionService::get($pid, $limit);
 
-        $res = $accounts->map(function ($id) {
-            return AccountService::get($id);
-        })->filter(function ($acct) use ($pid) {
-            if (! $acct) {
-                return false;
-            }
+        return $this->data($accounts);
+    }
 
-            if (FollowerService::follows($pid, $acct['id'])) {
-                return false;
-            }
+    public function hideSuggestion(Request $request)
+    {
+        $request->validate([
+            'profile_id' => 'required|integer|exists:profiles,id',
+        ]);
 
-            return true;
-        })->shuffle()->toArray();
+        $pid = (int) $request->user()->profile_id;
+        $profileId = (int) $request->input('profile_id');
 
-        return $this->data($res);
+        if ($pid === $profileId) {
+            return response()->json(['error' => 'Cannot hide your own account'], 422);
+        }
+
+        AccountSuggestionService::hide($pid, $profileId);
+
+        return response()->json(['message' => 'Suggestion hidden']);
+    }
+
+    public function unhideSuggestion(Request $request)
+    {
+        $request->validate([
+            'profile_id' => 'required|integer|exists:profiles,id',
+        ]);
+
+        $pid = (int) $request->user()->profile_id;
+        $profileId = (int) $request->input('profile_id');
+
+        if ($pid === $profileId) {
+            return response()->json(['error' => 'Cannot unhide your own account'], 422);
+        }
+
+        AccountSuggestionService::unhide($pid, $profileId);
+
+        return response()->json(['message' => 'Suggestion unhidden']);
     }
 
     public function accountFollowers(SearchFollowersRequest $request, $id)
