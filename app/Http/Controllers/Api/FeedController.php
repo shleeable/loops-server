@@ -25,7 +25,16 @@ class FeedController extends Controller
             return $this->error('Please finish setting up your account', 403);
         }
 
-        return FeedService::getAccountFeed($request->user()->profile_id);
+        $validated = $request->validate([
+            'sort' => 'sometimes|in:Latest,Popular,Oldest',
+            'limit' => 'sometimes|integer|min:1|max:20',
+        ]);
+
+        $limit = data_get($validated, 'limit', 10);
+        $sort = data_get($validated, 'sort', 'Latest');
+        $showPinned = $sort === 'Latest';
+
+        return FeedService::getAccountFeed($request->user()->profile_id, $limit, $sort, $showPinned);
     }
 
     public function getForYouFeed(Request $request)

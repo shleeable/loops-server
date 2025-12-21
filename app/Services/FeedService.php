@@ -10,10 +10,10 @@ use Illuminate\Pagination\CursorPaginator;
 
 class FeedService
 {
-    public static function getAccountFeed($profileId, $limit = 10, $sort = 'Latest')
+    public static function getAccountFeed($profileId, $limit = 10, $sort = 'Latest', $showPinned = true)
     {
         $request = request();
-        $isFirstPage = ! $request->has('cursor');
+        $isFirstPage = $showPinned && ! $request->has('cursor');
 
         $query = Video::whereProfileId($profileId)
             ->whereStatus(2)

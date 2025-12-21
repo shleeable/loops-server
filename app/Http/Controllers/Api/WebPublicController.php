@@ -245,6 +245,7 @@ class WebPublicController extends Controller
         ]);
 
         $sort = $request->input('sort', 'Latest');
+        $showPinned = $sort === 'Latest';
 
         $profile = Profile::findOrFail($id);
 
@@ -252,7 +253,7 @@ class WebPublicController extends Controller
             return $this->error('This resource is not available', 400);
         }
 
-        return FeedService::getAccountFeed($id, 10, $sort);
+        return FeedService::getAccountFeed($id, 10, $sort, $showPinned);
     }
 
     public function getContactInfo()
