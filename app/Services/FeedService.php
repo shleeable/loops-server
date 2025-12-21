@@ -17,7 +17,9 @@ class FeedService
 
         $query = Video::whereProfileId($profileId)
             ->whereStatus(2)
-            ->where('is_pinned', false);
+            ->when($isFirstPage, function ($query, $isFirstPage) {
+                $query->where('is_pinned', false);
+            });
 
         match ($sort) {
             'Latest' => $query->orderByDesc('id'),
