@@ -15,6 +15,7 @@ use App\Jobs\Federation\DeliverUndoFollowActivity;
 use App\Jobs\Federation\DeliverUndoFollowRequestActivity;
 use App\Models\Follower;
 use App\Models\FollowRequest;
+use App\Models\HiddenSuggestion;
 use App\Models\Notification;
 use App\Models\Profile;
 use App\Models\SystemMessage;
@@ -352,6 +353,10 @@ class AccountController extends Controller
 
         if ($pid === $profileId) {
             return response()->json(['error' => 'Cannot hide your own account'], 422);
+        }
+
+        if (HiddenSuggestion::where('profile_id', $pid)->count() > 100) {
+            return response()->json(['message' => 'You have reached the limit']);
         }
 
         AccountSuggestionService::hide($pid, $profileId);
