@@ -9,6 +9,7 @@ use App\Models\AdminSetting;
 use App\Services\RedisService;
 use App\Services\SanitizeService;
 use App\Services\SettingsFileService;
+use App\Services\UserAppPreferencesService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -68,6 +69,9 @@ class AdminSettingsController extends Controller
                 $settingKey = "{$section}.{$key}";
                 $isPublic = $this->isPublicSetting($settingKey);
                 if ($section == 'fyf' && $key == 'enabled') {
+                    if (! $value) {
+                        app(UserAppPreferencesService::class)->updateDisableForYouFeed();
+                    }
                     if (! $supportsBf) {
                         $value = false;
                     }

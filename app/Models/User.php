@@ -216,6 +216,14 @@ class User extends Authenticatable implements OAuthenticatable
         return $this->hasOne(UserDataSettings::class);
     }
 
+    /**
+     * @return HasOne<UserAppPreference, $this>
+     */
+    public function appPreferences(): HasOne
+    {
+        return $this->hasOne(UserAppPreference::class);
+    }
+
     public function getOrCreateDataSettings(): UserDataSettings
     {
         return $this->dataSettings()->firstOrCreate([

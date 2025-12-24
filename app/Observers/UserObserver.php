@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Jobs\User\UserSystemMessageSeederJob;
 use App\Models\Profile;
 use App\Models\User;
+use App\Services\UserAppPreferencesService;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
 class UserObserver implements ShouldHandleEventsAfterCommit
@@ -25,6 +26,7 @@ class UserObserver implements ShouldHandleEventsAfterCommit
         $user->save();
 
         UserSystemMessageSeederJob::dispatch($profile)->onQueue('notify');
+        app(UserAppPreferencesService::class)->get($user->id);
     }
 
     /**

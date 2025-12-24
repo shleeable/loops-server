@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StudioController;
+use App\Http\Controllers\Api\UserPreferencesController;
 use App\Http\Controllers\Api\VideoController;
 use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\AuthController;
@@ -227,6 +228,10 @@ Route::prefix('api')->group(function () {
 
     // Reports
     Route::post('/v1/report', [ReportController::class, 'store'])->middleware(['auth:web,api', 'throttle:api']);
+
+    // App Preferences
+    Route::get('/v1/app/preferences', [UserPreferencesController::class, 'show'])->middleware(['auth:web,api']);
+    Route::post('/v1/app/preferences', [UserPreferencesController::class, 'update'])->middleware(['auth:web,api']);
 
     // Admin
     Route::prefix('/v1/admin')->middleware(['auth:web,api', AdminOnlyAccess::class])->group(function () {
