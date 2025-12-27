@@ -10,6 +10,7 @@ use App\Http\Resources\FollowerResource;
 use App\Http\Resources\FollowingResource;
 use App\Http\Resources\NotificationResource;
 use App\Http\Resources\ProfileResource;
+use App\Http\Resources\UserVideoLikeResource;
 use App\Jobs\Federation\DeliverFollowRequest;
 use App\Jobs\Federation\DeliverUndoFollowActivity;
 use App\Jobs\Federation\DeliverUndoFollowRequestActivity;
@@ -20,12 +21,14 @@ use App\Models\Notification;
 use App\Models\Profile;
 use App\Models\SystemMessage;
 use App\Models\UserFilter;
+use App\Models\VideoLike;
 use App\Services\AccountService;
 use App\Services\AccountSuggestionService;
 use App\Services\FollowerService;
 use App\Services\NotificationService;
 use App\Services\SystemMessageService;
 use App\Services\UserFilterService;
+use App\Support\CursorToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -668,5 +671,90 @@ class AccountController extends Controller
         }
 
         return AccountCompactResource::collection($suggestions);
+    }
+
+    public function accountVideoLikes(Request $request)
+    {
+        $validated = $request->validate([
+            'cursor' => 'sometimes|string|max:2000',
+            'limit' => 'sometimes|integer|min:1|max:20',
+        ]);
+        $user = $request->user();
+        abort_unless($user->status, 1, 404);
+
+        $preCursor = $validated['cursor'] ?? null;
+        $limit = $validated['limit'] ?? 10;
+
+        $ctx = hash('sha256', implode('|', [
+            $user->id,
+            'self-likes',
+            'limit:'.$limit,
+            'order:id_desc',
+        ]));
+
+        $decodedCursor = null;
+        $hops = 0;
+        $maxPages = $user->is_admin ? 100 : 10;
+        $maxItems = $user->is_admin ? 300 : 120;
+
+        if ($request->filled('cursor')) {
+            ['cursor' => $decodedCursor, 'hops' => $hops] = CursorToken::decode($request->input('cursor'), $ctx);
+
+            if ($hops >= $maxPages) {
+                return $this->defaultCursorTokenResponse($request, $limit);
+            }
+
+            if (($hops * $limit) >= $maxItems) {
+                return $this->defaultCursorTokenResponse($request, $limit);
+            }
+        }
+
+        $pager = VideoLike::whereProfileId($user->profile_id)
+            ->orderByDesc('id')
+            ->cursorPaginate(
+                perPage: $limit,
+                columns: ['*'],
+                cursorName: 'cursor',
+                cursor: $decodedCursor
+            );
+
+        $nextLaravelCursor = $pager->nextCursor()?->encode();
+        $nextCursorToken = CursorToken::encode($nextLaravelCursor, $ctx, $hops + 1);
+
+        $tags = $pager->getCollection();
+
+        return UserVideoLikeResource::collection($tags)->additional([
+            'links' => [
+                'first' => null,
+                'last' => null,
+                'prev' => null,
+                'next' => null,
+            ],
+            'meta' => [
+                'path' => $request->url(),
+                'per_page' => $limit,
+                'next_cursor' => $nextCursorToken,
+                'prev_cursor' => $preCursor,
+            ],
+        ]);
+    }
+
+    public function defaultCursorTokenResponse($request, $limit)
+    {
+        return response()->json([
+            'data' => [],
+            'links' => [
+                'first' => null,
+                'last' => null,
+                'prev' => null,
+                'next' => null,
+            ],
+            'meta' => [
+                'path' => $request->url(),
+                'per_page' => $limit,
+                'next_cursor' => null,
+                'prev_cursor' => null,
+            ],
+        ]);
     }
 }

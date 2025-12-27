@@ -126,6 +126,7 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/account/follow/{id}', [AccountController::class, 'follow'])->middleware('auth:web,api');
     Route::post('/v1/account/unfollow/{id}', [AccountController::class, 'unfollow'])->middleware('auth:web,api');
     Route::post('/v1/account/undo-follow-request/{id}', [AccountController::class, 'undoFollowRequest'])->middleware('auth:web,api');
+    Route::get('/v1/account/videos/likes', [AccountController::class, 'accountVideoLikes'])->middleware('auth:web,api');
 
     // Bookmarks
     Route::get('/v1/account/favourites', [VideoBookmarkController::class, 'bookmarks'])->middleware('auth:web,api');
