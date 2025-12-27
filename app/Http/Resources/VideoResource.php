@@ -57,7 +57,7 @@ class VideoResource extends JsonResource
             'comments' => $this->comments,
             'bookmarks' => $this->bookmarks,
             'has_liked' => $hasLiked,
-            'has_bookmarked' => $hasBookmarked,
+            'has_bookmarked' => (bool) $hasBookmarked,
             'is_edited' => $this->is_edited,
             'lang' => $this->lang,
             'tags' => $this->hashtags->map(fn (Hashtag $tag) => $tag->name),

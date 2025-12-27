@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\VideoResource;
 use App\Models\Video;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class VideoBookmarkController extends Controller
 {
@@ -28,6 +29,7 @@ class VideoBookmarkController extends Controller
             'videos.*',
             'video_bookmarks.created_at',
             'video_bookmarks.video_id',
+            DB::raw('1 as is_bookmarked'),
         ])
             ->join('video_bookmarks', 'videos.id', '=', 'video_bookmarks.video_id')
             ->where('video_bookmarks.profile_id', $profileId)
