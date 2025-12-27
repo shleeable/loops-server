@@ -14,11 +14,6 @@ class ExploreController extends Controller
 {
     use ApiHelpers;
 
-    // public function __construct()
-    // {
-    //     $this->middleware('auth');
-    // }
-
     public function getTrendingTags(Request $request)
     {
         return $this->data(app(ExploreService::class)->getTrendingTags());
@@ -32,6 +27,13 @@ class ExploreController extends Controller
         $hashtagId = $tagMap->get($id)['id'];
 
         if ($request->user()) {
+            $user = $request->user();
+        } elseif ($request->bearerToken()) {
+            $user = $request->user('api');
+        } else {
+            $user = null;
+        }
+        if ($user) {
             $feed = VideoHashtag::whereHashtagId($hashtagId)
                 ->whereVisibility(1)
                 ->orderByDesc('id')
