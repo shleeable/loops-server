@@ -17,6 +17,7 @@ use App\Models\Follower;
 use App\Models\Hashtag;
 use App\Models\Page;
 use App\Models\Profile;
+use App\Models\SystemMessage;
 use App\Models\Video;
 use App\Models\VideoBookmark;
 use App\Models\VideoHashtag;
@@ -25,6 +26,7 @@ use App\Services\FeedService;
 use App\Services\FrontendService;
 use App\Services\IntlService;
 use App\Services\ReportService;
+use App\Services\SystemMessageService;
 use App\Support\CursorToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -382,6 +384,15 @@ class WebPublicController extends Controller
                 'total_results' => $tag->count,
             ],
         ]);
+    }
+
+    public function getPublicSystemNotification(Request $request, $id)
+    {
+        abort_unless($request->hasHeader('X-LOOPS-APP'), 404);
+        $systemMessage = SystemMessage::active()->published()->where('key_id', $id)->firstOrFail();
+        $cached = app(SystemMessageService::class)->getFull($systemMessage->id);
+
+        return response()->json(['data' => $cached]);
     }
 
     public function defaultTagResponse($request, $limit, $totalCount = 0)

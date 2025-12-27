@@ -131,6 +131,7 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/account/favourites', [VideoBookmarkController::class, 'bookmarks'])->middleware('auth:web,api');
 
     // Notifications
+    Route::get('/v1/notifications/system/{id}', [WebPublicController::class, 'getPublicSystemNotification'])->middleware('throttle:api');
     Route::get('/v1/account/notifications/system/{id}', [AccountController::class, 'getSystemNotification'])->middleware('auth:web,api');
     Route::get('/v1/account/notifications', [AccountController::class, 'notifications'])->middleware('auth:web,api');
     Route::get('/v1/account/notifications/count', [AccountController::class, 'notificationUnreadCount'])->middleware('auth:web,api');

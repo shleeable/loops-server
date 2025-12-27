@@ -32,6 +32,12 @@ const router = createRouter({
             meta: { requiresAuth: false }
         },
         {
+            path: '/notifications/system/:id/permalink',
+            name: 'notificationSystemPermalink',
+            component: () => import('~/pages/notifications/system-permalink.vue'),
+            meta: { requiresAuth: false, params: true }
+        },
+        {
             path: '/notifications/system/:id',
             name: 'notificationSystem',
             component: () => import('~/pages/notifications/system.vue'),
