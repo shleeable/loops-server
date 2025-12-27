@@ -680,7 +680,7 @@ class AccountController extends Controller
             'limit' => 'sometimes|integer|min:1|max:20',
         ]);
         $user = $request->user();
-        abort_unless($user->status, 1, 404);
+        abort_unless($user->status === 1, 404);
 
         $preCursor = $validated['cursor'] ?? null;
         $limit = $validated['limit'] ?? 10;
