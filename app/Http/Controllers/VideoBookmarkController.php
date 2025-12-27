@@ -28,7 +28,6 @@ class VideoBookmarkController extends Controller
             'videos.*',
             'video_bookmarks.created_at',
             'video_bookmarks.video_id',
-            'video_bookmarks.profile_id',
         ])
             ->join('video_bookmarks', 'videos.id', '=', 'video_bookmarks.video_id')
             ->where('video_bookmarks.profile_id', $profileId)
