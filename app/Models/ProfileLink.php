@@ -53,7 +53,7 @@ class ProfileLink extends Model
         $parts = parse_url($url);
         $display = ($parts['host'] ?? '').($parts['path'] ?? '');
 
-        return Str::limit($display, 30);
+        return Str::limit($display, 24);
     }
 
     public function getUrl()
