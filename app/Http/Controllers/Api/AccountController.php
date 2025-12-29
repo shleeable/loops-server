@@ -19,18 +19,22 @@ use App\Models\FollowRequest;
 use App\Models\HiddenSuggestion;
 use App\Models\Notification;
 use App\Models\Profile;
+use App\Models\ProfileLink;
 use App\Models\SystemMessage;
 use App\Models\UserFilter;
 use App\Models\VideoLike;
 use App\Services\AccountService;
 use App\Services\AccountSuggestionService;
+use App\Services\BlockedDomainService;
 use App\Services\FollowerService;
+use App\Services\LinkLimitService;
 use App\Services\NotificationService;
 use App\Services\SystemMessageService;
 use App\Services\UserFilterService;
 use App\Support\CursorToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class AccountController extends Controller
 {
@@ -756,5 +760,57 @@ class AccountController extends Controller
                 'prev_cursor' => null,
             ],
         ]);
+    }
+
+    public function getProfileLinks(Request $request)
+    {
+        $profile = $request->user()->profile;
+        $res = $profile->profileLinks()->orderBy('position')->get();
+
+        return $this->data($res);
+    }
+
+    public function removeProfileLink(Request $request, $id)
+    {
+        $profile = $request->user()->profile;
+        $link = ProfileLink::whereProfileId($profile->id)->findOrFail($id);
+        $link->delete();
+        $profile->syncLinksJson();
+
+        return $this->success();
+    }
+
+    public function profileLinkStore(Request $request)
+    {
+        $profile = $request->user()->profile;
+        if (! LinkLimitService::canAddLink($profile)) {
+            return response()->json([
+                'error' => 'You have reached your maximum link limit',
+                'max_links' => LinkLimitService::getMaxLinks($profile),
+            ], 422);
+        }
+        $validator = Validator::make($request->all(), [
+            'url' => 'required|url|max:120',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $validation = BlockedDomainService::validateUrl($request->url);
+        if (! $validation['valid']) {
+            return response()->json(['error' => $validation['error']], 422);
+        }
+
+        $maxPosition = $profile->profileLinks()->max('position') ?? -1;
+
+        $link = $profile->profileLinks()->create([
+            'url' => $request->url,
+            'position' => $maxPosition + 1,
+        ]);
+
+        $profile->syncLinksJson();
+
+        return response()->json($link, 201);
     }
 }

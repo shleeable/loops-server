@@ -162,6 +162,9 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/account/settings/email/resend', [EmailChangeController::class, 'resendEmailChange'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/account/disable', [SettingsController::class, 'confirmDisableAccount'])->middleware(['auth:web']);
     Route::post('/v1/account/settings/account/delete', [SettingsController::class, 'confirmDeleteAccount'])->middleware(['auth:web']);
+    Route::get('/v1/account/settings/links', [AccountController::class, 'getProfileLinks'])->middleware(['auth:web,api']);
+    Route::post('/v1/account/settings/links/add', [AccountController::class, 'profileLinkStore'])->middleware(['auth:web,api']);
+    Route::post('/v1/account/settings/links/delete/{id}', [AccountController::class, 'removeProfileLink'])->middleware(['auth:web,api']);
 
     // Account Data
     Route::get('/v1/account/data/insights', [AccountDataController::class, 'getDataInsights'])->middleware(['auth:web,api']);
