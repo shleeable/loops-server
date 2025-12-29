@@ -44,7 +44,7 @@ See the [installation guide](INSTALLATION.md).
 
 ## API Documentation
 
-View our official [API Documentation](https://joinloops.org/docs/api/v1).
+View our official [API Documentation](https://docs.joinloops.org).
 
 ## Translations
 
