@@ -37,7 +37,7 @@ class ProfileResource extends JsonResource
             'username' => $this->username,
             'is_owner' => false,
             'local' => (bool) $this->local,
-            'bio' => $this->bio,
+            'bio' => $this->bio ?? '',
             'post_count' => $this->video_count,
             'follower_count' => $this->followers,
             'following_count' => $this->following,
