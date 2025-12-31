@@ -138,7 +138,7 @@
 
             <div class="grid grid-cols-1 gap-6">
                 <ChartCard title="Engagement Metrics (7 Days)">
-                    <div ref="engagementChart" class="h-80"></div>
+                    <div ref="engagementChart" class="h-120"></div>
                 </ChartCard>
             </div>
 
