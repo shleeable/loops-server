@@ -90,37 +90,61 @@
                 />
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 <MiniMetric label="Active Today" :value="dashboardData.metrics.active_today" />
+                <MiniMetric
+                    label="Pending Reports"
+                    :value="dashboardData.metrics.pending_reports"
+                />
                 <MiniMetric
                     label="Comments"
                     :value="formatCount(dashboardData.metrics.total_comments)"
                 />
                 <MiniMetric label="Likes" :value="formatCount(dashboardData.metrics.total_likes)" />
                 <MiniMetric
+                    label="Shares"
+                    :value="formatCount(dashboardData.metrics.total_shares)"
+                />
+                <MiniMetric
                     label="Followers"
                     :value="formatCount(dashboardData.metrics.total_follows)"
                 />
                 <MiniMetric
-                    label="Pending Reports"
-                    :value="dashboardData.metrics.pending_reports"
+                    label="Hashtags"
+                    :value="formatCount(dashboardData.metrics.total_hashtags)"
+                />
+                <MiniMetric
+                    v-if="dashboardData.metrics.for_you.total_views"
+                    label="For You Total Views"
+                    :value="formatCount(dashboardData.metrics.for_you.total_views)"
+                />
+                <MiniMetric
+                    v-if="dashboardData.metrics.for_you.total_views"
+                    label="For You Watch Time"
+                    :value="dashboardData.metrics.for_you.total_watch_time"
                 />
                 <MiniMetric label="Storage Used" :value="dashboardData.metrics.storage_used" />
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ChartCard :title="`Active Users (${dashboardData.period})`">
+                    <div ref="activeUsersChart" class="h-80"></div>
+                </ChartCard>
+
                 <ChartCard :title="`User Growth (${dashboardData.period})`">
                     <div ref="userGrowthChart" class="h-80"></div>
                 </ChartCard>
+            </div>
 
-                <ChartCard :title="`Video Uploads (${dashboardData.period})`">
-                    <div ref="videoUploadsChart" class="h-80"></div>
+            <div class="grid grid-cols-1 gap-6">
+                <ChartCard title="Engagement Metrics (7 Days)">
+                    <div ref="engagementChart" class="h-80"></div>
                 </ChartCard>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <ChartCard title="Engagement Metrics (7 Days)">
-                    <div ref="engagementChart" class="h-80"></div>
+                <ChartCard :title="`Video Uploads (${dashboardData.period})`">
+                    <div ref="videoUploadsChart" class="h-80"></div>
                 </ChartCard>
 
                 <ChartCard title="Content Distribution">
@@ -338,11 +362,13 @@ const activeFilter = ref('30d')
 
 const filterOptions = ['30d', '60d', '90d', '365d']
 
+const activeUsersChart = ref(null)
 const userGrowthChart = ref(null)
 const videoUploadsChart = ref(null)
 const engagementChart = ref(null)
 const contentDistChart = ref(null)
 
+let activeUsersInstance = null
 let userGrowthInstance = null
 let videoUploadsInstance = null
 let engagementInstance = null
@@ -373,14 +399,71 @@ const fetchDashboardData = async () => {
 
 const initializeCharts = () => {
     if (!dashboardData.value) return
-    ;[userGrowthInstance, videoUploadsInstance, engagementInstance, contentDistInstance].forEach(
-        (instance) => instance?.dispose()
-    )
+    ;[
+        userGrowthInstance,
+        videoUploadsInstance,
+        engagementInstance,
+        contentDistInstance,
+        activeUsersInstance
+    ].forEach((instance) => instance?.dispose())
 
     initUserGrowthChart()
+    initActiveUsersChart()
     initVideoUploadsChart()
     initEngagementChart()
     initContentDistChart()
+}
+
+const initActiveUsersChart = () => {
+    if (!activeUsersChart.value) return
+
+    activeUsersInstance = echarts.init(activeUsersChart.value, isDarkMode.value ? 'dark' : 'light')
+    const data = dashboardData.value.charts.active_users
+
+    const option = {
+        tooltip: {
+            trigger: 'axis',
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            borderColor: '#333',
+            textStyle: { color: '#fff' }
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: data.dates,
+            axisLine: { lineStyle: { color: axisLineColor.value } },
+            axisLabel: { color: '#999' }
+        },
+        yAxis: {
+            type: 'value',
+            axisLine: { lineStyle: { color: axisLineColor.value } },
+            axisLabel: { color: '#999' },
+            splitLine: { lineStyle: { color: axisLineColor.value } }
+        },
+        series: [
+            {
+                name: 'Active Users',
+                type: 'line',
+                smooth: true,
+                data: data.values,
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: 'rgba(59, 130, 246, 0.5)' },
+                        { offset: 1, color: 'rgba(59, 130, 246, 0.1)' }
+                    ])
+                },
+                lineStyle: { color: '#3b82f6', width: 2 },
+                itemStyle: { color: '#3b82f6' }
+            }
+        ]
+    }
+
+    activeUsersInstance.setOption(option)
 }
 
 const initUserGrowthChart = () => {
@@ -501,9 +584,25 @@ const initEngagementChart = () => {
             textStyle: { color: '#fff' }
         },
         legend: {
-            data: ['Likes', 'Comments', 'Shares', 'Replies', 'Comment Likes', 'Reply Likes'],
+            data: [
+                'Likes',
+                'Comments',
+                'Replies',
+                'Reports',
+                'Bookmarks',
+                'Shares',
+                'Comment Likes',
+                'Reply Likes',
+                'Comment Shares',
+                'Reply Shares'
+            ],
             textStyle: { color: '#999' },
-            bottom: '0%'
+            bottom: '0%',
+            type: 'scroll'
+        },
+        emphasis: {
+            focus: 'series',
+            lineStyle: { width: 5 }
         },
         grid: {
             top: '5%',
@@ -533,7 +632,7 @@ const initEngagementChart = () => {
                 type: 'line',
                 smooth: true,
                 data: data.likes,
-                lineStyle: { color: '#ec4899' },
+                lineStyle: { color: '#ec4899', width: 5 },
                 itemStyle: { color: '#ec4899' }
             },
             {
@@ -541,40 +640,72 @@ const initEngagementChart = () => {
                 type: 'line',
                 smooth: true,
                 data: data.comments,
-                lineStyle: { color: '#3b82f6' },
+                lineStyle: { color: '#3b82f6', width: 4 },
                 itemStyle: { color: '#3b82f6' }
-            },
-            {
-                name: 'Shares',
-                type: 'line',
-                smooth: true,
-                data: data.shares,
-                lineStyle: { color: '#10b981' },
-                itemStyle: { color: '#10b981' }
             },
             {
                 name: 'Replies',
                 type: 'line',
                 smooth: true,
                 data: data.replies,
-                lineStyle: { color: '#f0b100' },
-                itemStyle: { color: '#f0b100' }
+                lineStyle: { color: '#f59e0b', width: 4 },
+                itemStyle: { color: '#f59e0b' }
+            },
+            {
+                name: 'Reports',
+                type: 'line',
+                smooth: false,
+                data: data.reports,
+                lineStyle: { color: '#f43f5e', width: 4 },
+                itemStyle: { color: '#f43f5e' }
+            },
+            {
+                name: 'Bookmarks',
+                type: 'line',
+                smooth: true,
+                data: data.bookmarks,
+                lineStyle: { color: '#a855f7', width: 4 },
+                itemStyle: { color: '#a855f7' }
+            },
+            {
+                name: 'Shares',
+                type: 'line',
+                smooth: false,
+                data: data.shares,
+                lineStyle: { color: '#10b981', type: 'dashed' },
+                itemStyle: { color: '#10b981' }
             },
             {
                 name: 'Comment Likes',
                 type: 'line',
-                smooth: true,
+                smooth: false,
                 data: data.commentLikes,
-                lineStyle: { color: '#7f22fe' },
-                itemStyle: { color: '#7f22fe' }
+                lineStyle: { color: '#8b5cf6', type: 'dashed' },
+                itemStyle: { color: '#8b5cf6' }
             },
             {
                 name: 'Reply Likes',
                 type: 'line',
-                smooth: true,
+                smooth: false,
                 data: data.replyLikes,
-                lineStyle: { color: '#f4a8ff' },
-                itemStyle: { color: '#f4a8ff' }
+                lineStyle: { color: '#ef4444', type: 'dashed' },
+                itemStyle: { color: '#ef4444' }
+            },
+            {
+                name: 'Comment Shares',
+                type: 'line',
+                smooth: false,
+                data: data.commentShares,
+                lineStyle: { color: '#06b6d4', type: 'dotted' },
+                itemStyle: { color: '#06b6d4' }
+            },
+            {
+                name: 'Reply Shares',
+                type: 'line',
+                smooth: false,
+                data: data.replyShares,
+                lineStyle: { color: '#eab308', type: 'dotted' },
+                itemStyle: { color: '#eab308' }
             }
         ]
     }

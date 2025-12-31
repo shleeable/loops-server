@@ -6,13 +6,18 @@ use App\Models\Comment;
 use App\Models\CommentLike;
 use App\Models\CommentReply;
 use App\Models\CommentReplyLike;
+use App\Models\CommentReplyRepost;
+use App\Models\CommentRepost;
+use App\Models\FeedImpression;
 use App\Models\Follower;
 use App\Models\Hashtag;
 use App\Models\Instance;
 use App\Models\Profile;
 use App\Models\Report;
+use App\Models\UsageSnapshots;
 use App\Models\User;
 use App\Models\Video;
+use App\Models\VideoBookmark;
 use App\Models\VideoLike;
 use App\Models\VideoRepost;
 use Carbon\Carbon;
@@ -44,7 +49,10 @@ class AdminDashboardService
         ];
 
         if ($forceRefresh) {
+            Cache::forget('admin_dashboard_stats_partial:for_you_feed');
+            Cache::forget('admin_dashboard_stats_partial:total_shares');
             Cache::forget('admin_dashboard_stats_partial:total_likes');
+            Cache::forget('admin_dashboard_stats_partial:total_hashtags');
             Cache::forget('admin_dashboard_stats_partial:total_comments');
             Cache::forget('admin_dashboard_stats_partial:total_follows');
             Cache::forget('admin_dashboard_stats_partial:pending_reports');
@@ -86,6 +94,7 @@ class AdminDashboardService
                     'metrics' => $this->getKeyMetrics($period['days']),
                     'charts' => [
                         'user_growth' => $this->getUserGrowthData($period),
+                        'active_users' => $this->getActiveUserData($period),
                         'video_uploads' => $this->getVideoUploadsData($period),
                         'engagement' => $this->getEngagementData($period['chart_days']),
                         'content_distribution' => $this->getContentDistribution(),
@@ -104,6 +113,9 @@ class AdminDashboardService
         $data['metrics']['total_comments'] = $this->getCommentCount();
         $data['metrics']['total_follows'] = $this->getTotalFollows();
         $data['metrics']['total_likes'] = $this->getTotalLikes();
+        $data['metrics']['for_you'] = $this->getForYouFeedImpressionData();
+        $data['metrics']['total_shares'] = $this->getTotalShares();
+        $data['metrics']['total_hashtags'] = $this->getTotalHashtags();
 
         return $data;
     }
@@ -180,6 +192,31 @@ class AdminDashboardService
         );
     }
 
+    protected function getForYouFeedImpressionData()
+    {
+        return Cache::remember(
+            'admin_dashboard_stats_partial:for_you_feed',
+            now()->addHours(4),
+            function () {
+                $total = FeedImpression::sum('watch_duration');
+                if ($total && $total > 5) {
+                    $total = round($total / 60);
+
+                    if ($total > 1000) {
+                        $total = round($total / 60).' hours';
+                    } else {
+                        $total = $total.' mins';
+                    }
+                }
+
+                return [
+                    'total_views' => FeedImpression::count(),
+                    'total_watch_time' => $total,
+                ];
+            }
+        );
+    }
+
     protected function getPendingReports()
     {
         return Cache::remember(
@@ -194,7 +231,16 @@ class AdminDashboardService
         return Cache::remember(
             'admin_dashboard_stats_partial:total_comments',
             now()->addHours(4),
-            fn () => Comment::count()
+            fn () => Comment::count() + CommentReply::count()
+        );
+    }
+
+    protected function getTotalHashtags()
+    {
+        return Cache::remember(
+            'admin_dashboard_stats_partial:total_hashtags',
+            now()->addHours(4),
+            fn () => Hashtag::count()
         );
     }
 
@@ -215,6 +261,17 @@ class AdminDashboardService
             fn () => VideoLike::count()
                 + CommentLike::count()
                 + CommentReplyLike::count()
+        );
+    }
+
+    protected function getTotalShares()
+    {
+        return Cache::remember(
+            'admin_dashboard_stats_partial:total_shares',
+            now()->addHours(4),
+            fn () => VideoRepost::count()
+            + CommentRepost::count()
+            + CommentReplyRepost::count()
         );
     }
 
@@ -348,6 +405,65 @@ class AdminDashboardService
         ];
     }
 
+    protected function getActiveUserData(array $period): array
+    {
+        $dates = [];
+        $values = [];
+        $days = $period['days'];
+        $grouping = $period['grouping'];
+
+        $metric = 'active_30d';
+
+        if ($grouping === 'monthly') {
+            for ($i = 11; $i >= 0; $i--) {
+                $startOfMonth = Carbon::now()->subMonths($i)->startOfMonth();
+                $endOfMonth = Carbon::now()->subMonths($i)->endOfMonth();
+
+                $dates[] = $startOfMonth->format('M Y');
+
+                $snapshot = UsageSnapshots::whereBetween('day', [
+                    $startOfMonth->toDateString(),
+                    $endOfMonth->toDateString(),
+                ])
+                    ->orderBy('day', 'desc')
+                    ->first();
+
+                $values[] = $snapshot ? $snapshot->$metric : 0;
+            }
+        } elseif ($grouping === 'weekly') {
+            $dataPoints = 30;
+            for ($i = $dataPoints - 1; $i >= 0; $i--) {
+                $date = Carbon::now()->subDays($i * 7);
+                $endDate = $date->copy()->addDays(6);
+
+                $dates[] = $date->format('M d');
+
+                $snapshot = UsageSnapshots::whereBetween('day', [
+                    $date->toDateString(),
+                    $endDate->toDateString(),
+                ])
+                    ->orderBy('day', 'desc')
+                    ->first();
+
+                $values[] = $snapshot ? $snapshot->$metric : 0;
+            }
+        } else {
+            for ($i = $days - 1; $i >= 0; $i--) {
+                $date = Carbon::now()->subDays($i);
+                $dates[] = $date->format('M d');
+
+                $snapshot = UsageSnapshots::whereDate('day', $date->toDateString())->first();
+
+                $values[] = $snapshot ? $snapshot->$metric : 0;
+            }
+        }
+
+        return [
+            'dates' => $dates,
+            'values' => $values,
+        ];
+    }
+
     protected function getVideoUploadsData(array $period): array
     {
         $dates = [];
@@ -416,6 +532,10 @@ class AdminDashboardService
         $replyLikes = [];
         $replies = [];
         $shares = [];
+        $commentShares = [];
+        $replyShares = [];
+        $bookmarks = [];
+        $reports = [];
 
         $displayDays = min($days, 30);
 
@@ -429,6 +549,10 @@ class AdminDashboardService
             $repliesCount = CommentReply::whereDate('created_at', $date->toDateString())->count();
             $replyLikesCount = CommentReplyLike::whereDate('created_at', $date->toDateString())->count();
             $sharesCount = VideoRepost::whereDate('created_at', $date->toDateString())->count();
+            $commentSharesCount = CommentRepost::whereDate('created_at', $date->toDateString())->count();
+            $replySharesCount = CommentReplyRepost::whereDate('created_at', $date->toDateString())->count();
+            $bookmarksCount = VideoBookmark::whereDate('created_at', $date->toDateString())->count();
+            $reportsCount = Report::whereDate('created_at', $date->toDateString())->count();
 
             $likes[] = $likesCount;
             $comments[] = $commentsCount;
@@ -436,6 +560,10 @@ class AdminDashboardService
             $replies[] = $repliesCount;
             $commentLikes[] = $commentLikesCount;
             $replyLikes[] = $replyLikesCount;
+            $commentShares[] = $commentSharesCount;
+            $replyShares[] = $replySharesCount;
+            $bookmarks[] = $bookmarksCount;
+            $reports[] = $reportsCount;
         }
 
         return [
@@ -446,6 +574,10 @@ class AdminDashboardService
             'replies' => $replies,
             'commentLikes' => $commentLikes,
             'replyLikes' => $replyLikes,
+            'commentShares' => $commentShares,
+            'replyShares' => $replyShares,
+            'bookmarks' => $bookmarks,
+            'reports' => $reports,
         ];
     }
 
