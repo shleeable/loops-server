@@ -250,7 +250,7 @@ Route::prefix('api')->group(function () {
         });
 
         Route::get('/dashboard/stats', [AdminDashboardController::class, 'index']);
-
+        Route::get('/version-check', [AdminController::class, 'versionCheck'])->middleware('auth:web,api');
         Route::get('/reports-count', [AdminController::class, 'reportCount'])->middleware('auth:web,api');
         Route::get('/videos', [AdminController::class, 'videos'])->middleware('auth:web,api');
         Route::get('/comments', [AdminController::class, 'comments'])->middleware('auth:web,api');

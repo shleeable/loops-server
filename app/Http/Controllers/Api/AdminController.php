@@ -28,6 +28,7 @@ use App\Services\AdminAuditLogService;
 use App\Services\ExploreService;
 use App\Services\NodeinfoCrawlerService;
 use App\Services\SanitizeService;
+use App\Services\VersionCheckService;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -999,6 +1000,11 @@ class AdminController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function versionCheck(VersionCheckService $versionCheck)
+    {
+        return response()->json($versionCheck->checkForUpdates());
     }
 
     private function applySorting($query, $sort)

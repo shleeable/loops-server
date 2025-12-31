@@ -1,5 +1,186 @@
 <template>
     <div class="space-y-6">
+        <transition
+            enter-active-class="transition-all duration-300 ease-out"
+            leave-active-class="transition-all duration-200 ease-in"
+            enter-from-class="opacity-0 -translate-y-2"
+            leave-to-class="opacity-0 -translate-y-2"
+        >
+            <div
+                v-if="
+                    versionCheck &&
+                    versionCheck.status === 'success' &&
+                    versionCheck.update_available
+                "
+                class="bg-gradient-to-r from-indigo-500 to-blue-700 rounded-lg shadow-lg border border-blue-400/50 p-4"
+            >
+                <div class="flex items-center justify-between flex-col lg:flex-row gap-4">
+                    <div class="flex items-start gap-3">
+                        <div class="flex-shrink-0 mt-0.5">
+                            <svg
+                                class="w-6 h-6 text-white animate-pulse"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                                />
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-bold text-white mb-1">Update Available! 🎉</h3>
+                            <p class="text-blue-50 text-sm mb-2">
+                                {{ versionCheck.release.name }}
+                            </p>
+                            <div class="flex flex-wrap items-center gap-3 text-xs text-blue-100">
+                                <span class="flex items-center gap-1">
+                                    <svg
+                                        class="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                                        />
+                                    </svg>
+                                    Current:
+                                    <span class="font-semibold">{{
+                                        versionCheck.current_version
+                                    }}</span>
+                                </span>
+                                <span class="text-blue-200">→</span>
+                                <span class="flex items-center gap-1">
+                                    <svg
+                                        class="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                                        />
+                                    </svg>
+                                    Latest:
+                                    <span class="font-semibold">{{
+                                        versionCheck.latest_version
+                                    }}</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a
+                            :href="versionCheck.release.url"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors shadow-sm"
+                        >
+                            <span>View Release</span>
+                            <svg
+                                class="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                />
+                            </svg>
+                        </a>
+                        <button
+                            @click="dismissVersionCheck"
+                            class="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                            title="Dismiss"
+                        >
+                            <svg
+                                class="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <transition
+            enter-active-class="transition-all duration-300 ease-out"
+            leave-active-class="transition-all duration-200 ease-in"
+            enter-from-class="opacity-0 -translate-y-2"
+            leave-to-class="opacity-0 -translate-y-2"
+        >
+            <div
+                v-if="
+                    versionCheck &&
+                    versionCheck.status === 'failure' &&
+                    versionCheck.error === 'prolonged_failure'
+                "
+                class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4"
+            >
+                <div class="flex items-start gap-3">
+                    <svg
+                        class="w-5 h-5 text-yellow-600 dark:text-yellow-500 flex-shrink-0 mt-0.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                    </svg>
+                    <div class="flex-1">
+                        <h3 class="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-1">
+                            Unable to Check for Updates
+                        </h3>
+                        <p class="text-sm text-yellow-700 dark:text-yellow-300">
+                            Version checks have been failing for
+                            {{ versionCheck.failure_details.days_failing }} days. The update beacon
+                            may be unreachable.
+                        </p>
+                    </div>
+                    <button
+                        @click="dismissVersionCheck"
+                        class="p-1 text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-200"
+                        title="Dismiss"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"
+                            />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </transition>
+
         <div class="flex items-center justify-center lg:justify-between flex-col xl:flex-row">
             <div class="flex justify-center items-center xl:items-start flex-col mb-3 xl:mb-0">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
@@ -156,33 +337,194 @@
                 <div
                     class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
                 >
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        Trending Hashtags
-                    </h3>
-                    <div class="space-y-3">
+                    <div class="flex items-center justify-between mb-5">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            Trending Hashtags
+                        </h3>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">{{
+                            dashboardData.period
+                        }}</span>
+                    </div>
+
+                    <div class="relative">
                         <div
-                            v-for="(tag, index) in dashboardData.top_hashtags"
-                            :key="tag.id"
-                            class="flex items-center justify-between"
+                            ref="scrollContainer"
+                            @scroll="handleScroll"
+                            class="space-y-2 max-h-80 overflow-y-scroll overflow-x-visible pl-4 -ml-4 pr-2"
                         >
-                            <div class="flex items-center space-x-3">
-                                <router-link
-                                    :to="`/admin/hashtags?id=${tag.id}`"
-                                    class="text-sm font-bold text-gray-500 dark:text-gray-400 w-6"
-                                >
-                                    #{{ index + 1 }}
-                                </router-link>
-                                <router-link
-                                    :to="`/tag/${tag.name}`"
-                                    class="text-blue-500 dark:text-white font-medium"
-                                >
-                                    #{{ tag.name }}
-                                </router-link>
+                            <div
+                                v-for="(tag, index) in dashboardData.top_hashtags"
+                                :key="tag.id"
+                                class="group relative bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
+                            >
+                                <div class="absolute -left-2 top-1/2 -translate-y-1/2">
+                                    <div
+                                        class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md"
+                                        :class="{
+                                            'bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-900':
+                                                index === 0,
+                                            'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800':
+                                                index === 1,
+                                            'bg-gradient-to-br from-orange-400 to-orange-600 text-orange-900':
+                                                index === 2,
+                                            'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300':
+                                                index > 2
+                                        }"
+                                    >
+                                        {{ index + 1 }}
+                                    </div>
+                                </div>
+
+                                <div class="ml-8">
+                                    <div class="flex items-start justify-between mb-2">
+                                        <div class="flex-1">
+                                            <router-link
+                                                :to="`/tag/${tag.name}`"
+                                                class="text-lg font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors inline-flex items-center gap-2"
+                                            >
+                                                #{{ tag.name }}
+                                                <span
+                                                    v-if="index < 3"
+                                                    title="This indicates a viral or popular hashtag"
+                                                >
+                                                    <svg
+                                                        class="w-4 h-4 text-red-500 animate-pulse"
+                                                        title="This indicates a viral or popular hashtag"
+                                                        fill="currentColor"
+                                                        viewBox="0 0 20 20"
+                                                    >
+                                                        <path
+                                                            d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM10 7a3 3 0 100 6 3 3 0 000-6zM15.657 5.404a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.06-1.06zM6.464 14.596a.75.75 0 10-1.06-1.06l-1.06 1.06a.75.75 0 001.06 1.06l1.06-1.06zM18 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0118 10zM5 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 015 10zM14.596 15.657a.75.75 0 001.06-1.06l-1.06-1.061a.75.75 0 10-1.06 1.06l1.06 1.06zM5.404 6.464a.75.75 0 001.06-1.06l-1.06-1.06a.75.75 0 10-1.061 1.06l1.06 1.06z"
+                                                        />
+                                                    </svg>
+                                                </span>
+                                            </router-link>
+                                        </div>
+                                        <router-link
+                                            :to="`/admin/hashtags?id=${tag.id}`"
+                                            class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            Manage →
+                                        </router-link>
+                                    </div>
+
+                                    <div class="flex items-center gap-4 mb-2">
+                                        <div
+                                            :title="`Videos posted with this hashtag in the ${dashboardData.period}`"
+                                            class="flex items-center gap-1.5 cursor-help"
+                                        >
+                                            <svg
+                                                class="w-4 h-4 text-blue-500 dark:text-blue-400"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                                />
+                                            </svg>
+                                            <span
+                                                class="text-sm font-semibold text-gray-900 dark:text-white"
+                                            >
+                                                {{ formatCount(tag.recent_video_count) }}
+                                            </span>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400"
+                                                >videos</span
+                                            >
+                                        </div>
+
+                                        <div
+                                            title="Total videos ever posted with this hashtag"
+                                            class="flex items-center gap-1.5 cursor-help"
+                                        >
+                                            <svg
+                                                class="w-4 h-4 text-gray-400"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                                                />
+                                            </svg>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">
+                                                {{ formatCount(tag.count) }} total
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="relative">
+                                        <div
+                                            class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
+                                        >
+                                            <div
+                                                class="h-full rounded-full transition-all duration-500"
+                                                :class="{
+                                                    'bg-gradient-to-r from-red-500 to-pink-500':
+                                                        index === 0,
+                                                    'bg-gradient-to-r from-orange-500 to-yellow-500':
+                                                        index === 1,
+                                                    'bg-gradient-to-r from-blue-500 to-cyan-500':
+                                                        index === 2,
+                                                    'bg-gradient-to-r from-purple-500 to-indigo-500':
+                                                        index > 2
+                                                }"
+                                                :style="{
+                                                    width: `${getTrendPercentage(tag.trend_score, dashboardData.top_hashtags[0].trend_score)}%`
+                                                }"
+                                            ></div>
+                                        </div>
+                                        <span
+                                            title="Calculated from recent video count + engagement (likes, comments, shares, views)"
+                                            class="absolute -top-5 right-0 text-xs font-medium text-gray-600 dark:text-gray-400 cursor-help"
+                                        >
+                                            {{ formatTrendScore(tag.trend_score) }}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-                            <span class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ formatCount(tag.count) }}
-                            </span>
                         </div>
+
+                        <transition
+                            enter-active-class="transition-opacity duration-300"
+                            leave-active-class="transition-opacity duration-300"
+                            enter-from-class="opacity-0"
+                            leave-to-class="opacity-0"
+                        >
+                            <div
+                                v-if="showScrollIndicator"
+                                class="absolute bottom-0 -left-5 right-0 h-20 pointer-events-none bg-gradient-to-t from-white dark:from-gray-800 to-transparent flex items-end justify-center pb-3"
+                            >
+                                <div
+                                    class="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-500 rounded-full bg-gray-100 dark:bg-gray-700 shadow-lg"
+                                >
+                                    <svg
+                                        class="w-4 h-4 text-gray-600 dark:text-gray-300 animate-bounce"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M19 9l-7 7-7-7"
+                                        />
+                                    </svg>
+                                    <span
+                                        class="text-xs font-medium text-gray-600 dark:text-gray-300"
+                                    >
+                                        Scroll for more
+                                    </span>
+                                </div>
+                            </div>
+                        </transition>
                     </div>
                 </div>
 
@@ -348,6 +690,7 @@ import { dashboardApi } from '@/services/adminApi'
 import { useAlertModal } from '@/composables/useAlertModal.js'
 import { useUtils } from '@/composables/useUtils'
 import { useAdminStore } from '~/stores/admin'
+import AnimatedButton from '@/components/AnimatedButton.vue'
 
 const { formatDate, formatCount, formatTimeAgo } = useUtils()
 const { alertModal } = useAlertModal()
@@ -357,6 +700,10 @@ const { isDarkMode } = storeToRefs(adminStore)
 const loading = ref(true)
 const dashboardData = ref(null)
 const shouldRefresh = ref(false)
+const scrollContainer = ref(null)
+const showScrollIndicator = ref(false)
+const versionCheck = ref(null)
+const versionCheckDismissed = ref(false)
 
 const activeFilter = ref('30d')
 
@@ -390,6 +737,7 @@ const fetchDashboardData = async () => {
         await nextTick()
         shouldRefresh.value = false
         initializeCharts()
+        tagScrollToTop()
     } catch (error) {
         alertModal('Error fetching dashboard data', error.message)
     } finally {
@@ -412,6 +760,22 @@ const initializeCharts = () => {
     initVideoUploadsChart()
     initEngagementChart()
     initContentDistChart()
+    checkScrollIndicator()
+    tagScrollToTop()
+}
+
+const fetchVersionCheck = async () => {
+    try {
+        const response = await dashboardApi.getVersionCheck()
+        versionCheck.value = response
+    } catch (error) {
+        console.warn('Version check failed:', error)
+    }
+}
+
+const dismissVersionCheck = () => {
+    versionCheckDismissed.value = true
+    versionCheck.value = null
 }
 
 const initActiveUsersChart = () => {
@@ -776,6 +1140,46 @@ const refreshDashboard = async () => {
     fetchDashboardData()
 }
 
+const formatTrendScore = (score) => {
+    if (score >= 1000000) {
+        return (score / 1000000).toFixed(1) + 'M'
+    }
+    if (score >= 1000) {
+        return (score / 1000).toFixed(0) + 'K'
+    }
+    return Math.round(score).toString()
+}
+
+const handleScroll = (event) => {
+    const container = event.target
+    const scrollTop = container.scrollTop
+    const scrollThreshold = 50
+
+    showScrollIndicator.value =
+        scrollTop < scrollThreshold && dashboardData.value.top_hashtags.length > 5
+}
+
+const checkScrollIndicator = () => {
+    if (scrollContainer.value && dashboardData.value.top_hashtags.length > 5) {
+        const container = scrollContainer.value
+        const hasScroll = container.scrollHeight > container.clientHeight
+        showScrollIndicator.value = hasScroll && container.scrollTop < 50
+    }
+}
+
+const tagScrollToTop = () => {
+    if (scrollContainer.value) {
+        scrollContainer.value.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        })
+    }
+}
+
+const getTrendPercentage = (score, maxScore) => {
+    return Math.min(100, (score / maxScore) * 100)
+}
+
 const handleResize = () => {
     ;[userGrowthInstance, videoUploadsInstance, engagementInstance, contentDistInstance].forEach(
         (instance) => instance?.resize()
@@ -790,8 +1194,10 @@ watch(isDarkMode, (newVal, oldVal) => {
     fetchDashboardData()
 })
 
-onMounted(() => {
+onMounted(async () => {
+    checkScrollIndicator()
     fetchDashboardData()
+    fetchVersionCheck()
     window.addEventListener('resize', handleResize)
 })
 

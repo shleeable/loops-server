@@ -11,6 +11,10 @@ export const dashboardApi = {
             : { period }
         const response = await apiClient.get('/api/v1/admin/dashboard/stats', params)
         return response
+    },
+
+    getVersionCheck: async () => {
+        return await apiClient.get('/api/v1/admin/version-check')
     }
 }
 
