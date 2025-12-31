@@ -619,9 +619,14 @@ const initEngagementChart = () => {
             axisLabel: { color: '#999' }
         },
         yAxis: {
-            min: 1,
+            min:
+                Math.min(
+                    ...Object.values(data)
+                        .flat()
+                        .filter((v) => v > 0)
+                ) || 1,
             type: 'log',
-            logBase: 2,
+            logBase: 10,
             axisLine: { lineStyle: { color: axisLineColor.value } },
             axisLabel: { color: '#999' },
             splitLine: { lineStyle: { color: axisLineColor.value } }
