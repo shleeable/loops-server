@@ -153,7 +153,18 @@
                                 : 'left-full top-0 ml-2'
                         ]"
                     >
+                        <router-link
+                            v-if="authStore.getUser"
+                            to="/dashboard/appearance"
+                            @click="handleMoreItemClick"
+                            class="flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300"
+                        >
+                            <i class="bx bx-moon mr-3 text-xl"></i>
+                            <span class="text-sm font-medium">{{ t('nav.appearance') }}</span>
+                        </router-link>
+
                         <div
+                            v-else
                             class="flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300"
                         >
                             <button
@@ -164,7 +175,7 @@
                                     class="bx mr-3 text-xl"
                                     :class="isDark ? 'bx-sun' : 'bx-moon'"
                                 ></i>
-                                <span class="text-sm font-medium">Toggle Theme</span>
+                                <span class="text-sm font-medium">{{ t('nav.toggleTheme') }}</span>
                             </button>
                         </div>
 
@@ -200,7 +211,7 @@
                                         d="M5 21h7v-2H5V5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2"
                                     />
                                 </svg>
-                                <span class="text-sm font-medium">Logout</span>
+                                <span class="text-sm font-medium">{{ $t('nav.logOut') }}</span>
                             </button>
                         </div>
                     </div>

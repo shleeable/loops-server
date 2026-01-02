@@ -234,6 +234,12 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
+            path: '/dashboard/appearance',
+            name: 'dashboardAppearance',
+            component: () => import('~/pages/dashboard/appearance.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/dashboard/account/data',
             name: 'dashboardAccountData',
             component: () => import('~/pages/dashboard/account/AccountData.vue'),
