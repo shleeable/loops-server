@@ -17,7 +17,12 @@ export const useCommentStore = defineStore('comment', {
         lastSubmittedKeyAt: new Map(),
         cooldownMs: 1500,
         highlightedCommentMap: new Map(),
-        highlightedCommentDataMap: new Map()
+        highlightedCommentDataMap: new Map(),
+        keepCommentsOpen:
+            typeof window !== 'undefined'
+                ? localStorage.getItem('loops_keepCommentsOpen') === 'true'
+                : false,
+        userManuallyClosed: false
     }),
 
     getters: {
@@ -75,6 +80,10 @@ export const useCommentStore = defineStore('comment', {
 
         getHighlightedCommentData() {
             return (videoId) => this.highlightedCommentDataMap.get(videoId) || null
+        },
+
+        shouldKeepCommentsOpen() {
+            return this.keepCommentsOpen && !this.userManuallyClosed
         }
     },
 
@@ -125,6 +134,32 @@ export const useCommentStore = defineStore('comment', {
             }
 
             return null
+        },
+
+        setKeepCommentsOpen(value) {
+            this.keepCommentsOpen = value
+
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('loops_keepCommentsOpen', String(value))
+            }
+
+            if (value === false) {
+                this.userManuallyClosed = false
+            }
+        },
+
+        setUserManuallyClosed(value) {
+            this.userManuallyClosed = value
+        },
+
+        toggleKeepCommentsOpen() {
+            this.keepCommentsOpen = !this.keepCommentsOpen
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('loops_keepCommentsOpen', String(this.keepCommentsOpen))
+            }
+            if (!this.keepCommentsOpen) {
+                this.userManuallyClosed = false
+            }
         },
 
         findAndUpdateComment(comments, parentId, updateFn) {

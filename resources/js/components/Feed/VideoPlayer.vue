@@ -364,7 +364,7 @@
             @touchstart.stop.prevent
             @touchmove.stop.prevent
             @touchend.stop.prevent
-            @click.stop="toggleComments"
+            @click.stop="closeComments"
         ></div>
 
         <div
@@ -386,7 +386,7 @@
                     <h2 class="text-lg font-semibold text-black dark:text-gray-400">
                         {{ $t('post.comments') }} ({{ formatCount(commentCount) }})
                     </h2>
-                    <button @click.stop="toggleComments" class="text-gray-400 hover:text-gray-300">
+                    <button @click.stop="closeComments" class="text-gray-400 hover:text-gray-300">
                         <i class="bx bx-x text-[20px]" />
                     </button>
                 </div>
@@ -545,6 +545,7 @@ const { t } = useI18n()
 const videoWidth = ref(null)
 const videoHeight = ref(null)
 const videoOrientation = ref('portrait')
+const shouldShowComments = computed(() => commentStore.shouldKeepCommentsOpen)
 
 const {
     hasInteracted: hasGlobalInteraction,
@@ -766,6 +767,11 @@ onMounted(async () => {
     videoLiked.value = props.hasLiked
     videoBookmarked.value = props.hasBookmarked
     bookmarksCount.value = props.bookmarks
+
+    if (!isMobile.value) {
+        await checkCommentDrawer()
+    }
+
     if (videoRef.value) {
         player = videojs(videoRef.value, {
             controls: false,
@@ -836,13 +842,17 @@ onMounted(async () => {
 
 watch(
     () => [props.videoId, props.isSensitive],
-    () => {
+    async () => {
         isSensitiveRevealed.value = false
         pendingPlay.value = false
         videoWidth.value = null
         videoHeight.value = null
         videoOrientation.value = 'portrait'
         pause()
+
+        if (!isMobile.value) {
+            await checkCommentDrawer()
+        }
     }
 )
 
@@ -873,6 +883,9 @@ onUnmounted(() => {
 })
 
 const play = async () => {
+    if (!isMobile.value) {
+        await checkCommentDrawer()
+    }
     if (!player) return Promise.resolve()
     if (!canInteract.value) return Promise.resolve()
     try {
@@ -908,6 +921,15 @@ const play = async () => {
     }
 }
 
+const checkCommentDrawer = async () => {
+    if (shouldShowComments.value) {
+        showComments.value = true
+        await commentStore.fetchComments(props.videoId, true)
+    } else {
+        showComments.value = false
+    }
+}
+
 const pause = () => {
     if (player) {
         player.pause()
@@ -917,18 +939,33 @@ const pause = () => {
 }
 
 const hideUI = () => {
-    if (showComments.value) showComments.value = false
     if (showMenu.value) showMenu.value = false
     showMobilePauseButton.value = false
+
+    if (!commentStore.shouldKeepCommentsOpen) {
+        showComments.value = false
+    }
 }
 
-const toggleComments = (e) => {
+const toggleComments = async (e) => {
     if (e) {
         e.preventDefault()
         e.stopPropagation()
     }
     showComments.value = !showComments.value
+
     if (showComments.value && showMenu.value) showMenu.value = false
+
+    if (showComments.value) {
+        await commentStore.fetchComments(props.videoId, true)
+    }
+}
+
+const closeComments = async () => {
+    showComments.value = false
+    if (showComments.value && showMenu.value) showMenu.value = false
+    commentStore.setUserManuallyClosed(true)
+    commentStore.setKeepCommentsOpen(false)
 }
 
 const handlePlayClick = async () => {
@@ -958,9 +995,12 @@ const preload = async () => {
 const cleanup = () => {
     if (player) player.pause()
     isVisible.value = false
-    showComments.value = false
     showMenu.value = false
     showMobilePauseButton.value = false
+
+    if (!commentStore.shouldKeepCommentsOpen) {
+        showComments.value = false
+    }
 }
 
 const onVisible = () => {
