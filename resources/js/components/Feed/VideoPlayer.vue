@@ -730,7 +730,6 @@ const toggleBookmark = async () => {
     if (state) {
         await videoStore.unbookmarkVideo(props.videoId).then((res) => {
             videoStore.setVideo(res.data)
-            console.log(res.data)
             videoBookmarked.value = false
             bookmarksCount.value = res.data.bookmarks
         })
@@ -815,10 +814,6 @@ onMounted(async () => {
                 } else {
                     videoOrientation.value = 'square'
                 }
-
-                console.log(
-                    `Video dimensions: ${videoWidth.value}x${videoHeight.value}, orientation: ${videoOrientation.value}`
-                )
             }
         })
 

@@ -714,7 +714,6 @@ const loadPost = async () => {
         } else {
             videoLoadTimeout.value = setTimeout(() => {
                 if (!isVideoLoaded.value) {
-                    console.log('Video load timeout - forcing display')
                     isVideoLoaded.value = true
 
                     if (!('ontouchstart' in window)) {
