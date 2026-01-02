@@ -38,6 +38,7 @@ class NotificationResource extends JsonResource
             Notification::VIDEO_COMMENT_SHARE => $this->newVideoCommentShare(),
             Notification::VIDEO_REPLY_SHARE => $this->newVideoCommentReplyShare(),
             Notification::DUET_YOUR_VIDEO => $this->newVideoDuet(),
+            Notification::NEW_COMMENT_REPLY => $this->newCommentReply(),
             Notification::SYSTEM_MESSAGE_INFO => $this->systemMessageInfo(),
             Notification::SYSTEM_MESSAGE_FEATURE => $this->systemMessageInfo(),
             Notification::SYSTEM_MESSAGE_UPDATE => $this->systemMessageInfo(),
@@ -65,6 +66,28 @@ class NotificationResource extends JsonResource
             'type' => 'system.message',
             'systemType' => $subType,
             'systemMessage' => $systemMessage,
+            'read_at' => $this->read_at,
+            'created_at' => $this->created_at,
+        ];
+    }
+
+    protected function newCommentReply()
+    {
+        $video = VideoService::getMediaData($this->video_id);
+        $thumb = data_get($video, 'media.thumbnail', null);
+        $videoPid = data_get($video, 'account.id', null);
+        $vhid = HashidService::encode($this->video_id);
+        $hid = HashidService::encode($this->comment_reply_id);
+        $link = '/v/'.$vhid.'?rid='.$hid;
+
+        return [
+            'id' => (string) $this->id,
+            'type' => 'video.commentReply',
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
+            'video_pid' => $videoPid,
+            'video_id' => (string) $this->video_id,
+            'video_thumbnail' => $thumb,
+            'url' => $link,
             'read_at' => $this->read_at,
             'created_at' => $this->created_at,
         ];
