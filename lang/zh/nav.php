@@ -4,6 +4,7 @@ return [
     'about' => '关于',
     'activity' => 'Activity',
     'admin' => '管理',
+    'appearance' => 'Appearance',
     'clearAll' => '全部清除',
     'community' => '社区',
     'contact' => '联系',
@@ -27,6 +28,7 @@ return [
     'search' => '搜索',
     'settings' => '设置',
     'terms' => '条款',
+    'toggleTheme' => 'Toggle Theme',
     'upload' => '上传',
     'uploadLoop' => '上传这一刻',
 ];

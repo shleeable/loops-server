@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'choseYourPreferredLanguage' => 'Choose your preferred language for the Loops interface.',
+    'displayLanguage' => 'Display Language',
+    'language' => 'Language',
     'picker' => [
         'title' => '选择语言',
         'description' => '选择你的首选语言。这将更改整个应用程序的语言。',
