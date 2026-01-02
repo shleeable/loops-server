@@ -12,7 +12,7 @@
                 <div class="flex items-center lg:items-end h-full justify-center w-full">
                     <div
                         :class="[
-                            'relative flex items-center h-full w-full bg-black border-0 lg:border lg:border-black lg:dark:border-slate-800 overflow-hidden rounded-none lg:rounded-xl video-container',
+                            'relative flex items-center h-full w-full bg-black border-0 lg:border-[0.5px] lg:border-slate-300 lg:dark:border-slate-800 overflow-hidden rounded-none lg:rounded-xl video-container',
                             videoAspectClass
                         ]"
                         :style="videoAspectStyle"
