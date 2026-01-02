@@ -11,7 +11,11 @@
             >
                 <div class="flex items-center lg:items-end h-full justify-center w-full">
                     <div
-                        class="relative flex items-center h-full w-full lg:max-w-sm xl:max-w-md 2xl:max-w-lg lg:aspect-[9/16] bg-black border-0 lg:border lg:border-black lg:dark:border-slate-800 overflow-hidden rounded-none lg:rounded-xl video-container"
+                        :class="[
+                            'relative flex items-center h-full w-full bg-black border-0 lg:border lg:border-black lg:dark:border-slate-800 overflow-hidden rounded-none lg:rounded-xl video-container',
+                            videoAspectClass
+                        ]"
+                        :style="videoAspectStyle"
                         @touchstart="handleTouchStart"
                         @touchmove="handleTouchMove"
                         @touchend="handleTouchEnd"
@@ -368,7 +372,7 @@
         <div
             v-if="showComments"
             :class="[
-                'fixed top-[70px] bottom-0 right-0 bg-gray-50 dark:bg-slate-900 border-l border-t lg:border-t border-gray-100 dark:border-slate-800 transform transition-transform duration-300 z-50 flex flex-col w-full sm:w-[400px] lg:w-[400px] shadow-xl comments-panel',
+                'fixed top-[70px] lg:top-0 bottom-0 right-0 bg-gray-50 dark:bg-slate-900 border-l border-t lg:border-t border-gray-100 dark:border-slate-800 transform transition-transform duration-300 z-50 flex flex-col w-full sm:w-[400px] lg:w-[400px] shadow-xl comments-panel',
                 showComments ? 'translate-x-0' : 'translate-x-full'
             ]"
             @touchstart.stop
@@ -557,6 +561,9 @@ const accumulatedWatchTime = ref(0)
 const hasReportedCompletion = ref(false)
 const videoDuration = ref(props.duration || 0)
 const hasFlushedFinal = ref(false)
+const videoWidth = ref(null)
+const videoHeight = ref(null)
+const videoOrientation = ref('portrait')
 
 const {
     hasInteracted: hasGlobalInteraction,
@@ -568,6 +575,32 @@ const {
 const isMuted = computed({
     get: () => globalMuted.value,
     set: (value) => setGlobalMuted(value)
+})
+
+const videoAspectClass = computed(() => {
+    if (!videoWidth.value || !videoHeight.value) {
+        return 'lg:max-w-sm xl:max-w-md 2xl:max-w-lg lg:aspect-[9/16]'
+    }
+
+    const aspectRatio = videoWidth.value / videoHeight.value
+
+    if (videoOrientation.value === 'portrait') {
+        return 'lg:max-w-sm xl:max-w-md 2xl:max-w-lg lg:aspect-[9/16]'
+    } else if (videoOrientation.value === 'landscape') {
+        return 'lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl lg:aspect-[16/9]'
+    } else {
+        return 'lg:max-w-2xl xl:max-w-3xl 2xl:max-w-4xl lg:aspect-square'
+    }
+})
+
+const videoAspectStyle = computed(() => {
+    if (!videoWidth.value || !videoHeight.value) return {}
+
+    const aspectRatio = videoWidth.value / videoHeight.value
+
+    return {
+        '--video-aspect-ratio': aspectRatio
+    }
 })
 
 const canInteract = computed(() => !props.isSensitive || isSensitiveRevealed.value)
@@ -775,6 +808,23 @@ onMounted(async () => {
         })
         player.on('loadedmetadata', () => {
             videoDuration.value = player.duration()
+
+            const videoElement = player.tech({ IWillNotUseThisInPlugins: true }).el()
+
+            if (videoElement) {
+                videoWidth.value = videoElement.videoWidth
+                videoHeight.value = videoElement.videoHeight
+
+                const aspectRatio = videoWidth.value / videoHeight.value
+
+                if (aspectRatio < 0.95) {
+                    videoOrientation.value = 'portrait'
+                } else if (aspectRatio > 1.05) {
+                    videoOrientation.value = 'landscape'
+                } else {
+                    videoOrientation.value = 'square'
+                }
+            }
         })
         player.on('ready', () => {
             playerReady.value = true
@@ -960,6 +1010,9 @@ const cleanup = () => {
     showComments.value = false
     showMenu.value = false
     showMobilePauseButton.value = false
+    videoWidth.value = null
+    videoHeight.value = null
+    videoOrientation.value = 'portrait'
 }
 
 const onVisible = () => {

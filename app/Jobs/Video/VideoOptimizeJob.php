@@ -69,10 +69,7 @@ class VideoOptimizeJob implements ShouldQueue
             return;
         }
 
-        $width = 720;
-        $crf = 23;
         $maxDuration = 180;
-
         $ext = pathinfo($video->vid, PATHINFO_EXTENSION);
         $name = str_replace('.'.$ext, '.720p.mp4', $video->vid);
 
@@ -80,16 +77,35 @@ class VideoOptimizeJob implements ShouldQueue
             return;
         }
 
+        $mediaInfo = FFMpeg::fromDisk('s3')->open($video->vid);
+        $videoStream = $mediaInfo->getVideoStream();
+        $width = $videoStream->get('width');
+        $height = $videoStream->get('height');
+
+        if ($height > $width) {
+            $scaleFilter = 'scale=720:-2';
+            $maxBitrate = '2M';
+        } elseif ($width > $height) {
+            $scaleFilter = 'scale=-2:720';
+            $maxBitrate = '3M';
+        } else {
+            $scaleFilter = 'scale=720:720';
+            $maxBitrate = '2.5M';
+        }
+
         $format = new X264('aac');
         $format
             ->setAudioKiloBitrate(128)
             ->setAdditionalParameters([
                 '-preset', 'slow',
-                '-crf', (string) $crf,
+                '-crf', '20',
+                '-maxrate', $maxBitrate,
+                '-bufsize', '4M',
                 '-profile:v', 'main',
                 '-level', '4.0',
                 '-movflags', '+faststart',
                 '-pix_fmt', 'yuv420p',
+                '-tune', 'film',
                 '-ac', '2',
                 '-t', (string) $maxDuration,
             ]);
@@ -97,7 +113,8 @@ class VideoOptimizeJob implements ShouldQueue
         // @phpstan-ignore-next-line
         $media = FFMpeg::fromDisk('s3')
             ->open($video->vid)
-            ->addFilter(['-vf', "scale={$width}:-2"])
+            ->addFilter(['-vf', $scaleFilter.',format=yuv420p'])
+            ->addFilter('-sws_flags', 'lanczos')
             ->addFilter('-err_detect', 'ignore_err')
             ->addFilter('-fflags', '+genpts')
             ->export()
