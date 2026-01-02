@@ -3,11 +3,13 @@
         class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 mb-50 lg:mb-20"
     >
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+            <div class="flex items-center justify-between flex-col lg:flex-row">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-5 lg:mb-0">
                     {{ title }}
                 </h3>
-                <div class="flex items-center space-x-3">
+                <div
+                    class="flex items-center space-x-3 space-y-3 lg:space-y-0 flex-col lg:flex-row"
+                >
                     <label
                         v-if="showLocalFilter"
                         class="flex items-center space-x-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
