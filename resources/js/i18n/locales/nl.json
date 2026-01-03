@@ -265,7 +265,7 @@
         "allCaughtUp": "You're all caught up!",
         "errorLoadingNotifications": "Error loading notifications",
         "messageTypes": {
-            "videoLike": "liked your video",
+            "videoLike": "vond je video leuk",
             "newFollower": "started following you",
             "videoComment": "commented on your video",
             "videoCommentReply": "replied to a comment on your video",
@@ -274,7 +274,7 @@
             "videoCommentShare": "shared your comment",
             "videoCommentReplyShare": "shared your comment reply",
             "videoShare": "shared your video",
-            "default": "interacted with your content"
+            "default": "had een interactie met je inhoud"
         },
         "messages": "Messages",
         "messagesWillAppearHere": "Messages will appear here",
@@ -288,7 +288,7 @@
         "systemNotificationsWillAppearHere": "System notifications will appear here"
     },
     "pagination": {
-        "next": "Next &raquo;",
+        "next": "Volgende &raquo;",
         "previous": "&laquo; Previous"
     },
     "post": {
@@ -319,7 +319,7 @@
         "goBack": "Go Back",
         "goHome": "Go Home",
         "hide": "Hide",
-        "invalidCommentLink": "The comment link is invalid or broken",
+        "invalidCommentLink": "De reactielink is ongeldig of beschadigd",
         "loadMoreReplies": "Load more replies",
         "loadingComment": "Loading comment...",
         "loadingComments": "Loading comments...",
@@ -350,7 +350,7 @@
         "viewAllComments": "View All Comments",
         "writeAReplyDotDotDot": "Write a reply...",
         "writeYourCaptionDotDotDot": "Write your caption...",
-        "yourReportingThis": "You're reporting this {type} for: {message}"
+        "yourReportingThis": ""
     },
     "profile": {
         "accountBlocked": "Account Blocked",
@@ -513,7 +513,7 @@
         "sendingDotDotDot": "Sending...",
         "setup2FA": "Setup Two-Factor Authentication",
         "setup2FAStep1": "Step 1: Scan QR Code",
-        "setup2FAStep1Message": "Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)",
+        "setup2FAStep1Message": "Scan deze QR-code met je authenticatietoepassing (Google Authenticator, Authy, etc.)",
         "setup2FAStep2": "Step 2: Enter Verification Code",
         "setup2FAStep2Message": "Enter the 6-digit code from your authenticator app",
         "status": "Status",
@@ -536,7 +536,7 @@
         "yourAccountStatistics": "Your account statistics",
         "yourDataYourControl": "Your data, your control",
         "yourDataYourControlMessage": "Download or review your account data. All exports are provided in JSON format for easy portability",
-        "yourEmailIsUsedForRecoveryMessage": "Your email is used for account recovery, notifications, and security alerts. We'll verify any changes to ensure account security."
+        "yourEmailIsUsedForRecoveryMessage": "Je e-mailadres wordt gebruikt voor accountherstel en (veiligheids)meldingen. We checken aanpassingen voor de veiligheid van je account."
     },
     "studio": {
         "actions": "Actions",
