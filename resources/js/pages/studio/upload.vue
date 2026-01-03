@@ -1119,7 +1119,7 @@ const handleDrop = async (event) => {
         uploadedFile.value = file
         videoPreviewUrl.value = URL.createObjectURL(file)
 
-        await checkVideoResolution(file)
+        videoMetadata.value = await checkVideoResolution(file)
 
         nextTick(() => {
             if (videoPreviewEl.value) {
