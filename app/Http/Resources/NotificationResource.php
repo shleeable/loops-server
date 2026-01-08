@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\Notification;
 use App\Services\AccountService;
 use App\Services\HashidService;
+use App\Services\SystemMessageService;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -37,6 +38,10 @@ class NotificationResource extends JsonResource
             Notification::VIDEO_COMMENT_SHARE => $this->newVideoCommentShare(),
             Notification::VIDEO_REPLY_SHARE => $this->newVideoCommentReplyShare(),
             Notification::DUET_YOUR_VIDEO => $this->newVideoDuet(),
+            Notification::NEW_COMMENT_REPLY => $this->newCommentReply(),
+            Notification::SYSTEM_MESSAGE_INFO => $this->systemMessageInfo(),
+            Notification::SYSTEM_MESSAGE_FEATURE => $this->systemMessageInfo(),
+            Notification::SYSTEM_MESSAGE_UPDATE => $this->systemMessageInfo(),
             default => [
                 'id' => (string) $this->id,
                 'type' => 'internal',
@@ -44,6 +49,48 @@ class NotificationResource extends JsonResource
                 'created_at' => $this->created_at,
             ],
         };
+    }
+
+    protected function systemMessageInfo()
+    {
+        $systemMessage = app(SystemMessageService::class)->get($this->system_message_id);
+        $subType = match ($this->type) {
+            8 => 'info',
+            9 => 'feature',
+            10 => 'update',
+            default => 'info'
+        };
+
+        return [
+            'id' => (string) $this->id,
+            'type' => 'system.message',
+            'systemType' => $subType,
+            'systemMessage' => $systemMessage,
+            'read_at' => $this->read_at,
+            'created_at' => $this->created_at,
+        ];
+    }
+
+    protected function newCommentReply()
+    {
+        $video = VideoService::getMediaData($this->video_id);
+        $thumb = data_get($video, 'media.thumbnail', null);
+        $videoPid = data_get($video, 'account.id', null);
+        $vhid = HashidService::encode($this->video_id);
+        $hid = HashidService::encode($this->comment_reply_id);
+        $link = '/v/'.$vhid.'?rid='.$hid;
+
+        return [
+            'id' => (string) $this->id,
+            'type' => 'video.commentReply',
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
+            'video_pid' => $videoPid,
+            'video_id' => (string) $this->video_id,
+            'video_thumbnail' => $thumb,
+            'url' => $link,
+            'read_at' => $this->read_at,
+            'created_at' => $this->created_at,
+        ];
     }
 
     protected function newVideoCommentReplyShare()
@@ -61,7 +108,7 @@ class NotificationResource extends JsonResource
             'video_pid' => $videoPid,
             'video_id' => (string) $this->video_id,
             'video_thumbnail' => $thumb,
-            'actor' => AccountService::compact($this->profile_id, false) ?: $this->unavailableAccount(),
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
             'url' => $link,
             'read_at' => $this->read_at,
             'created_at' => $this->created_at,
@@ -84,7 +131,7 @@ class NotificationResource extends JsonResource
             'video_id' => (string) $this->video_id,
             'video_thumbnail' => $thumb,
             'url' => $link,
-            'actor' => AccountService::compact($this->profile_id, false) ?: $this->unavailableAccount(),
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
             'read_at' => $this->read_at,
             'created_at' => $this->created_at,
         ];
@@ -102,7 +149,7 @@ class NotificationResource extends JsonResource
             'video_pid' => $videoPid,
             'video_id' => (string) $this->video_id,
             'video_thumbnail' => $thumb,
-            'actor' => AccountService::compact($this->profile_id, false) ?: $this->unavailableAccount(),
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
             'read_at' => $this->read_at,
             'created_at' => $this->created_at,
         ];
@@ -119,7 +166,7 @@ class NotificationResource extends JsonResource
         return [
             'id' => (string) $this->id,
             'type' => 'video.duet',
-            'actor' => AccountService::compact($this->profile_id, false) ?: $this->unavailableAccount(),
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
             'video_pid' => $videoPid,
             'video_id' => (string) $this->video_id,
             'video_thumbnail' => $thumb,
@@ -141,7 +188,7 @@ class NotificationResource extends JsonResource
         return [
             'id' => (string) $this->id,
             'type' => 'video.commentReply',
-            'actor' => AccountService::compact($this->profile_id, false) ?: $this->unavailableAccount(),
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
             'video_pid' => $videoPid,
             'video_id' => (string) $this->video_id,
             'video_thumbnail' => $thumb,
@@ -166,7 +213,7 @@ class NotificationResource extends JsonResource
             'video_pid' => $videoPid,
             'video_id' => (string) $this->video_id,
             'video_thumbnail' => $thumb,
-            'actor' => AccountService::compact($this->profile_id, false) ?: $this->unavailableAccount(),
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
             'url' => $link,
             'read_at' => $this->read_at,
             'created_at' => $this->created_at,
@@ -189,7 +236,7 @@ class NotificationResource extends JsonResource
             'video_id' => (string) $this->video_id,
             'video_thumbnail' => $thumb,
             'url' => $link,
-            'actor' => AccountService::compact($this->profile_id, false) ?: $this->unavailableAccount(),
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
             'read_at' => $this->read_at,
             'created_at' => $this->created_at,
         ];
@@ -207,7 +254,7 @@ class NotificationResource extends JsonResource
             'video_pid' => $videoPid,
             'video_id' => (string) $this->video_id,
             'video_thumbnail' => $thumb,
-            'actor' => AccountService::compact($this->profile_id, false) ?: $this->unavailableAccount(),
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
             'read_at' => $this->read_at,
             'created_at' => $this->created_at,
         ];
@@ -218,7 +265,7 @@ class NotificationResource extends JsonResource
         return [
             'id' => (string) $this->id,
             'type' => 'new_follower',
-            'actor' => AccountService::compact($this->profile_id, false) ?: $this->unavailableAccount(),
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
             'read_at' => $this->read_at,
             'created_at' => $this->created_at,
         ];
@@ -236,7 +283,7 @@ class NotificationResource extends JsonResource
         return [
             'id' => (string) $this->id,
             'type' => 'video.comment',
-            'actor' => AccountService::compact($this->profile_id, false) ?: $this->unavailableAccount(),
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
             'video_pid' => $videoPid,
             'video_id' => (string) $this->video_id,
             'video_thumbnail' => $thumb,

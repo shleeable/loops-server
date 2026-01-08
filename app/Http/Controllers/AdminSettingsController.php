@@ -6,16 +6,18 @@ use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Middleware\AdminOnlyAccess;
 use App\Jobs\Federation\DiscoverInstance;
 use App\Models\AdminSetting;
+use App\Services\RedisService;
 use App\Services\SanitizeService;
 use App\Services\SettingsFileService;
+use App\Services\UserAppPreferencesService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\File;
 use Intervention\Image\Laravel\Facades\Image;
-use Storage;
 
 class AdminSettingsController extends Controller
 {
@@ -32,8 +34,11 @@ class AdminSettingsController extends Controller
     {
         $settings = (new SettingsFileService)->getAdminConfig();
 
+        $system['redis_bf_support'] = app(RedisService::class)->supportsBloomFilters();
+
         return response()->json([
             'data' => $settings,
+            'system' => $system,
         ]);
     }
 
@@ -44,6 +49,7 @@ class AdminSettingsController extends Controller
             'branding' => 'array',
             'media' => 'array',
             'federation' => 'array',
+            'fyf' => 'array',
             'general.instanceName' => 'required|string|min:2,max:15',
             'general.instanceUrl' => 'sometimes|nullable|url',
             'general.instanceDescription' => 'sometimes|nullable|max:150',
@@ -51,15 +57,25 @@ class AdminSettingsController extends Controller
             'general.supportEmail' => 'sometimes|nullable|email:rfc,dns,spoof,strict',
             'general.supportForum' => 'sometimes|nullable|active_url',
             'general.supportFediverseAccount' => 'sometimes|nullable|active_url',
+            'fyf.enabled' => 'required|boolean',
             'general.openRegistration' => 'required|boolean',
             'general.emailVerification' => 'required|accepted',
         ]);
 
+        $supportsBf = app(RedisService::class)->supportsBloomFilters();
         $handleSubmit = false;
         foreach ($validated as $section => $settings) {
             foreach ($settings as $key => $value) {
                 $settingKey = "{$section}.{$key}";
                 $isPublic = $this->isPublicSetting($settingKey);
+                if ($section == 'fyf' && $key == 'enabled') {
+                    if (! $value) {
+                        app(UserAppPreferencesService::class)->updateDisableForYouFeed();
+                    }
+                    if (! $supportsBf) {
+                        $value = false;
+                    }
+                }
                 if ($section == 'general' && $key == 'instanceUrl') {
                     $value = config('app.url');
                 }
@@ -109,6 +125,7 @@ class AdminSettingsController extends Controller
             'general.instanceDescription',
             'general.openRegistration',
             'general.emailVerification',
+            'fyf.enabled',
             'branding.logo',
             'branding.favicon',
             'branding.primaryColor',
@@ -243,5 +260,14 @@ class AdminSettingsController extends Controller
             $res = ['domain' => config('app.url'), 'submitted_at' => now()->format('c')];
             Storage::disk('local')->put('fedidb_submit.json', json_encode($res, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
         }
+    }
+
+    public function recheckRedisBloomFilterSupport(): JsonResponse
+    {
+        $supported = app(RedisService::class)->recheckSupportsBloomFilters();
+
+        return response()->json([
+            'redis_bf_support' => $supported,
+        ]);
     }
 }

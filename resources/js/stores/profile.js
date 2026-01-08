@@ -34,7 +34,10 @@ export const useProfileStore = defineStore('profile', {
         allLikes: 0,
         isLoadingMorePosts: false,
         hasMorePosts: true,
-        isPollingFollowState: false
+        isPollingFollowState: false,
+        bookmarkedPosts: [],
+        bookmarkedPostsCursor: null,
+        hasMoreBookmarkedPosts: true
     }),
     actions: {
         async updateSort(type) {
@@ -60,6 +63,7 @@ export const useProfileStore = defineStore('profile', {
                 this.followerCount = res.data.data.follower_count
                 this.followingCount = res.data.data.following_count
                 this.allLikes = res.data.data.likes_count
+                this.isSelf = res.data.data.is_owner
                 this.posts = []
             } catch (error) {
                 console.error('Error fetching profile:', error)
@@ -372,6 +376,60 @@ export const useProfileStore = defineStore('profile', {
             }
         },
 
+        async getBookmarkedPosts() {
+            const axiosInstance = axios.getAxiosInstance()
+            try {
+                this.bookmarkedPosts = []
+                this.bookmarkedPostsCursor = null
+                this.hasMoreBookmarkedPosts = true
+
+                const response = await axiosInstance.get('/api/v1/account/favourites', {
+                    params: {
+                        limit: 12
+                    }
+                })
+
+                this.bookmarkedPosts = response.data.data || []
+                this.bookmarkedPostsCursor = response.data.meta?.next_cursor
+                this.hasMoreBookmarkedPosts = !!response.data.meta?.next_cursor
+
+                return response
+            } catch (error) {
+                console.error('Error fetching bookmarked posts:', error)
+                throw error
+            }
+        },
+
+        async loadMoreBookmarkedPosts() {
+            if (this.isLoadingMorePosts || !this.hasMoreBookmarkedPosts) {
+                return
+            }
+
+            this.isLoadingMorePosts = true
+
+            const axiosInstance = axios.getAxiosInstance()
+
+            try {
+                const response = await axiosInstance.get('/api/v1/account/favourites', {
+                    params: {
+                        cursor: this.bookmarkedPostsCursor,
+                        limit: 12
+                    }
+                })
+
+                if (response.data.data && response.data.data.length > 0) {
+                    this.bookmarkedPosts.push(...response.data.data)
+                }
+
+                this.bookmarkedPostsCursor = response.data.meta?.next_cursor
+                this.hasMoreBookmarkedPosts = !!response.data.meta?.next_cursor
+            } catch (error) {
+                console.error('Error loading more bookmarked posts:', error)
+            } finally {
+                this.isLoadingMorePosts = false
+            }
+        },
+
         resetUser() {
             this.id = ''
             this.name = ''
@@ -400,6 +458,9 @@ export const useProfileStore = defineStore('profile', {
             this.isLoadingMorePosts = false
             this.hasMorePosts = true
             this.isPollingFollowState = false
+            this.bookmarkedPosts = []
+            this.bookmarkedPostsCursor = null
+            this.hasMoreBookmarkedPosts = false
         }
     },
     persist: true

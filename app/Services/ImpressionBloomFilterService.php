@@ -1,0 +1,162 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\FeedImpression;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
+
+class ImpressionBloomFilterService
+{
+    private const FILTER_KEY_PREFIX = 'loops:bf:impressions:';
+
+    private const ERROR_RATE = 0.01;
+
+    private const EXPECTED_ITEMS = 1000;
+
+    private const TTL_SECONDS = 1209600;
+
+    private const HYDRATION_DAYS = 90;
+
+    public function add(int $profileId, int $videoId): void
+    {
+        $key = $this->getKey($profileId);
+        $this->ensureFilterExists($key);
+        $this->bloom('BF.ADD', [$key, (string) $videoId]);
+    }
+
+    public function mightContain(int $profileId, int $videoId): bool
+    {
+        $key = $this->getKey($profileId);
+
+        $this->ensureFilterHydrated($profileId, $key);
+
+        if (! $this->keyExists($key)) {
+            return false;
+        }
+
+        return (int) $this->bloom('BF.EXISTS', [$key, (string) $videoId]) === 1;
+    }
+
+    public function filterVideos(int $profileId, Collection $videos): Collection
+    {
+        if ($videos->isEmpty()) {
+            return $videos;
+        }
+
+        $key = $this->getKey($profileId);
+        $this->ensureFilterHydrated($profileId, $key);
+
+        $exists = $this->keyExists($key);
+
+        if (! $exists) {
+            return $videos;
+        }
+
+        $videoIdList = $videos->pluck('id')
+            ->map(fn ($id) => (string) $id)
+            ->values()
+            ->all();
+
+        $results = $this->bloom('BF.MEXISTS', array_merge([$key], $videoIdList));
+
+        $seenVideoIds = [];
+        foreach ($videoIdList as $i => $videoId) {
+            $resultValue = $results[$i] ?? null;
+            if (((int) ($resultValue ?? 0)) === 1) {
+                $seenVideoIds[$videoId] = true;
+            }
+        }
+
+        return $videos->reject(
+            fn ($video) => isset($seenVideoIds[(string) $video->id])
+        )->values();
+    }
+
+    private function getClient()
+    {
+        return Redis::connection()->client();
+    }
+
+    private function keyExists(string $key): bool
+    {
+        return (int) $this->getClient()->rawCommand('EXISTS', $key) === 1;
+    }
+
+    private function setex(string $key, int $ttl, string $value): void
+    {
+        $this->getClient()->rawCommand('SETEX', $key, $ttl, $value);
+    }
+
+    private function expire(string $key, int $ttl): void
+    {
+        $this->getClient()->rawCommand('EXPIRE', $key, $ttl);
+    }
+
+    private function ensureFilterHydrated(int $profileId, string $key): void
+    {
+        $hydratedKey = $key.':hydrated';
+
+        if ($this->keyExists($hydratedKey)) {
+            return;
+        }
+
+        $videoIds = FeedImpression::where('profile_id', $profileId)
+            ->where('viewed_at', '>=', now()->subDays(self::HYDRATION_DAYS))
+            ->pluck('video_id')
+            ->toArray();
+
+        if (empty($videoIds)) {
+            $this->setex($hydratedKey, self::TTL_SECONDS, '1');
+
+            return;
+        }
+
+        $this->ensureFilterExists($key);
+
+        foreach (array_chunk($videoIds, 100) as $chunk) {
+            $this->bloom('BF.MADD', array_merge([$key], array_map('strval', $chunk)));
+        }
+
+        if ($this->keyExists($key)) {
+            $this->setex($hydratedKey, self::TTL_SECONDS, '1');
+        }
+    }
+
+    private function ensureFilterExists(string $key): void
+    {
+        if ($this->keyExists($key)) {
+            return;
+        }
+
+        try {
+            $this->bloom('BF.RESERVE', [$key, self::ERROR_RATE, self::EXPECTED_ITEMS]);
+            $this->expire($key, self::TTL_SECONDS);
+        } catch (\Throwable $e) {
+            if (! str_contains($e->getMessage(), 'exists')) {
+                Log::error("BF.RESERVE failed for key {$key}: {$e->getMessage()}");
+            }
+        }
+    }
+
+    private function bloom(string $command, array $args = [])
+    {
+        return $this->getClient()->rawCommand($command, ...$args);
+    }
+
+    private function getKey(int $profileId): string
+    {
+        $week = now()->format('Y-W');
+
+        return self::FILTER_KEY_PREFIX."{$profileId}:{$week}";
+    }
+
+    public function invalidate(int $profileId): void
+    {
+        $key = $this->getKey($profileId);
+        $client = $this->getClient();
+        $client->rawCommand('DEL', $key);
+        $client->rawCommand('DEL', $key.':hydrated');
+    }
+}

@@ -17,12 +17,16 @@ use App\Models\Follower;
 use App\Models\Hashtag;
 use App\Models\Page;
 use App\Models\Profile;
+use App\Models\SystemMessage;
 use App\Models\Video;
+use App\Models\VideoBookmark;
 use App\Models\VideoHashtag;
 use App\Services\AccountService;
 use App\Services\FeedService;
+use App\Services\FrontendService;
 use App\Services\IntlService;
 use App\Services\ReportService;
+use App\Services\SystemMessageService;
 use App\Support\CursorToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -68,6 +72,11 @@ class WebPublicController extends Controller
 
         if (! $video || ($request->user() && $request->user()->cannot('view', $video))) {
             return $this->error('Video not found or is unavailable', 404);
+        }
+
+        if ($request->user()) {
+            // @phpstan-ignore-next-line
+            $video->is_bookmarked = VideoBookmark::whereProfileId($request->user()->profile_id)->whereVideoId($video->id)->exists();
         }
 
         return new VideoResource($video);
@@ -187,7 +196,7 @@ class WebPublicController extends Controller
         }
 
         $res = (new ProfileResource($profile))->toArray($request);
-        $res['is_owner'] = false;
+        $res['is_owner'] = $request->user()?->profile_id == $profile->id;
         $res['likes_count'] = AccountService::getAccountLikesCount($profile->id);
 
         return response()->json(['data' => $res]);
@@ -238,6 +247,7 @@ class WebPublicController extends Controller
         ]);
 
         $sort = $request->input('sort', 'Latest');
+        $showPinned = $sort === 'Latest';
 
         $profile = Profile::findOrFail($id);
 
@@ -245,7 +255,7 @@ class WebPublicController extends Controller
             return $this->error('This resource is not available', 400);
         }
 
-        return FeedService::getAccountFeed($id, 10, $sort);
+        return FeedService::getAccountFeed($id, 10, $sort, $showPinned);
     }
 
     public function getContactInfo()
@@ -376,6 +386,15 @@ class WebPublicController extends Controller
         ]);
     }
 
+    public function getPublicSystemNotification(Request $request, $id)
+    {
+        abort_unless($request->hasHeader('X-LOOPS-APP'), 404);
+        $systemMessage = SystemMessage::active()->published()->where('key_id', $id)->firstOrFail();
+        $cached = app(SystemMessageService::class)->getFull($systemMessage->id);
+
+        return response()->json(['data' => $cached]);
+    }
+
     public function defaultTagResponse($request, $limit, $totalCount = 0)
     {
         return response()->json([
@@ -408,6 +427,16 @@ class WebPublicController extends Controller
     public function getLanguagesList(Request $request)
     {
         return $this->data(app(IntlService::class)->get());
+    }
+
+    public function appConfiguration()
+    {
+        $config = FrontendService::getCache();
+        $config['app']['software'] = 'loops';
+        $config['app']['version'] = app('app_version');
+        unset($config['branding']);
+
+        return response()->json($config);
     }
 
     private function defaultCollection($meta = [])

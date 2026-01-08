@@ -112,6 +112,16 @@ class AdminAuditLogService
         return $this->log($user, 'profile:permissions', $changes, $profile, null, 1);
     }
 
+    public function logProfileAdminSuspend(User|int $user, $profile)
+    {
+        return $this->log($user, 'profile:suspend', null, $profile, null, 1);
+    }
+
+    public function logProfileAdminUnsuspend(User|int $user, $profile)
+    {
+        return $this->log($user, 'profile:unsuspend', null, $profile, null, 1);
+    }
+
     public function logVideoCommentDelete(User|int $user, $video, $changes)
     {
         return $this->log($user, 'video:delete_comment', $changes, $video, null, 1);

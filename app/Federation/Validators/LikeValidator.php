@@ -36,10 +36,5 @@ class LikeValidator extends BaseValidator
         if (! app(SanitizeService::class)->url($activity['object'], true)) {
             throw new \Exception('Like activity "object" URI is invalid.');
         }
-
-        if (! $this->isLocalStatus($activity['object'])) {
-            throw new \Exception("Like activity rejected: target status '{$activity['object']}' is not a local status.");
-        }
-
     }
 }

@@ -35,6 +35,7 @@ class VideoResource extends JsonResource
 
         $pid = $this->getAuthenticatedProfileId($request);
         $hasLiked = $pid ? app(LikeService::class)->hasLikedVideo((string) $this->id, (string) $pid) : false;
+        $hasBookmarked = $this->is_bookmarked ?? false;
 
         $res = [
             'id' => (string) $this->id,
@@ -54,7 +55,9 @@ class VideoResource extends JsonResource
             'likes' => $this->likes,
             'shares' => $this->shares,
             'comments' => $this->comments,
+            'bookmarks' => $this->bookmarks,
             'has_liked' => $hasLiked,
+            'has_bookmarked' => (bool) $hasBookmarked,
             'is_edited' => $this->is_edited,
             'lang' => $this->lang,
             'tags' => $this->hashtags->map(fn (Hashtag $tag) => $tag->name),

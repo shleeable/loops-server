@@ -25,7 +25,16 @@ class FeedController extends Controller
             return $this->error('Please finish setting up your account', 403);
         }
 
-        return FeedService::getAccountFeed($request->user()->profile_id);
+        $validated = $request->validate([
+            'sort' => 'sometimes|in:Latest,Popular,Oldest',
+            'limit' => 'sometimes|integer|min:1|max:20',
+        ]);
+
+        $limit = data_get($validated, 'limit', 10);
+        $sort = data_get($validated, 'sort', 'Latest');
+        $showPinned = $sort === 'Latest';
+
+        return FeedService::getAccountFeed($request->user()->profile_id, $limit, $sort, $showPinned);
     }
 
     public function getForYouFeed(Request $request)
@@ -87,10 +96,18 @@ class FeedController extends Controller
             return $this->error('Cannot access this profile', 403);
         }
 
-        $feed = Video::whereProfileId($profileId)
+        $authProfileId = $request->user()?->profile_id;
+
+        $feed = Video::select('videos.*')
+            ->selectRaw('CASE WHEN video_bookmarks.id IS NOT NULL THEN 1 ELSE 0 END as is_bookmarked')
+            ->leftJoin('video_bookmarks', function ($join) use ($authProfileId) {
+                $join->on('video_bookmarks.video_id', '=', 'videos.id')
+                    ->where('video_bookmarks.profile_id', '=', $authProfileId);
+            })
+            ->where('videos.profile_id', $profileId)
             ->published()
-            ->where('id', '<=', $videoId)
-            ->orderByDesc('id')
+            ->where('videos.id', '<=', $videoId)
+            ->orderByDesc('videos.id')
             ->cursorPaginate($limit)
             ->withQueryString();
 

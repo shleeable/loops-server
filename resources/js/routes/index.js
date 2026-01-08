@@ -14,6 +14,12 @@ const router = createRouter({
             meta: { requiresAuth: false }
         },
         {
+            path: '/feed/for-you',
+            name: 'feedForYouPage',
+            component: () => import('~/pages/feed/for-you.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/feed/following',
             name: 'feedFollowingPage',
             component: () => import('~/pages/feed/following.vue'),
@@ -26,9 +32,21 @@ const router = createRouter({
             meta: { requiresAuth: false }
         },
         {
+            path: '/notifications/system/:id/permalink',
+            name: 'notificationSystemPermalink',
+            component: () => import('~/pages/notifications/system-permalink.vue'),
+            meta: { requiresAuth: false, params: true }
+        },
+        {
+            path: '/notifications/system/:id',
+            name: 'notificationSystem',
+            component: () => import('~/pages/notifications/system.vue'),
+            meta: { requiresAuth: true, params: true }
+        },
+        {
             path: '/notifications',
             name: 'notifications',
-            component: () => import('~/pages/notifications.vue'),
+            component: () => import('~/pages/notifications/index.vue'),
             meta: { requiresAuth: true }
         },
         {
@@ -200,6 +218,12 @@ const router = createRouter({
             meta: { requiresAuth: false }
         },
         {
+            path: '/auth/app/register',
+            name: 'appRegister',
+            component: () => import('~/pages/auth/app-register.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
             path: '/dashboard',
             redirect: '/dashboard/account'
         },
@@ -207,6 +231,12 @@ const router = createRouter({
             path: '/dashboard/account',
             name: 'dashboard',
             component: () => import('~/pages/dashboard/index.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/dashboard/appearance',
+            name: 'dashboardAppearance',
+            component: () => import('~/pages/dashboard/appearance.vue'),
             meta: { requiresAuth: true }
         },
         {
@@ -276,10 +306,10 @@ const router = createRouter({
         //   meta: { requiresAuth: true }
         // },
         // {
-        //   path: '/dashboard/screen-time',
-        //   name: 'dashboardScreenTime',
-        //   component: () => import('~/pages/dashboard/screen-time.vue'),
-        //   meta: { requiresAuth: true }
+        //     path: '/dashboard/screen-time',
+        //     name: 'dashboardScreenTime',
+        //     component: () => import('~/pages/dashboard/screen-time.vue'),
+        //     meta: { requiresAuth: true }
         // },
         // {
         //     path: "/dashboard/preferences",

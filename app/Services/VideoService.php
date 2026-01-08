@@ -68,6 +68,7 @@ class VideoService
                 'url' => $video->shareUrl(),
                 'likes' => $video->likes,
                 'comments' => $video->comments,
+                'is_sensitive' => $video->is_sensitive,
                 'created_at' => $video->created_at->format('c'),
                 'media' => [
                     'duration' => $video->duration,

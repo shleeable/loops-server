@@ -8,6 +8,14 @@ export const fetchFeedPage = async ({ cursor = null }) => {
     return response.data
 }
 
+export const fetchForYouFeedPage = async ({ cursor = null }) => {
+    const axiosInstance = axios.getAxiosInstance()
+    const response = await axiosInstance.get('/api/v0/feed/recommended', {
+        params: cursor ? { cursor } : {}
+    })
+    return response.data
+}
+
 export const fetchFollowingFeedPage = async ({ cursor = null }) => {
     const axiosInstance = axios.getAxiosInstance()
     const response = await axiosInstance.get('/api/v1/feed/following', {

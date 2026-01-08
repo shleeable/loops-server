@@ -6,13 +6,18 @@ use App\Models\Comment;
 use App\Models\CommentLike;
 use App\Models\CommentReply;
 use App\Models\CommentReplyLike;
+use App\Models\CommentReplyRepost;
+use App\Models\CommentRepost;
+use App\Models\FeedImpression;
 use App\Models\Follower;
 use App\Models\Hashtag;
 use App\Models\Instance;
 use App\Models\Profile;
 use App\Models\Report;
+use App\Models\UsageSnapshots;
 use App\Models\User;
 use App\Models\Video;
+use App\Models\VideoBookmark;
 use App\Models\VideoLike;
 use App\Models\VideoRepost;
 use Carbon\Carbon;
@@ -26,7 +31,7 @@ class AdminDashboardService
      */
     protected string $baseCacheKey = 'admin_dashboard_stats_';
 
-    public const CACHE_VERSION = 'v1.3';
+    public const CACHE_VERSION = 'v1.4';
 
     /**
      * Main entrypoint for controller & command.
@@ -34,7 +39,7 @@ class AdminDashboardService
      * @param  string  $periodParam  e.g. '30d'
      * @param  bool  $forceRefresh  whether to clear cache first
      */
-    public function getDashboardData(string $periodParam = '30d', bool $forceRefresh = false): array
+    public function getDashboardData(string $periodParam = '30d', bool $forceRefresh = false, bool $hardRefresh = false): array
     {
         $period = $this->validateAndParsePeriod($periodParam);
         $cacheKey = "{$this->baseCacheKey}{$periodParam}:".self::CACHE_VERSION;
@@ -44,7 +49,22 @@ class AdminDashboardService
         ];
 
         if ($forceRefresh) {
+            Cache::forget('admin_dashboard_stats_partial:total_shares');
             Cache::forget('admin_dashboard_stats_partial:total_likes');
+            Cache::forget('admin_dashboard_stats_partial:total_hashtags');
+            Cache::forget('admin_dashboard_stats_partial:total_comments');
+            Cache::forget('admin_dashboard_stats_partial:total_follows');
+            Cache::forget('admin_dashboard_stats_partial:pending_reports');
+            Cache::forget('admin_dashboard_stats_partial:active_users_today');
+            Cache::forget("{$this->baseCacheKey}partial:recent_activity");
+            Cache::forget($cacheKey);
+        }
+
+        if ($hardRefresh) {
+            Cache::forget('admin_dashboard_stats_partial:for_you_feed');
+            Cache::forget('admin_dashboard_stats_partial:total_shares');
+            Cache::forget('admin_dashboard_stats_partial:total_likes');
+            Cache::forget('admin_dashboard_stats_partial:total_hashtags');
             Cache::forget('admin_dashboard_stats_partial:total_comments');
             Cache::forget('admin_dashboard_stats_partial:total_follows');
             Cache::forget('admin_dashboard_stats_partial:pending_reports');
@@ -52,7 +72,10 @@ class AdminDashboardService
             Cache::forget('admin_dashboard_stats_partial:storage_used');
             Cache::forget("{$this->baseCacheKey}partial:recent_activity");
             Cache::forget("{$this->baseCacheKey}partial:federation");
-            Cache::forget("{$this->baseCacheKey}partial:top_hashtags");
+            Cache::forget("{$this->baseCacheKey}partial:top_hashtags:period:30");
+            Cache::forget("{$this->baseCacheKey}partial:top_hashtags:period:60");
+            Cache::forget("{$this->baseCacheKey}partial:top_hashtags:period:90");
+            Cache::forget("{$this->baseCacheKey}partial:top_hashtags:period:365");
             Cache::forget($cacheKey);
         }
 
@@ -70,9 +93,11 @@ class AdminDashboardService
         );
 
         $data['top_hashtags'] = Cache::remember(
-            "{$this->baseCacheKey}partial:top_hashtags",
-            now()->addHours(12),
-            fn () => $this->getTopHashtags()
+            "{$this->baseCacheKey}partial:top_hashtags:period:{$period['days']}",
+            now()->addHours(24),
+            function () use ($period) {
+                return $this->getTopHashtags($period['days'], $period['days'] === 30 ? 20 : 10);
+            }
         );
 
         // Big dashboard payload
@@ -86,6 +111,7 @@ class AdminDashboardService
                     'metrics' => $this->getKeyMetrics($period['days']),
                     'charts' => [
                         'user_growth' => $this->getUserGrowthData($period),
+                        'active_users' => $this->getActiveUserData($period),
                         'video_uploads' => $this->getVideoUploadsData($period),
                         'engagement' => $this->getEngagementData($period['chart_days']),
                         'content_distribution' => $this->getContentDistribution(),
@@ -104,6 +130,9 @@ class AdminDashboardService
         $data['metrics']['total_comments'] = $this->getCommentCount();
         $data['metrics']['total_follows'] = $this->getTotalFollows();
         $data['metrics']['total_likes'] = $this->getTotalLikes();
+        $data['metrics']['for_you'] = $this->getForYouFeedImpressionData();
+        $data['metrics']['total_shares'] = $this->getTotalShares();
+        $data['metrics']['total_hashtags'] = $this->getTotalHashtags();
 
         return $data;
     }
@@ -156,7 +185,7 @@ class AdminDashboardService
     {
         return Cache::remember(
             'admin_dashboard_stats_partial:storage_used',
-            now()->addHours(12),
+            now()->addHours(24),
             function () {
                 $storageKB = Video::sum('size_kb');
                 $storageGB = round($storageKB / 1024 / 1024, 2);
@@ -180,6 +209,31 @@ class AdminDashboardService
         );
     }
 
+    protected function getForYouFeedImpressionData()
+    {
+        return Cache::remember(
+            'admin_dashboard_stats_partial:for_you_feed',
+            now()->addHours(24),
+            function () {
+                $total = FeedImpression::sum('watch_duration');
+                if ($total && $total > 5) {
+                    $total = round($total / 60);
+
+                    if ($total > 1000) {
+                        $total = round($total / 60).' hours';
+                    } else {
+                        $total = $total.' mins';
+                    }
+                }
+
+                return [
+                    'total_views' => FeedImpression::count(),
+                    'total_watch_time' => $total,
+                ];
+            }
+        );
+    }
+
     protected function getPendingReports()
     {
         return Cache::remember(
@@ -194,7 +248,21 @@ class AdminDashboardService
         return Cache::remember(
             'admin_dashboard_stats_partial:total_comments',
             now()->addHours(4),
-            fn () => Comment::count()
+            fn () => DB::select('
+                SELECT (
+                    (SELECT COUNT(*) FROM comments) +
+                    (SELECT COUNT(*) FROM comment_replies)
+                ) as total
+            ')[0]->total
+        );
+    }
+
+    protected function getTotalHashtags()
+    {
+        return Cache::remember(
+            'admin_dashboard_stats_partial:total_hashtags',
+            now()->addHours(4),
+            fn () => Hashtag::count()
         );
     }
 
@@ -212,9 +280,28 @@ class AdminDashboardService
         return Cache::remember(
             'admin_dashboard_stats_partial:total_likes',
             now()->addHours(4),
-            fn () => VideoLike::count()
-                + CommentLike::count()
-                + CommentReplyLike::count()
+            fn () => DB::select('
+                SELECT (
+                    (SELECT COUNT(*) FROM video_likes) +
+                    (SELECT COUNT(*) FROM comment_likes) +
+                    (SELECT COUNT(*) FROM comment_reply_likes)
+                ) as total
+            ')[0]->total
+        );
+    }
+
+    protected function getTotalShares()
+    {
+        return Cache::remember(
+            'admin_dashboard_stats_partial:total_shares',
+            now()->addHours(4),
+            fn () => DB::select('
+                SELECT (
+                    (SELECT COUNT(*) FROM video_reposts) +
+                    (SELECT COUNT(*) FROM comment_reposts) +
+                    (SELECT COUNT(*) FROM comment_reply_reposts)
+                ) as total
+            ')[0]->total
         );
     }
 
@@ -304,7 +391,7 @@ class AdminDashboardService
         $grouping = $period['grouping'];
 
         if ($grouping === 'monthly') {
-            for ($i = 11; $i >= 0; $i--) {
+            for ($i = 12; $i >= 1; $i--) {
                 $startOfMonth = Carbon::now()->subMonths($i)->startOfMonth();
                 $endOfMonth = Carbon::now()->subMonths($i)->endOfMonth();
 
@@ -319,7 +406,7 @@ class AdminDashboardService
             }
         } elseif ($grouping === 'weekly') {
             $dataPoints = 30;
-            for ($i = $dataPoints - 1; $i >= 0; $i--) {
+            for ($i = $dataPoints; $i >= 1; $i--) {
                 $date = Carbon::now()->subDays($i * 7);
                 $endDate = $date->copy()->addDays(6);
 
@@ -333,12 +420,71 @@ class AdminDashboardService
                 $values[] = $count;
             }
         } else {
-            for ($i = $days - 1; $i >= 0; $i--) {
+            for ($i = $days; $i >= 1; $i--) {
                 $date = Carbon::now()->subDays($i);
                 $dates[] = $date->format('M d');
 
                 $count = User::whereDate('created_at', $date->toDateString())->count();
                 $values[] = $count;
+            }
+        }
+
+        return [
+            'dates' => $dates,
+            'values' => $values,
+        ];
+    }
+
+    protected function getActiveUserData(array $period): array
+    {
+        $dates = [];
+        $values = [];
+        $days = $period['days'];
+        $grouping = $period['grouping'];
+
+        $metric = 'active_30d';
+
+        if ($grouping === 'monthly') {
+            for ($i = 12; $i >= 1; $i--) {
+                $startOfMonth = Carbon::now()->subMonths($i)->startOfMonth();
+                $endOfMonth = Carbon::now()->subMonths($i)->endOfMonth();
+
+                $dates[] = $startOfMonth->format('M Y');
+
+                $snapshot = UsageSnapshots::whereBetween('day', [
+                    $startOfMonth->toDateString(),
+                    $endOfMonth->toDateString(),
+                ])
+                    ->orderBy('day', 'desc')
+                    ->first();
+
+                $values[] = $snapshot ? $snapshot->$metric : 0;
+            }
+        } elseif ($grouping === 'weekly') {
+            $dataPoints = 30;
+            for ($i = $dataPoints; $i >= 1; $i--) {
+                $date = Carbon::now()->subDays($i * 7);
+                $endDate = $date->copy()->addDays(6);
+
+                $dates[] = $date->format('M d');
+
+                $snapshot = UsageSnapshots::whereBetween('day', [
+                    $date->toDateString(),
+                    $endDate->toDateString(),
+                ])
+                    ->orderBy('day', 'desc')
+                    ->first();
+
+                $values[] = $snapshot ? $snapshot->$metric : 0;
+            }
+        } else {
+            for ($i = $days; $i >= 1; $i--) {
+                $date = Carbon::now()->subDays($i);
+                $dates[] = $date->format('M d');
+
+                $snapshot = UsageSnapshots::whereDate('day', $date->toDateString())->first();
+
+                $values[] = $snapshot ? $snapshot->$metric : 0;
             }
         }
 
@@ -356,7 +502,7 @@ class AdminDashboardService
         $grouping = $period['grouping'];
 
         if ($grouping === 'monthly') {
-            for ($i = 11; $i >= 0; $i--) {
+            for ($i = 12; $i >= 1; $i--) {
                 $startOfMonth = Carbon::now()->subMonths($i)->startOfMonth();
                 $endOfMonth = Carbon::now()->subMonths($i)->endOfMonth();
 
@@ -373,7 +519,7 @@ class AdminDashboardService
             }
         } elseif ($grouping === 'weekly') {
             $dataPoints = 30;
-            for ($i = $dataPoints - 1; $i >= 0; $i--) {
+            for ($i = $dataPoints; $i >= 1; $i--) {
                 $date = Carbon::now()->subDays($i * 7);
                 $endDate = $date->copy()->addDays(6);
 
@@ -389,7 +535,7 @@ class AdminDashboardService
                 $values[] = $count;
             }
         } else {
-            for ($i = $days - 1; $i >= 0; $i--) {
+            for ($i = $days; $i >= 1; $i--) {
                 $date = Carbon::now()->subDays($i);
                 $dates[] = $date->format('M d');
 
@@ -416,10 +562,14 @@ class AdminDashboardService
         $replyLikes = [];
         $replies = [];
         $shares = [];
+        $commentShares = [];
+        $replyShares = [];
+        $bookmarks = [];
+        $reports = [];
 
         $displayDays = min($days, 30);
 
-        for ($i = $displayDays - 1; $i >= 0; $i--) {
+        for ($i = $displayDays; $i >= 1; $i--) {
             $date = Carbon::now()->subDays($i);
             $dates[] = $date->format('M d');
 
@@ -429,6 +579,10 @@ class AdminDashboardService
             $repliesCount = CommentReply::whereDate('created_at', $date->toDateString())->count();
             $replyLikesCount = CommentReplyLike::whereDate('created_at', $date->toDateString())->count();
             $sharesCount = VideoRepost::whereDate('created_at', $date->toDateString())->count();
+            $commentSharesCount = CommentRepost::whereDate('created_at', $date->toDateString())->count();
+            $replySharesCount = CommentReplyRepost::whereDate('created_at', $date->toDateString())->count();
+            $bookmarksCount = VideoBookmark::whereDate('created_at', $date->toDateString())->count();
+            $reportsCount = Report::whereDate('created_at', $date->toDateString())->count();
 
             $likes[] = $likesCount;
             $comments[] = $commentsCount;
@@ -436,6 +590,10 @@ class AdminDashboardService
             $replies[] = $repliesCount;
             $commentLikes[] = $commentLikesCount;
             $replyLikes[] = $replyLikesCount;
+            $commentShares[] = $commentSharesCount;
+            $replyShares[] = $replySharesCount;
+            $bookmarks[] = $bookmarksCount;
+            $reports[] = $reportsCount;
         }
 
         return [
@@ -446,6 +604,10 @@ class AdminDashboardService
             'replies' => $replies,
             'commentLikes' => $commentLikes,
             'replyLikes' => $replyLikes,
+            'commentShares' => $commentShares,
+            'replyShares' => $replyShares,
+            'bookmarks' => $bookmarks,
+            'reports' => $reports,
         ];
     }
 
@@ -466,13 +628,35 @@ class AdminDashboardService
         ];
     }
 
-    protected function getTopHashtags(): array
+    protected function getTopHashtags(int $days = 90, int $limit = 10): array
     {
-        return Hashtag::where('can_search', true)
-            ->where('is_banned', false)
-            ->orderByDesc('count')
-            ->limit(10)
-            ->get(['id', 'name', 'count'])
+        $since = now()->subDays($days);
+
+        return Hashtag::select([
+            'hashtags.id',
+            'hashtags.name',
+            'hashtags.count',
+        ])
+            ->selectRaw('COUNT(DISTINCT videos.id) as recent_video_count')
+            ->selectRaw('SUM(videos.likes + videos.comments + videos.shares + (videos.views / 10)) as engagement_score')
+            ->selectRaw('(
+                COUNT(DISTINCT videos.id) * 10 + 
+                SUM(videos.likes + videos.comments + videos.shares + (videos.views / 10))
+            ) as trend_score')
+            ->join('video_hashtags', 'hashtags.id', '=', 'video_hashtags.hashtag_id')
+            ->join('videos', function ($join) use ($since) {
+                $join->on('video_hashtags.video_id', '=', 'videos.id')
+                    ->where('videos.created_at', '>=', $since)
+                    ->where('videos.status', 2)
+                    ->where('videos.visibility', 1);
+            })
+            ->where('hashtags.can_search', true)
+            ->where('hashtags.is_banned', false)
+            ->where('video_hashtags.visibility', 1)
+            ->groupBy('hashtags.id', 'hashtags.name', 'hashtags.count')
+            ->orderByDesc('trend_score')
+            ->limit($limit)
+            ->get()
             ->toArray();
     }
 

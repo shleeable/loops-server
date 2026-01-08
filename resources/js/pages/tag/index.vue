@@ -124,7 +124,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, inject, ref, watch } from 'vue'
+import { onMounted, onUnmounted, inject, ref, watch, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { HeartIcon, ChatBubbleOvalLeftIcon } from '@heroicons/vue/24/outline'
 import { useRouter, useRoute } from 'vue-router'
@@ -161,20 +161,25 @@ const handleLoadMore = () => {
 }
 
 const setupIntersectionObserver = () => {
-    if (!loadMoreTrigger.value) return
+    if (observer) {
+        observer.disconnect()
+    }
+
+    if (!loadMoreTrigger.value) {
+        return
+    }
 
     observer = new IntersectionObserver(
         (entries) => {
             const [entry] = entries
-            if (entry.isIntersecting && !loadingMore.value && !loading.value) {
+
+            if (entry.isIntersecting && !loadingMore.value && !loading.value && hasMore.value) {
                 if (!authStore.authenticated) {
                     showGuestModal.value = true
                     return
                 }
 
-                if (hasMore.value) {
-                    loadMore()
-                }
+                loadMore()
             }
         },
         {
@@ -186,6 +191,17 @@ const setupIntersectionObserver = () => {
 
     observer.observe(loadMoreTrigger.value)
 }
+
+watch(
+    () => feed.value,
+    async (newFeed) => {
+        if (newFeed && newFeed.length > 0) {
+            await nextTick()
+            setupIntersectionObserver()
+        }
+    },
+    { immediate: true }
+)
 
 watch(
     () => route.params.id,
@@ -201,10 +217,6 @@ watch(
 onMounted(() => {
     id.value = route.params.id
     handleFetch()
-
-    setTimeout(() => {
-        setupIntersectionObserver()
-    }, 100)
 })
 
 onUnmounted(() => {

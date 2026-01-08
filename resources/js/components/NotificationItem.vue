@@ -25,11 +25,6 @@
                 class="w-10 h-10 rounded-full object-cover ring-2 ring-white dark:ring-gray-900 transition-transform group-hover/avatar:scale-105"
                 @error="handleImageError"
             />
-            <span
-                class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 dark:bg-gray-700 rounded opacity-0 pointer-events-none group-hover/avatar:opacity-100 transition-opacity whitespace-nowrap z-10"
-            >
-                @{{ notification.actor.username }}
-            </span>
             <div
                 class="absolute -bottom-1 -right-1 flex items-center justify-center w-5 h-5 rounded-full ring-2 ring-white dark:ring-gray-900"
                 :class="getIconBackgroundClass()"
@@ -44,19 +39,16 @@
 
         <div class="flex-1 min-w-0 pr-2">
             <p class="text-sm leading-snug text-gray-900 dark:text-gray-100">
-                <router-link
-                    :to="`/@${notification.actor.username}`"
-                    @click.stop="markAsRead"
-                    class="hover:underline group/name relative"
+                <span
+                    ref="nameRef"
+                    @mouseenter="handleNameHover"
+                    @mouseleave="handleNameLeave"
+                    class="hover:underline cursor-pointer"
                     :class="!notification.read_at ? 'font-bold' : 'font-semibold'"
+                    @click.stop="navigateToProfile"
                 >
                     {{ notification.actor.name }}
-                    <span
-                        class="absolute bottom-full left-0 mb-2 px-2 py-1 text-xs text-white bg-gray-900 dark:bg-gray-700 rounded opacity-0 pointer-events-none group-hover/name:opacity-100 transition-opacity whitespace-nowrap z-10"
-                    >
-                        @{{ notification.actor.username }}
-                    </span>
-                </router-link>
+                </span>
                 <span class="text-gray-600 dark:text-gray-400 font-normal">
                     {{ ' ' + getNotificationMessage() }}
                 </span>
@@ -89,10 +81,24 @@
 
             <div v-else-if="!notification.read_at" class="w-2 h-2 bg-blue-500 rounded-full"></div>
         </div>
+
+        <Teleport to="body">
+            <UserHoverCard
+                v-if="!isMobile && showHoverCard"
+                :show="showHoverCard"
+                :account="notification.actor"
+                :account-id="notification.actor.id"
+                :position="hoverCardPosition"
+                :current-user-id="currentUserId"
+                @mouseenter="handleCardEnter"
+                @mouseleave="handleCardLeave"
+            />
+        </Teleport>
     </div>
 </template>
 
 <script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
     HeartIcon,
@@ -104,11 +110,16 @@ import {
 } from '@heroicons/vue/24/solid'
 import { useHashids } from '@/composables/useHashids'
 import { useI18n } from 'vue-i18n'
+import UserHoverCard from '@/components/ProfileHoverCard.vue'
 
 const props = defineProps({
     notification: {
         type: Object,
         required: true
+    },
+    currentUserId: {
+        type: Number,
+        default: null
     }
 })
 
@@ -116,6 +127,14 @@ const emit = defineEmits(['mark-as-read'])
 const router = useRouter()
 const { encodeHashid } = useHashids()
 const { t } = useI18n()
+
+const isMobile = ref(false)
+
+const showHoverCard = ref(false)
+const hoverCardPosition = ref({ top: '0px', left: '0px' })
+const hoverTimeout = ref(null)
+const isOverCard = ref(false)
+const nameRef = ref(null)
 
 const notificationConfig = {
     'video.like': {
@@ -178,6 +197,85 @@ const notificationConfig = {
         iconColor: 'text-white',
         bgColor: 'bg-purple-500'
     }
+}
+
+// Check if device is mobile
+const checkMobile = () => {
+    isMobile.value =
+        'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth < 768
+}
+
+onMounted(() => {
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+    window.removeEventListener('resize', checkMobile)
+    clearTimeout(hoverTimeout.value)
+})
+
+const calculatePosition = () => {
+    if (!nameRef.value) return { top: '0px', left: '0px' }
+
+    const rect = nameRef.value.getBoundingClientRect()
+    const cardWidth = 288
+    const cardHeight = 220
+    const spacing = 12
+
+    let left = rect.left + rect.width / 2 - cardWidth / 2
+
+    const margin = 16
+    if (left < margin) {
+        left = margin
+    } else if (left + cardWidth > window.innerWidth - margin) {
+        left = window.innerWidth - cardWidth - margin
+    }
+
+    let top = rect.top - cardHeight - spacing
+
+    if (top < margin) {
+        top = rect.bottom + spacing
+    }
+
+    return {
+        top: `${top}px`,
+        left: `${left}px`
+    }
+}
+
+const handleNameHover = () => {
+    if (isMobile.value) return
+
+    clearTimeout(hoverTimeout.value)
+    hoverTimeout.value = setTimeout(() => {
+        hoverCardPosition.value = calculatePosition()
+        showHoverCard.value = true
+    }, 500)
+}
+
+const handleNameLeave = () => {
+    clearTimeout(hoverTimeout.value)
+    hoverTimeout.value = setTimeout(() => {
+        if (!isOverCard.value) {
+            showHoverCard.value = false
+        }
+    }, 200)
+}
+
+const handleCardEnter = () => {
+    clearTimeout(hoverTimeout.value)
+    isOverCard.value = true
+}
+
+const handleCardLeave = () => {
+    isOverCard.value = false
+    showHoverCard.value = false
+}
+
+const navigateToProfile = () => {
+    markAsRead()
+    router.push(`/@${props.notification.actor.username}`)
 }
 
 const getNotificationMessage = () => {

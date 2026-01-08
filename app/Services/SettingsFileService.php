@@ -12,6 +12,7 @@ class SettingsFileService
     {
         $this->generatePublicConfig();
         $this->generateAdminConfig();
+        app(ConfigService::class)->forYouFeed(true);
         app(ConfigService::class)->federation(true);
         app(ConfigService::class)->federationMode(true);
         app(ConfigService::class)->federationAllowedServers(true);
@@ -38,9 +39,10 @@ class SettingsFileService
             ],
             'media' => [
                 'max_video_size' => $settings['media.maxVideoSize'] ?? 100,
-                'max_video_duration' => $settings['media.maxVideoDuration'] ?? 300,
+                'max_video_duration' => $settings['media.maxVideoDuration'] ?? 180,
                 'allowed_video_formats' => $settings['media.allowedVideoFormats'] ?? ['mp4'],
             ],
+            'fyf' => $settings['fyf.enabled'] ?? false,
             'registration' => $settings['general.openRegistration'] ?? false,
             'federation' => $settings['federation.enableFederation'] ?? false,
         ];

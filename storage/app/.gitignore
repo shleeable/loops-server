@@ -3,4 +3,5 @@
 !private/
 !public/
 !page-templates
+!notifications/
 !.gitignore

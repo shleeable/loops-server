@@ -170,7 +170,7 @@ class User extends Authenticatable implements OAuthenticatable
      */
     public function videos(): HasMany
     {
-        return $this->hasMany(Video::class, 'profile_id');
+        return $this->hasMany(Video::class, 'profile_id', 'profile_id');
     }
 
     /** @return HasMany<Comment, $this> */
@@ -214,6 +214,14 @@ class User extends Authenticatable implements OAuthenticatable
     public function dataSettings(): HasOne
     {
         return $this->hasOne(UserDataSettings::class);
+    }
+
+    /**
+     * @return HasOne<UserAppPreference, $this>
+     */
+    public function appPreferences(): HasOne
+    {
+        return $this->hasOne(UserAppPreference::class);
     }
 
     public function getOrCreateDataSettings(): UserDataSettings

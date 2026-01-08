@@ -1,11 +1,13 @@
 <?php
 
 return [
+    'accountBlocked' => 'Compte Bloqué',
+    'accountUnavailable' => 'Compte Indisponible',
     'applyingDotDotDot' => 'Mise à jour...',
     'avatarFailedToUploadError' => 'Échec du téléchargement de l\'avatar. Réessayez.',
     'avatarFileSizeError' => 'L\'image doit faire moins de 5 Mo.',
     'avatarFileTypeError' => 'Choisissez une image valide (PNG, JPEG ou JPG).',
-    'bio' => 'Bio',
+    'bio' => 'Biographie',
     'bioHelp' => 'Bio optionnelle (max. 80 caractères)',
     'bioPlaceholder' => 'Ajoutez une bio (optionnel)',
     'block' => 'Bloquer',
@@ -17,6 +19,8 @@ return [
     'displayNameHelp' => 'Jusqu\'à 30 caractères maximum.',
     'editProfile' => 'Modifier le profil',
     'failedToUpdateProfileErrorMessage' => 'Échec de la mise à jour du profil. Réessayez.',
+    'favouritePosts' => 'Publications favorites',
+    'followRequestPending' => 'Demande de suivi en attente',
     'likes' => 'J\'aime',
     'loadingProfileDotDotDot' => 'Chargement du profil...',
     'noFollowersYet' => 'Pas encore d\'abonnés',
@@ -35,11 +39,15 @@ return [
     ],
     'tabOptions' => [
         'Videos' => 'Vidéos',
+        'Favourites' => 'Favoris',
     ],
+    'thisAccountIsNotAvailable' => 'Ce compte n\'est pas disponible',
     'unblock' => 'Débloquer',
     'userHasntPostedAnyVideosYet' => ':username n\'a pas encore posté de vidéos',
     'whenPeopleFollowThisAccount' => 'Quand des personnes suivent ce compte, elles apparaîtront ici.',
     'whenThisAccountFollowsSomeone' => 'Quand ce compte suit quelqu\'un, il apparaîtra ici.',
+    'youHaveBlockedThisAccount' => 'Vous avez bloqué ce compte',
     'youHaventPostedAnyVideosYet' => 'Vous n\'avez pas encore posté de vidéos',
+    'yourFavouritePostsWillAppearHere' => 'Vos publications préférées apparaîtront ici.',
     'youveReachedTheEndOfThisList' => 'Vous êtes arrivé au bout de la liste',
 ];

@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'accountBlocked' => 'Account Blocked',
+    'accountUnavailable' => 'Account Unavailable',
     'applyingDotDotDot' => '正在应用...',
     'avatarFailedToUploadError' => '更新头像失败。请重试。',
     'avatarFileSizeError' => '图片文件大小必须小于 5MB。',
@@ -17,6 +19,8 @@ return [
     'displayNameHelp' => '昵称最长可为 30 个字符。',
     'editProfile' => '编辑个人资料',
     'failedToUpdateProfileErrorMessage' => '更新个人资料失败。请重试。',
+    'favouritePosts' => 'Favourite posts',
+    'followRequestPending' => 'Follow Request Pending',
     'likes' => '点赞',
     'loadingProfileDotDotDot' => '正在加载个人资料...',
     'noFollowersYet' => '暂无粉丝',
@@ -35,11 +39,15 @@ return [
     ],
     'tabOptions' => [
         'Videos' => '视频',
+        'Favourites' => 'Favourites',
     ],
+    'thisAccountIsNotAvailable' => 'This account is not available',
     'unblock' => '解除屏蔽',
     'userHasntPostedAnyVideosYet' => ':username 还没有发布任何视频',
     'whenPeopleFollowThisAccount' => '关注此账号的用户将显示在这里。',
     'whenThisAccountFollowsSomeone' => '此账号关注的用户将显示在这里。',
+    'youHaveBlockedThisAccount' => 'You have blocked this account',
     'youHaventPostedAnyVideosYet' => '你还没有发布任何视频',
+    'yourFavouritePostsWillAppearHere' => 'Your favourite posts will appear here.',
     'youveReachedTheEndOfThisList' => '你已到达列表末尾',
 ];

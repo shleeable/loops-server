@@ -2,16 +2,19 @@
 
 return [
     'about' => 'Acerca de',
+    'activity' => 'Actividad',
     'admin' => 'Administración',
+    'appearance' => 'Apariencia',
     'clearAll' => 'Limpiar todo',
     'community' => 'Comunidad',
     'contact' => 'Contacto',
     'developers' => 'Desarrolladores',
-    'explore' => 'Explorar',
     'federation' => 'Federación',
+    'forYou' => 'Para ti',
     'help' => 'Ayuda',
     'home' => 'Inicio',
     'join' => 'Unirse',
+    'local' => 'Local',
     'logIn' => 'Iniciar sesión',
     'logOut' => 'Cerrar sesión',
     'loginOrRegister' => 'Iniciar sesión o registrarse',
@@ -25,6 +28,7 @@ return [
     'search' => 'Buscar',
     'settings' => 'Configuración',
     'terms' => 'Términos',
+    'toggleTheme' => 'Cambiar tema',
     'upload' => 'Subir',
     'uploadLoop' => 'Subir Loop',
 ];

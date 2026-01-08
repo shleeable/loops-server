@@ -58,7 +58,7 @@ class ProcessSharedInboxActivity implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(array $activity, ?Profile $actor)
+    public function __construct(array $activity, $actor)
     {
         $this->activity = $activity;
         $this->actor = $actor;

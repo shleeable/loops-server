@@ -170,6 +170,8 @@ class LoginController extends Controller
             $hasRecovered = true;
             $user->update(['status' => 1, 'delete_after' => null]);
             $user->profile->update(['status' => 1]);
+            $user->videos()->whereIn('status', [7, 8])->update(['status' => 2]);
+            $user->videos()->whereIn('status', [9])->update(['status' => 1]);
         }
 
         if ($intendedUrl && str_contains($intendedUrl, '/oauth/authorize')) {

@@ -21,7 +21,7 @@ class AdminDashboardController extends Controller
         $shouldRefresh = $request->has('refresh') && $request->boolean('refresh');
         $periodParam = $request->input('period', '30d');
 
-        $data = $this->dashboardService->getDashboardData($periodParam, $shouldRefresh);
+        $data = $this->dashboardService->getDashboardData($periodParam, $shouldRefresh, $shouldRefresh);
 
         return response()->json([
             'data' => $data,

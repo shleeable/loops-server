@@ -243,7 +243,7 @@
                                         :placeholder="$t('studio.describeYourVideoDotDotDot')"
                                         rows="4"
                                         class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                        maxlength="2200"
+                                        maxlength="200"
                                     ></textarea>
 
                                     <div
@@ -377,7 +377,7 @@
                                     <div
                                         class="absolute bottom-2 right-2 text-xs text-gray-400 dark:text-gray-500"
                                     >
-                                        {{ description.length }}/240
+                                        {{ description.length }}/200
                                     </div>
                                 </div>
                                 <div class="flex space-x-4 -mt-1">
@@ -945,6 +945,8 @@ const settings = reactive({
     containsAi: false
 })
 
+const videoMetadata = ref({ width: 0, height: 0, duration: 0, orientation: 'portrait' })
+
 onBeforeRouteLeave((to, from, next) => {
     if (isSubmitting.value) {
         confirmModal(
@@ -1093,7 +1095,7 @@ const handleFileSelect = async (event) => {
         uploadedFile.value = file
         videoPreviewUrl.value = URL.createObjectURL(file)
 
-        await checkVideoResolution(file)
+        videoMetadata.value = await checkVideoResolution(file)
 
         nextTick(() => {
             if (videoPreviewEl.value) {
@@ -1117,7 +1119,7 @@ const handleDrop = async (event) => {
         uploadedFile.value = file
         videoPreviewUrl.value = URL.createObjectURL(file)
 
-        await checkVideoResolution(file)
+        videoMetadata.value = await checkVideoResolution(file)
 
         nextTick(() => {
             if (videoPreviewEl.value) {
@@ -1291,23 +1293,36 @@ const checkVideoResolution = async (file) => {
         video.preload = 'metadata'
 
         video.onloadedmetadata = function () {
-            console.log(video)
             URL.revokeObjectURL(video.src)
             const width = video.videoWidth
             const height = video.videoHeight
             const duration = video.duration
 
+            const aspectRatio = width / height
+            let orientation = 'portrait'
+
+            if (aspectRatio < 0.95) {
+                orientation = 'portrait'
+            } else if (aspectRatio > 1.05) {
+                orientation = 'landscape'
+            } else {
+                orientation = 'square'
+            }
+
             needsConversion.value = true
 
+            const metadata = { width, height, duration, orientation }
+
             console.log(
-                `Video dimensions: ${width}x${height}, duration: ${duration}s, needs conversion: ${needsConversion.value}`
+                `Video dimensions: ${width}x${height}, aspect: ${aspectRatio.toFixed(2)}, orientation: ${orientation}, duration: ${duration}s`
             )
-            resolve({ width, height, duration })
+
+            resolve(metadata)
         }
 
         video.onerror = function () {
             console.error('Error loading video metadata')
-            resolve({ width: 0, height: 0, duration: 0 })
+            resolve({ width: 0, height: 0, duration: 0, orientation: 'portrait' })
         }
 
         video.src = URL.createObjectURL(file)
@@ -1348,21 +1363,39 @@ const handleTranscode = async () => {
             format: new Mp4OutputFormat()
         })
 
-        const quality = fileSize > 50000000 ? QUALITY_HIGH : 1500000
+        let targetWidth, targetHeight, bitrate
+
+        if (videoMetadata.value.orientation === 'portrait') {
+            targetWidth = 1080
+            targetHeight = 1920
+            bitrate = fileSize > 50000000 ? QUALITY_HIGH : 1500000
+        } else if (videoMetadata.value.orientation === 'landscape') {
+            targetWidth = 1920
+            targetHeight = 1080
+            bitrate = fileSize > 50000000 ? QUALITY_HIGH : 2000000
+        } else {
+            targetWidth = 1080
+            targetHeight = 1080
+            bitrate = fileSize > 50000000 ? QUALITY_HIGH : 1750000
+        }
+
+        console.log(
+            `Transcoding ${videoMetadata.value.orientation} video to ${targetWidth}x${targetHeight}`
+        )
 
         currentConversion = await Conversion.init({
             input,
             output,
             video: {
-                width: 1080,
-                height: 1920,
+                width: targetWidth,
+                height: targetHeight,
                 fit: 'contain',
-                bitrate: quality,
+                bitrate: bitrate,
                 frameRate: 30
             },
             trim: {
                 start: 0,
-                end: 60
+                end: 180
             }
         })
 

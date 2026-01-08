@@ -138,18 +138,118 @@ const { locale, availableLocales, t } = useI18n()
 const selectedLocale = ref(locale.value)
 
 const languageInfo = {
-    en: { name: 'English', nativeName: 'English' },
-    es: { name: 'Spanish', nativeName: 'Español' },
-    fr: { name: 'French', nativeName: 'Français' },
-    de: { name: 'German', nativeName: 'Deutsch' },
-    it: { name: 'Italian', nativeName: 'Italiano' },
-    pt: { name: 'Portuguese', nativeName: 'Português' },
-    ja: { name: 'Japanese', nativeName: '日本語' },
-    ko: { name: 'Korean', nativeName: '한국어' },
-    zh: { name: 'Chinese', nativeName: '中文' },
-    ar: { name: 'Arabic', nativeName: 'العربية' },
-    ru: { name: 'Russian', nativeName: 'Русский' },
-    hi: { name: 'Hindi', nativeName: 'हिन्दी' }
+    af: {
+        name: 'Afrikaans',
+        nativeName: 'Afrikaans'
+    },
+    ar: {
+        name: 'Arabic',
+        nativeName: 'العربية'
+    },
+    ca: {
+        name: 'Catalan',
+        nativeName: 'Català'
+    },
+    cs: {
+        name: 'Czech',
+        nativeName: 'Čeština'
+    },
+    da: {
+        name: 'Danish',
+        nativeName: 'Dansk'
+    },
+    de: {
+        name: 'German',
+        nativeName: 'Deutsch'
+    },
+    el: {
+        name: 'Greek',
+        nativeName: 'Ελληνικά'
+    },
+    en: {
+        name: 'English',
+        nativeName: 'English'
+    },
+    es: {
+        name: 'Spanish',
+        nativeName: 'Español'
+    },
+    fi: {
+        name: 'Finnish',
+        nativeName: 'Suomi'
+    },
+    fr: {
+        name: 'French',
+        nativeName: 'Français'
+    },
+    he: {
+        name: 'Hebrew',
+        nativeName: 'עברית'
+    },
+    hu: {
+        name: 'Hungarian',
+        nativeName: 'Magyar'
+    },
+    it: {
+        name: 'Italian',
+        nativeName: 'Italiano'
+    },
+    ja: {
+        name: 'Japanese',
+        nativeName: '日本語'
+    },
+    ko: {
+        name: 'Korean',
+        nativeName: '한국어'
+    },
+    nl: {
+        name: 'Dutch',
+        nativeName: 'Nederlands'
+    },
+    no: {
+        name: 'Norwegian',
+        nativeName: 'Norsk'
+    },
+    pl: {
+        name: 'Polish',
+        nativeName: 'Polski'
+    },
+    pt: {
+        name: 'Portuguese',
+        nativeName: 'Português'
+    },
+    ro: {
+        name: 'Romanian',
+        nativeName: 'Română'
+    },
+    ru: {
+        name: 'Russian',
+        nativeName: 'Русский'
+    },
+    sr: {
+        name: 'Serbian',
+        nativeName: 'Српски'
+    },
+    sv: {
+        name: 'Swedish',
+        nativeName: 'Svenska'
+    },
+    tr: {
+        name: 'Turkish',
+        nativeName: 'Türkçe'
+    },
+    uk: {
+        name: 'Ukrainian',
+        nativeName: 'Українська'
+    },
+    vi: {
+        name: 'Vietnamese',
+        nativeName: 'Tiếng Việt'
+    },
+    zh: {
+        name: 'Chinese',
+        nativeName: '中文'
+    }
 }
 
 const availableLanguages = computed(() => {

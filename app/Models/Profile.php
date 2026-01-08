@@ -165,6 +165,7 @@ class Profile extends Model
         'discoverable',
         'status',
         'has_playlists',
+        'links',
     ];
 
     protected $guarded = [];
@@ -287,6 +288,29 @@ class Profile extends Model
     public function playlists(): HasMany
     {
         return $this->hasMany(Playlist::class);
+    }
+
+    /** @return HasMany<ProfileLink, $this> */
+    public function profileLinks()
+    {
+        return $this->hasMany(ProfileLink::class)->orderBy('position');
+    }
+
+    public function syncLinksJson(): void
+    {
+        $linksData = $this->profileLinks()
+            ->orderBy('position')
+            ->get()
+            ->map(function ($link) {
+                return [
+                    'link' => $link->getUrl(),
+                    'url' => $link->getVisibleLink(),
+                    'is_verified' => $link->is_verified,
+                ];
+            })
+            ->toArray();
+
+        $this->update(['links' => $linksData]);
     }
 
     /**

@@ -17,6 +17,7 @@
             :has-actions="false"
             :sort-options="sortOptions"
             :show-local-filter="true"
+            :initial-local-filter="true"
             @local-change="handleLocalChange"
             @sort="handleSort"
             @search="handleSearch"
@@ -274,7 +275,7 @@ const pagination = ref({
 
 const searchQuery = ref('')
 const sortBy = ref('')
-const localOnly = ref(false)
+const localOnly = ref(true)
 const DEBOUNCE_DELAY = 300
 let searchTimeout = null
 

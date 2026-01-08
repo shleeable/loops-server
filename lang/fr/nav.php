@@ -2,15 +2,19 @@
 
 return [
     'about' => 'À propos',
+    'activity' => 'Activité',
     'admin' => 'Admin',
+    'appearance' => 'Apparence',
     'clearAll' => 'Tout effacer',
     'community' => 'Communauté',
     'contact' => 'Contact',
     'developers' => 'Développeurs',
     'federation' => 'Fédération',
+    'forYou' => 'For You',
     'help' => 'Aide',
     'home' => 'Accueil',
     'join' => 'Inscription',
+    'local' => 'Local',
     'logIn' => 'Connexion',
     'logOut' => 'Déconnexion',
     'loginOrRegister' => 'Connexion ou inscription',
@@ -24,6 +28,7 @@ return [
     'search' => 'Rechercher',
     'settings' => 'Paramètres',
     'terms' => 'Conditions',
+    'toggleTheme' => 'Changer de Thème',
     'upload' => 'Ajouter',
     'uploadLoop' => 'Ajouter une Loop',
 ];

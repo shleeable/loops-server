@@ -225,10 +225,10 @@ class CreateAdminUser extends Command
         if (strlen($username) < 3) {
             return 'Username must be at least 3 characters.';
         }
-        if (strlen($username) > 30) {
-            return 'Username must not exceed 30 characters.';
+        if (strlen($username) > 24) {
+            return 'Username must not exceed 24 characters.';
         }
-        if (! preg_match('/^[a-zA-Z0-9_-]+$/', $username)) {
+        if (! preg_match('/^[a-zA-Z0-9_.-]+$/', $username)) {
             return 'Username can only contain letters, numbers, underscores, and hyphens.';
         }
         if (User::where('username', $username)->exists()) {

@@ -2,15 +2,19 @@
 
 return [
     'about' => '关于',
+    'activity' => 'Activity',
     'admin' => '管理',
+    'appearance' => 'Appearance',
     'clearAll' => '全部清除',
     'community' => '社区',
     'contact' => '联系',
     'developers' => '开发者',
     'federation' => '联合',
+    'forYou' => 'For You',
     'help' => '帮助',
     'home' => '首页',
     'join' => '加入',
+    'local' => 'Local',
     'logIn' => '登录',
     'logOut' => '退出登录',
     'loginOrRegister' => '登录或注册',
@@ -24,6 +28,7 @@ return [
     'search' => '搜索',
     'settings' => '设置',
     'terms' => '条款',
+    'toggleTheme' => 'Toggle Theme',
     'upload' => '上传',
     'uploadLoop' => '上传这一刻',
 ];

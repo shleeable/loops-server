@@ -116,6 +116,38 @@ export const useVideoStore = defineStore('video', {
             }
         },
 
+        async bookmarkVideo(videoId) {
+            const axiosInstance = axios.getAxiosInstance()
+
+            try {
+                const uri = `/api/v1/video/bookmark/${videoId}`
+                return await axiosInstance.post(uri).then((res) => {
+                    this.currentVideo.has_bookmarked = res.data.has_bookmarked
+                    this.currentVideo.bookmarks = res.data.bookmarks
+                    return res
+                })
+            } catch (error) {
+                console.error('Error bookmarking post:', error)
+                throw error
+            }
+        },
+
+        async unbookmarkVideo(videoId) {
+            const axiosInstance = axios.getAxiosInstance()
+
+            try {
+                const uri = `/api/v1/video/unbookmark/${videoId}`
+                return await axiosInstance.post(uri).then((res) => {
+                    this.currentVideo.has_bookmarked = res.data.has_bookmarked
+                    this.currentVideo.bookmarks = res.data.bookmarks
+                    return res
+                })
+            } catch (error) {
+                console.error('Error bookmarking post:', error)
+                throw error
+            }
+        },
+
         async autocompleteHashtag(tag) {
             const axiosInstance = axios.getAxiosInstance()
             try {

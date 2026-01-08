@@ -279,6 +279,120 @@
                     </div>
                 </div>
 
+                <div v-if="activeTab === 'feeds'" class="space-y-8">
+                    <div>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex flex-col">
+                                    <label
+                                        class="text-sm font-medium text-gray-900 dark:text-white"
+                                    >
+                                        For You Feed
+                                    </label>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        Enables the For You Feed which uses a custom algorithm to
+                                        show relevant content to each user.
+                                    </p>
+                                </div>
+
+                                <button
+                                    @click="settings.fyf.enabled = !settings.fyf.enabled"
+                                    :disabled="!systemConfig.redis_bf_support"
+                                    :class="[
+                                        'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                                        settings.fyf.enabled && systemConfig.redis_bf_support
+                                            ? 'bg-blue-600'
+                                            : 'bg-gray-200 dark:bg-gray-600 cursor-not-allowed opacity-60'
+                                    ]"
+                                >
+                                    <span
+                                        :class="[
+                                            'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                                            settings.fyf.enabled && systemConfig.redis_bf_support
+                                                ? 'translate-x-5'
+                                                : 'translate-x-0'
+                                        ]"
+                                    ></span>
+                                </button>
+                            </div>
+
+                            <div
+                                v-if="!systemConfig.redis_bf_support"
+                                class="rounded-md lg:max-w-[55%] bg-amber-50 dark:bg-amber-900/30 p-4 mt-3 border border-amber-200 dark:border-amber-800"
+                            >
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg
+                                            class="h-5 w-5 text-amber-400"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                            aria-hidden="true"
+                                        >
+                                            <path
+                                                fill-rule="evenodd"
+                                                d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                                                clip-rule="evenodd"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h3
+                                            class="text-sm font-medium text-amber-800 dark:text-amber-200"
+                                        >
+                                            Bloom Filter Support Missing
+                                        </h3>
+                                        <div
+                                            class="mt-2 text-sm text-amber-700 dark:text-amber-300"
+                                        >
+                                            <p>
+                                                The For You Feed feature requires the Redis Bloom
+                                                module to work efficiently. To enable it, ensure
+                                                your Redis instance is running
+                                                <code
+                                                    class="bg-amber-100 dark:bg-amber-900/50 px-1 py-0.5 rounded text-amber-900 dark:text-amber-100 font-mono text-xs"
+                                                    >redis-stack</code
+                                                >
+                                                or has the
+                                                <code
+                                                    class="bg-amber-100 dark:bg-amber-900/50 px-1 py-0.5 rounded text-amber-900 dark:text-amber-100 font-mono text-xs"
+                                                    >bf</code
+                                                >
+                                                module loaded.
+                                            </p>
+                                        </div>
+                                        <div class="mt-6">
+                                            <div class="-mx-2 -mb-1.5 flex items-center gap-4">
+                                                <AnimatedButton
+                                                    @click="recheckSupport"
+                                                    :disabled="isRecheckingRedisBfSupport"
+                                                    :loading="isRecheckingRedisBfSupport"
+                                                    size="sm"
+                                                    class="w-full"
+                                                >
+                                                    <span class="font-bold">
+                                                        {{
+                                                            isRecheckingRedisBfSupport
+                                                                ? 'Checking Redis...'
+                                                                : 'Recheck'
+                                                        }}
+                                                    </span>
+                                                </AnimatedButton>
+                                                <AnimatedButton
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    class="min-w-[30%]"
+                                                >
+                                                    Learn more
+                                                </AnimatedButton>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div v-if="activeTab === 'branding'" class="space-y-8">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
@@ -1442,14 +1556,9 @@
                     v-if="['pages', 'branding'].indexOf(activeTab) == -1"
                     class="flex justify-end pt-6 mt-6 border-t border-gray-200 dark:border-gray-700"
                 >
-                    <button
-                        type="button"
-                        @click="saveSettings"
-                        :disabled="saving"
-                        class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
+                    <AnimatedButton @click="saveSettings" :disabled="saving">
                         {{ saving ? 'Saving...' : 'Save Settings' }}
-                    </button>
+                    </AnimatedButton>
                 </div>
             </div>
         </div>
@@ -1471,9 +1580,11 @@ import {
     DocumentIcon,
     PlusIcon,
     MagnifyingGlassIcon,
-    TrashIcon
+    TrashIcon,
+    QueueListIcon
 } from '@heroicons/vue/24/outline'
 import { settingsApi, pagesApi } from '@/services/adminApi'
+import AnimatedButton from '@/components/AnimatedButton.vue'
 
 const { truncateMiddle, formatNumber, formatDate } = useUtils()
 const { alertModal, confirmModal } = useAlertModal()
@@ -1483,6 +1594,7 @@ const isDark = ref(document.documentElement.classList.contains('dark'))
 
 const tabs = [
     { id: 'general', name: 'General', icon: CogIcon },
+    { id: 'feeds', name: 'Feeds', icon: QueueListIcon },
     { id: 'branding', name: 'Branding', icon: PaintBrushIcon },
     // { id: 'media', name: 'Media', icon: PhotoIcon },
     { id: 'pages', name: 'Pages', icon: DocumentIcon },
@@ -1492,6 +1604,7 @@ const tabs = [
 const activeTab = ref('general')
 const saving = ref(false)
 
+const systemConfig = ref()
 const pages = ref([])
 const selectedPage = ref(null)
 const loadingPages = ref(false)
@@ -1509,6 +1622,7 @@ const cssDeleting = ref(null)
 const isBulkView = ref(true)
 const allowedInstancesBulk = ref('')
 const blockedInstancesBulk = ref('')
+const isRecheckingRedisBfSupport = ref(false)
 
 const editorTheme = ref(isDark.value ? 'dark' : 'light')
 const editorToolbars = [
@@ -1568,13 +1682,16 @@ const settings = reactive({
     media: {
         maxVideoSize: 100,
         maxImageSize: 10,
-        maxVideoDuration: 300,
+        maxVideoDuration: 180,
         allowedVideoFormats: ['mp4', 'webm', 'mov'],
         storageDriver: 'local',
         bucketName: '',
         cdnUrl: '',
         autoThumbnails: true,
         videoTranscoding: false
+    },
+    fyf: {
+        enabled: true
     },
     federation: {
         enableFederation: false,
@@ -1591,26 +1708,22 @@ const settings = reactive({
 const isInitializing = ref(true)
 
 const updateUrlFromState = () => {
-    // Don't update URL during initialization to prevent conflicts
     if (isInitializing.value) return
 
     const query = { ...route.query }
 
-    // Update tab in URL
     if (activeTab.value !== 'general') {
         query.tab = activeTab.value
     } else {
         delete query.tab
     }
 
-    // Update page in URL (only for pages tab)
     if (activeTab.value === 'pages' && selectedPage.value?.id) {
         query.page = selectedPage.value.id
     } else {
         delete query.page
     }
 
-    // Only update if query actually changed
     const currentQuery = JSON.stringify(route.query)
     const newQuery = JSON.stringify(query)
 
@@ -1626,7 +1739,6 @@ const setActiveTab = (tabId) => {
     if (tabs.find((tab) => tab.id === tabId)) {
         activeTab.value = tabId
 
-        // Clear selected page if switching away from pages tab
         if (tabId !== 'pages') {
             selectedPage.value = null
         }
@@ -1640,9 +1752,7 @@ const initializeFromUrl = async () => {
         activeTab.value = urlTab
     }
 
-    // If we're on the pages tab and there's a page query param, select that page
     if (activeTab.value === 'pages' && route.query.page) {
-        // Ensure pages are loaded first
         if (pages.value.length === 0) {
             await loadPages()
         }
@@ -1651,7 +1761,6 @@ const initializeFromUrl = async () => {
         const page = pages.value.find((p) => p.id === pageId)
 
         if (page) {
-            // Temporarily set isInitializing to false to allow selectPage to work properly
             const wasInitializing = isInitializing.value
             isInitializing.value = false
             await selectPage(page)
@@ -1660,22 +1769,18 @@ const initializeFromUrl = async () => {
     }
 }
 
-// Watch for external URL changes (browser back/forward)
 watch(
     () => route.query,
     async (newQuery) => {
-        // Don't react to URL changes during initialization
         if (isInitializing.value) return
 
         const urlTab = newQuery.tab || 'general'
         const urlPageId = newQuery.page ? parseInt(newQuery.page) : null
 
-        // Update active tab if it changed
         if (urlTab !== activeTab.value) {
             activeTab.value = urlTab
         }
 
-        // Handle page selection for pages tab
         if (activeTab.value === 'pages') {
             if (urlPageId && (!selectedPage.value || selectedPage.value.id !== urlPageId)) {
                 const page = pages.value.find((p) => p.id === urlPageId)
@@ -1689,7 +1794,6 @@ watch(
     }
 )
 
-// Watch for state changes to update URL
 watch(activeTab, () => {
     if (!isInitializing.value) {
         updateUrlFromState()
@@ -1705,7 +1809,6 @@ watch(
     }
 )
 
-// Methods
 const getLogoSource = () => {
     if (pendingLogo.value) {
         return URL.createObjectURL(pendingLogo.value)
@@ -1734,7 +1837,6 @@ const handleLogoChange = (event) => {
 const handleFaviconChange = (event) => {
     const file = event.target.files[0]
     if (file) {
-        // Validate file size (2MB)
         if (file.size > 2 * 1024 * 1024) {
             alert('File size must be less than 2MB')
             return
@@ -2102,6 +2204,23 @@ const updateInstancesFromBulk = (type) => {
     }
 }
 
+const recheckSupport = async () => {
+    isRecheckingRedisBfSupport.value = true
+    try {
+        const response = await settingsApi.recheckRedisBfSupport()
+
+        if (response) {
+            systemConfig.value.redis_bf_support = response.redis_bf_support
+        } else {
+            throw new Error('Failed to recheck support')
+        }
+    } catch (error) {
+        console.error('Failed to recheck Redis support', error)
+    } finally {
+        isRecheckingRedisBfSupport.value = false
+    }
+}
+
 const clearInstances = (type) => {
     if (confirm(`Are you sure you want to clear all ${type} instances?`)) {
         if (type === 'allowed') {
@@ -2152,6 +2271,7 @@ const loadSettings = async () => {
 
         const result = response.data
         const loadedSettings = result
+        systemConfig.value = response.system
 
         Object.keys(loadedSettings).forEach((key) => {
             const [section, setting] = key.split('.')

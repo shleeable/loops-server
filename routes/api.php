@@ -9,10 +9,12 @@ use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\DuetController;
 use App\Http\Controllers\Api\ExploreController;
 use App\Http\Controllers\Api\FeedController;
+use App\Http\Controllers\Api\ForYouFeedController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StudioController;
+use App\Http\Controllers\Api\UserPreferencesController;
 use App\Http\Controllers\Api\VideoController;
 use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\AuthController;
@@ -25,6 +27,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PlaylistController;
 use App\Http\Controllers\SharedInboxController;
 use App\Http\Controllers\UserRegisterVerifyController;
+use App\Http\Controllers\VideoBookmarkController;
 use App\Http\Controllers\WebfingerController;
 use App\Http\Middleware\AdminOnlyAccess;
 use App\Http\Middleware\AuthorizedFetch;
@@ -66,13 +69,16 @@ Route::post('/auth/start', [WebPublicController::class, 'authStartFallback']);
 
 Route::prefix('api')->group(function () {
     Route::post('/v1/apps', [AuthController::class, 'registerApp']);
+    Route::get('/v1/config', [WebPublicController::class, 'appConfiguration']);
 
     Route::get('/v1/web/report-rules', [WebPublicController::class, 'reportTypes']);
 
     Route::get('/v1/platform/contact', [WebPublicController::class, 'getContactInfo']);
     Route::get('/v1/page/content', [WebPublicController::class, 'getPageContent']);
 
-    Route::get('/v1/accounts/suggested', [AccountController::class, 'getSuggestedAccounts']);
+    Route::get('/v1/accounts/suggested', [AccountController::class, 'getSuggestedAccounts'])->middleware('auth:web,api');
+    Route::post('/v1/accounts/suggested/hide', [AccountController::class, 'hideSuggestion'])->middleware('auth:web,api');
+    Route::post('/v1/accounts/suggested/unhide', [AccountController::class, 'unhideSuggestion'])->middleware('auth:web,api');
 
     // Auth
     Route::post('/v1/auth/2fa/verify', [AuthController::class, 'verifyTwoFactor']);
@@ -120,8 +126,14 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/account/follow/{id}', [AccountController::class, 'follow'])->middleware('auth:web,api');
     Route::post('/v1/account/unfollow/{id}', [AccountController::class, 'unfollow'])->middleware('auth:web,api');
     Route::post('/v1/account/undo-follow-request/{id}', [AccountController::class, 'undoFollowRequest'])->middleware('auth:web,api');
+    Route::get('/v1/account/videos/likes', [AccountController::class, 'accountVideoLikes'])->middleware('auth:web,api');
+
+    // Bookmarks
+    Route::get('/v1/account/favourites', [VideoBookmarkController::class, 'bookmarks'])->middleware('auth:web,api');
 
     // Notifications
+    Route::get('/v1/notifications/system/{id}', [WebPublicController::class, 'getPublicSystemNotification'])->middleware('throttle:api');
+    Route::get('/v1/account/notifications/system/{id}', [AccountController::class, 'getSystemNotification'])->middleware('auth:web,api');
     Route::get('/v1/account/notifications', [AccountController::class, 'notifications'])->middleware('auth:web,api');
     Route::get('/v1/account/notifications/count', [AccountController::class, 'notificationUnreadCount'])->middleware('auth:web,api');
     Route::post('/v1/account/notifications/mark-all-read', [AccountController::class, 'markAllNotificationsAsRead'])->middleware('auth:web,api');
@@ -150,6 +162,9 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/account/settings/email/resend', [EmailChangeController::class, 'resendEmailChange'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/account/disable', [SettingsController::class, 'confirmDisableAccount'])->middleware(['auth:web']);
     Route::post('/v1/account/settings/account/delete', [SettingsController::class, 'confirmDeleteAccount'])->middleware(['auth:web']);
+    Route::get('/v1/account/settings/links', [AccountController::class, 'getProfileLinks'])->middleware(['auth:web,api']);
+    Route::post('/v1/account/settings/links/add', [AccountController::class, 'profileLinkStore'])->middleware(['auth:web,api']);
+    Route::post('/v1/account/settings/links/delete/{id}', [AccountController::class, 'removeProfileLink'])->middleware(['auth:web,api']);
 
     // Account Data
     Route::get('/v1/account/data/insights', [AccountDataController::class, 'getDataInsights'])->middleware(['auth:web,api']);
@@ -175,6 +190,11 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/feed/for-you', [FeedController::class, 'getForYouFeed'])->middleware('auth:web,api');
     Route::get('/v1/feed/following', [FeedController::class, 'getFollowingFeed'])->middleware('auth:web,api');
 
+    Route::get('/v0/feed/recommended', [ForYouFeedController::class, 'index'])->middleware('auth:web,api');
+    Route::post('/v0/feed/recommended/impression', [ForYouFeedController::class, 'recordImpression'])->middleware('auth:web,api');
+    Route::post('/v0/feed/recommended/feedback', [ForYouFeedController::class, 'recordFeedback'])->middleware('auth:web,api');
+    Route::delete('/v0/feed/recommended/feedback/{videoId}', [ForYouFeedController::class, 'removeFeedback'])->middleware('auth:web,api');
+
     // Video Comments
     Route::post('/v1/comments/like/{vid}/{id}', [VideoController::class, 'storeCommentLike'])->middleware('auth:web,api');
     Route::post('/v1/comments/like/{vid}/{pid}/{id}', [VideoController::class, 'storeCommentReplyLike'])->middleware('auth:web,api');
@@ -197,6 +217,8 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/video/delete/{id}', [VideoController::class, 'destroy'])->middleware('auth:web,api');
     Route::post('/v1/video/like/{id}', [VideoController::class, 'like'])->middleware('auth:web,api');
     Route::post('/v1/video/unlike/{id}', [VideoController::class, 'unlike'])->middleware('auth:web,api');
+    Route::post('/v1/video/bookmark/{id}', [VideoController::class, 'bookmark'])->middleware('auth:web,api');
+    Route::post('/v1/video/unbookmark/{id}', [VideoController::class, 'unbookmark'])->middleware('auth:web,api');
     Route::get('/v1/video/history/{id}', [VideoController::class, 'showVideoHistory'])->middleware('throttle:api');
     Route::get('/v1/video/likes/{id}', [VideoController::class, 'showVideoLikes'])->middleware('auth:web,api');
     Route::get('/v1/video/shares/{id}', [VideoController::class, 'showVideoShares'])->middleware('auth:web,api');
@@ -212,6 +234,10 @@ Route::prefix('api')->group(function () {
     // Reports
     Route::post('/v1/report', [ReportController::class, 'store'])->middleware(['auth:web,api', 'throttle:api']);
 
+    // App Preferences
+    Route::get('/v1/app/preferences', [UserPreferencesController::class, 'show'])->middleware(['auth:web,api']);
+    Route::post('/v1/app/preferences', [UserPreferencesController::class, 'update'])->middleware(['auth:web,api']);
+
     // Admin
     Route::prefix('/v1/admin')->middleware(['auth:web,api', AdminOnlyAccess::class])->group(function () {
 
@@ -224,7 +250,7 @@ Route::prefix('api')->group(function () {
         });
 
         Route::get('/dashboard/stats', [AdminDashboardController::class, 'index']);
-
+        Route::get('/version-check', [AdminController::class, 'versionCheck'])->middleware('auth:web,api');
         Route::get('/reports-count', [AdminController::class, 'reportCount'])->middleware('auth:web,api');
         Route::get('/videos', [AdminController::class, 'videos'])->middleware('auth:web,api');
         Route::get('/comments', [AdminController::class, 'comments'])->middleware('auth:web,api');
@@ -257,6 +283,7 @@ Route::prefix('api')->group(function () {
         Route::put('/settings', [AdminSettingsController::class, 'update'])->middleware('auth:web,api');
         Route::post('/settings/update-logo', [AdminSettingsController::class, 'updateLogo'])->middleware('auth:web,api');
         Route::post('/settings/delete-logo', [AdminSettingsController::class, 'deleteLogo'])->middleware('auth:web,api');
+        Route::post('/settings/recheck-redis-bf-support', [AdminSettingsController::class, 'recheckRedisBloomFilterSupport'])->middleware('auth:web,api');
         Route::get('/instances', [AdminController::class, 'instances'])->middleware('auth:web,api');
         Route::get('/instances/stats', [AdminController::class, 'instanceStats'])->middleware('auth:web,api');
         Route::post('/instances/create', [AdminController::class, 'instanceCreate'])->middleware('auth:web,api');

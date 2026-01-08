@@ -39,6 +39,7 @@ use App\Models\CommentReplyLike;
 use App\Models\Hashtag;
 use App\Models\Profile;
 use App\Models\Video;
+use App\Models\VideoBookmark;
 use App\Models\VideoCaptionEdit;
 use App\Models\VideoLike;
 use App\Models\VideoRepost;
@@ -925,6 +926,44 @@ class VideoController extends Controller
         }
 
         return VideoRepostResource::collection($res);
+    }
+
+    public function bookmark(Request $request, $id)
+    {
+        $user = $request->user();
+        $pid = $user->profile_id;
+        $video = Video::published()->findOrFail($id);
+
+        $bookmark = VideoBookmark::firstOrCreate(
+            ['profile_id' => $pid, 'video_id' => $video->id]
+        );
+
+        if ($bookmark->wasRecentlyCreated) {
+            $video->increment('bookmarks');
+        }
+        // @phpstan-ignore-next-line
+        $video->is_bookmarked = true;
+        $resp = (new VideoResource($video))->toArray($request);
+
+        return $resp;
+    }
+
+    public function unbookmark(Request $request, $id)
+    {
+        $user = $request->user();
+        $pid = $user->profile_id;
+        $video = Video::published()->findOrFail($id);
+
+        $deleted = VideoBookmark::where(['profile_id' => $pid, 'video_id' => $id])->delete();
+
+        if ($deleted && $video->bookmarks) {
+            $video->decrement('bookmarks');
+        }
+        // @phpstan-ignore-next-line
+        $video->is_bookmarked = false;
+        $resp = (new VideoResource($video))->toArray($request);
+
+        return $resp;
     }
 
     private function escapeLike(string $value): string

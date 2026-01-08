@@ -16,14 +16,14 @@ This setup uses `serversideup/php:8.4-fpm-nginx` as the base image and is design
     git clone https://github.com/joinloops/loops-server
     cd loops-server
     sudo chown -R www-data:www-data storage/ bootstrap/cache/
+    sudo find storage/ -type d -exec chmod 755 {} \; # set all directories to rwx by user/group
+    sudo find storage/ -type f -exec chmod 644 {} \; # set all files to rw by user/group
     ```
 
-1. **Copy the environment file:**
+2. **Copy the environment file, and Generate secure `.env` secrets:**
    ```bash
    cp .env.docker.example .env
    ```
-
-2a. **Generate secure `.env` secrets and passwords:**
 
    ```bash
    sed -i "s|^APP_KEY=.*|APP_KEY=$(php -r 'echo \"base64:\".base64_encode(random_bytes(32));')|" .env
@@ -31,43 +31,36 @@ This setup uses `serversideup/php:8.4-fpm-nginx` as the base image and is design
    sed -i "s|^DB_ROOT_PASSWORD=.*|DB_ROOT_PASSWORD=\"$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)\"|" .env
    ```
 
-2b. **Update `.env` with your configuration:**
+3. **Update `.env` with your configuration:**
    - Update `APP_URL`, `APP_DOMAIN`, `ADMIN_DOMAIN`, `SESSION_DOMAIN` with your domain
    - Configure mail settings
    - Configure S3 (object storage)
    - Configure CAPTCHA
 
-3. **Build container**
+4. **Build container**
    ```bash
    docker compose build
    ```
+   See "Container Build Troubleshooting" below if you have permission errors.
 
-    #### Container Build Troubleshooting ####
-   
-    `open /home/username/loops/storage/app/public/m/_v2/xxxxxxxxxxxxxxxxxx/xxxxxxxxxxx-xxxxxxxxxx/xxxxxxxxxxxx: permission denied` or similar might require fixing local permissions.
-    ```bash
-    sudo find storage/ -type d -exec chmod 755 {} \; # set all directories to rwx by user/group
-    sudo find storage/ -type f -exec chmod 644 {} \; # set all files to rw by user/group
-    ```
-
-4. **Build and start the containers:**
+5. **Build and start the containers:**
    ```bash
    docker compose up -d mysqldb redis  # Bootstrap the database and Redis.
    # Wait 30 seconds for them to complete first boot.
    docker compose up -d
    ```
    
-5. **Generate application "admin defaults":**
+6. **Generate application "admin defaults":**
    ```bash
    docker compose exec loops php artisan db:seed --class=AdminSettingsSeeder
    ```
 
-6. **Generate application keys:**
+7. **Generate application keys:**
    ```bash
    docker compose exec loops php artisan passport:keys
    ```
 
-7. **Create admin user:**
+8. **Create admin user:**
    ```bash
    docker compose exec loops php artisan create-admin-account
    ```
@@ -115,6 +108,23 @@ server {
         proxy_read_timeout 300s;
     }
 }
+```
+
+## Upgrade
+
+```bash
+git pull
+docker compose build --pull
+docker compose up -d
+```
+See "Container Build Troubleshooting" below if you have permission errors.
+
+## Container Build Troubleshooting ##
+
+`open /home/username/loops/storage/app/public/m/_v2/xxxxxxxxxxxxxxxxxx/xxxxxxxxxxx-xxxxxxxxxx/xxxxxxxxxxxx: permission denied` or similar might require fixing local permissions.
+```bash
+sudo find storage/ -type d -exec chmod 755 {} \; # set all directories to rwx by user/group
+sudo find storage/ -type f -exec chmod 644 {} \; # set all files to rw by user/group
 ```
 
 ## Useful Commands

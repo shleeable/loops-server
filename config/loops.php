@@ -74,4 +74,9 @@ return [
     'admin_dashboard' => [
         'autoUpdate' => (bool) env('LOOPS_ADMIN_DASHBOARD_AUTOUPDATE', true),
     ],
+
+    'admin_mails' => [
+        'to' => env('LOOPS_ADMIN_MAILS_TO'),
+        'reports' => (bool) env('LOOPS_ADMIN_MAILS_REPORTS', false),
+    ],
 ];

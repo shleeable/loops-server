@@ -54,7 +54,7 @@
                                 v-if="initialLoading"
                                 class="flex items-center justify-center py-12"
                             >
-                                <Spinner class="h-8 w-8 text-[#F02C56]" />
+                                <Spinner />
                             </div>
 
                             <div

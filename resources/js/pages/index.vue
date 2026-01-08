@@ -1,7 +1,7 @@
 <template>
     <FeedLayout>
         <SnapScrollFeed
-            key="following-feed"
+            key="local-feed"
             :feed-data="feedData"
             :item-component="VideoPlayer"
             :get-item-props="getVideoProps"
@@ -29,7 +29,6 @@ const authStore = inject('authStore')
 
 const activeFeed = shallowRef(null)
 
-// Get the global interaction state (shared with SnapScrollFeed)
 const { hasInteracted, handleFirstInteraction, globalMuted } = useFeedInteraction()
 
 watch(
@@ -56,8 +55,9 @@ const getVideoProps = (post, index) => ({
     mentions: post.mentions,
     likes: post.likes,
     hasLiked: post.has_liked,
-    bookmarks: 0,
-    shares: 0,
+    hasBookmarked: post.has_bookmarked,
+    bookmarks: post.bookmarks,
+    shares: post.shares,
     comments: [],
     canComment: post.permissions?.can_comment,
     'comment-count': post.comments,

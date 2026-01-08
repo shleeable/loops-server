@@ -38,6 +38,11 @@ const menuItems = ref([
         highlight: true
     },
     {
+        name: t('nav.appearance'),
+        icon: 'bx bx-moon',
+        path: '/dashboard/appearance'
+    },
+    {
         name: t('settings.safety'),
         icon: 'bx bx-lock',
         path: '/dashboard/safety'

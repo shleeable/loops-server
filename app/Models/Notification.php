@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $video_id
  * @property int|null $comment_id
  * @property int|null $comment_reply_id
+ * @property int|null $system_message_id
  * @property array<array-key, mixed>|null $meta
  * @property \Illuminate\Support\Carbon|null $read_at
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -42,7 +43,10 @@ class Notification extends Model
 
     /**
      * Types Bitmask
-     * 0-10 = TBA
+     * 0-7 = TBA
+     * 8 = System message info
+     * 9 = System message feature
+     * 10 = System message update
      * 11 = New Follower
      * 12 = Reserved
      * 13 = Someone you know joined Loops
@@ -65,6 +69,12 @@ class Notification extends Model
      * 30 = Reserved
      * 31 - Duet your video
      **/
+    public const SYSTEM_MESSAGE_INFO = 8;
+
+    public const SYSTEM_MESSAGE_FEATURE = 9;
+
+    public const SYSTEM_MESSAGE_UPDATE = 10;
+
     public const NEW_FOLLOWER = 11;
 
     public const NEW_VIDCOMMENT = 15;
@@ -87,7 +97,12 @@ class Notification extends Model
 
     public const DUET_YOUR_VIDEO = 31;
 
-    protected $fillable = ['user_id', 'type', 'video_id', 'read_at', 'profile_id', 'comment_id', 'comment_reply_id'];
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = ['user_id', 'type', 'video_id', 'read_at', 'profile_id', 'comment_id', 'comment_reply_id', 'system_message_id', 'created_at', 'updated_at'];
 
     protected function casts(): array
     {
@@ -100,5 +115,25 @@ class Notification extends Model
     public function profile()
     {
         return $this->belongsTo(Profile::class);
+    }
+
+    public static function allTypes()
+    {
+        return [11, 15, 16, 18, 21, 22, 23, 26, 27, 28, 31];
+    }
+
+    public static function activityTypes()
+    {
+        return [15, 16, 18, 21, 22, 23, 26, 27, 28, 31];
+    }
+
+    public static function followerTypes()
+    {
+        return [11];
+    }
+
+    public static function systemTypes()
+    {
+        return [8, 9, 10];
     }
 }

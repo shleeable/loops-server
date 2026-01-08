@@ -11,6 +11,10 @@ export const dashboardApi = {
             : { period }
         const response = await apiClient.get('/api/v1/admin/dashboard/stats', params)
         return response
+    },
+
+    getVersionCheck: async () => {
+        return await apiClient.get('/api/v1/admin/version-check')
     }
 }
 
@@ -229,6 +233,54 @@ export const profilesApi = {
     }
 }
 
+// Admin Invites API
+export const invitesApi = {
+    async getInvites({
+        cursor = null,
+        direction = 'next',
+        search = '',
+        limit = 15,
+        sort = null
+    } = {}) {
+        return await apiClient.get('/api/v1/admin/invites', {
+            cursor: cursor,
+            limit: limit,
+            q: search,
+            sort: sort
+        })
+    },
+
+    async searchProfiles(query) {
+        const params = {
+            limit: 6,
+            local: 1,
+            q: query
+        }
+
+        return await apiClient.get('/api/v1/admin/profiles', params)
+    },
+
+    async getAccount(id) {
+        return await apiClient.get(`/api/v1/account/info/${id}`)
+    },
+
+    async getInvite(id) {
+        return await apiClient.get(`/api/v1/admin/invites/show/${id}`)
+    },
+
+    async deleteInvite(id) {
+        return await apiClient.post(`/api/v1/admin/invites/delete/${id}`)
+    },
+
+    async updateInvite(id, data) {
+        return await apiClient.post(`/api/v1/admin/invites/update/${id}`, data)
+    },
+
+    async createInvite(data) {
+        return await apiClient.post(`/api/v1/admin/invites/create`, data)
+    }
+}
+
 // Videos API
 export const videosApi = {
     async getVideos({
@@ -286,6 +338,10 @@ export const settingsApi = {
 
     async deleteLogo() {
         return await apiClient.post('/api/v1/admin/settings/delete-logo')
+    },
+
+    async recheckRedisBfSupport() {
+        return await apiClient.post('/api/v1/admin/settings/recheck-redis-bf-support')
     }
 }
 

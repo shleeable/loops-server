@@ -10,20 +10,31 @@ use App\Http\Resources\FollowerResource;
 use App\Http\Resources\FollowingResource;
 use App\Http\Resources\NotificationResource;
 use App\Http\Resources\ProfileResource;
+use App\Http\Resources\UserVideoLikeResource;
 use App\Jobs\Federation\DeliverFollowRequest;
 use App\Jobs\Federation\DeliverUndoFollowActivity;
 use App\Jobs\Federation\DeliverUndoFollowRequestActivity;
 use App\Models\Follower;
 use App\Models\FollowRequest;
+use App\Models\HiddenSuggestion;
 use App\Models\Notification;
 use App\Models\Profile;
+use App\Models\ProfileLink;
+use App\Models\SystemMessage;
 use App\Models\UserFilter;
+use App\Models\VideoLike;
 use App\Services\AccountService;
+use App\Services\AccountSuggestionService;
+use App\Services\BlockedDomainService;
 use App\Services\FollowerService;
+use App\Services\LinkLimitService;
 use App\Services\NotificationService;
+use App\Services\SystemMessageService;
 use App\Services\UserFilterService;
+use App\Support\CursorToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class AccountController extends Controller
 {
@@ -72,14 +83,35 @@ class AccountController extends Controller
 
     public function notifications(Request $request)
     {
+        $validated = $request->validate([
+            'type' => 'sometimes|in:all,activity,system,followers',
+        ]);
+
         $pid = $request->user()->profile_id;
+        $hasCursor = $request->filled('cursor');
+        $type = data_get($validated, 'type', 'all');
+        $types = match ($type) {
+            'all' => Notification::allTypes(),
+            'activity' => Notification::activityTypes(),
+            'followers' => Notification::followerTypes(),
+            'system' => Notification::systemTypes(),
+            default => Notification::allTypes()
+        };
 
         $res = Notification::whereUserId($pid)
-            ->whereIn('type', [11, 15, 16, 21, 22, 23, 26, 27, 28, 31])
+            ->whereIn('type', $types)
             ->orderByDesc('created_at')
             ->cursorPaginate(20);
 
-        return NotificationResource::collection($res);
+        if ($hasCursor) {
+            return NotificationResource::collection($res);
+        }
+
+        return NotificationResource::collection($res)->additional([
+            'meta' => [
+                'unread_counts' => NotificationService::getTotalUnreadCount($pid),
+            ],
+        ]);
     }
 
     public function notificationUnreadCount(Request $request)
@@ -104,11 +136,30 @@ class AccountController extends Controller
 
     public function markAllNotificationsAsRead(Request $request)
     {
+        $validated = $request->validate([
+            'type' => 'sometimes|in:all,activity,system,followers',
+        ]);
         $pid = $request->user()->profile_id;
-        Notification::whereUserId($pid)->update(['read_at' => now()]);
+        $type = data_get($validated, 'type', 'all');
+
+        match ($type) {
+            'all' => Notification::whereUserId($pid)->update(['read_at' => now()]),
+            'activity' => Notification::whereUserId($pid)->whereIn('type', Notification::activityTypes())->update(['read_at' => now()]),
+            'followers' => Notification::whereUserId($pid)->whereIn('type', Notification::followerTypes())->update(['read_at' => now()]),
+            'system' => Notification::whereUserId($pid)->whereIn('type', Notification::systemTypes())->update(['read_at' => now()]),
+            default => Notification::whereUserId($pid)->update(['read_at' => now()]),
+        };
         NotificationService::clearUnreadCount($pid);
 
         return $this->success();
+    }
+
+    public function getSystemNotification(Request $request, $id)
+    {
+        $systemMessage = SystemMessage::active()->published()->where('key_id', $id)->first();
+        $cached = app(SystemMessageService::class)->getFull($systemMessage->id);
+
+        return response()->json(['data' => $cached]);
     }
 
     public function accountBlock(Request $request, $id)
@@ -128,6 +179,8 @@ class AccountController extends Controller
         FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->delete();
         FollowRequest::whereProfileId($profile->id)->whereFollowingId($pid)->delete();
         FollowerService::refreshAndSync($pid, $profile->id);
+        AccountSuggestionService::removeForUser($pid, $profile->id);
+        AccountSuggestionService::invalidate($pid);
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_blocking'] = true;
 
@@ -144,7 +197,7 @@ class AccountController extends Controller
         UserFilter::whereProfileId($pid)
             ->whereAccountId($profile->id)
             ->delete();
-
+        AccountSuggestionService::invalidate($pid);
         FollowerService::refreshAndSync($pid, $profile->id);
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_blocking'] = false;
@@ -263,7 +316,7 @@ class AccountController extends Controller
             ]);
         }
 
-        $account = AccountService::get($id);
+        $account = AccountService::get($id, false);
 
         if (! $account) {
             return $this->error('Record not found');
@@ -271,6 +324,7 @@ class AccountController extends Controller
 
         $res = [
             'pending_follow_request' => false,
+            'followed_by' => (bool) FollowerService::follows($id, $pid),
             'following' => (bool) FollowerService::follows($pid, $id),
             'blocking' => (bool) UserFilterService::isBlocking($pid, $id),
         ];
@@ -284,30 +338,55 @@ class AccountController extends Controller
 
     public function getSuggestedAccounts(Request $request)
     {
-        $pid = $request->user()->profile_id;
+        $validated = $request->validate([
+            'limit' => 'sometimes|integer|min:3|max:20',
+        ]);
 
-        $accounts = Profile::active()
-            ->whereLocal(true)
-            ->where('id', '!=', $pid)
-            ->orderByDesc('followers')
-            ->take(10)
-            ->pluck('id');
+        $pid = (int) $request->user()->profile_id;
+        $limit = data_get($validated, 'limit', 20);
+        $accounts = AccountSuggestionService::get($pid, $limit);
 
-        $res = $accounts->map(function ($id) {
-            return AccountService::get($id);
-        })->filter(function ($acct) use ($pid) {
-            if (! $acct) {
-                return false;
-            }
+        return $this->data($accounts);
+    }
 
-            if (FollowerService::follows($pid, $acct['id'])) {
-                return false;
-            }
+    public function hideSuggestion(Request $request)
+    {
+        $request->validate([
+            'profile_id' => 'required|integer|exists:profiles,id',
+        ]);
 
-            return true;
-        })->shuffle()->toArray();
+        $pid = (int) $request->user()->profile_id;
+        $profileId = (int) $request->input('profile_id');
 
-        return $this->data($res);
+        if ($pid === $profileId) {
+            return response()->json(['error' => 'Cannot hide your own account'], 422);
+        }
+
+        if (HiddenSuggestion::where('profile_id', $pid)->count() > 100) {
+            return response()->json(['message' => 'You have reached the limit']);
+        }
+
+        AccountSuggestionService::hide($pid, $profileId);
+
+        return response()->json(['message' => 'Suggestion hidden']);
+    }
+
+    public function unhideSuggestion(Request $request)
+    {
+        $request->validate([
+            'profile_id' => 'required|integer|exists:profiles,id',
+        ]);
+
+        $pid = (int) $request->user()->profile_id;
+        $profileId = (int) $request->input('profile_id');
+
+        if ($pid === $profileId) {
+            return response()->json(['error' => 'Cannot unhide your own account'], 422);
+        }
+
+        AccountSuggestionService::unhide($pid, $profileId);
+
+        return response()->json(['message' => 'Suggestion unhidden']);
     }
 
     public function accountFollowers(SearchFollowersRequest $request, $id)
@@ -596,5 +675,142 @@ class AccountController extends Controller
         }
 
         return AccountCompactResource::collection($suggestions);
+    }
+
+    public function accountVideoLikes(Request $request)
+    {
+        $validated = $request->validate([
+            'cursor' => 'sometimes|string|max:2000',
+            'limit' => 'sometimes|integer|min:1|max:20',
+        ]);
+        $user = $request->user();
+        abort_unless($user->status === 1, 404);
+
+        $preCursor = $validated['cursor'] ?? null;
+        $limit = $validated['limit'] ?? 10;
+
+        $ctx = hash('sha256', implode('|', [
+            $user->id,
+            'self-likes',
+            'limit:'.$limit,
+            'order:id_desc',
+        ]));
+
+        $decodedCursor = null;
+        $hops = 0;
+        $maxPages = $user->is_admin ? 100 : 10;
+        $maxItems = $user->is_admin ? 300 : 120;
+
+        if ($request->filled('cursor')) {
+            ['cursor' => $decodedCursor, 'hops' => $hops] = CursorToken::decode($request->input('cursor'), $ctx);
+
+            if ($hops >= $maxPages) {
+                return $this->defaultCursorTokenResponse($request, $limit);
+            }
+
+            if (($hops * $limit) >= $maxItems) {
+                return $this->defaultCursorTokenResponse($request, $limit);
+            }
+        }
+
+        $pager = VideoLike::whereProfileId($user->profile_id)
+            ->orderByDesc('id')
+            ->cursorPaginate(
+                perPage: $limit,
+                columns: ['*'],
+                cursorName: 'cursor',
+                cursor: $decodedCursor
+            );
+
+        $nextLaravelCursor = $pager->nextCursor()?->encode();
+        $nextCursorToken = CursorToken::encode($nextLaravelCursor, $ctx, $hops + 1);
+
+        $tags = $pager->getCollection();
+
+        return UserVideoLikeResource::collection($tags)->additional([
+            'links' => [
+                'first' => null,
+                'last' => null,
+                'prev' => null,
+                'next' => null,
+            ],
+            'meta' => [
+                'path' => $request->url(),
+                'per_page' => $limit,
+                'next_cursor' => $nextCursorToken,
+                'prev_cursor' => $preCursor,
+            ],
+        ]);
+    }
+
+    public function defaultCursorTokenResponse($request, $limit)
+    {
+        return response()->json([
+            'data' => [],
+            'links' => [
+                'first' => null,
+                'last' => null,
+                'prev' => null,
+                'next' => null,
+            ],
+            'meta' => [
+                'path' => $request->url(),
+                'per_page' => $limit,
+                'next_cursor' => null,
+                'prev_cursor' => null,
+            ],
+        ]);
+    }
+
+    public function getProfileLinks(Request $request)
+    {
+        $profile = $request->user()->profile;
+        $res = $profile->profileLinks()->orderBy('position')->get();
+
+        return $this->data($res);
+    }
+
+    public function removeProfileLink(Request $request, $id)
+    {
+        $profile = $request->user()->profile;
+        $link = ProfileLink::whereProfileId($profile->id)->findOrFail($id);
+        $link->delete();
+        $profile->syncLinksJson();
+
+        return $this->success();
+    }
+
+    public function profileLinkStore(Request $request)
+    {
+        $profile = $request->user()->profile;
+        if (! LinkLimitService::canAddLink($profile)) {
+            return response()->json([
+                'error' => 'You have reached your maximum link limit',
+                'max_links' => LinkLimitService::getMaxLinks($profile),
+            ], 422);
+        }
+        $validator = Validator::make($request->all(), [
+            'url' => 'required|url|max:120',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $validation = BlockedDomainService::validateUrl($request->url);
+        if (! $validation['valid']) {
+            return response()->json(['error' => $validation['error']], 422);
+        }
+
+        $maxPosition = $profile->profileLinks()->max('position') ?? -1;
+
+        $link = $profile->profileLinks()->create([
+            'url' => $request->url,
+            'position' => $maxPosition + 1,
+        ]);
+
+        $profile->syncLinksJson();
+
+        return response()->json($link, 201);
     }
 }

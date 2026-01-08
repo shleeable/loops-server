@@ -14,6 +14,31 @@ class ConfigService
         return parse_url(config('app.url'), PHP_URL_HOST);
     }
 
+    public function forYouFeed($flush = false)
+    {
+        $supported = app(RedisService::class)->supportsBloomFilters();
+        if (! $supported) {
+            return false;
+        }
+
+        $key = self::CACHE_KEY.'for-you-feed';
+
+        if ($flush) {
+            Cache::forget($key);
+        }
+
+        return Cache::rememberForever($key, function () {
+            $config = AdminSetting::where('key', 'fyf.enabled')->first();
+            if (! $config) {
+                app(SettingsFileService::class)->generatePublicConfig();
+
+                return false;
+            }
+
+            return (bool) $config->value;
+        });
+    }
+
     public function federation($flush = false)
     {
         $key = self::CACHE_KEY.'federation';

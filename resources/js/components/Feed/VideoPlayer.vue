@@ -1,7 +1,5 @@
 <template>
-    <div
-        class="relative flex justify-center h-[100dvh] lg:h-[calc(100dvh-60px)] w-full overflow-hidden video-wrapper"
-    >
+    <div class="relative flex justify-center h-[100dvh] w-full overflow-hidden video-wrapper">
         <div class="flex items-center h-full w-full lg:max-w-7xl lg:mx-auto px-0 lg:px-4 lg:py-4">
             <div
                 :class="[
@@ -11,7 +9,11 @@
             >
                 <div class="flex items-center lg:items-end h-full justify-center w-full">
                     <div
-                        class="relative flex items-center h-full w-full lg:max-w-sm xl:max-w-md 2xl:max-w-lg lg:aspect-[9/16] bg-black border-0 lg:border lg:border-black lg:dark:border-slate-800 overflow-hidden rounded-none lg:rounded-xl video-container"
+                        :class="[
+                            'relative flex items-center h-full w-full bg-black border-0 lg:border-[0.5px] lg:border-slate-300 lg:dark:border-slate-800 overflow-hidden rounded-none lg:rounded-xl video-container',
+                            videoAspectClass
+                        ]"
+                        :style="videoAspectStyle"
                         @touchstart="handleTouchStart"
                         @touchmove="handleTouchMove"
                         @touchend="handleTouchEnd"
@@ -155,6 +157,22 @@
                             </div>
 
                             <div class="flex flex-col items-center text-white hover:text-red-500">
+                                <button @click.stop="toggleBookmark" class="mobile-interaction-btn">
+                                    <i
+                                        class="bx text-[24px] sm:text-[28px]"
+                                        :class="[
+                                            videoBookmarked
+                                                ? 'bxs-bookmark text-red-500'
+                                                : 'bx-bookmark'
+                                        ]"
+                                    ></i>
+                                </button>
+                                <span class="mt-1 text-xs font-medium">{{
+                                    formatCount(bookmarksCount)
+                                }}</span>
+                            </div>
+
+                            <div class="flex flex-col items-center text-white hover:text-red-500">
                                 <ShareModal :url="shareUrl">
                                     <button class="mobile-interaction-btn" @click.stop>
                                         <i class="bx bx-share text-[24px] sm:text-[28px]"></i>
@@ -256,6 +274,24 @@
                         </div>
 
                         <div
+                            class="flex flex-col items-center text-dark hover:text-red-500 dark:text-white"
+                        >
+                            <button @click="toggleBookmark">
+                                <i
+                                    class="bx text-[24px] sm:text-[28px]"
+                                    :class="[
+                                        videoBookmarked
+                                            ? 'bxs-bookmark text-red-500'
+                                            : 'bx-bookmark'
+                                    ]"
+                                ></i>
+                            </button>
+                            <span class="mt-1 text-sm font-medium">{{
+                                formatCount(bookmarksCount)
+                            }}</span>
+                        </div>
+
+                        <div
                             class="flex flex-col items-center text-dark hover:text-red-500 dark:text-white cursor-pointer"
                         >
                             <ShareModal type="video" :username="username" :url="shareUrl">
@@ -328,13 +364,13 @@
             @touchstart.stop.prevent
             @touchmove.stop.prevent
             @touchend.stop.prevent
-            @click.stop="toggleComments"
+            @click.stop="closeComments"
         ></div>
 
         <div
             v-if="showComments"
             :class="[
-                'fixed top-[70px] bottom-0 right-0 bg-gray-50 dark:bg-slate-900 border-l border-t lg:border-t border-gray-100 dark:border-slate-800 transform transition-transform duration-300 z-50 flex flex-col w-full sm:w-[400px] lg:w-[400px] shadow-xl comments-panel',
+                'fixed top-[70px] lg:top-0 bottom-0 right-0 bg-gray-50 dark:bg-slate-900 border-l border-t lg:border-t border-gray-100 dark:border-slate-800 transform transition-transform duration-300 z-50 flex flex-col w-full sm:w-[400px] lg:w-[400px] shadow-xl comments-panel',
                 showComments ? 'translate-x-0' : 'translate-x-full'
             ]"
             @touchstart.stop
@@ -350,7 +386,7 @@
                     <h2 class="text-lg font-semibold text-black dark:text-gray-400">
                         {{ $t('post.comments') }} ({{ formatCount(commentCount) }})
                     </h2>
-                    <button @click.stop="toggleComments" class="text-gray-400 hover:text-gray-300">
+                    <button @click.stop="closeComments" class="text-gray-400 hover:text-gray-300">
                         <i class="bx bx-x text-[20px]" />
                     </button>
                 </div>
@@ -467,7 +503,9 @@ const props = defineProps({
     profileImage: { type: String, default: '' },
     profileId: { type: String, default: '' },
     likes: { type: Number, default: 0 },
+    bookmarks: { type: Number, default: 0 },
     hasLiked: { type: Boolean, default: false },
+    hasBookmarked: { type: Boolean, default: false },
     canComment: { type: Boolean, default: true },
     bookmarks: { type: Number, default: 0 },
     shares: { type: Number, default: 0 },
@@ -492,7 +530,9 @@ const videoRef = ref(null)
 const isPaused = ref(true)
 const newComment = ref('')
 const likeCount = ref(0)
+const bookmarksCount = ref(0)
 const videoLiked = ref(false)
+const videoBookmarked = ref(false)
 const selectedEmoji = ref('')
 const isVisible = ref(false)
 const playerReady = ref(false)
@@ -502,6 +542,10 @@ const { openReportModal } = useReportModal()
 const queryClient = useQueryClient()
 const { alertModal, confirmModal } = useAlertModal()
 const { t } = useI18n()
+const videoWidth = ref(null)
+const videoHeight = ref(null)
+const videoOrientation = ref('portrait')
+const shouldShowComments = computed(() => commentStore.shouldKeepCommentsOpen)
 
 const {
     hasInteracted: hasGlobalInteraction,
@@ -513,6 +557,32 @@ const {
 const isMuted = computed({
     get: () => globalMuted.value,
     set: (value) => setGlobalMuted(value)
+})
+
+const videoAspectClass = computed(() => {
+    if (!videoWidth.value || !videoHeight.value) {
+        return 'lg:max-w-sm xl:max-w-md 2xl:max-w-lg lg:aspect-[9/16]'
+    }
+
+    const aspectRatio = videoWidth.value / videoHeight.value
+
+    if (videoOrientation.value === 'portrait') {
+        return 'lg:max-w-sm xl:max-w-md 2xl:max-w-lg lg:aspect-[9/16]'
+    } else if (videoOrientation.value === 'landscape') {
+        return 'lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl lg:aspect-[16/9]'
+    } else {
+        return 'lg:max-w-2xl xl:max-w-3xl 2xl:max-w-4xl lg:aspect-square'
+    }
+})
+
+const videoAspectStyle = computed(() => {
+    if (!videoWidth.value || !videoHeight.value) return {}
+
+    const aspectRatio = videoWidth.value / videoHeight.value
+
+    return {
+        '--video-aspect-ratio': aspectRatio
+    }
 })
 
 const canInteract = computed(() => !props.isSensitive || isSensitiveRevealed.value)
@@ -630,6 +700,10 @@ const submitComment = async () => {
 }
 
 const toggleLike = async () => {
+    if (!authStore.authenticated) {
+        authStore.openAuthModal()
+        return
+    }
     const state = videoLiked.value
 
     if (state) {
@@ -643,6 +717,28 @@ const toggleLike = async () => {
             videoStore.setVideo(res.data)
             videoLiked.value = true
             likeCount.value = res.data.likes
+        })
+    }
+}
+
+const toggleBookmark = async () => {
+    if (!authStore.authenticated) {
+        authStore.openAuthModal()
+        return
+    }
+    const state = videoBookmarked.value
+
+    if (state) {
+        await videoStore.unbookmarkVideo(props.videoId).then((res) => {
+            videoStore.setVideo(res.data)
+            videoBookmarked.value = false
+            bookmarksCount.value = res.data.bookmarks
+        })
+    } else {
+        await videoStore.bookmarkVideo(props.videoId).then((res) => {
+            videoStore.setVideo(res.data)
+            videoBookmarked.value = true
+            bookmarksCount.value = res.data.bookmarks
         })
     }
 }
@@ -663,10 +759,19 @@ onMounted(async () => {
         account: { id: props.profileId },
         comments: props.commentCount,
         likes: props.likesCount,
-        has_liked: props.hasLiked
+        bookmarks: props.bookmarks,
+        has_liked: props.hasLiked,
+        has_bookmarked: props.hasBookmarked
     })
     likeCount.value = props.likes
     videoLiked.value = props.hasLiked
+    videoBookmarked.value = props.hasBookmarked
+    bookmarksCount.value = props.bookmarks
+
+    if (!isMobile.value) {
+        await checkCommentDrawer()
+    }
+
     if (videoRef.value) {
         player = videojs(videoRef.value, {
             controls: false,
@@ -698,6 +803,26 @@ onMounted(async () => {
                 }
             }
         })
+
+        player.on('loadedmetadata', () => {
+            const videoElement = player.tech({ IWillNotUseThisInPlugins: true }).el()
+
+            if (videoElement) {
+                videoWidth.value = videoElement.videoWidth
+                videoHeight.value = videoElement.videoHeight
+
+                const aspectRatio = videoWidth.value / videoHeight.value
+
+                if (aspectRatio < 0.95) {
+                    videoOrientation.value = 'portrait'
+                } else if (aspectRatio > 1.05) {
+                    videoOrientation.value = 'landscape'
+                } else {
+                    videoOrientation.value = 'square'
+                }
+            }
+        })
+
         player.on('play', function () {
             isPaused.value = false
             if (hasGlobalInteraction.value) {
@@ -717,10 +842,17 @@ onMounted(async () => {
 
 watch(
     () => [props.videoId, props.isSensitive],
-    () => {
+    async () => {
         isSensitiveRevealed.value = false
         pendingPlay.value = false
+        videoWidth.value = null
+        videoHeight.value = null
+        videoOrientation.value = 'portrait'
         pause()
+
+        if (!isMobile.value) {
+            await checkCommentDrawer()
+        }
     }
 )
 
@@ -751,6 +883,9 @@ onUnmounted(() => {
 })
 
 const play = async () => {
+    if (!isMobile.value) {
+        await checkCommentDrawer()
+    }
     if (!player) return Promise.resolve()
     if (!canInteract.value) return Promise.resolve()
     try {
@@ -786,6 +921,15 @@ const play = async () => {
     }
 }
 
+const checkCommentDrawer = async () => {
+    if (shouldShowComments.value) {
+        showComments.value = true
+        await commentStore.fetchComments(props.videoId, true)
+    } else {
+        showComments.value = false
+    }
+}
+
 const pause = () => {
     if (player) {
         player.pause()
@@ -795,18 +939,33 @@ const pause = () => {
 }
 
 const hideUI = () => {
-    if (showComments.value) showComments.value = false
     if (showMenu.value) showMenu.value = false
     showMobilePauseButton.value = false
+
+    if (!commentStore.shouldKeepCommentsOpen) {
+        showComments.value = false
+    }
 }
 
-const toggleComments = (e) => {
+const toggleComments = async (e) => {
     if (e) {
         e.preventDefault()
         e.stopPropagation()
     }
     showComments.value = !showComments.value
+
     if (showComments.value && showMenu.value) showMenu.value = false
+
+    if (showComments.value) {
+        await commentStore.fetchComments(props.videoId, true)
+    }
+}
+
+const closeComments = async () => {
+    showComments.value = false
+    if (showComments.value && showMenu.value) showMenu.value = false
+    commentStore.setUserManuallyClosed(true)
+    commentStore.setKeepCommentsOpen(false)
 }
 
 const handlePlayClick = async () => {
@@ -836,9 +995,12 @@ const preload = async () => {
 const cleanup = () => {
     if (player) player.pause()
     isVisible.value = false
-    showComments.value = false
     showMenu.value = false
     showMobilePauseButton.value = false
+
+    if (!commentStore.shouldKeepCommentsOpen) {
+        showComments.value = false
+    }
 }
 
 const onVisible = () => {

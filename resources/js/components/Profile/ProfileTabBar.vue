@@ -7,13 +7,21 @@
                     :key="tab.key"
                     @click="activeTab = tab.key"
                     :class="[
-                        'px-6 py-4 text-[17px] font-semibold transition-colors duration-200 relative cursor-pointer',
+                        'px-10 py-4 text-[17px] font-semibold transition-colors duration-200 relative cursor-pointer flex items-center gap-1.5',
                         activeTab === tab.key
                             ? 'text-black dark:text-white'
                             : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                     ]"
                 >
-                    <Icon v-if="tab.icon" :name="tab.icon" class="inline-block mr-2 text-sm" />
+                    <div v-if="tab.key === 'bookmarks'" class="relative inline-block w-6 h-6">
+                        <BookmarkIcon class="w-full h-full" />
+
+                        <div
+                            class="absolute top-1/2 -right-0 -translate-y-1/2 flex items-center justify-center bg-white dark:bg-gray-900 rounded-full ring-1 ring-white dark:ring-gray-900"
+                        >
+                            <EyeSlashIcon class="w-2.5 h-2.5" />
+                        </div>
+                    </div>
                     {{ $t(`profile.tabOptions.${tab.label}`) }}
 
                     <div
@@ -23,7 +31,7 @@
                 </button>
             </div>
 
-            <div class="flex items-center lg:pr-4">
+            <div v-if="activeTab === 'videos'" class="flex items-center lg:pr-4">
                 <div class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1">
                     <button
                         v-for="filter in filterOptions"
@@ -45,6 +53,7 @@
 </template>
 
 <script setup>
+import { BookmarkIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
@@ -66,7 +75,7 @@ const mainTabs = computed(() => {
     ]
 
     if (props.showPrivateTabs) {
-        // baseTabs.push({ key: 'liked', label: 'Liked', icon: null })
+        baseTabs.push({ key: 'bookmarks', label: 'Favourites', icon: null })
         // baseTabs.push({ key: 'comments', label: 'Comments', icon: null })
     }
 

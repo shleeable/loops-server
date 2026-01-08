@@ -49,7 +49,7 @@ export const useExploreStore = defineStore('explore', () => {
             const axiosInstance = axios.getAxiosInstance()
             const res = await axiosInstance.get(`/api/v1/explore/tag-feed/${hashtagName}`)
 
-            videos.value = res.data.data
+            videos.value = res.data.data.filter((v) => v.id && v.account)
 
             cursor.value = res.data.meta?.next_cursor
             hasMore.value = res.data.meta?.next_cursor != undefined
@@ -91,7 +91,7 @@ export const useExploreStore = defineStore('explore', () => {
                 }
             )
 
-            videos.value = [...videos.value, ...res.data.data]
+            videos.value = [...videos.value, ...res.data.data.filter((v) => v.id && v.account)]
 
             cursor.value = res.data.meta?.next_cursor
             hasMore.value = res.data.meta?.next_cursor != undefined

@@ -2,15 +2,19 @@
 
 return [
     'about' => '소개',
+    'activity' => 'Activity',
     'admin' => '관리자',
+    'appearance' => 'Appearance',
     'clearAll' => '모두 지우기',
     'community' => '커뮤니티',
     'contact' => '문의',
     'developers' => '개발자',
     'federation' => '페더레이션',
+    'forYou' => 'For You',
     'help' => '도움말',
     'home' => '홈',
     'join' => '가입',
+    'local' => 'Local',
     'logIn' => '로그인',
     'logOut' => '로그아웃',
     'loginOrRegister' => '로그인 또는 회원가입',
@@ -24,6 +28,7 @@ return [
     'search' => '검색',
     'settings' => '설정',
     'terms' => '이용약관',
+    'toggleTheme' => 'Toggle Theme',
     'upload' => '업로드',
     'uploadLoop' => '업로드 루프',
 ];

@@ -349,15 +349,20 @@
                     </div>
 
                     <div class="pb-4 text-center flex items-center">
-                        <div
+                        <button
                             class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
+                            @click="handleBookmark"
                         >
-                            <BookmarkIcon class="h-4 w-4 text-gray-400" />
-                        </div>
+                            <SolidBookmark
+                                v-if="currentVideo?.has_bookmarked"
+                                class="h-4 w-4 text-red-500"
+                            />
+                            <BookmarkIcon v-else class="h-4 w-4 text-gray-400" />
+                        </button>
                         <span
                             class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
                         >
-                            {{ formatCount(0) }}
+                            {{ formatCount(currentVideo.bookmarks) }}
                         </span>
                     </div>
 
@@ -454,6 +459,7 @@ import {
     ArrowLeftIcon,
     PlayIcon
 } from '@heroicons/vue/24/outline'
+import { BookmarkIcon as SolidBookmark } from '@heroicons/vue/24/solid'
 import UrlCopyInput from '@/components/Form/UrlCopyInput.vue'
 import Comments from '@/components/Status/Comments.vue'
 import ReportModal from '@/components/ReportModal.vue'
@@ -708,7 +714,6 @@ const loadPost = async () => {
         } else {
             videoLoadTimeout.value = setTimeout(() => {
                 if (!isVideoLoaded.value) {
-                    console.log('Video load timeout - forcing display')
                     isVideoLoaded.value = true
 
                     if (!('ontouchstart' in window)) {
@@ -898,5 +903,22 @@ const handleSaveVideo = async (data) => {
 const handleDeleteVideo = async (id) => {
     await videoStore.deleteVideoById(id)
     router.push(`/studio/posts`)
+}
+
+const handleBookmark = async () => {
+    if (!authStore.isAuthenticated) {
+        authStore.openAuthModal('login')
+        return
+    }
+    const state = currentVideo.value?.has_bookmarked
+    try {
+        if (state) {
+            await videoStore.unbookmarkVideo(currentVideo.value?.id)
+        } else {
+            await videoStore.bookmarkVideo(currentVideo.value?.id)
+        }
+    } catch (error) {
+        await alertModal('Error', error?.response?.data?.message)
+    }
 }
 </script>
