@@ -216,9 +216,9 @@
         "noVideosFoundForThisHashtag": "Nessun video trovato con questo hashtag"
     },
     "language": {
-        "choseYourPreferredLanguage": "Choose your preferred language for the Loops interface.",
-        "displayLanguage": "Display Language",
-        "language": "Language",
+        "choseYourPreferredLanguage": "Scegli la lingua preferita per l'interfaccia Loop.",
+        "displayLanguage": "Visualizza lingua",
+        "language": "Lingua",
         "picker": {
             "title": "Seleziona lingua",
             "description": "Seleziona la tua lingua preferita. Questo cambierà la lingua per l'intera applicazione.",
@@ -230,19 +230,19 @@
     },
     "nav": {
         "about": "Info",
-        "activity": "Activity",
+        "activity": "Attivita'",
         "admin": "Amministratore",
-        "appearance": "Appearance",
+        "appearance": "Aspetto",
         "clearAll": "Cancella tutto",
         "community": "Community",
         "contact": "Contatti",
         "developers": "Sviluppatori",
         "federation": "Federazione",
-        "forYou": "For You",
+        "forYou": "Suggeriti",
         "help": "Aiuto",
         "home": "Home",
         "join": "Entra",
-        "local": "Local",
+        "local": "Locale",
         "logIn": "Accedi",
         "logOut": "Esci",
         "loginOrRegister": "Entra o registrati",
@@ -256,7 +256,7 @@
         "search": "Cerca",
         "settings": "Impostazioni",
         "terms": "Termini",
-        "toggleTheme": "Toggle Theme",
+        "toggleTheme": "Cambia Tema",
         "upload": "Carica",
         "uploadLoop": "Carica Loop"
     },
@@ -327,7 +327,7 @@
         "noCommentsYet": "Ancora nessun commento",
         "permalink": "Permalink",
         "pinToProfile": "Fissa sul profilo",
-        "pinned": "Pinned",
+        "pinned": "Fissato",
         "pleaseSelectAScenario": "Seleziona uno scenario",
         "post": "Pubblica",
         "postingDotDotDot": "Pubblicando...",
@@ -371,7 +371,7 @@
         "displayNameHelp": "I nomi visualizzati possono contenere fino a 30 caratteri.",
         "editProfile": "Modifica Profilo",
         "failedToUpdateProfileErrorMessage": "Aggiornamento profilo fallito. Prova di nuovo.",
-        "favouritePosts": "Favourite posts",
+        "favouritePosts": "Post preferiti",
         "followRequestPending": "Segui Richiesta In Sospeso",
         "likes": "Mi piace",
         "loadingProfileDotDotDot": "Caricamento profilo...",
@@ -391,7 +391,7 @@
         },
         "tabOptions": {
             "Videos": "Video",
-            "Favourites": "Favourites"
+            "Favourites": "Preferiti"
         },
         "thisAccountIsNotAvailable": "Questo account non è disponibile",
         "unblock": "Sblocca",
