@@ -300,7 +300,11 @@
                     Get help
                 </h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <router-link to="https://github.com/joinloops/loops-server/discussions/categories/q-a">
+                    <a
+                        href="https://github.com/joinloops/loops-server/discussions/categories/q-a"
+                        target="_blank"
+                        rel="noreferrer"
+                    >
                         <div
                             class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
                         >
@@ -319,7 +323,7 @@
                                 <i class="bx bx-chevron-right text-gray-400 dark:text-gray-500"></i>
                             </div>
                         </div>
-                    </router-link>
+                    </a>
 
                     <router-link to="/contact">
                         <div
