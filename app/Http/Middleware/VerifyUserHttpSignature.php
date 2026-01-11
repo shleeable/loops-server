@@ -249,18 +249,18 @@ class VerifyUserHttpSignature
         }
 
         $now = now('UTC');
-    
+
         // Reject if more than 1 hour in the future
         if ($date->isAfter($now->copy()->addHour())) {
             return false;
         }
-    
+
         // Reject if more than 1 hour in the past
         if ($date->isBefore($now->copy()->subHour())) {
             return false;
         }
 
-        Return true;
+        return true;
     }
 
     protected function fetchActorData(string $actorUrl)
