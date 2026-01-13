@@ -97,8 +97,8 @@ class LoginController extends Controller
 
         if ($hasCaptcha) {
             $driver = config('captcha.driver');
-            
-            if (!in_array($driver, ['turnstile', 'hcaptcha'])) {
+
+            if (! in_array($driver, ['turnstile', 'hcaptcha'])) {
                 throw new \RuntimeException('Captcha is enabled but driver is not properly configured.');
             }
 
@@ -129,6 +129,23 @@ class LoginController extends Controller
         $this->clearLoginAttempts($request);
 
         $user = $this->guard()->user();
+
+        if (! $user->email_verified_at) {
+            $this->guard()->logout();
+
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'message' => 'You need to verify your email.',
+                ], 403);
+            }
+
+            return redirect()->route('login')->withErrors([
+                $this->username() => 'You need to verify your email.',
+            ]);
+        }
 
         if ((int) $user->status === 6) {
             $this->guard()->logout();

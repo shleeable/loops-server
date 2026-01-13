@@ -48,8 +48,8 @@ class ResetPasswordController extends Controller
 
         if ($hasCaptcha) {
             $driver = config('captcha.driver');
-            
-            if (!in_array($driver, ['turnstile', 'hcaptcha'])) {
+
+            if (! in_array($driver, ['turnstile', 'hcaptcha'])) {
                 throw new \RuntimeException('Captcha is enabled but driver is not properly configured.');
             }
 
