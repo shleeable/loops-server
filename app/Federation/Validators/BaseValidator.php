@@ -92,9 +92,8 @@ abstract class BaseValidator
     {
         $isLocal = $this->isLocalObject($url);
 
-        // Return false immediately for non-local URLs
-        if (!$isLocal) {
-            return false; 
+        if (! $isLocal) {
+            return false;
         }
 
         $statusMatch = app(SanitizeService::class)->matchUrlTemplate(
