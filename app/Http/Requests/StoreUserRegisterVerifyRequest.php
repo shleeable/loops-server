@@ -53,11 +53,11 @@ class StoreUserRegisterVerifyRequest extends FormRequest
 
         if ($hasCaptcha) {
             $driver = config('captcha.driver');
-            
-            if (!in_array($driver, ['turnstile', 'hcaptcha'])) {
+
+            if (! in_array($driver, ['turnstile', 'hcaptcha'])) {
                 throw new \RuntimeException('Captcha is enabled but driver is not properly configured.');
             }
-            
+
             $rules['captcha_type'] = ['required', 'in:turnstile,hcaptcha'];
 
             if ($driver === 'turnstile') {
