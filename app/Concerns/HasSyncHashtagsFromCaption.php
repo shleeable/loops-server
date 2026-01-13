@@ -20,7 +20,7 @@ trait HasSyncHashtagsFromCaption
                 'name' => $tag,
             ]);
             if ($hashtag->can_autolink) {
-                $hashtags[$hashtag->id] = ['visibility' => $this->visibility];
+                $hashtags[$hashtag->id] = ['visibility' => $this->visibility ?? 1];
             }
         }
 
