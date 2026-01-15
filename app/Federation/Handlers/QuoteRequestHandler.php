@@ -132,29 +132,21 @@ class QuoteRequestHandler
      */
     protected function shouldAutoApproveQuote($quotable, Profile $quoterProfile): bool
     {
-        $policy = $quotable->interaction_policy ?? [];
-        $canQuote = $policy['canQuote'] ?? [];
-        $automaticApproval = $canQuote['automaticApproval'] ?? [];
+        if ($quotable instanceof \App\Models\Video) {
+            if ($quotable->visibility != 1 || $quotable->status != 2 || ! $quotable->is_local) {
+                return false;
+            }
 
-        if (in_array('https://www.w3.org/ns/activitystreams#Public', $automaticApproval)) {
             return true;
         }
 
-        // $quotedProfile = $quotable->profile;
+        if ($quotable instanceof \App\Models\Comment || $quotable instanceof \App\Models\CommentReply) {
+            if ($quotable->visibility != 1 || $quotable->status != 'active' || $quotable->ap_id) {
+                return false;
+            }
 
-        // $followersUrl = $quotedProfile->getFollowersUrl();
-        // if (in_array($followersUrl, $automaticApproval)) {
-        //     if ($quotedProfile->followedBy($quoterProfile)) {
-        //         return true;
-        //     }
-        // }
-
-        // $followingUrl = $quotedProfile->getFollowingUrl();
-        // if (in_array($followingUrl, $automaticApproval)) {
-        //     if ($quotedProfile->following($quoterProfile)) {
-        //         return true;
-        //     }
-        // }
+            return true;
+        }
 
         return false;
     }

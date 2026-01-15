@@ -28,6 +28,8 @@ class DeliveryService
             return;
         }
 
+        $body = json_encode($activity);
+
         $headers = [
             'Host' => $parsedUrl['host'],
             'Date' => now()->toRfc7231String(),
@@ -43,7 +45,8 @@ class DeliveryService
                 $privateKey,
                 $headers,
                 'POST',
-                $parsedUrl['path'] ?? '/'
+                $parsedUrl['path'] ?? '/',
+                $body
             );
 
             $headers['Signature'] = $signature;
@@ -59,7 +62,8 @@ class DeliveryService
         try {
             $response = Http::timeout(config('loops.federation.delivery.timeout', 10))
                 ->withHeaders($headers)
-                ->post($inboxUrl, $activity);
+                ->withBody($body, 'application/activity+json')
+                ->post($inboxUrl);
 
             if ($response->successful()) {
                 if (config('logging.dev_log')) {
@@ -87,7 +91,6 @@ class DeliveryService
             if (config('logging.dev_log')) {
                 Log::error($error, ['inbox' => $inboxUrl]);
             }
-
             throw $e;
         } catch (\Exception $e) {
             if (config('logging.dev_log')) {
@@ -97,7 +100,6 @@ class DeliveryService
                     'trace' => $e->getTraceAsString(),
                 ]);
             }
-
             throw $e;
         }
     }
