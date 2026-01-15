@@ -9,6 +9,7 @@ use App\Models\Profile;
 use App\Models\Video;
 use App\Services\AccountService;
 use App\Services\AutoLinkerService;
+use App\Support\ActivityPubContext;
 
 class CreateActivityBuilder
 {
@@ -25,10 +26,7 @@ class CreateActivityBuilder
         $videoObject = self::buildVideoObject($actor, $video);
 
         return [
-            '@context' => [
-                'https://www.w3.org/ns/activitystreams',
-                'https://w3id.org/security/v1',
-            ],
+            '@context' => app(ActivityPubContext::class)->forVideo($video),
             'id' => $activityId,
             'type' => 'Create',
             'actor' => $actor->getActorId(),
@@ -49,10 +47,7 @@ class CreateActivityBuilder
     public static function buildForVideoFlat(Profile $actor, Video $video): array
     {
         return [
-            '@context' => [
-                'https://www.w3.org/ns/activitystreams',
-                'https://w3id.org/security/v1',
-            ],
+            '@context' => app(ActivityPubContext::class)->forVideo($video),
             ...self::buildVideoObject($actor, $video),
         ];
     }
@@ -89,6 +84,10 @@ class CreateActivityBuilder
         ];
 
         $mentions = [];
+
+        if ($video->visibility === 1) {
+            $videoObject['interactionPolicy'] = app(ActivityPubContext::class)->forVideoInteractionPolicy($video);
+        }
 
         if ($video->caption) {
             $videoObject['tag'] = [];
