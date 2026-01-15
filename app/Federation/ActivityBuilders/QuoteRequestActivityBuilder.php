@@ -51,6 +51,10 @@ class QuoteRequestActivityBuilder
     {
         $activityId = $actor->getActorId('#accepts/quote-requests/'.SnowflakeService::next());
 
+        $instrumentUrl = is_array($quoteRequest['instrument'])
+            ? ($quoteRequest['instrument']['id'] ?? $quoteRequest['instrument'])
+            : $quoteRequest['instrument'];
+
         return [
             '@context' => [
                 'https://www.w3.org/ns/activitystreams',
@@ -62,7 +66,13 @@ class QuoteRequestActivityBuilder
             'id' => $activityId,
             'actor' => $actor->getActorId(),
             'to' => [$quoteRequest['actor']],
-            'object' => $quoteRequest,
+            'object' => [
+                'id' => $quoteRequest['id'],
+                'type' => 'QuoteRequest',
+                'actor' => $quoteRequest['actor'],
+                'object' => $quoteRequest['object'],
+                'instrument' => $instrumentUrl,
+            ],
             'result' => $authorization->ap_url,
             'published' => now()->toIso8601String(),
         ];
@@ -79,6 +89,10 @@ class QuoteRequestActivityBuilder
     {
         $activityId = $actor->getActorId('#rejects/quote-requests/'.SnowflakeService::next());
 
+        $instrumentUrl = is_array($quoteRequest['instrument'])
+            ? ($quoteRequest['instrument']['id'] ?? $quoteRequest['instrument'])
+            : $quoteRequest['instrument'];
+
         return [
             '@context' => [
                 'https://www.w3.org/ns/activitystreams',
@@ -90,7 +104,13 @@ class QuoteRequestActivityBuilder
             'id' => $activityId,
             'actor' => $actor->getActorId(),
             'to' => [$quoteRequest['actor']],
-            'object' => $quoteRequest,
+            'object' => [
+                'id' => $quoteRequest['id'],
+                'type' => 'QuoteRequest',
+                'actor' => $quoteRequest['actor'],
+                'object' => $quoteRequest['object'],
+                'instrument' => $instrumentUrl,
+            ],
             'published' => now()->toIso8601String(),
         ];
     }
