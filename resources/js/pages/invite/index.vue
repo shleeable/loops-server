@@ -113,7 +113,7 @@
                                 class="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xl shadow-slate-900/5 backdrop-blur dark:border-slate-800 dark:bg-slate-900/70 dark:shadow-black/30 overflow-hidden"
                             >
                                 <transition name="slide">
-                                    <div class="space-y-4">
+                                    <div v-if="authStore.isAuthenticated" class="space-y-4">
                                         <div class="flex justify-center items-center gap-3">
                                             <div
                                                 class="flex flex-col space-y-3 justify-center items-center"

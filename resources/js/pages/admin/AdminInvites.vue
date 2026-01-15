@@ -37,7 +37,7 @@
                 </router-link>
             </template>
 
-            <template #cell-title="{ value, item }">
+            <template #cell-title="{ value }">
                 <p class="flex text-wrap break-all w-[250px]">
                     {{ value }}
                 </p>
@@ -70,7 +70,7 @@
                 >
             </template>
 
-            <template #cell-expires_at="{ value, item }">
+            <template #cell-expires_at="{ value }">
                 <div v-if="!value">
                     <div class="text-gray-900 dark:text-white font-medium text-sm">Never</div>
                 </div>
