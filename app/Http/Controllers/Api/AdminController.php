@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreAdminInviteRequest;
 use App\Http\Resources\AdminHashtagResource;
 use App\Http\Resources\AdminInstanceResource;
+use App\Http\Resources\AdminInviteResource;
 use App\Http\Resources\AdminProfileResource;
 use App\Http\Resources\CommentReplyResource;
 use App\Http\Resources\CommentResource;
@@ -13,6 +15,7 @@ use App\Http\Resources\ProfileResource;
 use App\Http\Resources\ReportResource;
 use App\Http\Resources\VideoResource;
 use App\Jobs\Federation\FetchInstanceNodeinfo;
+use App\Models\AdminInvite;
 use App\Models\Comment;
 use App\Models\CommentReply;
 use App\Models\Follower;
@@ -33,6 +36,7 @@ use App\Services\VideoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
@@ -190,32 +194,46 @@ class AdminController extends Controller
 
         $query = Profile::query();
 
+        $query->select('profiles.*');
+
         if ($local) {
-            $query->where('local', true);
+            $query->where('profiles.local', true);
         }
 
         if (! in_array($sort, ['disabled', 'suspended', 'deleted'])) {
-            $query->where('status', 1);
+            $query->join('users', 'profiles.id', '=', 'users.profile_id')
+                ->where('users.status', 1);
         }
 
         if (! empty($search)) {
             if (str_starts_with($search, 'bio:')) {
                 $bio = trim(substr($search, 4));
                 if (! empty($bio)) {
-                    $query->where('bio', 'like', '%'.$bio.'%');
+                    $query->where('profiles.bio', 'like', '%'.$bio.'%');
                 }
             } elseif (str_starts_with($search, 'name:')) {
                 $name = trim(substr($search, 5));
                 if (! empty($name)) {
-                    $query->where('name', 'like', '%'.$name.'%');
+                    $query->where('profiles.name', 'like', '%'.$name.'%');
                 }
             } elseif (str_starts_with($search, 'email:')) {
                 $email = trim(substr($search, 6));
                 if (! empty($email)) {
-                    $query->join('users', 'profiles.id', '=', 'users.profile_id')->where('users.email', 'like', '%'.$email.'%');
+                    if (! $this->queryHasJoin($query, 'users')) {
+                        $query->join('users', 'profiles.id', '=', 'users.profile_id');
+                    }
+                    $query->where('users.email', 'like', '%'.$email.'%');
+                }
+            } elseif (str_starts_with($search, 'invited_with:')) {
+                $inviteId = trim(substr($search, 13));
+                if (! empty($inviteId)) {
+                    if (! $this->queryHasJoin($query, 'users')) {
+                        $query->join('users', 'profiles.id', '=', 'users.profile_id');
+                    }
+                    $query->where('users.admin_invite_id', $inviteId);
                 }
             } else {
-                $query->where('username', 'like', '%'.$search.'%');
+                $query->where('profiles.username', 'like', '%'.$search.'%');
             }
         }
 
@@ -1007,8 +1025,82 @@ class AdminController extends Controller
         return response()->json($versionCheck->checkForUpdates());
     }
 
+    public function getAdminInvites(Request $request)
+    {
+        $search = $request->query('q');
+        $sort = $request->query('sort');
+
+        $query = AdminInvite::query();
+        if (! in_array($sort, ['deleted', 'expired'])) {
+            $query = AdminInvite::query()->where('is_active', 1)->unexpired();
+        } elseif (in_array($sort, ['deleted'])) {
+            $query = AdminInvite::withTrashed()->whereNotNull('deleted_at');
+        } elseif (in_array($sort, ['expired'])) {
+            $query = AdminInvite::expired();
+        }
+
+        if (! empty($search)) {
+            if (str_starts_with($search, 'message:')) {
+                $message = trim(substr($search, 8));
+                if (! empty($message)) {
+                    $query->where('message', 'like', '%'.$message.'%');
+                }
+            } elseif (str_starts_with($search, 'note:')) {
+                $note = trim(substr($search, 5));
+                if (! empty($note)) {
+                    $query->where('admin_note', 'like', '%'.$note.'%');
+                }
+            } else {
+                $query->where('title', 'like', '%'.$search.'%');
+            }
+        }
+
+        $query = $this->applySorting($query, $sort);
+
+        $invites = $query->cursorPaginate(10)->withQueryString();
+
+        return AdminInviteResource::collection($invites);
+    }
+
+    public function storeAdminInvite(StoreAdminInviteRequest $request)
+    {
+        $inviteKey = 'a_'.Str::uuid7().Str::random(7);
+        $validated = $request->safe()->merge(['invite_key' => $inviteKey, 'invited_by' => $request->user()->profile_id]);
+        $invite = AdminInvite::create($validated->all());
+
+        return new AdminInviteResource($invite);
+    }
+
+    public function showAdminInvite(Request $request, $id)
+    {
+        $invite = AdminInvite::withTrashed()->findOrFail($id);
+
+        return new AdminInviteResource($invite);
+    }
+
+    public function updateAdminInvite(StoreAdminInviteRequest $request, $id)
+    {
+        $invite = AdminInvite::findOrFail($id);
+        $validated = $request->safe();
+        $invite->update($validated->all());
+
+        return new AdminInviteResource($invite->fresh());
+    }
+
+    public function deleteAdminInvite(Request $request, $id)
+    {
+        $invite = AdminInvite::findOrFail($id);
+        $invite->delete();
+
+        return $this->success();
+    }
+
     private function applySorting($query, $sort)
     {
+        if (in_array($sort, ['deleted', 'expired'])) {
+            return $query->orderBy('deleted_at', 'desc');
+        }
+
         $sortOptions = [
             'username_asc' => ['username', 'asc'],
             'username_desc' => ['username', 'desc'],
@@ -1033,25 +1125,20 @@ class AdminController extends Controller
         if (str_starts_with($sort, 'is_')) {
             $query->where($sort, true);
 
-            return $query;
+            return $query->orderBy('id', 'desc');
         }
 
         if (str_starts_with($sort, 'can_')) {
             $query->where($sort, true);
 
-            return $query;
+            return $query->orderBy('id', 'desc');
         }
 
         if ($sort && isset($sortOptions[$sort])) {
             [$column, $direction] = $sortOptions[$sort];
-            $query->orderBy($column, $direction)
-                ->orderByDesc('id');
+            $query->orderBy($column, $direction)->orderByDesc('id');
         } else {
-            if (request()->query('q')) {
-                $query->orderBy('id', 'desc')->orderBy('id', 'desc');
-            } else {
-                $query->orderBy('id', 'desc');
-            }
+            $query->orderBy('id', 'desc');
         }
 
         return $query;
@@ -1120,5 +1207,17 @@ class AdminController extends Controller
         }
 
         return $query;
+    }
+
+    private function queryHasJoin($query, $table)
+    {
+        $joins = $query->getQuery()->joins ?? [];
+        foreach ($joins as $join) {
+            if ($join->table === $table) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

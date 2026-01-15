@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountDataController;
 use App\Http\Controllers\ActorController;
+use App\Http\Controllers\AdminInviteController;
 use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AdminController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Api\VideoController;
 use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailChangeController;
+use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\InstanceActorController;
 use App\Http\Controllers\NodeInfoController;
@@ -80,6 +82,11 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/accounts/suggested/hide', [AccountController::class, 'hideSuggestion'])->middleware('auth:web,api');
     Route::post('/v1/accounts/suggested/unhide', [AccountController::class, 'unhideSuggestion'])->middleware('auth:web,api');
 
+    Route::post('/v1/invite/verify', [AdminInviteController::class, 'verifyInvite']);
+    Route::post('/v1/invite/check-username', [AdminInviteController::class, 'checkUsername']);
+    Route::post('/v1/invite/register', [AdminInviteController::class, 'register']);
+    Route::post('/v1/invite/verify-age', [AdminInviteController::class, 'verifyAge']);
+
     // Auth
     Route::post('/v1/auth/2fa/verify', [AuthController::class, 'verifyTwoFactor']);
     Route::post('/v1/auth/register/email', [UserRegisterVerifyController::class, 'sendEmailVerification']);
@@ -87,6 +94,9 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/auth/register/email/verify', [UserRegisterVerifyController::class, 'verifyEmailVerification']);
     Route::post('/v1/auth/register/username', [UserRegisterVerifyController::class, 'claimUsername']);
     Route::post('/v1/auth/register/verify-age', [UserRegisterVerifyController::class, 'verifyAge']);
+    Route::post('/v1/auth/verify/email', [EmailVerificationController::class, 'initiate']);
+    Route::post('/v1/auth/verify/email/confirm', [EmailVerificationController::class, 'confirm']);
+    Route::post('/v1/auth/verify/email/resend', [EmailVerificationController::class, 'resend']);
 
     // Studio
     Route::get('/v1/studio/posts', [StudioController::class, 'getPosts'])->middleware('auth:web,api');
@@ -298,6 +308,11 @@ Route::prefix('api')->group(function () {
         Route::post('/instances/{id}/refresh', [AdminController::class, 'updateInstanceRefreshData'])->middleware('auth:web,api');
         Route::post('/instances/{id}/suspend', [AdminController::class, 'instanceSuspend'])->middleware('auth:web,api');
         Route::post('/instances/{id}/activate', [AdminController::class, 'instanceActivate'])->middleware('auth:web,api');
+        Route::get('/invites', [AdminController::class, 'getAdminInvites'])->middleware('auth:web,api');
+        Route::post('/invites/create', [AdminController::class, 'storeAdminInvite'])->middleware('auth:web,api');
+        Route::get('/invites/show/{id}', [AdminController::class, 'showAdminInvite'])->middleware('auth:web,api');
+        Route::post('/invites/delete/{id}', [AdminController::class, 'deleteAdminInvite'])->middleware('auth:web,api');
+        Route::post('/invites/update/{id}', [AdminController::class, 'updateAdminInvite'])->middleware('auth:web,api');
     });
 
     Route::any('{any}', function () {

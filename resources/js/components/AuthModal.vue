@@ -1428,6 +1428,9 @@ const handleLogin = async () => {
         }
     } catch (err) {
         setError(err?.response?.data?.message || t('common.loginFailedPleaseTryAgain'))
+        if (err.response?.data?.redirect) {
+            window.location.href = err.response?.data?.redirect
+        }
     } finally {
         loading.value = false
     }

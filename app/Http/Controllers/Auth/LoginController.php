@@ -138,6 +138,7 @@ class LoginController extends Controller
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
+                    'redirect' => url('/auth/verify-email'),
                     'message' => 'You need to verify your email.',
                 ], 403);
             }

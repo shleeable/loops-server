@@ -1,10 +1,17 @@
 <template>
     <div>
         <div class="mb-6">
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Profiles</h1>
-            <p class="mt-2 text-gray-600 dark:text-gray-400">
-                Manage user profiles and account status
-            </p>
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Profiles</h1>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">
+                        Manage user profiles and account status
+                    </p>
+                </div>
+                <AnimatedButton @click="router.push('/admin/profiles/invites')">
+                    Manage Invites
+                </AnimatedButton>
+            </div>
         </div>
 
         <DataTable
@@ -18,6 +25,7 @@
             :sort-options="sortOptions"
             :show-local-filter="true"
             :initial-local-filter="true"
+            :initial-search-query="searchQuery"
             @local-change="handleLocalChange"
             @sort="handleSort"
             @search="handleSearch"
@@ -241,7 +249,7 @@
 
 <script setup>
 import { ref, onMounted, watch, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import DataTable from '@/components/DataTable.vue'
 import { profilesApi } from '@/services/adminApi'
 import { useUtils } from '@/composables/useUtils'
@@ -265,6 +273,7 @@ import {
 const { truncateMiddle, formatDate } = useUtils()
 
 const router = useRouter()
+const route = useRoute()
 const profiles = ref([])
 const loading = ref(false)
 const pagination = ref({
@@ -273,7 +282,7 @@ const pagination = ref({
     hasNext: false
 })
 
-const searchQuery = ref('')
+const searchQuery = ref(route.query.q || '')
 const sortBy = ref('')
 const localOnly = ref(true)
 const DEBOUNCE_DELAY = 300
@@ -377,6 +386,13 @@ const viewProfile = (profile) => {
 const manageProfile = (profile) => {
     router.push(`/admin/profiles/${profile.id}`)
 }
+
+watch(
+    () => route.query.q,
+    (newQuery) => {
+        searchQuery.value = newQuery || ''
+    }
+)
 
 watch(localOnly, () => {
     if (searchTimeout) {
