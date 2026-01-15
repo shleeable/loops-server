@@ -286,7 +286,7 @@ class VideoController extends Controller
         $config = app(ConfigService::class);
 
         if ($config->federation()) {
-            app(FederationDispatcher::class)->dispatchVideoUpdate($video);
+            app(FederationDispatcher::class)->dispatchVideoUpdate($video->fresh());
         }
 
         return response()->json($res);
@@ -593,7 +593,7 @@ class VideoController extends Controller
 
         $config = app(ConfigService::class);
         if ($config->federation()) {
-            app(FederationDispatcher::class)->dispatchCommentUpdate($comment);
+            app(FederationDispatcher::class)->dispatchCommentUpdate($comment->fresh());
         }
 
         return CommentResource::collection([$comment]);
@@ -623,7 +623,7 @@ class VideoController extends Controller
         $config = app(ConfigService::class);
         if ($config->federation()) {
             app(FederationDispatcher::class)->dispatchCommentReplyUpdate(
-                $comment
+                $comment->fresh()
             );
         }
 
