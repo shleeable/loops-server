@@ -6,6 +6,7 @@ use App\Federation\ActivityBuilders\CreateActivityBuilder;
 use App\Models\Comment;
 use App\Models\CommentReply;
 use App\Models\Profile;
+use App\Models\QuoteAuthorization;
 use App\Models\Video;
 use App\Services\ConfigService;
 use App\Services\HashidService;
@@ -182,5 +183,16 @@ class ObjectController extends Controller
         $res = CreateActivityBuilder::buildForCommentReplyFlat($comment->profile, $comment);
 
         return $this->activityPubResponse($res);
+    }
+
+    public function getQuoteAuthorization($profileId, $authId)
+    {
+        $authorization = QuoteAuthorization::where('id', $authId)
+            ->where('quoted_profile_id', $profileId)
+            ->firstOrFail();
+
+        return response()->json($authorization->toActivityPub())
+            ->header('Content-Type', 'application/activity+json; charset=utf-8')
+            ->header('Cache-Control', 'public, max-age=300');
     }
 }

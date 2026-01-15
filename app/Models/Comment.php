@@ -130,6 +130,16 @@ class Comment extends Model
         return $this->ap_id ?: url('/ap/users/'.$this->profile_id.'/comment/'.$this->id.$suffix);
     }
 
+    public function permalink($suffix = null): string
+    {
+        return $this->ap_id ?: url('/ap/users/'.$this->profile_id.'/comment/'.$this->id.$suffix);
+    }
+
+    public function quoteAuthorizations(): MorphMany
+    {
+        return $this->morphMany(QuoteAuthorization::class, 'quotable');
+    }
+
     public function shareUrl(): string
     {
         $vid = HashidService::encode((string) $this->video_id);
