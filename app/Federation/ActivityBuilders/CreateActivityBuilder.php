@@ -38,7 +38,6 @@ class CreateActivityBuilder
 
         if ($video->visibility === 1) {
             $videoObject['interactionPolicy'] = app(ActivityPubContext::class)->forVideoInteractionPolicy($video);
-            $videoObject['quote'] = $video->shareUrl();
         }
 
         return $videoObject;
@@ -94,7 +93,6 @@ class CreateActivityBuilder
 
         if ($video->visibility === 1) {
             $videoObject['interactionPolicy'] = app(ActivityPubContext::class)->forVideoInteractionPolicy($video);
-            $videoObject['quote'] = $video->shareUrl();
         }
 
         if ($video->caption) {
