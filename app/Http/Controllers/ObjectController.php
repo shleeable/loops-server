@@ -89,7 +89,7 @@ class ObjectController extends Controller
                 $cid = HashidService::safeDecode($replyHashId);
                 $vid = $id;
                 $videoHashId = $hashId;
-                $comment = CommentReply::with('parent')->findOrFail($cid);
+                $comment = CommentReply::with('parent')->where('visibility', 1)->whereNull('ap_id')->where('status', 'active')->findOrFail($cid);
 
                 return $this->renderVideoCommentReplyObject($video, $comment, $videoHashId, $hashId, $vid, $cid);
             } else {
@@ -143,7 +143,7 @@ class ObjectController extends Controller
 
     public function showCommentObject(Request $request, $actor, $id)
     {
-        $comment = Comment::with('profile')->findOrFail($id);
+        $comment = Comment::with('profile')->where('visibility', 1)->whereNull('ap_id')->where('status', 'active')->findOrFail($id);
         abort_if($comment->profile->status != 1, 403, 'Resource not available');
         $video = Video::whereStatus(2)->findOrFail($comment->video_id);
         $videoHashId = HashidService::safeEncode($video->id);
@@ -156,7 +156,7 @@ class ObjectController extends Controller
 
     public function showReplyObject(Request $request, $actor, $id)
     {
-        $comment = CommentReply::with(['parent', 'profile'])->findOrFail($id);
+        $comment = CommentReply::with(['parent', 'profile'])->where('visibility', 1)->whereNull('ap_id')->where('status', 'active')->findOrFail($id);
         abort_if($comment->profile->status != 1, 403, 'Resource not available');
         $video = Video::whereStatus(2)->findOrFail($comment->video_id);
         $videoHashId = HashidService::safeEncode($video->id);
@@ -169,7 +169,7 @@ class ObjectController extends Controller
 
     protected function renderVideoCommentObject($video, $videoHashId, $hashId, $vid, $cid)
     {
-        $comment = Comment::with('profile')->whereVideoId($vid)->findOrFail($cid);
+        $comment = Comment::with('profile')->where('visibility', 1)->whereNull('ap_id')->where('status', 'active')->whereVideoId($vid)->findOrFail($cid);
         abort_if($comment->profile->status != 1, 403, 'Resource not available');
         $res = CreateActivityBuilder::buildForCommentFlat($comment->profile, $comment);
 

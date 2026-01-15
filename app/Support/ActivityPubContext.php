@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Models\Comment;
+use App\Models\CommentReply;
 use App\Models\Video;
 
 class ActivityPubContext
@@ -15,6 +17,54 @@ class ActivityPubContext
             2, 3, 4, 5 => $this->getDefault(),
             default => $this->getDefault(),
         };
+    }
+
+    public function forComment(Comment $comment)
+    {
+        $visibility = $comment->visibility ?? 2;
+
+        return match ($visibility) {
+            1 => $this->getVideoPublic(),
+            2, 3, 4, 5 => $this->getDefault(),
+            default => $this->getDefault(),
+        };
+    }
+
+    public function forCommentInteractionPolicy(Comment $comment)
+    {
+        $visibility = $comment->visibility ?? 2;
+
+        return $visibility === 1 ? [
+            'canQuote' => [
+                'automaticApproval' => [
+                    'https://www.w3.org/ns/activitystreams#Public',
+                ],
+            ],
+        ] : [];
+    }
+
+    public function forCommentReply(CommentReply $comment)
+    {
+        $visibility = $comment->visibility ?? 2;
+
+        return match ($visibility) {
+            1 => $this->getVideoPublic(),
+            2, 3, 4, 5 => $this->getDefault(),
+            default => $this->getDefault(),
+        };
+    }
+
+    public function forCommentReplyInteractionPolicy(CommentReply $comment)
+    {
+        $visibility = $comment->visibility ?? 2;
+
+        return $visibility === 1 ? [
+            'canQuote' => [
+                'automaticApproval' => [
+                    'https://www.w3.org/ns/activitystreams#Public',
+                ],
+            ],
+        ] : [];
     }
 
     public function forVideoInteractionPolicy(Video $video)
