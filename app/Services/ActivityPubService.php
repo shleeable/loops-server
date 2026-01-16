@@ -101,14 +101,16 @@ class ActivityPubService
             'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
         ];
 
-        $contentType = $res->header('Content-Type')[0];
+        /** @var string|null $contentType */
+        $contentType = $res->header('Content-Type');
 
         if ($validateContentType) {
-            if (! $contentType) {
+            if ($contentType === null) {
                 return false;
             }
 
-            if (in_array($contentType, $acceptedTypes)) {
+            // Check if NOT in accepted types
+            if (! in_array($contentType, $acceptedTypes)) {
                 return false;
             }
         }

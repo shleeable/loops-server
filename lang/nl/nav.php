@@ -14,7 +14,7 @@ return [
     'help' => 'Hulp',
     'home' => 'Thuis',
     'join' => 'Deelnemen',
-    'local' => 'Mijn instantie',
+    'local' => 'Lokaal',
     'logIn' => 'Inloggen',
     'logOut' => 'Uitloggen',
     'loginOrRegister' => 'Log in of Registreren',
@@ -30,5 +30,5 @@ return [
     'terms' => 'Voorwaarden',
     'toggleTheme' => 'Thema wisselen',
     'upload' => 'Upload',
-    'uploadLoop' => 'Loop uploaden',
+    'uploadLoop' => 'Loop Uploaden',
 ];

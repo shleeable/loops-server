@@ -28,7 +28,7 @@ return [
     'goBack' => 'Ga Terug',
     'goHome' => 'Naar Thuis',
     'hide' => 'Verberg',
-    'invalidCommentLink' => 'De reactielink is ongeldig of beschadigd',
+    'invalidCommentLink' => 'De reactielink is ongeldig of gebroken',
     'loadMoreReplies' => 'Meer antwoorden laden',
     'loadingComment' => 'Reactie laden...',
     'loadingComments' => 'Reacties laden...',
@@ -59,5 +59,5 @@ return [
     'viewAllComments' => 'Alle Reacties Bekijken',
     'writeAReplyDotDotDot' => 'Een antwoord schrijven...',
     'writeYourCaptionDotDotDot' => 'Je onderschrift schrijven...',
-    'yourReportingThis' => '',
+    'yourReportingThis' => 'Je meld deze :type voor: :message',
 ];

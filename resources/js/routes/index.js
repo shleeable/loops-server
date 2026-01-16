@@ -56,6 +56,12 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
+            path: '/invite/:id',
+            name: 'invitePage',
+            component: () => import('~/pages/invite/index.vue'),
+            meta: { requiresAuth: false, params: true }
+        },
+        {
             path: '/v/:id',
             name: 'videoPage',
             component: () => import('~/pages/v/index.vue'),
@@ -145,6 +151,12 @@ const router = createRouter({
         },
 
         // AUTH
+        {
+            path: '/auth/verify-email',
+            name: 'manuallyVerifyEmail',
+            component: () => import('~/pages/auth/manuallyVerifyEmail.vue'),
+            meta: { requiresAuth: false }
+        },
         {
             path: '/auth/forgot-password',
             name: 'forgotPassword',
@@ -367,6 +379,24 @@ const router = createRouter({
                     path: 'profiles',
                     name: 'Profiles',
                     component: () => import('~/pages/admin/Profiles.vue'),
+                    meta: { requiresAdmin: true }
+                },
+                {
+                    path: 'profiles/invites',
+                    name: 'adminInvites',
+                    component: () => import('~/pages/admin/AdminInvites.vue'),
+                    meta: { requiresAdmin: true }
+                },
+                {
+                    path: 'profiles/invites/create',
+                    name: 'adminInvitesCreate',
+                    component: () => import('~/pages/admin/AdminInvitesCreate.vue'),
+                    meta: { requiresAdmin: true }
+                },
+                {
+                    path: 'profiles/invites/:id',
+                    name: 'adminInvitesShow',
+                    component: () => import('~/pages/admin/AdminInvitesShow.vue'),
                     meta: { requiresAdmin: true }
                 },
                 {

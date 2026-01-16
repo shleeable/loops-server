@@ -9,6 +9,7 @@ use App\Models\Profile;
 use App\Models\Video;
 use App\Services\AccountService;
 use App\Services\AutoLinkerService;
+use App\Support\ActivityPubContext;
 
 class CreateActivityBuilder
 {
@@ -24,11 +25,8 @@ class CreateActivityBuilder
         $activityId = $video->getObjectUrl('/activity');
         $videoObject = self::buildVideoObject($actor, $video);
 
-        return [
-            '@context' => [
-                'https://www.w3.org/ns/activitystreams',
-                'https://w3id.org/security/v1',
-            ],
+        $videoObject = [
+            '@context' => app(ActivityPubContext::class)->forVideo($video),
             'id' => $activityId,
             'type' => 'Create',
             'actor' => $actor->getActorId(),
@@ -37,6 +35,12 @@ class CreateActivityBuilder
             'cc' => $videoObject['cc'],
             'object' => $videoObject,
         ];
+
+        if ($video->visibility === 1) {
+            $videoObject['interactionPolicy'] = app(ActivityPubContext::class)->forVideoInteractionPolicy($video);
+        }
+
+        return $videoObject;
     }
 
     /**
@@ -49,10 +53,7 @@ class CreateActivityBuilder
     public static function buildForVideoFlat(Profile $actor, Video $video): array
     {
         return [
-            '@context' => [
-                'https://www.w3.org/ns/activitystreams',
-                'https://w3id.org/security/v1',
-            ],
+            '@context' => app(ActivityPubContext::class)->forVideo($video),
             ...self::buildVideoObject($actor, $video),
         ];
     }
@@ -89,6 +90,10 @@ class CreateActivityBuilder
         ];
 
         $mentions = [];
+
+        if ($video->visibility === 1) {
+            $videoObject['interactionPolicy'] = app(ActivityPubContext::class)->forVideoInteractionPolicy($video);
+        }
 
         if ($video->caption) {
             $videoObject['tag'] = [];
@@ -143,11 +148,8 @@ class CreateActivityBuilder
         $activityId = $comment->getObjectUrl('/activity');
         $commentObject = self::buildCommentObject($actor, $comment);
 
-        return [
-            '@context' => [
-                'https://www.w3.org/ns/activitystreams',
-                'https://w3id.org/security/v1',
-            ],
+        $commentObj = [
+            '@context' => app(ActivityPubContext::class)->forComment($comment),
             'id' => $activityId,
             'type' => 'Create',
             'actor' => $actor->getActorId(),
@@ -156,6 +158,12 @@ class CreateActivityBuilder
             'cc' => $commentObject['cc'],
             'object' => $commentObject,
         ];
+
+        if ($comment->visibility === 1) {
+            $commentObj['interactionPolicy'] = app(ActivityPubContext::class)->forCommentInteractionPolicy($comment);
+        }
+
+        return $commentObj;
     }
 
     /**
@@ -168,10 +176,7 @@ class CreateActivityBuilder
     public static function buildForCommentFlat(Profile $actor, Comment $comment): array
     {
         return [
-            '@context' => [
-                'https://www.w3.org/ns/activitystreams',
-                'https://w3id.org/security/v1',
-            ],
+            '@context' => app(ActivityPubContext::class)->forComment($comment),
             ...self::buildCommentObject($actor, $comment),
         ];
     }
@@ -198,6 +203,10 @@ class CreateActivityBuilder
             'to' => [],
             'cc' => [],
         ];
+
+        if ($comment->visibility === 1) {
+            $commentObject['interactionPolicy'] = app(ActivityPubContext::class)->forCommentInteractionPolicy($comment);
+        }
 
         $mentions = [];
 
@@ -255,11 +264,8 @@ class CreateActivityBuilder
         $activityId = $comment->getObjectUrl('/activity');
         $commentObject = self::buildCommentReplyObject($actor, $comment);
 
-        return [
-            '@context' => [
-                'https://www.w3.org/ns/activitystreams',
-                'https://w3id.org/security/v1',
-            ],
+        $commentObj = [
+            '@context' => app(ActivityPubContext::class)->forCommentReply($comment),
             'id' => $activityId,
             'type' => 'Create',
             'actor' => $actor->getActorId(),
@@ -268,6 +274,12 @@ class CreateActivityBuilder
             'cc' => $commentObject['cc'],
             'object' => $commentObject,
         ];
+
+        if ($comment->visibility === 1) {
+            $commentObj['interactionPolicy'] = app(ActivityPubContext::class)->forCommentReplyInteractionPolicy($comment);
+        }
+
+        return $commentObj;
     }
 
     /**
@@ -292,6 +304,10 @@ class CreateActivityBuilder
             'to' => [],
             'cc' => [],
         ];
+
+        if ($comment->visibility === 1) {
+            $commentObject['interactionPolicy'] = app(ActivityPubContext::class)->forCommentReplyInteractionPolicy($comment);
+        }
 
         $mentions = [];
 
@@ -345,10 +361,7 @@ class CreateActivityBuilder
     public static function buildForCommentReplyFlat(Profile $actor, CommentReply $comment): array
     {
         return [
-            '@context' => [
-                'https://www.w3.org/ns/activitystreams',
-                'https://w3id.org/security/v1',
-            ],
+            '@context' => app(ActivityPubContext::class)->forCommentReply($comment),
             ...self::buildCommentReplyObject($actor, $comment),
         ];
     }

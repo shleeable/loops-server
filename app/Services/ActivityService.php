@@ -107,6 +107,10 @@ class ActivityService
                 'handler' => \App\Federation\Handlers\UpdateHandler::class,
                 'validator' => \App\Federation\Validators\UpdateValidator::class,
             ],
+            'QuoteRequest' => [
+                'handler' => \App\Federation\Handlers\QuoteRequestHandler::class,
+                'validator' => \App\Federation\Validators\QuoteRequestValidator::class,
+            ],
         ];
     }
 

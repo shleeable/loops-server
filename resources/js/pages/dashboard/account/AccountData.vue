@@ -255,10 +255,10 @@
                     </div>
                 </div>
 
-                <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">
+                <h2 class="hidden tracking-tight font-light mb-4 dark:text-gray-300">
                     {{ $t('settings.dataManagement') }}
                 </h2>
-                <div class="flex flex-col gap-3 mb-6">
+                <div class="hidden flex flex-col gap-3 mb-6">
                     <div class="bg-white dark:bg-slate-950 rounded-lg shadow-sm">
                         <div class="px-4 py-6 flex items-center justify-between">
                             <div class="flex flex-col max-w-[70%]">

@@ -9,6 +9,7 @@ use App\Jobs\Auth\NewAccountEmailVerifyJob;
 use App\Models\AdminSetting;
 use App\Models\User;
 use App\Models\UserRegisterVerify;
+use App\Support\VerificationCode;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,7 +33,7 @@ class UserRegisterVerifyController extends Controller
             $sessionKey = Str::random(32);
             $existing->update([
                 'session_key' => $sessionKey,
-                'verify_code' => (string) random_int(111111, 999999),
+                'verify_code' => (string) app(VerificationCode::class)->generate(),
                 'resend_attempts' => 1,
                 'email_last_sent_at' => now(),
                 'ip_address' => $request->ip(),
@@ -50,7 +51,7 @@ class UserRegisterVerifyController extends Controller
         $reg = new UserRegisterVerify;
         $reg->session_key = $sessionKey;
         $reg->email = $email;
-        $reg->verify_code = (string) random_int(111111, 999999);
+        $reg->verify_code = (string) app(VerificationCode::class)->generate();
         $reg->ip_address = $request->ip();
         $reg->user_agent = $request->userAgent();
         $reg->email_last_sent_at = now();
@@ -94,7 +95,7 @@ class UserRegisterVerifyController extends Controller
         );
 
         $res->update([
-            'verify_code' => (string) random_int(111111, 999999),
+            'verify_code' => (string) app(VerificationCode::class)->generate(),
             'resend_attempts' => $res->resend_attempts + 1,
             'email_last_sent_at' => now(),
         ]);
@@ -261,6 +262,15 @@ class UserRegisterVerifyController extends Controller
                     : __('common.youMustBeAtLeastXYearsOld', ['years' => $minAge]),
             ],
         ]);
+    }
+
+    public function verifyUserAndSendEmailVerification(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
     }
 
     public function preflightCheck($request)

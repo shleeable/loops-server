@@ -122,9 +122,11 @@ class User extends Authenticatable implements OAuthenticatable
         'can_comment',
         'can_like',
         'last_active_at',
+        'email_verified_at',
         'birth_date',
         'delete_after',
         'status',
+        'admin_invite_id',
     ];
 
     protected $hidden = [
@@ -140,6 +142,7 @@ class User extends Authenticatable implements OAuthenticatable
         'email_verification_token',
         'last_active_at',
         'birth_date',
+        'admin_invite_id',
     ];
 
     protected function casts(): array
@@ -163,6 +166,11 @@ class User extends Authenticatable implements OAuthenticatable
     public function profile(): HasOne
     {
         return $this->hasOne(Profile::class);
+    }
+
+    public function url()
+    {
+        return url('/@'.$this->username);
     }
 
     /**

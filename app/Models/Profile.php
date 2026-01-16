@@ -258,6 +258,13 @@ class Profile extends Model
             $this->uri;
     }
 
+    public function permalink($suffix = null)
+    {
+        return $this->local ?
+            url('/ap/users/'.$this->id.$suffix) :
+            $this->uri;
+    }
+
     public function getFollowingUrl()
     {
         return $this->local ?

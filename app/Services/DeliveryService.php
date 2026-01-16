@@ -21,10 +21,14 @@ class DeliveryService
 
         if (! $parsedUrl || ! isset($parsedUrl['host'])) {
             $error = "Invalid inbox URL: {$inboxUrl}";
-            Log::error($error);
+            if (config('logging.dev_log')) {
+                Log::error($error);
+            }
 
             return;
         }
+
+        $body = json_encode($activity);
 
         $headers = [
             'Host' => $parsedUrl['host'],
@@ -41,13 +45,16 @@ class DeliveryService
                 $privateKey,
                 $headers,
                 'POST',
-                $parsedUrl['path'] ?? '/'
+                $parsedUrl['path'] ?? '/',
+                $body
             );
 
             $headers['Signature'] = $signature;
         } catch (\Exception $e) {
             $error = "Failed to sign request: {$e->getMessage()}";
-            Log::error($error, ['actor' => $actor->id]);
+            if (config('logging.dev_log')) {
+                Log::error($error, ['actor' => $actor->id]);
+            }
 
             return;
         }
@@ -55,20 +62,25 @@ class DeliveryService
         try {
             $response = Http::timeout(config('loops.federation.delivery.timeout', 10))
                 ->withHeaders($headers)
-                ->post($inboxUrl, $activity);
+                ->withBody($body, 'application/activity+json')
+                ->post($inboxUrl);
 
             if ($response->successful()) {
-                Log::info('Successfully delivered activity', [
-                    'type' => $this->activity['type'] ?? 'unknown',
-                    'to' => $inboxUrl,
-                    'status' => $response->status(),
-                ]);
+                if (config('logging.dev_log')) {
+                    Log::info('Successfully delivered activity', [
+                        'type' => $activity['type'] ?? 'unknown',
+                        'to' => $inboxUrl,
+                        'status' => $response->status(),
+                    ]);
+                }
             } else {
                 $error = "Delivery failed with status {$response->status()}: {$response->body()}";
-                Log::warning($error, [
-                    'inbox' => $inboxUrl,
-                    'status' => $response->status(),
-                ]);
+                if (config('logging.dev_log')) {
+                    Log::warning($error, [
+                        'inbox' => $inboxUrl,
+                        'status' => $response->status(),
+                    ]);
+                }
 
                 if ($response->serverError() || in_array($response->status(), [408, 429])) {
                     throw new \Exception($error);
@@ -76,18 +88,18 @@ class DeliveryService
             }
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
             $error = "Network error: {$e->getMessage()}";
-            Log::error($error, ['inbox' => $inboxUrl]);
-
-            // Always retry network errors
+            if (config('logging.dev_log')) {
+                Log::error($error, ['inbox' => $inboxUrl]);
+            }
             throw $e;
         } catch (\Exception $e) {
-            Log::error('Error delivering activity', [
-                'inbox' => $inboxUrl,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            // Re-throw to trigger retry if applicable
+            if (config('logging.dev_log')) {
+                Log::error('Error delivering activity', [
+                    'inbox' => $inboxUrl,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
             throw $e;
         }
     }

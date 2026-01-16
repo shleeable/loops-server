@@ -241,6 +241,13 @@ class Video extends Model
             $this->uri;
     }
 
+    public function permalink($suffix = null): string
+    {
+        return $this->is_local ?
+            url('/ap/users/'.$this->profile_id.'/video/'.$this->id.$suffix) :
+            $this->uri;
+    }
+
     /** @return BelongsTo<Profile, $this> */
     public function profile(): BelongsTo
     {
@@ -311,5 +318,10 @@ class Video extends Model
     public function playlist(): ?Playlist
     {
         return $this->playlists()->first();
+    }
+
+    public function quoteAuthorizations(): MorphMany
+    {
+        return $this->morphMany(QuoteAuthorization::class, 'quotable');
     }
 }

@@ -192,12 +192,14 @@
                                     @error="$event.target.src = '/storage/avatars/default.jpg'"
                                 />
                             </router-link>
-                            <div class="ml-3 pt-0.5 min-w-0 flex-1 items-center">
-                                <div
-                                    class="text-base sm:text-[17px] font-semibold dark:text-slate-50 mt-2 -mb-1 truncate"
-                                >
-                                    {{ currentVideo.account.username }}
-                                </div>
+                            <div class="ml-3 min-w-0 flex flex-col justify-center">
+                                <router-link :to="`/@${currentVideo.account.username}`">
+                                    <div
+                                        class="text-base sm:text-[17px] font-semibold dark:text-slate-50 truncate"
+                                    >
+                                        {{ currentVideo.account.username }}
+                                    </div>
+                                </router-link>
                                 <div
                                     class="text-xs sm:text-[13px] font-light flex gap-1 items-center"
                                 >
