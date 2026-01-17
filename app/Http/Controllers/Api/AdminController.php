@@ -34,6 +34,7 @@ use App\Services\SanitizeService;
 use App\Services\VersionCheckService;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -665,6 +666,8 @@ class AdminController extends Controller
         app(AdminAuditLogService::class)->logHashtagUpdate($request->user(), $hashtag, ['old' => $oldValues, 'new' => $validated]);
 
         app(ExploreService::class)->getTrendingTags(true);
+
+        Cache::forget('explore:getTagFeed:'.$hashtag->id);
 
         return $this->success();
     }
