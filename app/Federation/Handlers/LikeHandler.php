@@ -157,7 +157,7 @@ class LikeHandler extends BaseHandler
             );
 
             if ($statusMatch && isset($statusMatch['userId'], $statusMatch['videoId'])) {
-                return Video::whereProfileId($statusMatch['userId'])->whereKey($statusMatch['videoId'])->first();
+                return Video::published()->whereProfileId($statusMatch['userId'])->whereKey($statusMatch['videoId'])->first();
             }
 
             $videoHashIdMatch = app(SanitizeService::class)->matchUrlTemplate(
@@ -170,7 +170,7 @@ class LikeHandler extends BaseHandler
             if ($videoHashIdMatch && isset($videoHashIdMatch['hashId'])) {
                 $decodedId = HashidService::safeDecode($videoHashIdMatch['hashId']);
                 if ($decodedId !== null) {
-                    return Video::whereStatus(2)->whereKey($decodedId)->first();
+                    return Video::published()->whereKey($decodedId)->first();
                 }
             }
 
