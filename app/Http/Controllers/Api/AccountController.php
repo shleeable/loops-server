@@ -787,7 +787,19 @@ class AccountController extends Controller
     {
         $profile = $request->user()->profile;
         $link = ProfileLink::whereProfileId($profile->id)->findOrFail($id);
+
         $link->delete();
+
+        $remainingLinks = ProfileLink::whereProfileId($profile->id)
+            ->orderBy('position')
+            ->orderBy('id')
+            ->get();
+
+        foreach ($remainingLinks as $index => $remainingLink) {
+            $remainingLink->position = $index;
+            $remainingLink->save();
+        }
+
         $profile->syncLinksJson();
 
         return $this->data([
