@@ -784,40 +784,58 @@ class AccountController extends Controller
         $link->delete();
         $profile->syncLinksJson();
 
-        return $this->success();
+        return $this->data([
+            'id' => (string) $profile->id,
+            'message' => 'Successfully deleted',
+        ]);
     }
 
     public function profileLinkStore(Request $request)
     {
         $profile = $request->user()->profile;
         if (! LinkLimitService::canAddLink($profile)) {
-            return response()->json([
-                'error' => 'You have reached your maximum link limit',
-                'max_links' => LinkLimitService::getMaxLinks($profile),
-            ], 422);
+            return $this->error('You have reached your maximum link limit', 422);
         }
         $validator = Validator::make($request->all(), [
-            'url' => 'required|url|max:120',
+            'url' => 'required|url:https|max:120',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->error('Invalid URL provided', 422);
         }
 
         $validation = BlockedDomainService::validateUrl($request->url);
         if (! $validation['valid']) {
-            return response()->json(['error' => $validation['error']], 422);
+            return $this->error('Invalid URL provided', 422);
+        }
+
+        $existingLink = $profile->profileLinks()
+            ->where('url', $request->url)
+            ->first();
+
+        if ($existingLink) {
+            return $this->error('You have already added this link to your profile', 422);
         }
 
         $maxPosition = $profile->profileLinks()->max('position') ?? -1;
 
-        $link = $profile->profileLinks()->create([
+        $profile->profileLinks()->create([
             'url' => $request->url,
             'position' => $maxPosition + 1,
         ]);
 
         $profile->syncLinksJson();
 
-        return response()->json($link, 201);
+        $links = $profile->profileLinks()->orderBy('position')->get();
+
+        $res = [
+            'id' => (string) $profile->id,
+            'total_allowed' => (int) LinkLimitService::getMaxLinks($profile),
+            'available_slots' => (int) LinkLimitService::getRemainingSlots($profile),
+            'can_add' => (bool) LinkLimitService::canAddLink($profile),
+            'links' => $links,
+        ];
+
+        return $this->data($res);
     }
 }
