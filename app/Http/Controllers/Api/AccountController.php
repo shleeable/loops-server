@@ -765,7 +765,12 @@ class AccountController extends Controller
     public function getProfileLinks(Request $request)
     {
         $profile = $request->user()->profile;
-        $res = $profile->profileLinks()->orderBy('position')->get();
+        $links = $profile->profileLinks()->orderBy('position')->get();
+        $res = [
+            'available_slots' => LinkLimitService::getRemainingSlots($profile),
+            'can_add' => (bool) LinkLimitService::canAddLink($profile),
+            'links' => $links,
+        ];
 
         return $this->data($res);
     }
