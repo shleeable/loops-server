@@ -20,14 +20,14 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton('app_version', function () {
-            return '1.0.0-beta.7';
+            return '1.0.0-beta.8';
         });
 
         $this->app->singleton('user_agent', function () {
             $version = app('app_version');
             $url = config('app.url');
 
-            return "Loops/{$version} (Laravel/".app()->version()."; +{$url})";
+            return "Loops/{$version} (Laravel/12.x; +{$url})";
         });
     }
 
