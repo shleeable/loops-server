@@ -768,6 +768,7 @@ class AccountController extends Controller
         $links = $profile->profileLinks()->orderBy('position')->get();
         $res = [
             'id' => (string) $profile->id,
+            'min_threshold' => (int) LinkLimitService::getMinThreshold(),
             'total_allowed' => (int) LinkLimitService::getMaxLinks($profile),
             'available_slots' => (int) LinkLimitService::getRemainingSlots($profile),
             'can_add' => (bool) LinkLimitService::canAddLink($profile),
@@ -830,6 +831,7 @@ class AccountController extends Controller
 
         $res = [
             'id' => (string) $profile->id,
+            'min_threshold' => (int) LinkLimitService::getMinThreshold(),
             'total_allowed' => (int) LinkLimitService::getMaxLinks($profile),
             'available_slots' => (int) LinkLimitService::getRemainingSlots($profile),
             'can_add' => (bool) LinkLimitService::canAddLink($profile),
