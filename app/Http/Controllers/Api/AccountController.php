@@ -772,7 +772,12 @@ class AccountController extends Controller
             'total_allowed' => (int) LinkLimitService::getMaxLinks($profile),
             'available_slots' => (int) LinkLimitService::getRemainingSlots($profile),
             'can_add' => (bool) LinkLimitService::canAddLink($profile),
-            'links' => $links,
+            'links' => $links->map(fn ($link) => [
+                'id' => (string) $link->id,
+                'url_pretty' => str_replace('https://', '', $link->url),
+                'url' => $link->url,
+                'created_at' => $link->created_at->format('c'),
+            ]),
         ];
 
         return $this->data($res);
