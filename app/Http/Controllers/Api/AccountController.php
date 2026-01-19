@@ -169,6 +169,10 @@ class AccountController extends Controller
 
         $profile = Profile::findOrFail($id);
 
+        $count = UserFilter::where('profile_id', $pid)->count();
+
+        abort_if($count > 250, 422, 'You cannot block any more accounts');
+
         UserFilter::updateOrCreate([
             'profile_id' => $pid,
             'account_id' => $profile->id,

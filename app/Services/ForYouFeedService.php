@@ -62,8 +62,6 @@ class ForYouFeedService
         $interests = $this->getUserInterests($profile->id);
         $isNewUser = $interests->isEmpty();
 
-        $hiddenCreatorIds = $this->getHiddenCreators($profile->id);
-
         $cursorScore = null;
         $cursorId = null;
         if ($cursor) {
@@ -76,7 +74,6 @@ class ForYouFeedService
         $personalizedVideos = $this->getPersonalizedVideos(
             $profile,
             $interests,
-            $hiddenCreatorIds,
             $cursorScore,
             $cursorId,
             $isNewUser ? $limit : $personalizedCount
@@ -85,7 +82,6 @@ class ForYouFeedService
         if ($personalizedVideos->count() < self::MIN_RESULTS || $isNewUser) {
             $popularVideos = $this->getPopularVideos(
                 $profile,
-                $hiddenCreatorIds,
                 $cursorId,
                 $limit - $personalizedVideos->count(),
                 $personalizedVideos->pluck('id')->toArray()
@@ -103,7 +99,6 @@ class ForYouFeedService
         if (! $isNewUser && $discoveryCount > 0) {
             $discoveryVideos = $this->getDiscoveryVideos(
                 $profile,
-                $hiddenCreatorIds,
                 $personalizedVideos->pluck('id')->toArray(),
                 $discoveryCount
             );
@@ -114,10 +109,17 @@ class ForYouFeedService
         return $personalizedVideos->take($limit)->values();
     }
 
+    private function applyUserFilters($query, int $profileId)
+    {
+        return $query->leftJoin('user_filters', function ($join) use ($profileId) {
+            $join->on('videos.profile_id', '=', 'user_filters.account_id')
+                ->where('user_filters.profile_id', '=', $profileId);
+        })->whereNull('user_filters.id');
+    }
+
     private function getPersonalizedVideos(
         Profile $profile,
         Collection $interests,
-        array $hiddenCreatorIds,
         ?float $cursorScore,
         ?int $cursorId,
         int $limit
@@ -130,7 +132,6 @@ class ForYouFeedService
 
         while ($scoredVideos->count() < $limit && $attempts < $maxAttempts) {
             $attempts++;
-
             $batchSize = $limit * $batchMultiplier * $attempts;
 
             $query = Video::query()
@@ -141,12 +142,14 @@ class ForYouFeedService
                 ->where('videos.status', 2)
                 ->where('videos.visibility', 1)
                 ->where('videos.created_at', '>=', now()->subDays(self::MAX_AGE_DAYS))
-                ->whereNotIn('videos.profile_id', $hiddenCreatorIds)
                 ->orderByDesc('videos.id')
                 ->with([
                     'profile:id,username',
                     'hashtags:hashtags.id,hashtags.name',
                 ]);
+
+            // Apply user filters via join
+            $query = $this->applyUserFilters($query, $profile->id);
 
             if ($lastId !== null) {
                 $query->where('videos.id', '<', $lastId);
@@ -181,7 +184,6 @@ class ForYouFeedService
 
     private function getPopularVideos(
         Profile $profile,
-        array $hiddenCreatorIds,
         ?int $cursorId,
         int $limit,
         array $alreadyIncludedIds = []
@@ -201,11 +203,13 @@ class ForYouFeedService
             ->where('videos.visibility', 1)
             ->where('videos.created_at', '>=', now()->subDays(self::MAX_AGE_DAYS))
             ->whereNotIn('videos.id', $alreadyIncludedIds)
-            ->whereNotIn('videos.profile_id', $hiddenCreatorIds)
             ->with([
                 'profile:id,username',
                 'hashtags:hashtags.id,hashtags.name',
             ]);
+
+        // Apply user filters via join
+        $query = $this->applyUserFilters($query, $profile->id);
 
         if ($cursorId) {
             $query->where('videos.id', '<', $cursorId);
@@ -223,11 +227,10 @@ class ForYouFeedService
 
     private function getDiscoveryVideos(
         Profile $profile,
-        array $hiddenCreatorIds,
         array $alreadyIncludedIds,
         int $limit
     ): Collection {
-        $videos = Video::query()
+        $query = Video::query()
             ->select([
                 'videos.*',
                 DB::raw('RAND() as feed_score'),
@@ -236,15 +239,20 @@ class ForYouFeedService
             ->where('videos.visibility', 1)
             ->where('videos.created_at', '>=', now()->subDays(self::MAX_AGE_DAYS))
             ->whereNotIn('videos.id', $alreadyIncludedIds)
-            ->whereNotIn('videos.profile_id', $hiddenCreatorIds)
             ->where('videos.likes', '>=', 2)
             ->with([
                 'profile:id,username',
                 'hashtags:hashtags.id,hashtags.name',
-            ])
+            ]);
+
+        // Apply user filters via join
+        $query = $this->applyUserFilters($query, $profile->id);
+
+        $videos = $query
             ->inRandomOrder()
             ->limit($limit)
             ->get();
+
         $videos = app(ImpressionBloomFilterService::class)->filterVideos($profile->id, $videos);
 
         return $videos;
@@ -409,25 +417,6 @@ class ForYouFeedService
     public function forgetUserInterests(int $profileId): void
     {
         Cache::forget("fyf:user_interests:{$profileId}");
-    }
-
-    private function getHiddenCreators(int $profileId): array
-    {
-        return Cache::remember(
-            "fyf:hidden_creators:{$profileId}",
-            now()->addMinutes(30),
-            fn () => FeedFeedback::where('feed_feedback.profile_id', $profileId)
-                ->where('feedback_type', FeedFeedback::TYPE_HIDE_CREATOR)
-                ->join('videos', 'feed_feedback.video_id', '=', 'videos.id')
-                ->pluck('videos.profile_id')
-                ->unique()
-                ->toArray()
-        );
-    }
-
-    public function forgetHiddenCreators(int $profileId): void
-    {
-        Cache::forget("fyf:hidden_creators:{$profileId}");
     }
 
     private function generateCursor(Collection $videos): ?string
