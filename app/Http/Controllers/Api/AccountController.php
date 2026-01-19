@@ -803,7 +803,7 @@ class AccountController extends Controller
             return $this->error('You have reached your maximum link limit', 422);
         }
         $validator = Validator::make($request->all(), [
-            'url' => 'required|url:https|max:120',
+            'url' => 'required|active_url:https|max:120',
         ]);
 
         if ($validator->fails()) {
