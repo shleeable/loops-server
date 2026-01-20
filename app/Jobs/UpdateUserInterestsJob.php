@@ -36,7 +36,6 @@ class UpdateUserInterestsJob implements ShouldQueue
         $this->decayInterests($profile);
 
         app(ForYouFeedService::class)->forgetUserInterests($this->profileId);
-        app(ForYouFeedService::class)->forgetHiddenCreators($this->profileId);
     }
 
     private function updateFromLikes(Profile $profile): void

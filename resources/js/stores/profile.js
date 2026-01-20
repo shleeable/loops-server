@@ -21,6 +21,7 @@ export const useProfileStore = defineStore('profile', {
         followingCount: 0,
         followers: [],
         following: [],
+        links: [],
         followersNextCursor: null,
         followingNextCursor: null,
         isFollowing: null,
@@ -59,6 +60,7 @@ export const useProfileStore = defineStore('profile', {
                 this.bio = res.data.data.bio
                 this.avatar = res.data.data.avatar
                 this.url = res.data.data.url
+                this.links = res.data.data.links
                 this.postCount = res.data.data.post_count
                 this.followerCount = res.data.data.follower_count
                 this.followingCount = res.data.data.following_count
@@ -168,6 +170,7 @@ export const useProfileStore = defineStore('profile', {
                 this.bio = res.data.data.bio
                 this.avatar = res.data.data.avatar
                 this.url = res.data.data.url
+                this.links = res.data.data.links
                 this.postCount = res.data.data.post_count
                 this.followerCount = res.data.data.follower_count
                 this.followingCount = res.data.data.following_count
@@ -274,6 +277,7 @@ export const useProfileStore = defineStore('profile', {
                 this.bio = res.bio
                 this.avatar = res.avatar
                 this.url = res.url
+                this.links = res.links
                 this.postCount = res.post_count
                 this.allLikes = res.likes_count
                 this.followingCount = res.following_count
@@ -443,6 +447,7 @@ export const useProfileStore = defineStore('profile', {
             this.posts = null
             this.postsNextCursor = null
             this.postsSort = null
+            this.links = []
             this.followers = []
             this.following = []
             this.followersNextCursor = []

@@ -197,7 +197,9 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/tags/video/{id}', [WebPublicController::class, 'getVideoTags'])->middleware('throttle:api');
 
     // Global Feeds
+    // Note: the for-you feed will be deprecated in a future release, in favour of the local feed
     Route::get('/v1/feed/for-you', [FeedController::class, 'getForYouFeed'])->middleware('auth:web,api');
+    Route::get('/v1/feed/local', [FeedController::class, 'getForYouFeed'])->middleware('auth:web,api');
     Route::get('/v1/feed/following', [FeedController::class, 'getFollowingFeed'])->middleware('auth:web,api');
 
     Route::get('/v0/feed/recommended', [ForYouFeedController::class, 'index'])->middleware('auth:web,api');

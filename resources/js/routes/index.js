@@ -90,6 +90,10 @@ const router = createRouter({
             }
         },
         {
+            path: '/legal/privacy-policy',
+            redirect: '/privacy'
+        },
+        {
             path: '/terms',
             name: 'Terms of Service',
             component: DynamicPage,

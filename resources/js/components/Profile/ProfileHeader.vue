@@ -4,7 +4,7 @@
             <div class="flex flex-col lg:flex-row lg:space-x-10 lg:items-center mb-5">
                 <div class="flex justify-center lg:justify-start mb-4 lg:mb-0">
                     <img
-                        class="w-24 h-24 sm:w-32 sm:h-32 lg:max-w-[200px] lg:w-[200px] lg:h-[200px] rounded-full object-cover"
+                        class="w-24 h-24 sm:w-32 sm:h-32 lg:max-w-[200px] lg:w-[200px] lg:h-[200px] rounded-full object-cover border border-gray-200 dark:border-gray-800"
                         :src="profile.avatar"
                         @error="$event.target.src = '/storage/avatars/default.jpg'"
                     />
@@ -181,6 +181,30 @@
                     >
                         {{ profile.bio }}
                     </div>
+
+                    <div
+                        v-if="authStore.authenticated && profile.links && profile.links.length > 0"
+                        class="pt-4 flex flex-wrap gap-2 justify-center lg:justify-start"
+                    >
+                        <a
+                            v-for="(linkItem, index) in profile.links"
+                            :key="index"
+                            :href="linkItem.link"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 px-3 py-[3px] text-xs text-xs rounded-2xl border border-gray-200 font-medium dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-950 transition-colors cursor-pointer"
+                            :title="linkItem.url"
+                        >
+                            <LinkIcon class="w-3 h-3 flex-shrink-0" />
+                            <span class="truncate max-w-[150px] sm:max-w-[200px]">
+                                {{ linkItem.url }}
+                            </span>
+                            <CheckBadgeIcon
+                                v-if="linkItem.is_verified"
+                                class="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0"
+                            />
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -224,7 +248,9 @@ import {
     ShareIcon,
     EllipsisHorizontalIcon,
     FlagIcon,
-    NoSymbolIcon
+    NoSymbolIcon,
+    LinkIcon,
+    CheckBadgeIcon
 } from '@heroicons/vue/24/outline'
 
 const { t } = useI18n()

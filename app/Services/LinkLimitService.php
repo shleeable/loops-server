@@ -16,13 +16,18 @@ class LinkLimitService
 
     private const TIER_4_LIMIT = 4;
 
-    private const TIER_1_THRESHOLD = 100;
+    private const TIER_1_THRESHOLD = 5;
 
-    private const TIER_2_THRESHOLD = 2000;
+    private const TIER_2_THRESHOLD = 1500;
 
-    private const TIER_3_THRESHOLD = 5000;
+    private const TIER_3_THRESHOLD = 2000;
 
-    private const TIER_4_THRESHOLD = 10000;
+    private const TIER_4_THRESHOLD = 2300;
+
+    public static function getMinThreshold(): int
+    {
+        return self::TIER_1_THRESHOLD;
+    }
 
     public static function getMaxLinks(Profile $profile): int
     {
