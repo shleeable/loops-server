@@ -82,6 +82,7 @@ class ProcessSharedInboxActivity implements ShouldQueue
                 $relay = app(\App\Services\RelayService::class)->isFromRelay($actorUrl);
                 if ($relay) {
                     $this->handleRelayActivity($relay);
+
                     return;
                 }
             }
@@ -384,6 +385,7 @@ class ProcessSharedInboxActivity implements ShouldQueue
             if (config('logging.dev_log')) {
                 Log::info('Relay subscription accepted', ['relay' => $relay->relay_url]);
             }
+
             return;
         }
 
@@ -392,6 +394,7 @@ class ProcessSharedInboxActivity implements ShouldQueue
             if (config('logging.dev_log')) {
                 Log::warning('Relay subscription rejected', ['relay' => $relay->relay_url]);
             }
+
             return;
         }
 

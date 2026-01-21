@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Middleware\AdminOnlyAccess;
 use App\Models\RelaySubscription;
 use App\Services\RelayService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class AdminRelayController extends Controller
 {

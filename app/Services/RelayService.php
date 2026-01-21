@@ -4,16 +4,18 @@ namespace App\Services;
 
 use App\Models\Profile;
 use App\Models\RelaySubscription;
-use App\Federation\ActivityBuilders\AcceptActivityBuilder;
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class RelayService
 {
     protected $activityPubService;
+
     protected $deliveryService;
+
     protected $instanceActorService;
+
     protected $signingService;
 
     public function __construct(
@@ -31,7 +33,7 @@ class RelayService
     public function subscribe(string $relayUrl): RelaySubscription
     {
         $relayInfo = $this->fetchRelayInfo($relayUrl);
-        
+
         $relay = RelaySubscription::create([
             'relay_url' => $relayUrl,
             'relay_actor_url' => $relayInfo['id'] ?? null,
@@ -58,7 +60,7 @@ class RelayService
     public function sendFollowActivity(RelaySubscription $relay): void
     {
         $instanceActor = $this->instanceActorService->get();
-        
+
         $activity = [
             '@context' => 'https://www.w3.org/ns/activitystreams',
             'id' => route('activitypub.activity', ['id' => uniqid('follow-relay-', true)]),
@@ -68,7 +70,7 @@ class RelayService
         ];
 
         $inboxUrl = $relay->getInbox();
-        if (!$inboxUrl) {
+        if (! $inboxUrl) {
             throw new Exception('Relay inbox URL not found');
         }
 
@@ -78,7 +80,7 @@ class RelayService
     public function sendUndoFollowActivity(RelaySubscription $relay): void
     {
         $instanceActor = $this->instanceActorService->get();
-        
+
         $followActivity = [
             'id' => route('activitypub.activity', ['id' => uniqid('follow-relay-', true)]),
             'type' => 'Follow',
@@ -104,7 +106,7 @@ class RelayService
     {
         if ($relay->isPending()) {
             $relay->markAsActive();
-            
+
             if (config('logging.dev_log')) {
                 Log::info('Relay subscription accepted', ['relay' => $relay->relay_url]);
             }
@@ -114,7 +116,7 @@ class RelayService
     public function handleReject(RelaySubscription $relay): void
     {
         $relay->markAsRejected();
-        
+
         if (config('logging.dev_log')) {
             Log::warning('Relay subscription rejected', ['relay' => $relay->relay_url]);
         }
@@ -129,7 +131,7 @@ class RelayService
         foreach ($relays as $relay) {
             try {
                 $inboxUrl = $relay->getInbox();
-                if (!$inboxUrl) {
+                if (! $inboxUrl) {
                     continue;
                 }
 
@@ -163,11 +165,11 @@ class RelayService
 
     protected function fetchRelayInfo(string $relayUrl): array
     {
-        $actorUrl = rtrim($relayUrl, '/') . '/actor';
-        
+        $actorUrl = rtrim($relayUrl, '/').'/actor';
+
         $info = $this->activityPubService->get($actorUrl, [], false);
-        
-        if (!$info || !is_array($info)) {
+
+        if (! $info || ! is_array($info)) {
             throw new Exception('Failed to fetch relay information');
         }
 
@@ -177,8 +179,8 @@ class RelayService
     protected function deliverActivity(Profile $actor, string $inboxUrl, array $activity): void
     {
         $parsedUrl = parse_url($inboxUrl);
-        
-        if (!$parsedUrl || !isset($parsedUrl['host'])) {
+
+        if (! $parsedUrl || ! isset($parsedUrl['host'])) {
             throw new Exception('Invalid inbox URL');
         }
 
@@ -209,7 +211,7 @@ class RelayService
             ->withBody($body, 'application/activity+json')
             ->post($inboxUrl);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new Exception("Delivery failed: {$response->status()}");
         }
     }
