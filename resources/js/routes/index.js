@@ -440,6 +440,12 @@ const router = createRouter({
                     name: 'Settings',
                     component: () => import('~/pages/admin/Settings.vue'),
                     meta: { requiresAdmin: true }
+                },
+                {
+                    path: 'relays',
+                    name: 'Relays',
+                    component: () => import('~/pages/admin/Relays.vue'),
+                    meta: { requiresAdmin: true }
                 }
             ]
         },
