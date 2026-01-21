@@ -68,9 +68,7 @@
             </div>
 
             <div v-if="loading" class="p-6 text-center">
-                <div
-                    class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
-                ></div>
+                <Spinner />
             </div>
 
             <div
@@ -169,7 +167,7 @@
 
         <div
             v-if="showAddModal"
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            class="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
             @click.self="showAddModal = false"
         >
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">

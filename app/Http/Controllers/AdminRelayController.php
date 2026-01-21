@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Middleware\AdminOnlyAccess;
 use App\Models\RelaySubscription;
 use App\Services\RelayService;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class AdminRelayController extends Controller
 {
+    use ApiHelpers;
     protected $relayService;
 
     public function __construct(RelayService $relayService)
@@ -24,7 +26,7 @@ class AdminRelayController extends Controller
     {
         $relays = RelaySubscription::orderBy('created_at', 'desc')->get();
 
-        return response()->json([
+        return $this->data([
             'relays' => $relays,
         ]);
     }
@@ -144,6 +146,6 @@ class AdminRelayController extends Controller
             'total_received' => RelaySubscription::sum('total_received'),
         ];
 
-        return response()->json(['stats' => $stats]);
+        return $this->data(['stats' => $stats]);
     }
 }
