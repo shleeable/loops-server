@@ -222,6 +222,39 @@
                                     ></span>
                                 </button>
                             </div>
+
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-900 dark:text-white"
+                                        >Spam Detection</label
+                                    >
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        Check ip/email against known spammer database after
+                                        registration
+                                    </p>
+                                </div>
+                                <button
+                                    @click="
+                                        settings.general.userSpamDetection =
+                                            !settings.general.userSpamDetection
+                                    "
+                                    :class="[
+                                        'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                                        settings.general.userSpamDetection
+                                            ? 'bg-blue-600'
+                                            : 'bg-gray-200 dark:bg-gray-600'
+                                    ]"
+                                >
+                                    <span
+                                        :class="[
+                                            'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                                            settings.general.userSpamDetection
+                                                ? 'translate-x-5'
+                                                : 'translate-x-0'
+                                        ]"
+                                    ></span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -1668,6 +1701,7 @@ const settings = reactive({
         supportFediverseAccount: '',
         openRegistration: true,
         emailVerification: true,
+        userSpamDetection: false,
         defaultContentStatus: 'published',
         autoModerateNSFW: true
     },

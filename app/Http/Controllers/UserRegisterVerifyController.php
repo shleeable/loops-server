@@ -6,9 +6,11 @@ use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Requests\StoreRegisterUsernameRequest;
 use App\Http\Requests\StoreUserRegisterVerifyRequest;
 use App\Jobs\Auth\NewAccountEmailVerifyJob;
+use App\Jobs\User\UserSpamCheckJob;
 use App\Models\AdminSetting;
 use App\Models\User;
 use App\Models\UserRegisterVerify;
+use App\Services\ConfigService;
 use App\Support\VerificationCode;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -217,6 +219,8 @@ class UserRegisterVerifyController extends Controller
         $user->password = Hash::make($password);
         $user->email_verified_at = now();
         $user->birth_date = $birthDate;
+        $user->register_ip = $request->ip();
+        $user->last_ip = $request->ip();
         $user->save();
 
         sleep(1);
@@ -224,6 +228,10 @@ class UserRegisterVerifyController extends Controller
         $request->session()->regenerate();
 
         Auth::login($user);
+
+        if (app(ConfigService::class)->userSpamDetection()) {
+            UserSpamCheckJob::dispatch($user);
+        }
 
         $reg->delete();
 

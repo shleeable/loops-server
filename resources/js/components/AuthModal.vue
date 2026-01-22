@@ -943,6 +943,11 @@ const onCaptchaError = (error) => {
     console.error('Captcha error:', error)
     captchaToken.value = ''
     form.value.captcha_token = ''
+    if (appCaptcha.provider === 'turnstile' && turnstileRef.value) {
+        turnstileRef.value.reset()
+    } else if (appCaptcha.provider === 'hcaptcha' && hcaptchaRef.value) {
+        hcaptchaRef.value.reset()
+    }
 }
 
 const onCaptchaExpired = () => {
@@ -1431,6 +1436,7 @@ const handleLogin = async () => {
         if (err.response?.data?.redirect) {
             window.location.href = err.response?.data?.redirect
         }
+        onCaptchaExpired()
     } finally {
         loading.value = false
     }

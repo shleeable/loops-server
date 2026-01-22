@@ -212,6 +212,8 @@ class AdminInviteController extends Controller
         $user->email_verified_at = $invite->verify_email ? null : now();
         $user->birth_date = $birthDate;
         $user->admin_invite_id = $invite->id;
+        $user->register_ip = $request->ip();
+        $user->last_ip = $request->ip();
         $user->save();
 
         $invite->increment('total_uses');

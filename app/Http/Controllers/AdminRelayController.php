@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 class AdminRelayController extends Controller
 {
     use ApiHelpers;
+
     protected $relayService;
 
     public function __construct(RelayService $relayService)

@@ -59,6 +59,7 @@ class AdminSettingsController extends Controller
             'general.supportFediverseAccount' => 'sometimes|nullable|active_url',
             'fyf.enabled' => 'required|boolean',
             'general.openRegistration' => 'required|boolean',
+            'general.userSpamDetection' => 'required|boolean',
             'general.emailVerification' => 'required|accepted',
         ]);
 

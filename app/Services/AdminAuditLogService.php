@@ -141,4 +141,17 @@ class AdminAuditLogService
     {
         return $this->log($user, 'video:publish', $changes, $video, null, 1);
     }
+
+    public function logSpamDetectionUserSuspension($user)
+    {
+        return AdminAuditLog::create([
+            'user_id' => null,
+            'type' => 'spam:suspended',
+            'value' => ['email' => $user->email, 'ip' => $user->register_ip],
+            'activity_type' => User::class,
+            'activity_id' => $user->id,
+            'action_msg' => null,
+            'visibility' => 1,
+        ]);
+    }
 }
