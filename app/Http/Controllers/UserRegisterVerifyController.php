@@ -217,6 +217,8 @@ class UserRegisterVerifyController extends Controller
         $user->password = Hash::make($password);
         $user->email_verified_at = now();
         $user->birth_date = $birthDate;
+        $user->register_ip = $request->ip();
+        $user->last_ip = $request->ip();
         $user->save();
 
         sleep(1);

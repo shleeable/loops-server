@@ -130,6 +130,8 @@ class LoginController extends Controller
 
         $user = $this->guard()->user();
 
+        $user->update(['last_ip' => $request->ip()]);
+
         if (! $user->email_verified_at) {
             $this->guard()->logout();
 

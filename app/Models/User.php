@@ -127,6 +127,8 @@ class User extends Authenticatable implements OAuthenticatable
         'delete_after',
         'status',
         'admin_invite_id',
+        'register_ip',
+        'last_ip',
     ];
 
     protected $hidden = [
@@ -143,6 +145,8 @@ class User extends Authenticatable implements OAuthenticatable
         'last_active_at',
         'birth_date',
         'admin_invite_id',
+        'register_ip',
+        'last_ip',
     ];
 
     protected function casts(): array
