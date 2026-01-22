@@ -32,7 +32,7 @@ class ComposerPostInstallCommand extends Command
             DB::connection()->getPdo();
 
             Cache::forget('version_check_result');
-            app(SettingsFileService::class)->syncDefaultSettings();
+            app(SettingsFileService::class)->flush();
 
             $this->info('Post-install tasks completed successfully.');
         } catch (\Exception $e) {
