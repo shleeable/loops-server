@@ -28,14 +28,15 @@ class ComposerPostInstallCommand extends Command
      */
     public function handle()
     {
-        Cache::forget('version_check_result');
-
         try {
             DB::connection()->getPdo();
+
+            Cache::forget('version_check_result');
             app(SettingsFileService::class)->syncDefaultSettings();
-            $this->info('Settings synced successfully.');
+
+            $this->info('Post-install tasks completed successfully.');
         } catch (\Exception $e) {
-            $this->warn('Database not configured yet. Skipping settings sync.');
+            return 0;
         }
     }
 }
