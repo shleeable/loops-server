@@ -16,6 +16,7 @@ class SettingsFileService
         app(ConfigService::class)->forYouFeed(true);
         app(ConfigService::class)->federation(true);
         app(ConfigService::class)->federationMode(true);
+        app(ConfigService::class)->userSpamDetection(true);
         app(ConfigService::class)->federationAllowedServers(true);
         app(ConfigService::class)->federationAuthorizedFetch(true);
     }
@@ -184,6 +185,13 @@ class SettingsFileService
                 'type' => 'boolean',
                 'is_public' => true,
                 'description' => 'Require email verification for new accounts',
+            ],
+            [
+                'key' => 'general.userSpamDetection',
+                'value' => false,
+                'type' => 'boolean',
+                'is_public' => false,
+                'description' => 'Check ip/email against known spammer database',
             ],
             [
                 'key' => 'general.defaultContentStatus',
