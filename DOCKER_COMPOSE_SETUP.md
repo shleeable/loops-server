@@ -32,7 +32,7 @@ This setup uses `serversideup/php:8.4-fpm-nginx` as the base image and is design
    ```
 
 3. **Update `.env` with your configuration:**
-   - Update `APP_URL`, `APP_DOMAIN`, `ADMIN_DOMAIN`, `SESSION_DOMAIN` with your domain
+   - Update `APP_URL` with your domain
    - Configure mail settings
    - Configure S3 (object storage)
    - Configure CAPTCHA
