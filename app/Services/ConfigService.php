@@ -99,6 +99,26 @@ class ConfigService
         });
     }
 
+    public function pushNotifications($flush = false)
+    {
+        $key = self::CACHE_KEY.'general:pushNotifications';
+
+        if ($flush) {
+            Cache::forget($key);
+        }
+
+        return Cache::rememberForever($key, function () {
+            $config = AdminSetting::where('key', 'general.pushNotifications')->first();
+            if (! $config) {
+                app(SettingsFileService::class)->generatePublicConfig();
+
+                return [];
+            }
+
+            return $config->value;
+        });
+    }
+
     public function federationAllowedServers($flush = false)
     {
         $key = self::CACHE_KEY.'federation:lockdown:allowed';

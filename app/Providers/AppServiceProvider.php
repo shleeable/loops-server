@@ -29,6 +29,10 @@ class AppServiceProvider extends ServiceProvider
 
             return "Loops/{$version} (Laravel/12.x; +{$url})";
         });
+
+        $this->app->singleton('push_relay', function () {
+            return 'https://push.loopsplatform.com';
+        });
     }
 
     /**
