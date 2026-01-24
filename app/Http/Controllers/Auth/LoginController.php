@@ -158,12 +158,12 @@ class LoginController extends Controller
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
-                    'message' => 'Your account has been disabled.',
+                    'message' => '<div class="text-center">Your account has been disabled.<br/><br/>Please <a href="/contact" class="font-bold underline">contact support</a> for further assistance.</div>',
                 ], 403);
             }
 
             return redirect()->route('login')->withErrors([
-                $this->username() => 'Your account has been disabled.',
+                $this->username() => '<div class="text-center">Your account has been disabled.<br/><br/>Please <a href="/contact" class="font-bold underline">contact support</a> for further assistance.</div>',
             ]);
         }
 
