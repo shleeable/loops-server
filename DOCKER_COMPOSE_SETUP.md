@@ -26,12 +26,12 @@ This setup uses `serversideup/php:8.4-fpm-nginx` as the base image and is design
    ```
 
    ```bash
-   sed -i "s|^APP_KEY=.*|APP_KEY=$(php -r 'echo \"base64:\".base64_encode(random_bytes(32));')|" .env
    sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=\"$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)\"|" .env
    sed -i "s|^DB_ROOT_PASSWORD=.*|DB_ROOT_PASSWORD=\"$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)\"|" .env
    ```
 
 3. **Update `.env` with your configuration:**
+   - Set APP_KEY ( generate with https://laravel-encryption-key-generator.vercel.app/ )
    - Update `APP_URL` with your domain
    - Configure mail settings
    - Configure S3 (object storage)
