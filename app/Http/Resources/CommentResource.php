@@ -32,10 +32,17 @@ class CommentResource extends JsonResource
             $pid = $user->profile_id;
         }
 
-        if ($this->deleted_at && $this->status != 'active') {
-            $msg = $this->status === 'deleted_by_user' ?
-                'This comment was deleted by the user' :
-                'This comment was deleted by admins';
+        /** @var string $status */
+        $status = $this->status;
+
+        if ($status != 'active') {
+            $msg = match ($status) {
+                'deleted_by_user' => 'This comment was deleted by the user',
+                'deleted_by_admin' => 'This comment was deleted by admins',
+                'account_disabled' => 'This comment was made by a disabled account',
+                'account_pending_deletion' => 'This comment was deleted by the user',
+                default => 'This comment is not available',
+            };
 
             return [
                 'id' => (string) $this->id,

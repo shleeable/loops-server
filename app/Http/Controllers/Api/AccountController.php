@@ -101,6 +101,7 @@ class AccountController extends Controller
 
         $res = Notification::whereUserId($pid)
             ->whereIn('type', $types)
+            ->where('actor_state', 1)
             ->orderByDesc('created_at')
             ->cursorPaginate(20);
 
@@ -718,8 +719,13 @@ class AccountController extends Controller
             }
         }
 
-        $pager = VideoLike::whereProfileId($user->profile_id)
-            ->orderByDesc('id')
+        $pager = VideoLike::where('video_likes.profile_id', $user->profile_id)
+            ->join('videos', 'videos.id', '=', 'video_likes.video_id')
+            ->join('profiles', 'profiles.id', '=', 'videos.profile_id')
+            ->where('videos.status', 2)
+            ->where('profiles.status', 1)
+            ->select('video_likes.*')
+            ->orderByDesc('video_likes.id')
             ->cursorPaginate(
                 perPage: $limit,
                 columns: ['*'],

@@ -198,6 +198,9 @@ class LoginController extends Controller
             $user->profile->update(['status' => 1]);
             $user->videos()->whereIn('status', [7, 8])->update(['status' => 2]);
             $user->videos()->whereIn('status', [9])->update(['status' => 1]);
+            $user->comments()->whereIn('status', ['account_pending_deletion', 'account_disabled'])->update(['status' => 'active']);
+            $user->commentReplies()->whereIn('status', ['account_pending_deletion', 'account_disabled'])->update(['status' => 'active']);
+            $user->actorNotifications()->whereIn('actor_state', [7, 8])->update(['actor_state' => 1]);
         }
 
         if ($intendedUrl && str_contains($intendedUrl, '/oauth/authorize')) {

@@ -329,6 +329,11 @@ class AdminController extends Controller
             DB::table('oauth_auth_codes')->where('user_id', $profile->user_id)->delete();
             DB::table('sessions')->where('user_id', $profile->user_id)->delete();
             $profile->user->update(['status' => 6]);
+            $profile->user->videos()->whereIn('status', [2])->update(['status' => 6]);
+            $profile->user->comments()->where('status', 'active')->update(['status' => 'account_pending_deletion']);
+            $profile->user->commentReplies()->where('status', 'active')->update(['status' => 'account_pending_deletion']);
+            $profile->user->actorNotifications()->update(['actor_state' => 6]);
+            AccountService::del($profile->id);
         }
 
         AccountSuggestionService::removeFromAll($profile->id);
@@ -350,6 +355,10 @@ class AdminController extends Controller
 
         if ($profile->local) {
             $profile->user->update(['status' => 1]);
+            $profile->user->videos()->whereIn('status', [6])->update(['status' => 2]);
+            $profile->user->comments()->where('status', 'account_pending_deletion')->update(['status' => 'active']);
+            $profile->user->commentReplies()->where('status', 'account_pending_deletion')->update(['status' => 'active']);
+            $profile->user->actorNotifications()->update(['actor_state' => 1]);
         }
 
         AccountService::del($profile->id);

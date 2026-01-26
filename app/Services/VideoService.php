@@ -3,9 +3,9 @@
 namespace App\Services;
 
 use App\Models\Video;
-use Cache;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Storage;
 
 class VideoService
 {

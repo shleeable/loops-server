@@ -880,7 +880,9 @@ class VideoController extends Controller
         $video = Video::published()->findOrFail($id);
         $isAuth = $video->profile_id == $pid || $user->is_admin;
 
-        $likes = VideoLike::whereVideoId($id);
+        $likes = VideoLike::whereVideoId($id)
+            ->join('profiles', 'profiles.id', '=', 'video_likes.profile_id')
+            ->where('profiles.status', 1);
 
         if ($isAuth) {
             $res = $likes->leftJoin('followers as auth_following', function ($join) use ($pid) {
@@ -888,13 +890,16 @@ class VideoController extends Controller
                     ->where('auth_following.profile_id', '=', $pid);
             })
                 ->select([
-                    'video_likes.*',
-                    DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
-                ])
+                'video_likes.*',
+                DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
+            ])
                 ->orderBy('video_likes.created_at', 'desc')
                 ->cursorPaginate(10);
         } else {
-            $res = $likes->limit(10)->get();
+            $res = $likes->select('video_likes.*')
+                ->orderBy('video_likes.created_at', 'desc')
+                ->limit(10)
+                ->get();
         }
 
         return VideoLikeResource::collection($res);
@@ -908,21 +913,26 @@ class VideoController extends Controller
         $video = Video::published()->findOrFail($id);
         $isAuth = $video->profile_id == $pid || $user->is_admin;
 
-        $likes = VideoRepost::whereVideoId($id);
+        $shares = VideoRepost::whereVideoId($id)
+            ->join('profiles', 'profiles.id', '=', 'video_reposts.profile_id')
+            ->where('profiles.status', 1);
 
         if ($isAuth) {
-            $res = $likes->leftJoin('followers as auth_following', function ($join) use ($pid) {
+            $res = $shares->leftJoin('followers as auth_following', function ($join) use ($pid) {
                 $join->on('auth_following.following_id', '=', 'video_reposts.profile_id')
                     ->where('auth_following.profile_id', '=', $pid);
             })
                 ->select([
-                    'video_reposts.*',
-                    DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
-                ])
+                'video_reposts.*',
+                DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
+            ])
                 ->orderBy('video_reposts.created_at', 'desc')
                 ->cursorPaginate(10);
         } else {
-            $res = $likes->limit(10)->get();
+            $res = $shares->select('video_reposts.*')
+                ->orderBy('video_reposts.created_at', 'desc')
+                ->limit(10)
+                ->get();
         }
 
         return VideoRepostResource::collection($res);

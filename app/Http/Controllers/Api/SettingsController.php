@@ -12,11 +12,12 @@ use App\Http\Resources\ProfileResource;
 use App\Models\Profile;
 use App\Models\UserFilter;
 use App\Services\AccountService;
+use App\Services\AccountSuggestionService;
 use App\Services\AvatarService;
 use App\Services\TwoFactorService;
 use App\Services\UserAuditLogService;
-use Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use PragmaRX\Google2FA\Google2FA;
@@ -309,7 +310,13 @@ class SettingsController extends Controller
         $request->user()->update(['status' => 7]);
         $request->user()->profile->update(['status' => 7]);
         $request->user()->videos()->whereIn('status', [2])->update(['status' => 7]);
+        $request->user()->comments()->where('status', 'active')->update(['status' => 'account_disabled']);
+        $request->user()->commentReplies()->where('status', 'active')->update(['status' => 'account_disabled']);
+        $request->user()->actorNotifications()->update(['actor_state' => 7]);
 
+        AccountSuggestionService::removeFromAll($request->user()->profile_id);
+
+        AccountService::del($request->user()->profile_id);
         Auth::logoutOtherDevices($request->input('password'));
         Auth::logout();
 
@@ -329,7 +336,12 @@ class SettingsController extends Controller
         $request->user()->update(['status' => 8, 'delete_after' => now()->addMonth()]);
         $request->user()->profile->update(['status' => 8]);
         $request->user()->videos()->whereIn('status', [2])->update(['status' => 8]);
+        $request->user()->comments()->whereIn('status', ['active'])->update(['status' => 'account_pending_deletion']);
+        $request->user()->commentReplies()->whereIn('status', ['active'])->update(['status' => 'account_pending_deletion']);
+        $request->user()->actorNotifications()->update(['actor_state' => 8]);
+        AccountSuggestionService::removeFromAll($request->user()->profile_id);
 
+        AccountService::del($request->user()->profile_id);
         Auth::logoutOtherDevices($request->input('password'));
         Auth::logout();
 
