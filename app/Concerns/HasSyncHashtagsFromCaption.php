@@ -17,8 +17,8 @@ trait HasSyncHashtagsFromCaption
 
         foreach ($matches[2] as $tag) {
             $hashtag = Hashtag::firstOrCreate(
-                ['name_normalized' => strtolower($tag)],
-                ['name' => $tag]
+                ['name_normalized' => strtolower($tag), 'name' => $tag],
+                ['can_autolink' => true]
             );
             if ($hashtag->can_autolink) {
                 $hashtags[$hashtag->id] = ['visibility' => $this->visibility ?? 1];
