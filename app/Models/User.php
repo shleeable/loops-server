@@ -129,6 +129,9 @@ class User extends Authenticatable implements OAuthenticatable
         'admin_invite_id',
         'register_ip',
         'last_ip',
+        'push_token',
+        'push_token_verified_at',
+        'push_token_platform',
     ];
 
     protected $hidden = [
@@ -147,6 +150,7 @@ class User extends Authenticatable implements OAuthenticatable
         'admin_invite_id',
         'register_ip',
         'last_ip',
+        'push_token_platform',
     ];
 
     protected function casts(): array

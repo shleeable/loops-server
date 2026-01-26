@@ -1363,24 +1363,24 @@ const handleTranscode = async () => {
             format: new Mp4OutputFormat()
         })
 
-        let targetWidth, targetHeight, bitrate
+        let targetWidth, targetHeight, maxBitrate
 
         if (videoMetadata.value.orientation === 'portrait') {
             targetWidth = 1080
             targetHeight = 1920
-            bitrate = fileSize > 50000000 ? QUALITY_HIGH : 1500000
+            maxBitrate = 2000000
         } else if (videoMetadata.value.orientation === 'landscape') {
             targetWidth = 1920
             targetHeight = 1080
-            bitrate = fileSize > 50000000 ? QUALITY_HIGH : 2000000
+            maxBitrate = 3000000
         } else {
             targetWidth = 1080
             targetHeight = 1080
-            bitrate = fileSize > 50000000 ? QUALITY_HIGH : 1750000
+            maxBitrate = 2500000
         }
 
         console.log(
-            `Transcoding ${videoMetadata.value.orientation} video to ${targetWidth}x${targetHeight}`
+            `Transcoding ${videoMetadata.value.orientation} video to ${targetWidth}x${targetHeight} with CRF`
         )
 
         currentConversion = await Conversion.init({
@@ -1390,7 +1390,9 @@ const handleTranscode = async () => {
                 width: targetWidth,
                 height: targetHeight,
                 fit: 'contain',
-                bitrate: bitrate,
+                crf: 23,
+                maxBitrate: maxBitrate,
+                bufferSize: 4000000,
                 frameRate: 30
             },
             trim: {

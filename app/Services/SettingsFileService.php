@@ -17,6 +17,7 @@ class SettingsFileService
         app(ConfigService::class)->federation(true);
         app(ConfigService::class)->federationMode(true);
         app(ConfigService::class)->userSpamDetection(true);
+        app(ConfigService::class)->pushNotifications(true);
         app(ConfigService::class)->federationAllowedServers(true);
         app(ConfigService::class)->federationAuthorizedFetch(true);
     }
@@ -47,6 +48,7 @@ class SettingsFileService
             'fyf' => $settings['fyf.enabled'] ?? false,
             'registration' => $settings['general.openRegistration'] ?? false,
             'federation' => $settings['federation.enableFederation'] ?? false,
+            'pushNotifications' => $settings['general.pushNotifications'] ?? false,
         ];
 
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -192,6 +194,13 @@ class SettingsFileService
                 'type' => 'boolean',
                 'is_public' => false,
                 'description' => 'Check ip/email against known spammer database',
+            ],
+            [
+                'key' => 'general.pushNotifications',
+                'value' => false,
+                'type' => 'boolean',
+                'is_public' => true,
+                'description' => 'Enable push notifications support',
             ],
             [
                 'key' => 'general.defaultContentStatus',

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Middleware\AdminOnlyAccess;
 use App\Jobs\Federation\DiscoverInstance;
 use App\Models\AdminSetting;
+use App\Services\PushRelayClientService;
 use App\Services\RedisService;
 use App\Services\SanitizeService;
 use App\Services\SettingsFileService;
@@ -60,6 +61,7 @@ class AdminSettingsController extends Controller
             'fyf.enabled' => 'required|boolean',
             'general.openRegistration' => 'required|boolean',
             'general.userSpamDetection' => 'required|boolean',
+            'general.pushNotifications' => 'required|boolean',
             'general.emailVerification' => 'required|accepted',
         ]);
 
@@ -74,6 +76,13 @@ class AdminSettingsController extends Controller
                         app(UserAppPreferencesService::class)->updateDisableForYouFeed();
                     }
                     if (! $supportsBf) {
+                        $value = false;
+                    }
+                }
+                if ($section == 'general' && $key == 'pushNotifications' && $value) {
+                    $attest = app(PushRelayClientService::class)->ensureAttested();
+
+                    if (! $attest) {
                         $value = false;
                     }
                 }

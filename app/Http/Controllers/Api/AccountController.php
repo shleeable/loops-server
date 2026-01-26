@@ -26,6 +26,7 @@ use App\Models\VideoLike;
 use App\Services\AccountService;
 use App\Services\AccountSuggestionService;
 use App\Services\BlockedDomainService;
+use App\Services\ConfigService;
 use App\Services\FollowerService;
 use App\Services\LinkLimitService;
 use App\Services\NotificationService;
@@ -810,6 +811,66 @@ class AccountController extends Controller
             'id' => (string) $profile->id,
             'message' => 'Successfully deleted',
         ]);
+    }
+
+    public function getPushNotificationStatus(Request $request)
+    {
+        $allowed = app(ConfigService::class)->pushNotifications();
+        $user = $request->user();
+
+        $res = [
+            'allowed' => (bool) $allowed,
+            'enabled' => (bool) $user->push_token,
+            'platform' => $user->push_token_platform,
+        ];
+
+        return $this->data($res);
+    }
+
+    public function enablePushNotifications(Request $request)
+    {
+        $allowed = app(ConfigService::class)->pushNotifications();
+
+        if (! $allowed) {
+            return $this->error('Push Notifications are not enabled on this server', 422);
+        }
+
+        $validated = $request->validate([
+            'token' => 'required|string|starts_with:ExponentPushToken[',
+            'platform' => 'required|string|in:android,ios',
+        ]);
+        $user = $request->user();
+
+        if ($user->status != 1 || ! $user->email_verified_at) {
+            return $this->error('You do not have permission for this.', 422);
+        }
+
+        $user->update([
+            'push_token' => $validated['token'],
+            'push_token_verified_at' => now(),
+            'push_token_platform' => $validated['platform'],
+        ]);
+
+        return $this->success();
+    }
+
+    public function disablePushNotifications(Request $request)
+    {
+        $allowed = app(ConfigService::class)->pushNotifications();
+
+        if (! $allowed) {
+            return $this->error('Push Notifications are not enabled on this server', 422);
+        }
+
+        $user = $request->user();
+
+        if ($user->status != 1 || ! $user->email_verified_at) {
+            return $this->error('You do not have permission for this.', 422);
+        }
+
+        $user->update(['push_token' => null, 'push_token_verified_at' => null]);
+
+        return $this->success();
     }
 
     public function profileLinkStore(Request $request)
