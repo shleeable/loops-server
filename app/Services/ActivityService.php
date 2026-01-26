@@ -43,7 +43,7 @@ class ActivityService
                     ]);
                 }
 
-                throw new \Exception("Invalid activity: {$e->getMessage()}");
+                return;
             }
         }
 
