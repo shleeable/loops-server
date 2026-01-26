@@ -37,7 +37,7 @@
                 </router-link>
             </div>
 
-            <div v-if="isEditing" class="mb-2">
+            <div v-if="!comment.tombstone && isEditing" class="mb-2">
                 <MentionHashtagInput
                     v-model="editedCaption"
                     :placeholder="$t('post.editYourComment')"
@@ -91,16 +91,30 @@
             </div>
 
             <div v-else class="mb-2">
-                <AutolinkedText
-                    :caption="comment?.caption"
-                    :mentions="comment?.mentions"
-                    :tags="comment?.tags"
-                    text-size="text-[16px]"
-                    :max-char-limit="80"
-                />
+                <p
+                    class="text-[16px] leading-relaxed break-all"
+                    :class="[
+                        comment.tombstone
+                            ? 'italic text-gray-500 dark:text-gray-500'
+                            : 'text-[#161823] dark:text-gray-100'
+                    ]"
+                >
+                    <AutolinkedText
+                        :caption="comment?.caption"
+                        :mentions="comment?.mentions"
+                        :tags="comment?.tags"
+                        :root-class="
+                            comment.tombstone
+                                ? 'text-gray-500'
+                                : 'text-gray-800 dark:text-slate-300 whitespace-pre-wrap leading-relaxed'
+                        "
+                        text-size="text-[16px]"
+                        :max-char-limit="80"
+                    />
+                </p>
             </div>
 
-            <div v-if="!isEditing" class="flex items-center justify-between">
+            <div v-if="!comment.tombstone && !isEditing" class="flex items-center justify-between">
                 <div class="flex items-center space-x-4 text-gray-500 text-sm">
                     <span class="flex items-center gap-1">{{
                         formatContentDate(comment.created_at)
@@ -132,7 +146,7 @@
             </div>
         </div>
 
-        <div class="relative flex flex-col">
+        <div v-if="!comment.tombstone" class="relative flex flex-col">
             <div
                 class="relative flex opacity-0 group-hover/nested-comment:opacity-100 transition-opacity duration-200"
             >
@@ -182,7 +196,10 @@
                 </div>
             </div>
 
-            <div v-if="!isEditing" class="relative flex justify-center items-center space-x-1">
+            <div
+                v-if="!comment.tombstone && !isEditing"
+                class="relative flex justify-center items-center space-x-1"
+            >
                 <button
                     @click="handleLike"
                     class="flex flex-col justify-center items-center space-y-1 hover:text-red-500 transition-colors"
@@ -444,10 +461,12 @@ const fetchHashtags = async (query) => {
         background-color: rgba(240, 44, 86, 0.15);
         box-shadow: 0 0 0 0 rgba(240, 44, 86, 0.4);
     }
+
     50% {
         background-color: rgba(240, 44, 86, 0.25);
         box-shadow: 0 0 0 8px rgba(240, 44, 86, 0);
     }
+
     100% {
         background-color: rgba(240, 44, 86, 0.1);
         box-shadow: 0 0 0 0 rgba(240, 44, 86, 0);
@@ -458,6 +477,7 @@ const fetchHashtags = async (query) => {
     0% {
         background-color: rgba(240, 44, 86, 0.1);
     }
+
     100% {
         background-color: transparent;
     }
@@ -486,10 +506,12 @@ const fetchHashtags = async (query) => {
         background-color: rgba(240, 44, 86, 0.25);
         box-shadow: 0 0 0 0 rgba(240, 44, 86, 0.5);
     }
+
     50% {
         background-color: rgba(240, 44, 86, 0.35);
         box-shadow: 0 0 0 8px rgba(240, 44, 86, 0);
     }
+
     100% {
         background-color: rgba(240, 44, 86, 0.15);
         box-shadow: 0 0 0 0 rgba(240, 44, 86, 0);
@@ -500,6 +522,7 @@ const fetchHashtags = async (query) => {
     0% {
         background-color: rgba(240, 44, 86, 0.15);
     }
+
     100% {
         background-color: transparent;
     }
