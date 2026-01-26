@@ -93,6 +93,31 @@ use Laravel\Passport\HasApiTokens;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUsername($value)
  *
+ * @property int $status
+ * @property int $role
+ * @property string|null $push_token_platform
+ * @property \Illuminate\Support\Carbon|null $birth_date
+ * @property int|null $admin_invite_id
+ * @property string|null $register_ip
+ * @property string|null $last_ip
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Notification> $actorNotifications
+ * @property-read int|null $actor_notifications_count
+ * @property-read \App\Models\UserAppPreference|null $appPreferences
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Laravel\Passport\Client> $clients
+ * @property-read int|null $clients_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CommentReply> $commentReplies
+ * @property-read int|null $comment_replies_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Laravel\Passport\Client> $oauthApps
+ * @property-read int|null $oauth_apps_count
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereAdminInviteId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereBirthDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastIp($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePushTokenPlatform($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRegisterIp($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRole($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereStatus($value)
+ *
  * @mixin \Eloquent
  */
 #[ObservedBy([UserObserver::class])]
@@ -192,7 +217,19 @@ class User extends Authenticatable implements OAuthenticatable
     /** @return HasMany<Comment, $this> */
     public function comments(): HasMany
     {
-        return $this->hasMany(Comment::class, 'profile_id');
+        return $this->hasMany(Comment::class, 'profile_id', 'profile_id');
+    }
+
+    /** @return HasMany<CommentReply, $this> */
+    public function commentReplies(): HasMany
+    {
+        return $this->hasMany(CommentReply::class, 'profile_id', 'profile_id');
+    }
+
+    /** @return HasMany<Notification, $this> */
+    public function actorNotifications(): HasMany
+    {
+        return $this->hasMany(Notification::class, 'profile_id', 'profile_id');
     }
 
     /** @return HasMany<VideoLike, $this> */
