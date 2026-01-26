@@ -1100,6 +1100,10 @@ class AdminController extends Controller
 
     private function applySorting($query, $sort)
     {
+        if ($sort === 'unprocessed') {
+            return $query->where('status', 1);
+        }
+
         if (in_array($sort, ['deleted', 'expired'])) {
             return $query->orderBy('deleted_at', 'desc');
         }

@@ -155,6 +155,7 @@ const sortOptions = [
     { name: 'Most Comments', value: 'comments_desc' },
     { name: 'Newest', value: 'created_at_desc' },
     { name: 'Oldest', value: 'created_at_asc' },
+    { name: 'Unprocessed', value: 'unprocessed' },
     { name: 'Last Updated', value: 'updated_at_desc' }
 ]
 
