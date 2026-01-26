@@ -890,9 +890,9 @@ class VideoController extends Controller
                     ->where('auth_following.profile_id', '=', $pid);
             })
                 ->select([
-                'video_likes.*',
-                DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
-            ])
+                    'video_likes.*',
+                    DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
+                ])
                 ->orderBy('video_likes.created_at', 'desc')
                 ->cursorPaginate(10);
         } else {
@@ -923,9 +923,9 @@ class VideoController extends Controller
                     ->where('auth_following.profile_id', '=', $pid);
             })
                 ->select([
-                'video_reposts.*',
-                DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
-            ])
+                    'video_reposts.*',
+                    DB::raw('CASE WHEN auth_following.id IS NOT NULL THEN 1 ELSE 0 END as is_following'),
+                ])
                 ->orderBy('video_reposts.created_at', 'desc')
                 ->cursorPaginate(10);
         } else {
