@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
+use Laravel\Passport\Bridge\Client;
 use Laravel\Passport\Contracts\OAuthenticatable;
 use Laravel\Passport\HasApiTokens;
 
@@ -282,6 +284,18 @@ class User extends Authenticatable implements OAuthenticatable
         return $this->dataSettings()->firstOrCreate([
             'user_id' => $this->id,
         ]);
+    }
+
+    public function findForPassport(string $username, Client $client): User
+    {
+        return $this->where('email', $username)
+            ->where('status', '=', 1)
+            ->first();
+    }
+
+    public function validateForPassportPasswordGrant(string $password): bool
+    {
+        return $this->status == 1 && Hash::check($password, $this->password);
     }
 
     public function getTotalWatchTimeInHours(): int
