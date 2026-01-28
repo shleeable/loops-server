@@ -102,7 +102,6 @@ class AppServiceProvider extends ServiceProvider
             app(UserActivityService::class)->markActive($e->user);
         });
 
-        Passport::ignoreRoutes();
         Passport::authorizationView('auth.oauth.authorize');
         Passport::tokensCan([
             'user:read' => 'Retrieve the user info',
