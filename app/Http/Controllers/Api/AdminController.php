@@ -197,13 +197,17 @@ class AdminController extends Controller
 
         $query->select('profiles.*');
 
-        if ($local) {
+        if ($local == true) {
             $query->where('profiles.local', true);
         }
 
         if (! in_array($sort, ['disabled', 'suspended', 'deleted'])) {
-            $query->join('users', 'profiles.id', '=', 'users.profile_id')
-                ->where('users.status', 1);
+            if ($local) {
+                $query->join('users', 'profiles.id', '=', 'users.profile_id')
+                    ->where('users.status', 1);
+            } else {
+                $query->where('status', 1);
+            }
         }
 
         if (! empty($search)) {
