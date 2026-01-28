@@ -281,6 +281,7 @@ class CreateHandler extends BaseHandler
         $comment->profile_id = $actor->id;
         $comment->caption = $this->extractContent($object);
         $comment->visibility = $visibility;
+        $comment->status = 'active';
         $comment->ap_id = $object['id'] ?? null;
         $comment->created_at = $this->extractPublishedDate($object);
         $comment->updated_at = now();
@@ -313,6 +314,7 @@ class CreateHandler extends BaseHandler
         $reply->profile_id = $actor->id;
         $reply->caption = $this->extractContent($object, 'content');
         $reply->visibility = $visibility;
+        $reply->status = 'active';
         $reply->ap_id = $object['id'] ?? null;
         $reply->created_at = $this->extractPublishedDate($object);
         $reply->updated_at = now();
