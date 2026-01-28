@@ -171,8 +171,8 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/account/settings/email/cancel', [EmailChangeController::class, 'cancelEmailChange'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/email/verify', [EmailChangeController::class, 'verifyEmailChange'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/email/resend', [EmailChangeController::class, 'resendEmailChange'])->middleware(['auth:web,api']);
-    Route::post('/v1/account/settings/account/disable', [SettingsController::class, 'confirmDisableAccount'])->middleware(['auth:web']);
-    Route::post('/v1/account/settings/account/delete', [SettingsController::class, 'confirmDeleteAccount'])->middleware(['auth:web']);
+    Route::post('/v1/account/settings/account/disable', [SettingsController::class, 'confirmDisableAccount'])->middleware(['auth:web,api']);
+    Route::post('/v1/account/settings/account/delete', [SettingsController::class, 'confirmDeleteAccount'])->middleware(['auth:web,api']);
     Route::get('/v1/account/settings/links', [AccountController::class, 'getProfileLinks'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/links/add', [AccountController::class, 'profileLinkStore'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/links/delete/{id}', [AccountController::class, 'removeProfileLink'])->middleware(['auth:web,api']);
