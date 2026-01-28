@@ -534,6 +534,7 @@ class VideoController extends Controller
             $comment->video_id = $vid;
             $comment->profile_id = $pid;
             $comment->caption = $body;
+            $comment->status = 'active';
             $comment->save();
             $parent->recalculateReplies();
             $parent->saveQuietly();
@@ -550,6 +551,7 @@ class VideoController extends Controller
             $comment->video_id = $vid;
             $comment->profile_id = $pid;
             $comment->caption = $body;
+            $comment->status = 'active';
             $comment->save();
 
             $comment->syncHashtagsFromCaption();
