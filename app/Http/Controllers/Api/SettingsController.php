@@ -18,7 +18,9 @@ use App\Services\TwoFactorService;
 use App\Services\UserAuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use PragmaRX\Google2FA\Google2FA;
 
@@ -307,22 +309,35 @@ class SettingsController extends Controller
             'password' => 'required|current_password',
         ]);
 
-        $request->user()->update(['status' => 7]);
-        $request->user()->profile->update(['status' => 7]);
-        $request->user()->videos()->whereIn('status', [2])->update(['status' => 7]);
-        $request->user()->comments()->where('status', 'active')->update(['status' => 'account_disabled']);
-        $request->user()->commentReplies()->where('status', 'active')->update(['status' => 'account_disabled']);
-        $request->user()->actorNotifications()->update(['actor_state' => 7]);
+        $user = $request->user();
 
-        AccountSuggestionService::removeFromAll($request->user()->profile_id);
+        DB::transaction(function () use ($user) {
+            $user->forceFill([
+                'status' => 7,
+                'remember_token' => Str::random(60),
+            ])->save();
+            $user->profile?->update(['status' => 7]);
+            $user->videos()->whereIn('status', [2])->update(['status' => 7]);
+            $user->comments()->where('status', 'active')->update(['status' => 'account_disabled']);
+            $user->commentReplies()->where('status', 'active')->update(['status' => 'account_disabled']);
+            $user->actorNotifications()->update(['actor_state' => 7]);
 
-        AccountService::del($request->user()->profile_id);
-        Auth::logoutOtherDevices($request->input('password'));
-        Auth::logout();
+            AccountSuggestionService::removeFromAll($user->profile_id);
+            AccountService::del($user->profile_id);
 
-        $request->session()->invalidate();
+            $tokenIds = $user->tokens()->pluck('id');
+            $user->tokens()->update(['revoked' => true]);
 
-        $request->session()->regenerateToken();
+            DB::table('oauth_refresh_tokens')
+                ->whereIn('access_token_id', $tokenIds)
+                ->update(['revoked' => true]);
+        });
+
+        if ($request->hasSession()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         return $this->success();
     }
@@ -333,21 +348,38 @@ class SettingsController extends Controller
             'password' => 'required|current_password',
         ]);
 
-        $request->user()->update(['status' => 8, 'delete_after' => now()->addMonth()]);
-        $request->user()->profile->update(['status' => 8]);
-        $request->user()->videos()->whereIn('status', [2])->update(['status' => 8]);
-        $request->user()->comments()->whereIn('status', ['active'])->update(['status' => 'account_pending_deletion']);
-        $request->user()->commentReplies()->whereIn('status', ['active'])->update(['status' => 'account_pending_deletion']);
-        $request->user()->actorNotifications()->update(['actor_state' => 8]);
-        AccountSuggestionService::removeFromAll($request->user()->profile_id);
+        $user = $request->user();
 
-        AccountService::del($request->user()->profile_id);
-        Auth::logoutOtherDevices($request->input('password'));
-        Auth::logout();
+        DB::transaction(function () use ($user) {
+            $user->forceFill([
+                'status' => 8,
+                'delete_after' => now()->addMonth(),
+                'remember_token' => Str::random(60),
+            ])->save();
 
-        $request->session()->invalidate();
+            $user->profile?->update(['status' => 8]);
 
-        $request->session()->regenerateToken();
+            $user->videos()->whereIn('status', [2])->update(['status' => 8]);
+            $user->comments()->whereIn('status', ['active'])->update(['status' => 'account_pending_deletion']);
+            $user->commentReplies()->whereIn('status', ['active'])->update(['status' => 'account_pending_deletion']);
+            $user->actorNotifications()->update(['actor_state' => 8]);
+
+            AccountSuggestionService::removeFromAll($user->profile_id);
+            AccountService::del($user->profile_id);
+
+            $accessTokenIds = $user->tokens()->pluck('id');
+            $user->tokens()->update(['revoked' => true]);
+
+            DB::table('oauth_refresh_tokens')
+                ->whereIn('access_token_id', $accessTokenIds)
+                ->update(['revoked' => true]);
+        });
+
+        if ($request->hasSession()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         return $this->success();
     }
