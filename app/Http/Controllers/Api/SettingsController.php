@@ -10,6 +10,7 @@ use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Resources\BlockedAccountResource;
 use App\Http\Resources\ProfileResource;
 use App\Models\Profile;
+use App\Models\User;
 use App\Models\UserFilter;
 use App\Services\AccountService;
 use App\Services\AccountSuggestionService;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Laravel\Passport\Token;
 use PragmaRX\Google2FA\Google2FA;
 
 class SettingsController extends Controller
@@ -325,12 +327,10 @@ class SettingsController extends Controller
             AccountSuggestionService::removeFromAll($user->profile_id);
             AccountService::del($user->profile_id);
 
-            $tokenIds = $user->tokens()->pluck('id');
-            $user->tokens()->update(['revoked' => true]);
-
-            DB::table('oauth_refresh_tokens')
-                ->whereIn('access_token_id', $tokenIds)
-                ->update(['revoked' => true]);
+            User::find($user->id)->tokens()->each(function (Token $token) {
+                $token->revoke();
+                $token->refreshToken?->revoke();
+            });
         });
 
         if ($request->hasSession()) {
@@ -367,12 +367,10 @@ class SettingsController extends Controller
             AccountSuggestionService::removeFromAll($user->profile_id);
             AccountService::del($user->profile_id);
 
-            $accessTokenIds = $user->tokens()->pluck('id');
-            $user->tokens()->update(['revoked' => true]);
-
-            DB::table('oauth_refresh_tokens')
-                ->whereIn('access_token_id', $accessTokenIds)
-                ->update(['revoked' => true]);
+            User::find($user->id)->tokens()->each(function (Token $token) {
+                $token->revoke();
+                $token->refreshToken?->revoke();
+            });
         });
 
         if ($request->hasSession()) {
