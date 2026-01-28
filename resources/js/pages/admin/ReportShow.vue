@@ -48,30 +48,70 @@
                         </p>
                     </div>
 
-                    <div v-if="report.status === 'pending'" class="flex flex-col gap-3">
+                    <div
+                        v-if="report.status === 'pending'"
+                        class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 md:max-w-[40%] lg:max-w-[50%] gap-3"
+                    >
                         <button
                             @click="dismissReport"
-                            class="px-4 py-2 bg-gray-100 text-black text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors cursor-pointer"
+                            class="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer"
                         >
                             Dismiss Report
                         </button>
+
                         <button
                             @click="dismissAllReportsByAccount"
-                            class="px-4 py-2 bg-gray-100 text-black text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors cursor-pointer truncate"
+                            class="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer truncate"
                         >
                             Dismiss all by {{ report.reporter.username }}
                         </button>
+
                         <button
                             v-if="report.content_type === 'video'"
                             @click="markAsNsfw"
-                            class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors cursor-pointer"
+                            class="px-4 py-2.5 bg-green-600 dark:bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors cursor-pointer"
                         >
                             Mark as NSFW
                         </button>
+
+                        <button
+                            v-if="
+                                report.content_type === 'video' &&
+                                !report.content_preview?.meta?.contains_ai
+                            "
+                            @click="markAsAi"
+                            class="px-4 py-2.5 bg-green-600 dark:bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors cursor-pointer"
+                        >
+                            Mark as AI
+                        </button>
+
+                        <button
+                            v-if="
+                                report.content_type === 'video' &&
+                                !report.content_preview?.meta?.contains_ad
+                            "
+                            @click="markAsAd"
+                            class="px-4 py-2.5 bg-green-600 dark:bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors cursor-pointer"
+                        >
+                            Mark as Ad
+                        </button>
+
+                        <button
+                            v-if="
+                                report.content_type === 'video' &&
+                                !report.content_preview?.meta?.contains_ad &&
+                                !report.content_preview?.meta?.contains_ai
+                            "
+                            @click="markAsAiAndAd"
+                            class="px-4 py-2.5 bg-green-600 dark:bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors cursor-pointer"
+                        >
+                            Mark as AI + Ad
+                        </button>
+
                         <button
                             v-if="report.content_type === 'video'"
                             @click="deleteVideo"
-                            class="px-4 py-2 text-red-600 border border-red-600 text-sm font-medium rounded-lg hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
+                            class="px-4 py-2.5 bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 border border-red-600 dark:border-red-500 text-sm font-medium rounded-lg hover:bg-red-600 hover:text-white dark:hover:bg-red-600 dark:hover:border-red-600 transition-colors cursor-pointer"
                         >
                             Delete Video
                         </button>
@@ -79,7 +119,7 @@
                         <button
                             v-if="report.content_type === 'comment'"
                             @click="deleteComment"
-                            class="px-4 py-2 text-red-600 border border-red-600 text-sm font-medium rounded-lg hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
+                            class="px-4 py-2.5 bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 border border-red-600 dark:border-red-500 text-sm font-medium rounded-lg hover:bg-red-600 hover:text-white dark:hover:bg-red-600 dark:hover:border-red-600 transition-colors cursor-pointer"
                         >
                             Delete Comment
                         </button>
@@ -87,15 +127,15 @@
                         <button
                             v-if="report.content_type === 'reply'"
                             @click="deleteCommentReply"
-                            class="px-4 py-2 text-red-600 border border-red-600 text-sm font-medium rounded-lg hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
+                            class="px-4 py-2.5 bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 border border-red-600 dark:border-red-500 text-sm font-medium rounded-lg hover:bg-red-600 hover:text-white dark:hover:bg-red-600 dark:hover:border-red-600 transition-colors cursor-pointer"
                         >
-                            Delete Comment Reply
+                            Delete Reply
                         </button>
 
                         <button
                             v-if="report.content_type === 'hashtag'"
                             @click="dismissAndManageHashtag"
-                            class="px-4 py-2 text-red-600 border border-red-600 text-sm font-medium rounded-lg hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
+                            class="px-4 py-2.5 bg-orange-50 dark:bg-orange-950 text-orange-600 dark:text-orange-400 border border-orange-600 dark:border-orange-500 text-sm font-medium rounded-lg hover:bg-orange-600 hover:text-white dark:hover:bg-orange-600 dark:hover:border-orange-600 transition-colors cursor-pointer"
                         >
                             Dismiss & Manage Hashtag
                         </button>
@@ -103,7 +143,7 @@
                         <button
                             v-if="report.content_type === 'hashtag'"
                             @click="manageHashtag"
-                            class="px-4 py-2 text-red-600 border border-red-600 text-sm font-medium rounded-lg hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
+                            class="px-4 py-2.5 bg-orange-50 dark:bg-orange-950 text-orange-600 dark:text-orange-400 border border-orange-600 dark:border-orange-500 text-sm font-medium rounded-lg hover:bg-orange-600 hover:text-white dark:hover:bg-orange-600 dark:hover:border-orange-600 transition-colors cursor-pointer"
                         >
                             Manage Hashtag
                         </button>
@@ -204,6 +244,26 @@
                             <span class="text-sm text-gray-600 dark:text-gray-400"
                                 >ID: {{ report.content_preview?.id }}</span
                             >
+                        </div>
+                        <div
+                            v-if="
+                                report.content_preview?.meta?.contains_ai ||
+                                report.content_preview?.meta?.contains_ad
+                            "
+                            class="flex flex-col xl:flex-row my-1 gap-3"
+                        >
+                            <span
+                                v-if="report.content_preview?.meta?.contains_ai"
+                                class="inline-flex justify-center items-center rounded-full bg-indigo-100 px-5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-400"
+                            >
+                                Contains AI
+                            </span>
+                            <span
+                                v-if="report.content_preview?.meta?.contains_ad"
+                                class="inline-flex justify-center items-center rounded-full bg-indigo-100 px-5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-400"
+                            >
+                                Sponsored Ad
+                            </span>
                         </div>
                     </div>
                     <div class="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -767,7 +827,7 @@ const deleteCommentReply = async () => {
 const markAsNsfw = async () => {
     const result = await confirmModal(
         'Mark as NSFW',
-        `Are you sure you want to mark this post as NSFW? This action cannot be undone.`,
+        `Are you sure you want to mark this post as NSFW?`,
         'Mark as NSFW',
         'Cancel'
     )
@@ -775,6 +835,57 @@ const markAsNsfw = async () => {
     if (result) {
         const id = report.value.id
         const response = await reportsApi.updateReportMarkAsNsfw(id).finally(async () => {
+            await adminStore.fetchReportsCount()
+            router.push('/admin/reports')
+        })
+    }
+}
+
+const markAsAi = async () => {
+    const result = await confirmModal(
+        'Mark as AI',
+        `Are you sure you want to mark this post as AI generated content?`,
+        'Mark as AI',
+        'Cancel'
+    )
+
+    if (result) {
+        const id = report.value.id
+        const response = await reportsApi.markAsAi(id).finally(async () => {
+            await adminStore.fetchReportsCount()
+            router.push('/admin/reports')
+        })
+    }
+}
+
+const markAsAd = async () => {
+    const result = await confirmModal(
+        'Mark as Ad',
+        `Are you sure you want to mark this post as an Ad/Sponsored content?`,
+        'Mark as AI',
+        'Cancel'
+    )
+
+    if (result) {
+        const id = report.value.id
+        const response = await reportsApi.markAsAd(id).finally(async () => {
+            await adminStore.fetchReportsCount()
+            router.push('/admin/reports')
+        })
+    }
+}
+
+const markAsAiAndAd = async () => {
+    const result = await confirmModal(
+        'Mark as Ai + Ad',
+        `Are you sure you want to mark this post as AI generated and Ad/Sponsored content?`,
+        'Mark as AI + Ad',
+        'Cancel'
+    )
+
+    if (result) {
+        const id = report.value.id
+        const response = await reportsApi.markAsAiAndAd(id).finally(async () => {
             await adminStore.fetchReportsCount()
             router.push('/admin/reports')
         })

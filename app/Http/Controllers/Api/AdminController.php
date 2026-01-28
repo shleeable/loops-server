@@ -435,6 +435,49 @@ class AdminController extends Controller
         return $this->success();
     }
 
+    public function reportMarkAsAi(Request $request, $id)
+    {
+        $report = Report::whereNotNull('reported_video_id')->where('admin_seen', false)->findOrFail($id);
+        $video = $report->video;
+        $video->contains_ai = true;
+        $video->save();
+        $report->admin_seen = true;
+        $report->save();
+
+        app(AdminAuditLogService::class)->logReportUpdateMarkAsAi($request->user(), $report, ['vid' => $video->id, 'profile_id' => $report->reporter_profile_id]);
+
+        return $this->success();
+    }
+
+    public function reportMarkAsAd(Request $request, $id)
+    {
+        $report = Report::whereNotNull('reported_video_id')->where('admin_seen', false)->findOrFail($id);
+        $video = $report->video;
+        $video->contains_ad = true;
+        $video->save();
+        $report->admin_seen = true;
+        $report->save();
+
+        app(AdminAuditLogService::class)->logReportUpdateMarkAsAd($request->user(), $report, ['vid' => $video->id, 'profile_id' => $report->reporter_profile_id]);
+
+        return $this->success();
+    }
+
+    public function reportMarkAsAiAndAd(Request $request, $id)
+    {
+        $report = Report::whereNotNull('reported_video_id')->where('admin_seen', false)->findOrFail($id);
+        $video = $report->video;
+        $video->contains_ad = true;
+        $video->contains_ai = true;
+        $video->save();
+        $report->admin_seen = true;
+        $report->save();
+
+        app(AdminAuditLogService::class)->logReportUpdateMarkAsAiAndAd($request->user(), $report, ['vid' => $video->id, 'profile_id' => $report->reporter_profile_id]);
+
+        return $this->success();
+    }
+
     public function reportDismiss(Request $request, $id)
     {
         $report = Report::where('admin_seen', false)->findOrFail($id);

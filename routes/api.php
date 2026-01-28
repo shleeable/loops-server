@@ -289,6 +289,9 @@ Route::prefix('api')->group(function () {
         Route::post('/reports/{id}/comment-reply-delete', [AdminController::class, 'reportDeleteCommentReply'])->middleware('auth:web,api');
         Route::post('/reports/{id}/dismiss', [AdminController::class, 'reportDismiss'])->middleware('auth:web,api');
         Route::post('/reports/{id}/dismiss-all-by-account', [AdminController::class, 'reportDismissAllByAccount'])->middleware('auth:web,api');
+        Route::post('/reports/{id}/mark-as-ai', [AdminController::class, 'reportMarkAsAi'])->middleware('auth:web,api');
+        Route::post('/reports/{id}/mark-as-ad', [AdminController::class, 'reportMarkAsAd'])->middleware('auth:web,api');
+        Route::post('/reports/{id}/mark-as-ai-and-ad', [AdminController::class, 'reportMarkAsAiAndAd'])->middleware('auth:web,api');
         Route::post('/reports/{id}/video-delete', [AdminController::class, 'reportDeleteVideo'])->middleware('auth:web,api');
         Route::get('/profiles/{id}', [AdminController::class, 'profileShow'])->middleware('auth:web,api');
         Route::post('/profiles/{id}/permissions', [AdminController::class, 'profilePermissionUpdate'])->middleware('auth:web,api');
