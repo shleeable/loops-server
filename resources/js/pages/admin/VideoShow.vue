@@ -275,7 +275,7 @@
                             Video Stats
                         </h3>
 
-                        <div class="grid grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-6">
                             <div class="text-center">
                                 <div class="text-2xl font-bold text-gray-900 dark:text-white">
                                     {{ formatNumber(video.likes) }}
@@ -322,6 +322,24 @@
                                     Reports
                                 </div>
                             </component>
+                        </div>
+
+                        <div
+                            v-if="video.meta.contains_ai || video.meta.contains_ad"
+                            class="flex flex-col xl:flex-row mt-4 gap-3 lg:px-5"
+                        >
+                            <span
+                                v-if="video.meta.contains_ai"
+                                class="inline-flex justify-center items-center rounded-full bg-indigo-100 px-5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-400"
+                            >
+                                Contains AI
+                            </span>
+                            <span
+                                v-if="video.meta.contains_ad"
+                                class="inline-flex justify-center items-center rounded-full bg-indigo-100 px-5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-400"
+                            >
+                                Sponsored Ad
+                            </span>
                         </div>
                     </div>
 
