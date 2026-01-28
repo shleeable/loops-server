@@ -196,6 +196,7 @@ class LoginController extends Controller
 
         if (in_array($user->status, [7, 8])) {
             $hasRecovered = true;
+
             DB::transaction(function () use ($user) {
                 $user->update(['status' => 1, 'delete_after' => null]);
                 $user->profile->update(['status' => 1]);
@@ -204,8 +205,9 @@ class LoginController extends Controller
                 $user->comments()->whereIn('status', ['account_pending_deletion', 'account_disabled'])->update(['status' => 'active']);
                 $user->commentReplies()->whereIn('status', ['account_pending_deletion', 'account_disabled'])->update(['status' => 'active']);
                 $user->actorNotifications()->whereIn('actor_state', [7, 8])->update(['actor_state' => 1]);
-                AccountService::del($user->profile_id);
             });
+            AccountService::del($user->profile_id);
+            AccountService::get($user->profile_id);
         }
 
         if ($intendedUrl && str_contains($intendedUrl, '/oauth/authorize')) {
