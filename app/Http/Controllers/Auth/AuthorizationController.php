@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Auth;
 
-use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Passport\Bridge\User;
@@ -26,7 +25,6 @@ class AuthorizationController extends PassportController
      */
     public function __construct(
         protected AuthorizationServer $server,
-        protected StatefulGuard $guard,
         protected ClientRepository $clients,
     ) {}
 
