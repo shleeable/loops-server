@@ -71,9 +71,6 @@ class VideoThumbnailJob implements ShouldQueue
         $thumb = str_replace('.'.$ext, '.jpg', $video->vid);
 
         $indexSec = 0;
-        if ($video->size_kb && $video->size_kb > 8000) {
-            $indexSec = 2;
-        }
 
         $media = FFMpeg::fromDisk('s3')
             ->open($video->vid)
