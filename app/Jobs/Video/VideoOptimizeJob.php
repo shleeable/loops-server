@@ -103,8 +103,8 @@ class VideoOptimizeJob implements ShouldQueue
 
             if ($height > $width) {
                 $scaleFilter = 'scale=720:-2';
-                $maxBitrate = '2000k';
-                $bufSize = '4000k';
+                $maxBitrate = '2500k';
+                $bufSize = '5000k';
             } elseif ($width > $height) {
                 $scaleFilter = 'scale=-2:720';
                 $maxBitrate = '3000k';
@@ -125,8 +125,8 @@ class VideoOptimizeJob implements ShouldQueue
                     '-maxrate', $maxBitrate,
                     '-bufsize', $bufSize,
                     '-nal-hrd', 'vbr',
-                    '-profile:v', 'main',
-                    '-level', '4.0',
+                    '-profile:v', 'high',
+                    '-level', '4.1',
                     '-movflags', '+faststart',
                     '-pix_fmt', 'yuv420p',
                     '-tune', 'film',
