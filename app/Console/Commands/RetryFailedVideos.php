@@ -3,12 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Jobs\Video\VideoOptimizeJob;
+use App\Jobs\Video\VideoProcessingCompleteJob;
 use App\Jobs\Video\VideoThumbnailJob;
 use App\Models\Video;
 use App\Services\ConfigService;
-use App\Services\FederationDispatcher;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Bus;
 
 class RetryFailedVideos extends Command
 {
@@ -42,35 +41,10 @@ class RetryFailedVideos extends Command
             $video->processing_failed_at = null;
             $video->save();
 
-            Bus::batch([
-                [new VideoThumbnailJob($video)],
-                [new VideoOptimizeJob($video)],
-            ])
-                ->then(function () use ($video, $config) {
-                    $video->processing_status = 'completed';
-                    $video->save();
-
-                    if ($config->federation() && $video->is_local && ! $video->federated_at) {
-                        app(FederationDispatcher::class)->dispatchVideoCreation($video);
-
-                        $video->federated_at = now();
-                        $video->save();
-
-                        $this->info("Federation dispatched for video ID: {$video->id}");
-                    } elseif ($video->federated_at) {
-                        $this->info("Video ID: {$video->id} was already federated, skipping.");
-                    }
-                })
-                ->catch(function ($batch, $e) use ($video) {
-                    $video->processing_status = 'failed';
-                    $video->processing_error = $e->getMessage();
-                    $video->processing_failed_at = now();
-                    $video->save();
-
-                    $this->error("Video ID {$video->id} failed again: {$e->getMessage()}");
-                })
-                ->allowFailures()
-                ->dispatch();
+            VideoThumbnailJob::withChain([
+                new VideoOptimizeJob($video),
+                new VideoProcessingCompleteJob($video),
+            ])->dispatch($video);
 
             $this->info("Retrying video ID: {$video->id}");
         }
