@@ -3,7 +3,6 @@
 namespace App\Jobs\Video;
 
 use App\Services\VideoService;
-use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,7 +15,7 @@ use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 
 class VideoThumbnailJob implements ShouldQueue
 {
-    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $video;
 
@@ -30,23 +29,26 @@ class VideoThumbnailJob implements ShouldQueue
 
     public $backoff = [10, 30, 60];
 
+    public function __construct($video)
+    {
+        $this->video = $video->withoutRelations();
+        $this->onQueue('video-processing');
+    }
+
     public function middleware(): array
     {
         return [(new WithoutOverlapping('video-thumb:'.$this->video->id))->expireAfter(180)];
     }
 
-    public function __construct($video)
-    {
-        $this->video = $video;
-    }
-
     public function handle(): void
     {
-        if ($this->batch()?->cancelled()) {
+        $video = $this->video->fresh();
+
+        if (! $video) {
+            Log::warning('Video not found for thumbnail job', ['video_id' => $this->video->id]);
+
             return;
         }
-
-        $video = $this->video;
 
         if (str_starts_with($video->vid, 'https://')) {
             return;
@@ -90,7 +92,6 @@ class VideoThumbnailJob implements ShouldQueue
             $video->save();
 
             VideoService::deleteMediaData($video->id);
-
         } catch (\Exception $e) {
             Log::error('Video thumbnail generation failed', [
                 'video_id' => $video->id,
@@ -101,6 +102,8 @@ class VideoThumbnailJob implements ShouldQueue
 
             if ($this->attempts() >= $this->tries) {
                 $video->processing_error = 'Thumbnail generation failed: '.$e->getMessage();
+                $video->processing_status = 'failed';
+                $video->processing_failed_at = now();
                 $video->save();
             }
 
@@ -110,14 +113,18 @@ class VideoThumbnailJob implements ShouldQueue
 
     public function failed(\Throwable $exception): void
     {
+        $video = $this->video->fresh();
+
+        if ($video) {
+            $video->processing_status = 'failed';
+            $video->processing_error = 'Thumbnail: '.$exception->getMessage();
+            $video->processing_failed_at = now();
+            $video->save();
+        }
+
         Log::error('Video thumbnail job permanently failed', [
             'video_id' => $this->video->id,
             'error' => $exception->getMessage(),
         ]);
-
-        $this->video->processing_status = 'failed';
-        $this->video->processing_error = 'Thumbnail: '.$exception->getMessage();
-        $this->video->processing_failed_at = now();
-        $this->video->save();
     }
 }

@@ -4,7 +4,6 @@ namespace App\Jobs\Video;
 
 use App\Services\VideoService;
 use FFMpeg\Format\Video\X264;
-use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -17,54 +16,38 @@ use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 
 class VideoOptimizeJob implements ShouldQueue
 {
-    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $video;
 
-    /**
-     * The number of seconds the job can run before timing out.
-     *
-     * @var int
-     */
     public $timeout = 300;
 
     public $tries = 3;
 
-    /**
-     * The maximum number of unhandled exceptions to allow before failing.
-     *
-     * @var int
-     */
     public $maxExceptions = 3;
 
     public $deleteWhenMissingModels = true;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct($video)
     {
-        $this->video = $video;
+        $this->video = $video->withoutRelations();
+        $this->onQueue('video-processing');
     }
 
-    /**
-     * Get the middleware the job should pass through.
-     */
     public function middleware(): array
     {
         return [(new WithoutOverlapping('video-processing:'.$this->video->id))->expireAfter(420)];
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
-        if ($this->batch()?->cancelled()) {
+        $video = $this->video->fresh();
+
+        if (! $video) {
+            Log::warning('Video not found for optimization job', ['video_id' => $this->video->id]);
+
             return;
         }
-
-        $video = $this->video;
 
         if (str_starts_with($video->vid, 'https://')) {
             return;
@@ -160,9 +143,7 @@ class VideoOptimizeJob implements ShouldQueue
             $video->save();
 
             $media->cleanupTemporaryFiles();
-
             VideoService::deleteMediaData($video->id);
-
         } catch (\Exception $e) {
             Log::error('Video optimization failed', [
                 'video_id' => $video->id,
@@ -173,6 +154,8 @@ class VideoOptimizeJob implements ShouldQueue
 
             if ($this->attempts() >= $this->tries) {
                 $video->processing_error = 'Optimization failed: '.$e->getMessage();
+                $video->processing_status = 'failed';
+                $video->processing_failed_at = now();
                 $video->save();
             }
 
@@ -182,14 +165,18 @@ class VideoOptimizeJob implements ShouldQueue
 
     public function failed(\Throwable $exception): void
     {
+        $video = $this->video->fresh();
+
+        if ($video) {
+            $video->processing_status = 'failed';
+            $video->processing_error = 'Optimization: '.$exception->getMessage();
+            $video->processing_failed_at = now();
+            $video->save();
+        }
+
         Log::error('Video optimization job permanently failed', [
             'video_id' => $this->video->id,
             'error' => $exception->getMessage(),
         ]);
-
-        $this->video->processing_status = 'failed';
-        $this->video->processing_error = 'Optimization: '.$exception->getMessage();
-        $this->video->processing_failed_at = now();
-        $this->video->save();
     }
 }

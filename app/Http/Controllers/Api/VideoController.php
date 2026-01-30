@@ -29,6 +29,7 @@ use App\Jobs\Federation\DeliverUndoCommentReplyLikeActivity;
 use App\Jobs\Federation\DeliverUndoVideoLikeActivity;
 use App\Jobs\Federation\DeliverVideoLikeActivity;
 use App\Jobs\Video\VideoOptimizeJob;
+use App\Jobs\Video\VideoProcessingCompleteJob;
 use App\Jobs\Video\VideoThumbnailJob;
 use App\Models\Comment;
 use App\Models\CommentCaptionEdit;
@@ -50,9 +51,7 @@ use App\Services\LikeService;
 use App\Services\SanitizeService;
 use App\Services\UserActivityService;
 use App\Services\VideoService;
-use Illuminate\Bus\Batch;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -177,40 +176,10 @@ class VideoController extends Controller
             $model->processing_status = 'processing';
             $model->save();
 
-            $config = app(ConfigService::class);
-
-            Bus::batch([
-                [
-                    new VideoThumbnailJob($model),
-                ],
-                [
-                    new VideoOptimizeJob($model),
-                ],
-            ])->then(function (Batch $batch) use ($model, $config) {
-                $model->processing_status = 'completed';
-                $model->save();
-
-                if ($config->federation() && ! $model->federated_at) {
-                    app(FederationDispatcher::class)->dispatchVideoCreation($model);
-
-                    $model->federated_at = now();
-                    $model->save();
-                }
-            })
-                ->catch(function (Batch $batch, \Throwable $e) use ($model) {
-                    $model->processing_status = 'failed';
-                    $model->processing_error = $e->getMessage();
-                    $model->processing_failed_at = now();
-                    $model->save();
-
-                    Log::error('Video processing batch failed', [
-                        'video_id' => $model->id,
-                        'batch_id' => $batch->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                })
-                ->allowFailures()
-                ->dispatch();
+            VideoThumbnailJob::withChain([
+                new VideoOptimizeJob($model),
+                new VideoProcessingCompleteJob($model),
+            ])->dispatch($model);
 
             return $this->success();
 
