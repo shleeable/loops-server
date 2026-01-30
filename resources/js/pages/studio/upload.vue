@@ -1368,15 +1368,15 @@ const handleTranscode = async () => {
         if (videoMetadata.value.orientation === 'portrait') {
             targetWidth = 1080
             targetHeight = 1920
-            maxBitrate = 2000000
+            maxBitrate = 5000000
         } else if (videoMetadata.value.orientation === 'landscape') {
             targetWidth = 1920
             targetHeight = 1080
-            maxBitrate = 3000000
+            maxBitrate = 5000000
         } else {
             targetWidth = 1080
             targetHeight = 1080
-            maxBitrate = 2500000
+            maxBitrate = 5000000
         }
 
         console.log(
@@ -1392,7 +1392,7 @@ const handleTranscode = async () => {
                 fit: 'contain',
                 crf: 23,
                 maxBitrate: maxBitrate,
-                bufferSize: 4000000,
+                bufferSize: 6000000,
                 frameRate: 30
             },
             trim: {
