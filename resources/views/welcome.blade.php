@@ -13,6 +13,7 @@
     <meta property="og:type" content="website" />
     <meta name="twitter:title" content="{{ $title }}" />
     <meta name="twitter:description" content="{{ $desc }}" />
+    <meta name="apple-itunes-app" content="app-id=6499375182">
     @vite(['resources/js/app.js']){!!App\Services\FrontendService::getCustomCss();!!}
 
     <script type="text/javascript">
