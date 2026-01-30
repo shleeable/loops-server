@@ -565,7 +565,7 @@ class AccountController extends Controller
         $limit = 15;
 
         $targetFollows = Profile::select([
-            'profiles.*',
+            'profiles.id',
             DB::raw('COUNT(f_count.id) as followers_count'),
             DB::raw('1 as suggestion_type'),
             DB::raw('0 as is_following'),
@@ -605,7 +605,7 @@ class AccountController extends Controller
             $needed = $limit - $suggestions->count();
 
             $followersOfTarget = Profile::select([
-                'profiles.*',
+                'profiles.id',
                 DB::raw('COUNT(f_count.id) as followers_count'),
                 DB::raw('2 as suggestion_type'),
                 DB::raw('0 as is_following'),
@@ -646,7 +646,7 @@ class AccountController extends Controller
             $needed = $limit - $suggestions->count();
 
             $popularAccounts = Profile::select([
-                'profiles.*',
+                'profiles.id',
                 DB::raw('COUNT(f_count.id) as followers_count'),
                 DB::raw('3 as suggestion_type'),
                 DB::raw('0 as is_following'),
