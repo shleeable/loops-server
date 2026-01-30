@@ -25,7 +25,7 @@ class Controller extends BaseController
 
         $headers = array_merge($defaultHeaders, $headers);
 
-        return response()->json($data, $status, $headers);
+        return response()->json($data, $status, $headers, JSON_UNESCAPED_SLASHES);
     }
 
     /**
