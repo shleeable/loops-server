@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('processing_failed_at')->nullable();
         });
 
-        DB::table('videos')->where('status', 2)->update(['processing_status' => 'completed']);
+        DB::table('videos')->whereIn('status', [2, 4, 6, 7, 8, 9])->update(['processing_status' => 'completed']);
     }
 
     /**
