@@ -174,6 +174,9 @@ class VideoController extends Controller
 
             DB::commit();
 
+            $model->processing_status = 'processing';
+            $model->save();
+
             $config = app(ConfigService::class);
 
             Bus::batch([
@@ -183,12 +186,28 @@ class VideoController extends Controller
                 [
                     new VideoOptimizeJob($model),
                 ],
-            ])->finally(function (Batch $batch) use ($model) {
-                $config = app(ConfigService::class);
+            ])->then(function (Batch $batch) use ($model, $config) {
+                $model->processing_status = 'completed';
+                $model->save();
+
                 if ($config->federation()) {
                     app(FederationDispatcher::class)->dispatchVideoCreation($model);
                 }
-            })->dispatch();
+            })
+                ->catch(function (Batch $batch, \Throwable $e) use ($model) {
+                    $model->processing_status = 'failed';
+                    $model->processing_error = $e->getMessage();
+                    $model->processing_failed_at = now();
+                    $model->save();
+
+                    Log::error('Video processing batch failed', [
+                        'video_id' => $model->id,
+                        'batch_id' => $batch->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                })
+                ->allowFailures()
+                ->dispatch();
 
             return $this->success();
 
