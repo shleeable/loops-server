@@ -105,6 +105,7 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
             $video->update([
                 'vid' => $s3Path,
                 'vid_optimized' => $s3Path,
+                'processing_status' => 'completed',
                 'size_kb' => $sizeKb,
                 'duration' => (int) round($duration),
                 'status' => self::STATUS_PUBLISHED,

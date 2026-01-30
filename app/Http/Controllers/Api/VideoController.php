@@ -190,8 +190,11 @@ class VideoController extends Controller
                 $model->processing_status = 'completed';
                 $model->save();
 
-                if ($config->federation()) {
+                if ($config->federation() && ! $model->federated_at) {
                     app(FederationDispatcher::class)->dispatchVideoCreation($model);
+
+                    $model->federated_at = now();
+                    $model->save();
                 }
             })
                 ->catch(function (Batch $batch, \Throwable $e) use ($model) {

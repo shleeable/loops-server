@@ -12,6 +12,7 @@ Schedule::command('app:system-message-seeder')->daily()->onOneServer();
 Schedule::command('app:system-message-garbage-collector')->daily()->onOneServer();
 Schedule::command('passport:purge --revoked')->daily()->onOneServer();
 Schedule::command('version:check --force')->twiceDaily(9, 17)->withoutOverlapping()->runInBackground()->onOneServer();
+Schedule::command('videos:retry-failed')->everyThirtyMinutes()->onOneServer();
 
 if (config('loops.admin_dashboard.autoUpdate')) {
     Schedule::command('admin:refresh-dashboard-30d')->everyThirtyMinutes()->onOneServer();
