@@ -20,6 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
+        $middleware->web(append: [
+            \App\Http\Middleware\CheckAccountStatus::class,
+        ]);
 
         $getenv = static function (string $key, $default = null) {
             $val = $_SERVER[$key] ?? $_ENV[$key] ?? (getenv($key) !== false ? getenv($key) : null);

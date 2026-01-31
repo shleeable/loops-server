@@ -280,24 +280,20 @@
                 </div>
             </div>
 
-            <div
-                class="flex justify-between flex-col gap-3 px-3 mt-5 transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100"
-            >
-                <div class="text-[10.5px] text-gray-400 font-light dbi">
-                    {{ getCopyright() }}
-                </div>
+            <div class="flex justify-between flex-col gap-3 px-3 mt-5">
                 <div class="flex flex-col">
-                    <a
-                        class="text-[10.5px] text-gray-400 hover:text-red-400 dbi"
-                        href="https://joinloops.org"
-                        >{{ t('nav.poweredBy') }} Loops</a
-                    >
-                    <a
-                        class="text-[8px] text-gray-400 hover:text-red-400 dbi"
-                        href="https://github.com/joinloops/loops-server"
-                        target="_blank"
-                        >v{{ appVersion() }}</a
-                    >
+                    <div class="text-[10.5px] text-gray-400 font-light dbi">
+                        {{ getCopyright() }}
+                    </div>
+                    <div>
+                        <a
+                            class="text-[10.5px] text-gray-400 hover:text-red-400 dbi"
+                            href="https://joinloops.org"
+                            target="_blank"
+                            :title="'v' + appVersion()"
+                            >{{ t('nav.poweredBy') }} Loops</a
+                        >
+                    </div>
                 </div>
             </div>
 

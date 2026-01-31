@@ -36,7 +36,6 @@ Welcome! Please verify your email address to complete your account setup on [Loo
 
 **Having trouble?**
 - Make sure you're using the latest verification code
-- Check your spam folder if you don't see this email
 - Contact support if you continue having issues
 
 If you didn't create an account, you can safely ignore this email.

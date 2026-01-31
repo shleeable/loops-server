@@ -35,6 +35,11 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereVideoId($value)
  *
+ * @property int $actor_state
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereActorState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Notification whereSystemMessageId($value)
+ *
  * @mixin \Eloquent
  */
 class Notification extends Model
@@ -102,7 +107,7 @@ class Notification extends Model
      *
      * @var list<string>
      */
-    protected $fillable = ['user_id', 'type', 'video_id', 'read_at', 'profile_id', 'comment_id', 'comment_reply_id', 'system_message_id', 'created_at', 'updated_at'];
+    protected $fillable = ['user_id', 'type', 'video_id', 'read_at', 'profile_id', 'actor_state', 'comment_id', 'comment_reply_id', 'system_message_id', 'created_at', 'updated_at'];
 
     protected function casts(): array
     {

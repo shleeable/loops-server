@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Cache;
 
 class AccountService
 {
-    const CACHE_KEY = 'api:s:account:';
+    const CACHE_KEY = 'api:s:account:v1:';
 
     const ACCOUNT_LIKES_CACHE_KEY = 'api:s:account:likes_count:';
 
@@ -119,7 +119,7 @@ class AccountService
     public static function getAccountLikesCount($id)
     {
         return Cache::remember(self::ACCOUNT_LIKES_CACHE_KEY.$id, now()->addHours(36), function () use ($id) {
-            return Video::whereProfileId($id)->sum('likes');
+            return Video::whereProfileId($id)->whereStatus(2)->sum('likes');
         });
     }
 }

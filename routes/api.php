@@ -171,8 +171,8 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/account/settings/email/cancel', [EmailChangeController::class, 'cancelEmailChange'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/email/verify', [EmailChangeController::class, 'verifyEmailChange'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/email/resend', [EmailChangeController::class, 'resendEmailChange'])->middleware(['auth:web,api']);
-    Route::post('/v1/account/settings/account/disable', [SettingsController::class, 'confirmDisableAccount'])->middleware(['auth:web']);
-    Route::post('/v1/account/settings/account/delete', [SettingsController::class, 'confirmDeleteAccount'])->middleware(['auth:web']);
+    Route::post('/v1/account/settings/account/disable', [SettingsController::class, 'confirmDisableAccount'])->middleware(['auth:web,api']);
+    Route::post('/v1/account/settings/account/delete', [SettingsController::class, 'confirmDeleteAccount'])->middleware(['auth:web,api']);
     Route::get('/v1/account/settings/links', [AccountController::class, 'getProfileLinks'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/links/add', [AccountController::class, 'profileLinkStore'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/links/delete/{id}', [AccountController::class, 'removeProfileLink'])->middleware(['auth:web,api']);
@@ -289,6 +289,9 @@ Route::prefix('api')->group(function () {
         Route::post('/reports/{id}/comment-reply-delete', [AdminController::class, 'reportDeleteCommentReply'])->middleware('auth:web,api');
         Route::post('/reports/{id}/dismiss', [AdminController::class, 'reportDismiss'])->middleware('auth:web,api');
         Route::post('/reports/{id}/dismiss-all-by-account', [AdminController::class, 'reportDismissAllByAccount'])->middleware('auth:web,api');
+        Route::post('/reports/{id}/mark-as-ai', [AdminController::class, 'reportMarkAsAi'])->middleware('auth:web,api');
+        Route::post('/reports/{id}/mark-as-ad', [AdminController::class, 'reportMarkAsAd'])->middleware('auth:web,api');
+        Route::post('/reports/{id}/mark-as-ai-and-ad', [AdminController::class, 'reportMarkAsAiAndAd'])->middleware('auth:web,api');
         Route::post('/reports/{id}/video-delete', [AdminController::class, 'reportDeleteVideo'])->middleware('auth:web,api');
         Route::get('/profiles/{id}', [AdminController::class, 'profileShow'])->middleware('auth:web,api');
         Route::post('/profiles/{id}/permissions', [AdminController::class, 'profilePermissionUpdate'])->middleware('auth:web,api');

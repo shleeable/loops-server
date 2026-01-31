@@ -28,6 +28,7 @@ This setup uses `serversideup/php:8.4-fpm-nginx` as the base image and is design
    ```bash
    sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=\"$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)\"|" .env
    sed -i "s|^DB_ROOT_PASSWORD=.*|DB_ROOT_PASSWORD=\"$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)\"|" .env
+   sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=\"$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)\"|" .env
    ```
 
 3. **Update `.env` with your configuration:**
@@ -48,6 +49,8 @@ This setup uses `serversideup/php:8.4-fpm-nginx` as the base image and is design
    docker compose up -d mysqldb redis  # Bootstrap the database and Redis.
    # Wait 30 seconds for them to complete first boot.
    docker compose up -d
+   # Monitor for any errors.
+   docker compose logs -f
    ```
    
 6. **Generate application "admin defaults":**

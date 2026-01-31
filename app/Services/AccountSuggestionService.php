@@ -159,7 +159,7 @@ class AccountSuggestionService
             ->pluck('account_id')
             ->toArray();
 
-        $fetchLimit = $limit + count($hiddenIds) + 10;
+        $fetchLimit = min($limit * 2 + count($hiddenIds) + 10, self::CANDIDATE_POOL);
         $profileIds = $redis->zrevrange($cacheKey, 0, $fetchLimit - 1);
 
         if (empty($profileIds)) {
@@ -169,9 +169,9 @@ class AccountSuggestionService
         $profileIds = array_diff($profileIds, $hiddenIds);
 
         $accounts = collect($profileIds)
-            ->take($limit)
             ->map(fn ($id) => AccountService::get($id))
             ->filter()
+            ->take($limit)
             ->values()
             ->all();
 

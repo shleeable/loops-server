@@ -177,7 +177,9 @@
             class="lg:max-w-[550px] relative w-full h-full bg-white dark:bg-slate-950 flex flex-col"
         >
             <div class="flex-shrink-0">
-                <div class="p-3 sm:p-5 m-2 sm:m-8 mb-0 rounded-lg bg-gray-100 dark:bg-slate-900">
+                <div
+                    class="p-3 sm:p-5 mx-2 mt-2 sm:mt-8 sm:mx-8 mb-0 rounded-lg bg-gray-100 dark:bg-slate-900"
+                >
                     <div class="flex items-start sm:items-center justify-between gap-3">
                         <div class="flex items-center flex-1 min-w-0">
                             <router-link :to="`/@${currentVideo.account.username}`">
@@ -290,10 +292,22 @@
                         >
                     </div>
                     <div
-                        v-if="currentVideo?.meta.contains_ai"
-                        class="mt-3 text-xs bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded inline-flex px-3 py-1"
+                        v-if="currentVideo?.meta?.contains_ai || currentVideo?.meta?.contains_ad"
+                        class="flex mt-3 gap-3"
                     >
-                        Creator labelled as AI-generated
+                        <div
+                            v-if="currentVideo?.meta.contains_ai"
+                            class="text-xs bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded inline-flex px-3 py-1"
+                        >
+                            Creator labelled as AI-generated
+                        </div>
+
+                        <div
+                            v-if="currentVideo?.meta.contains_ad"
+                            class="text-xs bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded inline-flex px-3 py-1"
+                        >
+                            Sponsored
+                        </div>
                     </div>
                 </div>
             </div>

@@ -27,12 +27,16 @@ class VideoBookmarkController extends Controller
 
         $posts = Video::addSelect([
             'videos.*',
+            'videos.status',
             'video_bookmarks.created_at',
             'video_bookmarks.video_id',
             DB::raw('1 as is_bookmarked'),
         ])
             ->join('video_bookmarks', 'videos.id', '=', 'video_bookmarks.video_id')
+            ->join('profiles', 'profiles.id', '=', 'videos.profile_id')
             ->where('video_bookmarks.profile_id', $profileId)
+            ->where('videos.status', 2)
+            ->where('profiles.status', 1)
             ->orderBy('video_bookmarks.created_at', 'desc')
             ->orderBy('video_bookmarks.id', 'desc')
             ->cursorPaginate($limit, ['*'], 'cursor', $cursor)

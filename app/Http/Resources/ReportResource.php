@@ -6,6 +6,7 @@ use App\Models\Comment;
 use App\Models\CommentReply;
 use App\Models\Hashtag;
 use App\Models\Report;
+use App\Models\Video;
 use App\Services\AccountService;
 use App\Services\ReportService;
 use App\Services\VideoService;
@@ -37,7 +38,8 @@ class ReportResource extends JsonResource
             $contentPreview = AccountService::get($this->reported_profile_id);
         } elseif ($this->reported_video_id) {
             $contentType = 'video';
-            $contentPreview = VideoService::getMediaData($this->reported_video_id);
+            $videoContent = Video::find($this->reported_video_id);
+            $contentPreview = $videoContent ? (new VideoResource($videoContent)) : VideoService::getMediaData($this->reported_video_id);
         } elseif ($this->reported_comment_id) {
             $contentType = 'comment';
             $comment = Comment::findOrFail($this->reported_comment_id);

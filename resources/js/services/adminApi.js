@@ -167,6 +167,18 @@ export const reportsApi = {
         return await apiClient.post(`/api/v1/admin/reports/${id}/comment-reply-delete`)
     },
 
+    async markAsAi(id) {
+        return await apiClient.post(`/api/v1/admin/reports/${id}/mark-as-ai`)
+    },
+
+    async markAsAd(id) {
+        return await apiClient.post(`/api/v1/admin/reports/${id}/mark-as-ad`)
+    },
+
+    async markAsAiAndAd(id) {
+        return await apiClient.post(`/api/v1/admin/reports/${id}/mark-as-ai-and-ad`)
+    },
+
     async deleteVideo(id) {
         return await apiClient.post(`/api/v1/admin/reports/${id}/video-delete`)
     },

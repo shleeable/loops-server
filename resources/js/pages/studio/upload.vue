@@ -1357,6 +1357,21 @@ const handleTranscode = async () => {
 
     try {
         const fileSize = await source.getSize()
+        const fileDuration = await input.computeDuration()
+        const sourceBitrate = (fileSize * 8) / fileDuration
+
+        if (sourceBitrate < 2500000 && fileSize < 100 * 1024 * 1024) {
+            console.log('Video already optimized, skipping transcode')
+            isConverting.value = false
+            return uploadedFile.value
+        }
+
+        let crf = 23
+        if (sourceBitrate < 2000000) {
+            crf = 28
+        } else if (sourceBitrate < 4000000) {
+            crf = 25
+        }
 
         const output = new Output({
             target: new BufferTarget(),
@@ -1368,7 +1383,7 @@ const handleTranscode = async () => {
         if (videoMetadata.value.orientation === 'portrait') {
             targetWidth = 1080
             targetHeight = 1920
-            maxBitrate = 2000000
+            maxBitrate = 3000000
         } else if (videoMetadata.value.orientation === 'landscape') {
             targetWidth = 1920
             targetHeight = 1080
@@ -1379,8 +1394,10 @@ const handleTranscode = async () => {
             maxBitrate = 2500000
         }
 
+        maxBitrate = Math.min(maxBitrate, sourceBitrate * 1.2)
+
         console.log(
-            `Transcoding ${videoMetadata.value.orientation} video to ${targetWidth}x${targetHeight} with CRF`
+            `Transcoding ${videoMetadata.value.orientation} video to ${targetWidth}x${targetHeight} with CRF ${crf}, source bitrate: ${(sourceBitrate / 1000000).toFixed(2)}Mbps`
         )
 
         currentConversion = await Conversion.init({
@@ -1389,11 +1406,13 @@ const handleTranscode = async () => {
             video: {
                 width: targetWidth,
                 height: targetHeight,
-                fit: 'contain',
-                crf: 23,
+                fit: 'cover',
+                crf: crf,
                 maxBitrate: maxBitrate,
-                bufferSize: 4000000,
-                frameRate: 30
+                bufferSize: 2000000
+            },
+            audio: {
+                bitrate: 128000
             },
             trim: {
                 start: 0,
@@ -1404,7 +1423,6 @@ const handleTranscode = async () => {
         currentConversion.onProgress = (newProgress) =>
             (transcodeProgress.value = Math.floor(newProgress * 100))
 
-        const fileDuration = await input.computeDuration()
         const startTime = performance.now()
 
         const updateProgress = () => {
@@ -1426,8 +1444,8 @@ const handleTranscode = async () => {
         if (buffer) {
             const blob = new Blob([buffer], { type: output.format.mimeType })
 
-            console.log(`Original size: ${fileSize}`)
-            console.log(`Transcoded size: ${buffer.byteLength}`)
+            console.log(`Original size: ${(fileSize / 1024 / 1024).toFixed(2)}MB`)
+            console.log(`Transcoded size: ${(buffer.byteLength / 1024 / 1024).toFixed(2)}MB`)
             console.log(
                 `${((buffer.byteLength / fileSize) * 100).toPrecision(3)}% of original size`
             )
@@ -1435,6 +1453,9 @@ const handleTranscode = async () => {
             return blob
         }
 
+        return null
+    } catch (error) {
+        console.error('Transcoding error:', error)
         return null
     } finally {
         isConverting.value = false

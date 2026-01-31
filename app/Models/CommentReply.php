@@ -30,7 +30,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $is_sensitive
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string $status
+ *
+ * @phpstan-type CommentStatus
+ *   'active'|'deleted_by_user'|'deleted_by_admin'|'account_disabled'|'account_pending_deletion'
+ *
+ * @property CommentStatus $status
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property string|null $ap_id
  * @property string|null $remote_url
@@ -61,6 +65,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CommentReply whereVideoId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CommentReply withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CommentReply withoutTrashed()
+ *
+ * @property int $visibility
+ * @property-read \App\Models\CommentReplyHashtag|null $pivot
+ * @property-read int|null $hashtags_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Mention> $mentions
+ * @property-read int|null $mentions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\QuoteAuthorization> $quoteAuthorizations
+ * @property-read int|null $quote_authorizations_count
+ * @property-read \App\Models\Video $video
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CommentReply whereVisibility($value)
  *
  * @mixin \Eloquent
  */

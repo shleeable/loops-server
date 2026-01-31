@@ -29,6 +29,7 @@ use App\Jobs\Federation\DeliverUndoCommentReplyLikeActivity;
 use App\Jobs\Federation\DeliverUndoVideoLikeActivity;
 use App\Jobs\Federation\DeliverVideoLikeActivity;
 use App\Jobs\Video\VideoOptimizeJob;
+use App\Jobs\Video\VideoProcessingCompleteJob;
 use App\Jobs\Video\VideoThumbnailJob;
 use App\Models\Comment;
 use App\Models\CommentCaptionEdit;
@@ -50,9 +51,7 @@ use App\Services\LikeService;
 use App\Services\SanitizeService;
 use App\Services\UserActivityService;
 use App\Services\VideoService;
-use Illuminate\Bus\Batch;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -174,21 +173,13 @@ class VideoController extends Controller
 
             DB::commit();
 
-            $config = app(ConfigService::class);
+            $model->processing_status = 'processing';
+            $model->save();
 
-            Bus::batch([
-                [
-                    new VideoThumbnailJob($model),
-                ],
-                [
-                    new VideoOptimizeJob($model),
-                ],
-            ])->finally(function (Batch $batch) use ($model) {
-                $config = app(ConfigService::class);
-                if ($config->federation()) {
-                    app(FederationDispatcher::class)->dispatchVideoCreation($model);
-                }
-            })->dispatch();
+            VideoThumbnailJob::withChain([
+                new VideoOptimizeJob($model),
+                new VideoProcessingCompleteJob($model),
+            ])->dispatch($model);
 
             return $this->success();
 
@@ -534,6 +525,7 @@ class VideoController extends Controller
             $comment->video_id = $vid;
             $comment->profile_id = $pid;
             $comment->caption = $body;
+            $comment->status = 'active';
             $comment->save();
             $parent->recalculateReplies();
             $parent->saveQuietly();
@@ -550,6 +542,7 @@ class VideoController extends Controller
             $comment->video_id = $vid;
             $comment->profile_id = $pid;
             $comment->caption = $body;
+            $comment->status = 'active';
             $comment->save();
 
             $comment->syncHashtagsFromCaption();
@@ -880,7 +873,9 @@ class VideoController extends Controller
         $video = Video::published()->findOrFail($id);
         $isAuth = $video->profile_id == $pid || $user->is_admin;
 
-        $likes = VideoLike::whereVideoId($id);
+        $likes = VideoLike::whereVideoId($id)
+            ->join('profiles', 'profiles.id', '=', 'video_likes.profile_id')
+            ->where('profiles.status', 1);
 
         if ($isAuth) {
             $res = $likes->leftJoin('followers as auth_following', function ($join) use ($pid) {
@@ -894,7 +889,10 @@ class VideoController extends Controller
                 ->orderBy('video_likes.created_at', 'desc')
                 ->cursorPaginate(10);
         } else {
-            $res = $likes->limit(10)->get();
+            $res = $likes->select('video_likes.*')
+                ->orderBy('video_likes.created_at', 'desc')
+                ->limit(10)
+                ->get();
         }
 
         return VideoLikeResource::collection($res);
@@ -908,10 +906,12 @@ class VideoController extends Controller
         $video = Video::published()->findOrFail($id);
         $isAuth = $video->profile_id == $pid || $user->is_admin;
 
-        $likes = VideoRepost::whereVideoId($id);
+        $shares = VideoRepost::whereVideoId($id)
+            ->join('profiles', 'profiles.id', '=', 'video_reposts.profile_id')
+            ->where('profiles.status', 1);
 
         if ($isAuth) {
-            $res = $likes->leftJoin('followers as auth_following', function ($join) use ($pid) {
+            $res = $shares->leftJoin('followers as auth_following', function ($join) use ($pid) {
                 $join->on('auth_following.following_id', '=', 'video_reposts.profile_id')
                     ->where('auth_following.profile_id', '=', $pid);
             })
@@ -922,7 +922,10 @@ class VideoController extends Controller
                 ->orderBy('video_reposts.created_at', 'desc')
                 ->cursorPaginate(10);
         } else {
-            $res = $likes->limit(10)->get();
+            $res = $shares->select('video_reposts.*')
+                ->orderBy('video_reposts.created_at', 'desc')
+                ->limit(10)
+                ->get();
         }
 
         return VideoRepostResource::collection($res);

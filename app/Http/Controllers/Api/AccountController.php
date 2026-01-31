@@ -101,6 +101,7 @@ class AccountController extends Controller
 
         $res = Notification::whereUserId($pid)
             ->whereIn('type', $types)
+            ->where('actor_state', 1)
             ->orderByDesc('created_at')
             ->cursorPaginate(20);
 
@@ -564,7 +565,7 @@ class AccountController extends Controller
         $limit = 15;
 
         $targetFollows = Profile::select([
-            'profiles.*',
+            'profiles.id',
             DB::raw('COUNT(f_count.id) as followers_count'),
             DB::raw('1 as suggestion_type'),
             DB::raw('0 as is_following'),
@@ -604,7 +605,7 @@ class AccountController extends Controller
             $needed = $limit - $suggestions->count();
 
             $followersOfTarget = Profile::select([
-                'profiles.*',
+                'profiles.id',
                 DB::raw('COUNT(f_count.id) as followers_count'),
                 DB::raw('2 as suggestion_type'),
                 DB::raw('0 as is_following'),
@@ -645,7 +646,7 @@ class AccountController extends Controller
             $needed = $limit - $suggestions->count();
 
             $popularAccounts = Profile::select([
-                'profiles.*',
+                'profiles.id',
                 DB::raw('COUNT(f_count.id) as followers_count'),
                 DB::raw('3 as suggestion_type'),
                 DB::raw('0 as is_following'),
@@ -718,8 +719,13 @@ class AccountController extends Controller
             }
         }
 
-        $pager = VideoLike::whereProfileId($user->profile_id)
-            ->orderByDesc('id')
+        $pager = VideoLike::where('video_likes.profile_id', $user->profile_id)
+            ->join('videos', 'videos.id', '=', 'video_likes.video_id')
+            ->join('profiles', 'profiles.id', '=', 'videos.profile_id')
+            ->where('videos.status', 2)
+            ->where('profiles.status', 1)
+            ->select('video_likes.*')
+            ->orderByDesc('video_likes.id')
             ->cursorPaginate(
                 perPage: $limit,
                 columns: ['*'],

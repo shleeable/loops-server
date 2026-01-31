@@ -70,6 +70,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Comment withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Comment withoutTrashed()
  *
+ * @property int $visibility
+ * @property-read \App\Models\CommentHashtag|null $pivot
+ * @property-read int|null $hashtags_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\QuoteAuthorization> $quoteAuthorizations
+ * @property-read int|null $quote_authorizations_count
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Comment whereVisibility($value)
+ *
  * @mixin \Eloquent
  */
 class Comment extends Model

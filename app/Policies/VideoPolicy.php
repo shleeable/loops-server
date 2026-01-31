@@ -21,6 +21,10 @@ class VideoPolicy
             return false;
         }
 
+        if ($user->status != 1) {
+            return false;
+        }
+
         return true;
     }
 

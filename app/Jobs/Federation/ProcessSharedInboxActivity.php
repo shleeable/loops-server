@@ -363,7 +363,7 @@ class ProcessSharedInboxActivity implements ShouldQueue
                 ]);
             }
 
-            throw new \Exception("Invalid activity: {$e->getMessage()}");
+            return;
         }
 
         $handler = app(DeleteHandler::class);

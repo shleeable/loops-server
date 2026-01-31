@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Rules\HCaptchaRule;
 use App\Rules\TurnstileRule;
+use App\Services\AccountService;
 use App\Services\CaptchaService;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
 class LoginController extends Controller
@@ -194,10 +196,18 @@ class LoginController extends Controller
 
         if (in_array($user->status, [7, 8])) {
             $hasRecovered = true;
-            $user->update(['status' => 1, 'delete_after' => null]);
-            $user->profile->update(['status' => 1]);
-            $user->videos()->whereIn('status', [7, 8])->update(['status' => 2]);
-            $user->videos()->whereIn('status', [9])->update(['status' => 1]);
+
+            DB::transaction(function () use ($user) {
+                $user->update(['status' => 1, 'delete_after' => null]);
+                $user->profile->update(['status' => 1]);
+                $user->videos()->whereIn('status', [7, 8])->update(['status' => 2]);
+                $user->videos()->whereIn('status', [9])->update(['status' => 1]);
+                $user->comments()->whereIn('status', ['account_pending_deletion', 'account_disabled'])->update(['status' => 'active']);
+                $user->commentReplies()->whereIn('status', ['account_pending_deletion', 'account_disabled'])->update(['status' => 'active']);
+                $user->actorNotifications()->whereIn('actor_state', [7, 8])->update(['actor_state' => 1]);
+            });
+            AccountService::del($user->profile_id);
+            AccountService::get($user->profile_id);
         }
 
         if ($intendedUrl && str_contains($intendedUrl, '/oauth/authorize')) {

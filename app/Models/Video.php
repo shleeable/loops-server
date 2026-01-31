@@ -188,6 +188,7 @@ class Video extends Model
             'bookmarks' => 'integer',
             'contains_ai' => 'boolean',
             'contains_ad' => 'boolean',
+            'federated_at' => 'datetime',
         ];
     }
 

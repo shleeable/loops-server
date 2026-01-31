@@ -197,13 +197,17 @@ class AdminController extends Controller
 
         $query->select('profiles.*');
 
-        if ($local) {
+        if ($local == true) {
             $query->where('profiles.local', true);
         }
 
         if (! in_array($sort, ['disabled', 'suspended', 'deleted'])) {
-            $query->join('users', 'profiles.id', '=', 'users.profile_id')
-                ->where('users.status', 1);
+            if ($local) {
+                $query->join('users', 'profiles.id', '=', 'users.profile_id')
+                    ->where('users.status', 1);
+            } else {
+                $query->where('status', 1);
+            }
         }
 
         if (! empty($search)) {
@@ -329,6 +333,11 @@ class AdminController extends Controller
             DB::table('oauth_auth_codes')->where('user_id', $profile->user_id)->delete();
             DB::table('sessions')->where('user_id', $profile->user_id)->delete();
             $profile->user->update(['status' => 6]);
+            $profile->user->videos()->whereIn('status', [2])->update(['status' => 6]);
+            $profile->user->comments()->where('status', 'active')->update(['status' => 'account_pending_deletion']);
+            $profile->user->commentReplies()->where('status', 'active')->update(['status' => 'account_pending_deletion']);
+            $profile->user->actorNotifications()->update(['actor_state' => 6]);
+            AccountService::del($profile->id);
         }
 
         AccountSuggestionService::removeFromAll($profile->id);
@@ -350,6 +359,10 @@ class AdminController extends Controller
 
         if ($profile->local) {
             $profile->user->update(['status' => 1]);
+            $profile->user->videos()->whereIn('status', [6])->update(['status' => 2]);
+            $profile->user->comments()->where('status', 'account_pending_deletion')->update(['status' => 'active']);
+            $profile->user->commentReplies()->where('status', 'account_pending_deletion')->update(['status' => 'active']);
+            $profile->user->actorNotifications()->update(['actor_state' => 1]);
         }
 
         AccountService::del($profile->id);
@@ -422,6 +435,49 @@ class AdminController extends Controller
         $report->save();
 
         app(AdminAuditLogService::class)->logReportUpdateMarkAsNsfw($request->user(), $report, ['vid' => $video->id, 'profile_id' => $report->reporter_profile_id]);
+
+        return $this->success();
+    }
+
+    public function reportMarkAsAi(Request $request, $id)
+    {
+        $report = Report::whereNotNull('reported_video_id')->where('admin_seen', false)->findOrFail($id);
+        $video = $report->video;
+        $video->contains_ai = true;
+        $video->save();
+        $report->admin_seen = true;
+        $report->save();
+
+        app(AdminAuditLogService::class)->logReportUpdateMarkAsAi($request->user(), $report, ['vid' => $video->id, 'profile_id' => $report->reporter_profile_id]);
+
+        return $this->success();
+    }
+
+    public function reportMarkAsAd(Request $request, $id)
+    {
+        $report = Report::whereNotNull('reported_video_id')->where('admin_seen', false)->findOrFail($id);
+        $video = $report->video;
+        $video->contains_ad = true;
+        $video->save();
+        $report->admin_seen = true;
+        $report->save();
+
+        app(AdminAuditLogService::class)->logReportUpdateMarkAsAd($request->user(), $report, ['vid' => $video->id, 'profile_id' => $report->reporter_profile_id]);
+
+        return $this->success();
+    }
+
+    public function reportMarkAsAiAndAd(Request $request, $id)
+    {
+        $report = Report::whereNotNull('reported_video_id')->where('admin_seen', false)->findOrFail($id);
+        $video = $report->video;
+        $video->contains_ad = true;
+        $video->contains_ai = true;
+        $video->save();
+        $report->admin_seen = true;
+        $report->save();
+
+        app(AdminAuditLogService::class)->logReportUpdateMarkAsAiAndAd($request->user(), $report, ['vid' => $video->id, 'profile_id' => $report->reporter_profile_id]);
 
         return $this->success();
     }
@@ -1100,6 +1156,10 @@ class AdminController extends Controller
 
     private function applySorting($query, $sort)
     {
+        if ($sort === 'unprocessed') {
+            return $query->where('status', 1);
+        }
+
         if (in_array($sort, ['deleted', 'expired'])) {
             return $query->orderBy('deleted_at', 'desc');
         }
