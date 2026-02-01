@@ -147,7 +147,7 @@
                                             v-if="userBio"
                                             class="text-[11px]"
                                             :class="
-                                                userBio.length >= 70
+                                                userBio.length >= 200
                                                     ? 'text-orange-500'
                                                     : 'text-gray-500'
                                             "
