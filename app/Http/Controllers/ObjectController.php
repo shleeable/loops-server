@@ -8,6 +8,7 @@ use App\Models\CommentReply;
 use App\Models\Profile;
 use App\Models\QuoteAuthorization;
 use App\Models\Video;
+use App\Services\ActivityPubCacheService;
 use App\Services\ConfigService;
 use App\Services\HashidService;
 use App\Services\VideoService;
@@ -15,6 +16,13 @@ use Illuminate\Http\Request;
 
 class ObjectController extends Controller
 {
+    protected $apCache;
+
+    public function __construct(ActivityPubCacheService $apCache)
+    {
+        $this->apCache = $apCache;
+    }
+
     public function showProfile(Request $request, $username)
     {
         $config = app(ConfigService::class);
@@ -24,11 +32,7 @@ class ObjectController extends Controller
                 return abort(404, 'Not found');
             }
 
-            if ($config->federationAuthorizedFetch()) {
-                return abort(403, 'You do not have permission to view this.');
-            }
-
-            $profile = Profile::whereUsername($username)->whereLocal(true)->first();
+            $profile = Profile::active()->whereUsername($username)->whereLocal(true)->first();
 
             if (! $profile) {
                 return $this->activityPubError('Record not found', 404);
@@ -38,7 +42,12 @@ class ObjectController extends Controller
                 return $this->activityPubError('Record not available', 400);
             }
 
-            return $this->activityPubResponse($profile->toActivityPub());
+            $cacheKey = $this->apCache->profileKey($profile->id);
+            $activityPub = $this->apCache->getOrCache($cacheKey, function () use ($profile) {
+                return $profile->toActivityPub();
+            });
+
+            return $this->activityPubResponseWithCache($activityPub);
         }
 
         $profile = Profile::whereUsername($username)->first();
@@ -67,10 +76,6 @@ class ObjectController extends Controller
 
             if (! $config->federation()) {
                 return abort(404, 'Not found');
-            }
-
-            if ($config->federationAuthorizedFetch()) {
-                return abort(403, 'You do not have permission to view this.');
             }
 
             if ($video->visibility !== 1) {
@@ -108,9 +113,13 @@ class ObjectController extends Controller
 
     protected function renderVideoObject($video, $hashId)
     {
-        $res = CreateActivityBuilder::buildForVideoFlat($video->profile, $video);
+        $cacheKey = $this->apCache->videoKey($video->id);
 
-        return $this->activityPubResponse($res);
+        $res = $this->apCache->getOrCache($cacheKey, function () use ($video) {
+            return CreateActivityBuilder::buildForVideoFlat($video->profile, $video);
+        });
+
+        return $this->activityPubResponseWithCache($res);
     }
 
     public function showVideoObject(Request $request, $actor, $id)
@@ -171,18 +180,27 @@ class ObjectController extends Controller
     {
         $comment = Comment::with('profile')->where('visibility', 1)->whereNull('ap_id')->where('status', 'active')->whereVideoId($vid)->findOrFail($cid);
         abort_if($comment->profile->status != 1, 403, 'Resource not available');
-        $res = CreateActivityBuilder::buildForCommentFlat($comment->profile, $comment);
 
-        return $this->activityPubResponse($res);
+        $cacheKey = $this->apCache->commentKey($comment->id);
+
+        $res = $this->apCache->getOrCache($cacheKey, function () use ($comment) {
+            return CreateActivityBuilder::buildForCommentFlat($comment->profile, $comment);
+        });
+
+        return $this->activityPubResponseWithCache($res);
     }
 
     protected function renderVideoCommentReplyObject($video, $comment, $videoHashId, $hashId, $vid, $cid)
     {
         abort_if($comment->profile->status != 1, 403, 'Resource not available');
 
-        $res = CreateActivityBuilder::buildForCommentReplyFlat($comment->profile, $comment);
+        $cacheKey = $this->apCache->replyKey($comment->id);
 
-        return $this->activityPubResponse($res);
+        $res = $this->apCache->getOrCache($cacheKey, function () use ($comment) {
+            return CreateActivityBuilder::buildForCommentReplyFlat($comment->profile, $comment);
+        });
+
+        return $this->activityPubResponseWithCache($res);
     }
 
     public function getQuoteAuthorization($profileId, $authId)
@@ -191,8 +209,27 @@ class ObjectController extends Controller
             ->where('quoted_profile_id', $profileId)
             ->firstOrFail();
 
-        return response()->json($authorization->toActivityPub())
+        $cacheKey = "quote_auth:{$authId}";
+
+        $activityPub = $this->apCache->getOrCache($cacheKey, function () use ($authorization) {
+            return $authorization->toActivityPub();
+        }, 900);
+
+        return $this->activityPubResponseWithCache($activityPub);
+    }
+
+    /**
+     * Return ActivityPub response with proper cache headers
+     */
+    protected function activityPubResponseWithCache($data)
+    {
+        $json = is_array($data) ? json_encode($data) : $data;
+        $etag = $this->apCache->getETag($json);
+
+        return response($json)
             ->header('Content-Type', 'application/activity+json; charset=utf-8')
-            ->header('Cache-Control', 'public, max-age=300');
+            ->header('Cache-Control', 'public, max-age=3600, s-maxage=7200, stale-while-revalidate=86400')
+            ->header('ETag', $etag)
+            ->header('Vary', 'Accept');
     }
 }

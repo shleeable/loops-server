@@ -50,6 +50,7 @@ return [
         ],
         'inbox_dispatch_chunk_size' => env('LOOPS_FED_INBOX_DIS_CHUNKER', 100),
         'inbox_max_followers' => env('LOOPS_FED_INBOX_MAX_FOLLOWERS', 5000),
+        'cache_ttl' => env('LOOPS_FEDI_CACHE_TTL', 3600),
     ],
 
     'registration' => [
