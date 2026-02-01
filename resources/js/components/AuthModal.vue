@@ -312,7 +312,7 @@
                                             v-model="form.verificationCode"
                                             type="text"
                                             required
-                                            maxlength="6"
+                                            maxlength="16"
                                             class="w-full px-4 py-3 text-center text-2xl tracking-widest rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
                                             placeholder="000000"
                                         />
