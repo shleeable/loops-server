@@ -218,6 +218,100 @@ class ObjectController extends Controller
         return $this->activityPubResponseWithCache($activityPub);
     }
 
+    public function showVideoObjectLikes(Request $request, $actor, $id)
+    {
+        $config = app(ConfigService::class);
+
+        if (! $config->federation()) {
+            return abort(404, 'Not found');
+        }
+
+        $videoMetadata = VideoService::getMediaData($id);
+
+        if (! $videoMetadata) {
+            return response()->json(['error' => 'Resource does not exist'], 404);
+        }
+
+        $acctId = data_get($videoMetadata, 'account.id', null);
+
+        if (! hash_equals($acctId, $actor)) {
+            return response()->json(['error' => 'Resource does not exist'], 404);
+        }
+
+        $cacheKey = "video_object_likes:v1:{$id}";
+
+        $activityPub = $this->apCache->getOrCache($cacheKey, function () use ($actor, $id) {
+            $video = Video::with('profile')->whereProfileId($actor)->whereStatus(2)->find($id);
+
+            if ($video && $video->is_local && $video->visibility === 1) {
+                abort_if($video->profile->status != 1, 403, 'Resource is not available');
+
+                if ($video->visibility !== 1) {
+                    return $this->activityPubError('You do not have permission to access this resource.', 403);
+                }
+
+                return [
+                    '@context' => 'https://www.w3.org/ns/activitystreams',
+                    'id' => $video->permalink('/likes'),
+                    'type' => 'Collection',
+                    'totalItems' => (int) $video->likes,
+                ];
+
+            } else {
+                return ['error' => 'Resource does not exist'];
+            }
+        }, 900);
+
+        return $this->activityPubResponseWithCache($activityPub);
+    }
+
+    public function showVideoObjectShares(Request $request, $actor, $id)
+    {
+        $config = app(ConfigService::class);
+
+        if (! $config->federation()) {
+            return abort(404, 'Not found');
+        }
+
+        $videoMetadata = VideoService::getMediaData($id);
+
+        if (! $videoMetadata) {
+            return response()->json(['error' => 'Resource does not exist'], 404);
+        }
+
+        $acctId = data_get($videoMetadata, 'account.id', null);
+
+        if (! hash_equals($acctId, $actor)) {
+            return response()->json(['error' => 'Resource does not exist'], 404);
+        }
+
+        $cacheKey = "video_object_shares:v1:{$id}";
+
+        $activityPub = $this->apCache->getOrCache($cacheKey, function () use ($actor, $id) {
+            $video = Video::with('profile')->whereProfileId($actor)->whereStatus(2)->find($id);
+
+            if ($video && $video->is_local && $video->visibility === 1) {
+                abort_if($video->profile->status != 1, 403, 'Resource is not available');
+
+                if ($video->visibility !== 1) {
+                    return $this->activityPubError('You do not have permission to access this resource.', 403);
+                }
+
+                return [
+                    '@context' => 'https://www.w3.org/ns/activitystreams',
+                    'id' => $video->permalink('/shares'),
+                    'type' => 'Collection',
+                    'totalItems' => (int) $video->shares,
+                ];
+
+            } else {
+                return ['error' => 'Resource does not exist'];
+            }
+        }, 900);
+
+        return $this->activityPubResponseWithCache($activityPub);
+    }
+
     /**
      * Return ActivityPub response with proper cache headers
      */
