@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
@@ -15,8 +16,15 @@ class HealthController extends Controller
             ->header('Content-Type', 'text/plain');
     }
 
-    public function health(): JsonResponse
+    public function health(Request $request): JsonResponse
     {
+        abort_unless(config('loops.health.enabled'), 404);
+        $request->validate([
+            'key' => 'required|string|min:3',
+        ]);
+
+        abort_unless(strlen(config('loops.health.secret')) >= 3 && hash_equals(config('loops.health.secret'), $request->input('key')), 404);
+
         $checks = [
             'database' => $this->checkDatabase(),
             'redis' => $this->checkRedis(),

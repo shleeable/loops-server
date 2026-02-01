@@ -80,4 +80,9 @@ return [
         'to' => env('LOOPS_ADMIN_MAILS_TO'),
         'reports' => (bool) env('LOOPS_ADMIN_MAILS_REPORTS', false),
     ],
+
+    'health' => [
+        'enabled' => env('LOOPS_HEALTH_ENDPOINT_ENABLED', false),
+        'secret' => env('LOOPS_HEALTH_ENDPOINT_SECRET'),
+    ],
 ];
