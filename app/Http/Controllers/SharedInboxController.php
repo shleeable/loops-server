@@ -3,17 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Http\Middleware\FederationEnabled;
-use App\Http\Middleware\VerifyHttpSignature;
-use App\Jobs\Federation\ProcessSharedInboxActivity;
+use App\Http\Middleware\HasHttpSignature;
+use App\Jobs\Federation\ProcessInboxActivityWithVerification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class SharedInboxController extends Controller
 {
     public function __construct()
     {
         $this->middleware(FederationEnabled::class);
-        $this->middleware(VerifyHttpSignature::class);
+        $this->middleware(HasHttpSignature::class);
     }
 
     public function sharedInbox(Request $request)
@@ -22,19 +21,23 @@ class SharedInboxController extends Controller
 
         if (isset($activity['type']) && $activity['type'] === 'Delete') {
             if (! $this->validateDeleteOrigin($activity, $request)) {
-                if (config('logging.dev_log')) {
-                    Log::warning('Rejected Delete activity with mismatched origin', [
-                        'activity_id' => $activity['id'] ?? null,
-                        'signed_host' => $request->header('Host'),
-                        'object' => is_array($activity['object']) ? ($activity['object']['id'] ?? 'unknown') : $activity['object'],
-                    ]);
-                }
-
-                return response()->json(['error' => 'Delete origin mismatch'], 403);
+                return response()->json(['status' => 'accepted'], 202);
             }
         }
 
-        ProcessSharedInboxActivity::dispatch($activity, $request->attributes->get('activitypub_actor'))->onQueue('activitypub-in');
+        $headers = collect($request->headers->all())->mapWithKeys(function ($value, $key) {
+            return [strtolower($key) => $value];
+        })->toArray();
+
+        ProcessInboxActivityWithVerification::dispatch(
+            $activity,
+            $headers,
+            $request->method(),
+            $request->getRequestUri(),
+            $request->getContent(),
+            null,
+            false
+        )->onQueue('activitypub-in');
 
         return response()->json(['status' => 'accepted'], 202);
     }
