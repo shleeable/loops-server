@@ -573,6 +573,19 @@ class SanitizeService
         return trim($cleaned);
     }
 
+    public function cleanPlainTextWithoutLineBreaks($text)
+    {
+        if (empty($text)) {
+            return '';
+        }
+
+        $cleaned = strip_tags($text);
+        $cleaned = str_replace(["\r\n", "\r", "\n"], ' ', $cleaned);
+        $cleaned = preg_replace('/\s+/', ' ', $cleaned);
+
+        return trim($cleaned);
+    }
+
     public function cleanHtmlWithSpacing($html)
     {
         $blockTags = ['a', 'b', 'blockquote', 'br', 'code', 'del', 'div', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'i', 'img', 'li', 'ol', 'p', 'pre', 's', 'strike', 'strong', 'u', 'ul'];
