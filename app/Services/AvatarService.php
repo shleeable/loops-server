@@ -116,7 +116,11 @@ class AvatarService
 
         $dirPath = storage_path('app/avatars-temp');
         if (! File::isDirectory($dirPath)) {
-            File::makeDirectory($dirPath, 0755, true);
+            File::makeDirectory($dirPath, 0755, true, true);
+        }
+
+        if (! is_writable($dirPath)) {
+            throw new \RuntimeException("avatars-temp directory is not writable: {$dirPath}");
         }
 
         Image::read($avatarFile)
