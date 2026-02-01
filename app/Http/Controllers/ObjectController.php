@@ -319,7 +319,7 @@ class ObjectController extends Controller
      */
     protected function activityPubResponseWithCache($data)
     {
-        $json = is_array($data) ? json_encode($data) : $data;
+        $json = is_array($data) ? json_encode($data, JSON_UNESCAPED_SLASHES) : $data;
         $etag = $this->apCache->getETag($json);
 
         return response($json)
