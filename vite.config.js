@@ -32,5 +32,20 @@ export default defineConfig({
     },
     optimizeDeps: {
         exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util']
-    }
+    },
+    build: {
+        minify: 'esbuild',
+        chunkSizeWarningLimit: 1024,
+        rollupOptions: {
+            output: {
+                manualChunks: {  // Chunk splitting for better caching
+                    'vendor': ['vue', 'vue-router', 'pinia'],
+                    'ui': ['@vueuse/core', '@headlessui/vue', '@heroicons/vue'],
+                },
+            },
+        },
+    },
+    define: {
+        __VUE_PROD_DEVTOOLS__: false,  // Disable Vue devtools in production
+    },
 });
