@@ -40,6 +40,11 @@ class Follower extends Model
 
     public $visible = ['profile_id', 'following_id'];
 
+    protected $casts = [
+        'profile_is_local' => 'boolean',
+        'following_is_local' => 'boolean',
+    ];
+
     public function profile()
     {
         return $this->belongsTo(Profile::class, 'profile_id');
