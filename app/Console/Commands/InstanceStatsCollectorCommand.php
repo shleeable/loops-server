@@ -9,8 +9,8 @@ use App\Models\Instance;
 use App\Models\Profile;
 use App\Models\Report;
 use App\Models\Video;
+use App\Services\InstanceService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
 
 class InstanceStatsCollectorCommand extends Command
 {
@@ -58,7 +58,7 @@ class InstanceStatsCollectorCommand extends Command
         }
 
         if ($count) {
-            Cache::forget('loops:admin:api:instance-stats');
+            app(InstanceService::class)->flushStats();
         }
 
         $this->info("Collected stats for {$count} instances");
