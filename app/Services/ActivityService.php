@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Activity;
 use App\Models\Profile;
+use App\Models\InstanceActor;
 use Illuminate\Support\Facades\Log;
 
 class ActivityService
@@ -11,7 +12,7 @@ class ActivityService
     /**
      * Process an incoming activity
      */
-    public function processIncomingActivity(array $activityData, Profile $actor, Profile $target)
+    public function processIncomingActivity(array $activityData, Profile|InstanceActor $actor, Profile $target)
     {
         $type = $activityData['type'] ?? null;
         $mapping = $this->getMapType($type);
@@ -164,7 +165,7 @@ class ActivityService
     /**
      * Store an activity in the database
      */
-    protected function storeActivity(array $activityData, Profile $actor, Profile $target): Activity
+    protected function storeActivity(array $activityData, Profile|InstanceActor $actor, Profile $target): Activity
     {
         return Activity::firstOrCreate(
             ['activity_id' => $activityData['id']],
