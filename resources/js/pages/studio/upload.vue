@@ -1270,7 +1270,7 @@ const resetForm = () => {
     coverImage.value = null
     privacy.value = 'everyone'
     settings.allowComments = true
-    settings.allowDuet = true
+    settings.allowDuets = true
     settings.allowStitch = true
     settings.containsAd = false
     settings.containsAi = false
@@ -1338,16 +1338,30 @@ const isSafari = (() => {
     return isSafariLike
 })()
 
+const isFirefox = (() => {
+    if (typeof navigator === 'undefined') {
+        return false
+    }
+    return /Firefox/.test(navigator.userAgent)
+})()
+
 const handleTranscode = async () => {
     if (isConverting.value) {
         return null
     }
 
     if (isSafari) {
+        console.log('Safari detected, skipping transcode')
         return uploadedFile.value
     }
 
-    isConverting.value = true
+    const fileSize = uploadedFile.value.size
+    const fileSizeMB = fileSize / (1024 * 1024)
+
+    if (fileSizeMB < 25) {
+        console.log(`File under 25MB (${fileSizeMB.toFixed(2)}MB), skipping client-side transcode`)
+        return uploadedFile.value
+    }
 
     const source = new BlobSource(uploadedFile.value)
     const input = new Input({
@@ -1356,21 +1370,46 @@ const handleTranscode = async () => {
     })
 
     try {
-        const fileSize = await source.getSize()
+        const mimeType = await input.getMimeType()
+        console.log(`File MIME type: ${mimeType}`)
+
+        const isHEVC =
+            mimeType.toLowerCase().includes('hvc1') ||
+            mimeType.toLowerCase().includes('hev1') ||
+            mimeType.toLowerCase().includes('hevc')
+
+        if (isFirefox && isHEVC && fileSizeMB < 40) {
+            console.log(
+                `Firefox + HEVC under 40MB (${fileSizeMB.toFixed(2)}MB), skipping transcode to avoid compatibility issues`
+            )
+            return uploadedFile.value
+        }
+
+        isConverting.value = true
+
         const fileDuration = await input.computeDuration()
         const sourceBitrate = (fileSize * 8) / fileDuration
 
-        if (sourceBitrate < 2500000 && fileSize < 100 * 1024 * 1024) {
-            console.log('Video already optimized, skipping transcode')
+        const targetFileSizeMB = 35
+        const targetBitrate = (targetFileSizeMB * 1024 * 1024 * 8) / fileDuration
+
+        if (fileSizeMB < targetFileSizeMB && sourceBitrate < 2500000) {
+            console.log(
+                `File already under ${targetFileSizeMB}MB and optimized, skipping transcode`
+            )
             isConverting.value = false
             return uploadedFile.value
         }
 
-        let crf = 23
-        if (sourceBitrate < 2000000) {
+        let crf
+        if (fileSizeMB > 80) {
+            crf = 30
+        } else if (fileSizeMB > 60) {
             crf = 28
-        } else if (sourceBitrate < 4000000) {
-            crf = 25
+        } else if (fileSizeMB > 40) {
+            crf = 26
+        } else {
+            crf = 24
         }
 
         const output = new Output({
@@ -1379,28 +1418,33 @@ const handleTranscode = async () => {
         })
 
         let targetWidth, targetHeight, maxBitrate
+        const shouldReduceResolution = fileSizeMB > 40
 
         if (videoMetadata.value.orientation === 'portrait') {
-            targetWidth = 1080
-            targetHeight = 1920
-            maxBitrate = 3000000
+            targetWidth = shouldReduceResolution ? 720 : 1080
+            targetHeight = shouldReduceResolution ? 1280 : 1920
+            maxBitrate = shouldReduceResolution ? 1800000 : 2200000
         } else if (videoMetadata.value.orientation === 'landscape') {
-            targetWidth = 1920
-            targetHeight = 1080
-            maxBitrate = 3000000
+            targetWidth = shouldReduceResolution ? 1280 : 1920
+            targetHeight = shouldReduceResolution ? 720 : 1080
+            maxBitrate = shouldReduceResolution ? 1800000 : 2200000
         } else {
-            targetWidth = 1080
-            targetHeight = 1080
-            maxBitrate = 2500000
+            targetWidth = shouldReduceResolution ? 720 : 1080
+            targetHeight = shouldReduceResolution ? 720 : 1080
+            maxBitrate = shouldReduceResolution ? 1500000 : 2000000
         }
 
-        maxBitrate = Math.min(maxBitrate, sourceBitrate * 1.2)
+        const maxFramerate = 30
+
+        maxBitrate = Math.min(maxBitrate, targetBitrate * 0.85)
+
+        const audioBitrate = fileSizeMB > 40 ? 96000 : 128000
 
         console.log(
-            `Transcoding ${videoMetadata.value.orientation} video to ${targetWidth}x${targetHeight} with CRF ${crf}, source bitrate: ${(sourceBitrate / 1000000).toFixed(2)}Mbps`
+            `Transcoding ${videoMetadata.value.orientation} video to ${targetWidth}x${targetHeight}@${maxFramerate}fps with CRF ${crf}, source: ${(sourceBitrate / 1000000).toFixed(2)}Mbps, target: ${(maxBitrate / 1000000).toFixed(2)}Mbps, audio: ${audioBitrate / 1000}kbps${isHEVC ? ' (HEVC source)' : ''}`
         )
 
-        currentConversion = await Conversion.init({
+        const conversionConfig = {
             input,
             output,
             video: {
@@ -1409,16 +1453,21 @@ const handleTranscode = async () => {
                 fit: 'cover',
                 crf: crf,
                 maxBitrate: maxBitrate,
-                bufferSize: 2000000
+                bufferSize: maxBitrate * 1.5,
+                maxFramerate: maxFramerate,
+                pixelFormat: 'yuv420p'
             },
             audio: {
-                bitrate: 128000
+                bitrate: audioBitrate,
+                sampleRate: 44100
             },
             trim: {
                 start: 0,
                 end: 180
             }
-        })
+        }
+
+        currentConversion = await Conversion.init(conversionConfig)
 
         currentConversion.onProgress = (newProgress) =>
             (transcodeProgress.value = Math.floor(newProgress * 100))
@@ -1443,12 +1492,20 @@ const handleTranscode = async () => {
 
         if (buffer) {
             const blob = new Blob([buffer], { type: output.format.mimeType })
+            const transcodedSizeMB = buffer.byteLength / 1024 / 1024
 
-            console.log(`Original size: ${(fileSize / 1024 / 1024).toFixed(2)}MB`)
-            console.log(`Transcoded size: ${(buffer.byteLength / 1024 / 1024).toFixed(2)}MB`)
-            console.log(
-                `${((buffer.byteLength / fileSize) * 100).toPrecision(3)}% of original size`
-            )
+            console.log(`Original size: ${fileSizeMB.toFixed(2)}MB`)
+            console.log(`Transcoded size: ${transcodedSizeMB.toFixed(2)}MB`)
+            console.log(`Compression ratio: ${((buffer.byteLength / fileSize) * 100).toFixed(1)}%`)
+
+            if (transcodedSizeMB > 40) {
+                await alertModal(
+                    'Video Too Large',
+                    `<p class="text-gray-700">After compression, your video is still ${transcodedSizeMB.toFixed(1)}MB (limit: 40MB).</p><p class="text-gray-700 mt-2">Your ${Math.floor(fileDuration)}s video at ${videoMetadata.value.width}x${videoMetadata.value.height} is too high quality for our size limits.</p><p class="text-gray-700 mt-2">Please try:</p><ul class="list-disc ml-6 mt-2 text-gray-700"><li>Trimming to under ${Math.floor((40 / transcodedSizeMB) * fileDuration)}s</li><li>Recording at 720p instead of 1080p</li><li>Using your phone's "high efficiency" video mode</li></ul>`
+                )
+                isConverting.value = false
+                return null
+            }
 
             return blob
         }
@@ -1456,6 +1513,12 @@ const handleTranscode = async () => {
         return null
     } catch (error) {
         console.error('Transcoding error:', error)
+
+        if (fileSizeMB < 40) {
+            console.log('Transcoding failed for file under 40MB, using original')
+            return uploadedFile.value
+        }
+
         return null
     } finally {
         isConverting.value = false

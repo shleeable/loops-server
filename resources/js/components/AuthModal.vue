@@ -312,7 +312,7 @@
                                             v-model="form.verificationCode"
                                             type="text"
                                             required
-                                            maxlength="6"
+                                            maxlength="16"
                                             class="w-full px-4 py-3 text-center text-2xl tracking-widest rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
                                             placeholder="000000"
                                         />
@@ -1221,7 +1221,11 @@ const handleVerifyCode = async () => {
     clearMessages()
     loading.value = true
 
-    if (form.value.verificationCode?.length != 6) {
+    // Strip spaces and non-numeric characters from the code
+    const cleanCode = form.value.verificationCode?.replace(/[^0-9]/g, '') || ''
+    form.value.verificationCode = cleanCode
+
+    if (cleanCode.length != 6) {
         setError(t('common.invalidCodeLength'))
         setTimeout(() => {
             clearMessages()
@@ -1231,12 +1235,10 @@ const handleVerifyCode = async () => {
     }
 
     try {
-        await authStore
-            .verifyEmailVerification(form.value.email, form.value.verificationCode)
-            .then((res) => {
-                registrationStep.value = 3
-                setSuccess(t('common.emailVerifiedSuccessfully'))
-            })
+        await authStore.verifyEmailVerification(form.value.email, cleanCode).then((res) => {
+            registrationStep.value = 3
+            setSuccess(t('common.emailVerifiedSuccessfully'))
+        })
     } catch (err) {
         console.error('Verification error:', err)
 

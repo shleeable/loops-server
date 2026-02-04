@@ -4,11 +4,19 @@ namespace App\Observers;
 
 use App\Models\Comment;
 use App\Models\Notification;
+use App\Services\ActivityPubCacheService;
 use App\Services\NotificationService;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
 class CommentObserver implements ShouldHandleEventsAfterCommit
 {
+    protected $apCache;
+
+    public function __construct(ActivityPubCacheService $apCache)
+    {
+        $this->apCache = $apCache;
+    }
+
     /**
      * Handle the Comment "created" event.
      */
@@ -30,7 +38,7 @@ class CommentObserver implements ShouldHandleEventsAfterCommit
      */
     public function updated(Comment $comment): void
     {
-        //
+        $this->apCache->forget($this->apCache->commentKey($comment->id));
     }
 
     /**
@@ -51,6 +59,8 @@ class CommentObserver implements ShouldHandleEventsAfterCommit
             ->whereProfileId($comment->profile_id)
             ->whereCommentId($comment->id)
             ->delete();
+
+        $this->apCache->forget($this->apCache->commentKey($comment->id));
     }
 
     /**
@@ -58,7 +68,7 @@ class CommentObserver implements ShouldHandleEventsAfterCommit
      */
     public function restored(Comment $comment): void
     {
-        //
+        $this->apCache->forget($this->apCache->commentKey($comment->id));
     }
 
     /**
@@ -79,5 +89,7 @@ class CommentObserver implements ShouldHandleEventsAfterCommit
             ->whereProfileId($comment->profile_id)
             ->whereCommentId($comment->id)
             ->delete();
+
+        $this->apCache->forget($this->apCache->commentKey($comment->id));
     }
 }

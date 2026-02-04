@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $failure_count
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $stats_last_collected_at
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Instance newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Instance newQuery()
@@ -84,6 +85,7 @@ class Instance extends Model
         'admin_notes',
         'allow_video_posts',
         'allow_videos_in_fyf',
+        'stats_last_collected_at',
     ];
 
     protected $casts = [
@@ -95,6 +97,7 @@ class Instance extends Model
         'last_failure_at' => 'datetime',
         'failure_count' => 'integer',
         'federation_state' => 'integer',
+        'stats_last_collected_at' => 'datetime',
     ];
 
     /* Federation State

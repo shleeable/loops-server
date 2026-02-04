@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailChangeController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\HealthController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\InstanceActorController;
 use App\Http\Controllers\NodeInfoController;
@@ -36,6 +37,10 @@ use App\Http\Middleware\AdminOnlyAccess;
 use App\Http\Middleware\AuthorizedFetch;
 use App\Http\Middleware\FederationEnabled;
 use Illuminate\Support\Facades\Route;
+
+// Health check endpoints
+Route::get('/ping', [HealthController::class, 'ping'])->name('health.ping');
+Route::get('/health', [HealthController::class, 'health'])->name('health.check');
 
 // NodeInfo endpoints
 Route::group(['prefix' => 'nodeinfo'], function () {
@@ -349,6 +354,8 @@ Route::prefix('/ap')->middleware([AuthorizedFetch::class])->group(function () {
     Route::get('users/{actor}/followers', [ActorController::class, 'followers'])->middleware(AuthorizedFetch::class);
     Route::get('users/{actor}/following', [ActorController::class, 'following'])->middleware(AuthorizedFetch::class);
     Route::get('users/{actor}/video/{id}', [ObjectController::class, 'showVideoObject'])->middleware(AuthorizedFetch::class);
+    Route::get('users/{actor}/video/{id}/likes', [ObjectController::class, 'showVideoObjectLikes'])->middleware(AuthorizedFetch::class);
+    Route::get('users/{actor}/video/{id}/shares', [ObjectController::class, 'showVideoObjectShares'])->middleware(AuthorizedFetch::class);
     Route::get('users/{actor}/comment/{id}', [ObjectController::class, 'showCommentObject'])->middleware(AuthorizedFetch::class);
     Route::get('users/{actor}/reply/{id}', [ObjectController::class, 'showReplyObject'])->middleware(AuthorizedFetch::class);
     Route::get('users/{profileId}/quote_authorizations/{authId}', [ObjectController::class, 'getQuoteAuthorization'])->middleware(AuthorizedFetch::class);

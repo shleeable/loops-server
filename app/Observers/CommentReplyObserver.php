@@ -4,11 +4,19 @@ namespace App\Observers;
 
 use App\Models\CommentReply;
 use App\Models\Notification;
+use App\Services\ActivityPubCacheService;
 use App\Services\NotificationService;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
 class CommentReplyObserver implements ShouldHandleEventsAfterCommit
 {
+    protected $apCache;
+
+    public function __construct(ActivityPubCacheService $apCache)
+    {
+        $this->apCache = $apCache;
+    }
+
     /**
      * Handle the CommentReply "created" event.
      */
@@ -49,7 +57,7 @@ class CommentReplyObserver implements ShouldHandleEventsAfterCommit
      */
     public function updated(CommentReply $commentReply): void
     {
-        //
+        $this->apCache->forget($this->apCache->replyKey($commentReply->id));
     }
 
     /**
@@ -71,6 +79,8 @@ class CommentReplyObserver implements ShouldHandleEventsAfterCommit
             ->whereProfileId($commentReply->profile_id)
             ->whereCommentReplyId($commentReply->id)
             ->delete();
+
+        $this->apCache->forget($this->apCache->replyKey($commentReply->id));
     }
 
     /**
@@ -78,7 +88,7 @@ class CommentReplyObserver implements ShouldHandleEventsAfterCommit
      */
     public function restored(CommentReply $commentReply): void
     {
-        //
+        $this->apCache->forget($this->apCache->replyKey($commentReply->id));
     }
 
     /**
@@ -100,5 +110,7 @@ class CommentReplyObserver implements ShouldHandleEventsAfterCommit
             ->whereProfileId($commentReply->profile_id)
             ->whereCommentReplyId($commentReply->id)
             ->delete();
+
+        $this->apCache->forget($this->apCache->replyKey($commentReply->id));
     }
 }

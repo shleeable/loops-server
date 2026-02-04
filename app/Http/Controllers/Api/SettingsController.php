@@ -47,13 +47,13 @@ class SettingsController extends Controller
 
         if ($request->filled('name')) {
             $name = $request->input('name') ?: AccountService::getDefaultDisplayName($user->profile_id);
-            $profile->name = $this->purifyText($name);
-            $user->name = $this->purifyText($name);
+            $profile->name = $this->purifyTextWithoutLineBreaks($name);
+            $user->name = $this->purifyTextWithoutLineBreaks($name);
             $user->save();
         }
 
         if ($request->filled('bio')) {
-            $profile->bio = $this->purifyText($request->input('bio'));
+            $profile->bio = $this->purifyTextWithoutLineBreaks($request->input('bio'));
         }
 
         $profile->save();

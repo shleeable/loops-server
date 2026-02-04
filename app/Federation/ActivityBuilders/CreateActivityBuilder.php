@@ -87,6 +87,16 @@ class CreateActivityBuilder
                     'name' => $video->alt_text,
                 ],
             ],
+            'likes' => [
+                'id' => $video->permalink('/likes'),
+                'type' => 'Collection',
+                'totalItems' => (int) $video->likes,
+            ],
+            'shares' => [
+                'id' => $video->permalink('/shares'),
+                'type' => 'Collection',
+                'totalItems' => (int) $video->shares,
+            ],
         ];
 
         $mentions = [];

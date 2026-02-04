@@ -826,7 +826,7 @@ class AdminController extends Controller
 
         $query = $this->applySortingJoin($query, $sort, 'comments');
 
-        $comments = $query->cursorPaginate(3)->withQueryString();
+        $comments = $query->cursorPaginate(10)->withQueryString();
 
         return CommentResource::collection($comments);
     }
@@ -1168,7 +1168,11 @@ class AdminController extends Controller
             'username_asc' => ['username', 'asc'],
             'username_desc' => ['username', 'desc'],
             'video_count_desc' => ['video_count', 'desc'],
+            'user_count_desc' => ['user_count', 'desc'],
+            'comment_count_desc' => ['comment_count', 'desc'],
+            'reply_count_desc' => ['reply_count', 'desc'],
             'follower_count_desc' => ['follower_count', 'desc'],
+            'following_count_desc' => ['following_count', 'desc'],
             'followers_asc' => ['followers', 'asc'],
             'followers_desc' => ['followers', 'desc'],
             'likes_desc' => ['likes', 'desc'],

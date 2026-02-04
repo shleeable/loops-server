@@ -569,8 +569,12 @@ const columns = [
 const sortOptions = [
     { name: 'Domain A-Z', value: 'domain_asc' },
     { name: 'Domain Z-A', value: 'domain_desc' },
+    { name: 'Most Following', value: 'following_count_desc' },
     { name: 'Most Followers', value: 'follower_count_desc' },
     { name: 'Most Videos', value: 'video_count_desc' },
+    { name: 'Most Users', value: 'user_count_desc' },
+    { name: 'Most Comments', value: 'comment_count_desc' },
+    { name: 'Most Replies', value: 'reply_count_desc' },
     { name: 'Newest', value: 'created_at_desc' },
     { name: 'Oldest', value: 'created_at_asc' },
     { name: 'Suspended', value: 'is_blocked' },

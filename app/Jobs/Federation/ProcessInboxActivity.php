@@ -2,7 +2,6 @@
 
 namespace App\Jobs\Federation;
 
-use App\Models\Profile;
 use App\Services\ActivityService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -53,7 +52,7 @@ class ProcessInboxActivity implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(array $activity, Profile $actor, Profile $target)
+    public function __construct(array $activity, $actor, $target)
     {
         $this->activity = $activity;
         $this->actor = $actor;

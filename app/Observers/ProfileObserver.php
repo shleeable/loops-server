@@ -5,10 +5,18 @@ namespace App\Observers;
 use App\Jobs\Federation\FetchRemoteAvatarJob;
 use App\Models\Profile;
 use App\Services\AccountService;
+use App\Services\ActivityPubCacheService;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
 class ProfileObserver implements ShouldHandleEventsAfterCommit
 {
+    protected $apCache;
+
+    public function __construct(ActivityPubCacheService $apCache)
+    {
+        $this->apCache = $apCache;
+    }
+
     /**
      * Handle the Profile "created" event.
      */
@@ -31,6 +39,8 @@ class ProfileObserver implements ShouldHandleEventsAfterCommit
         if (! $profile->local && $profile->uri && $profile->avatar) {
             FetchRemoteAvatarJob::dispatch($profile)->onQueue('actor-update');
         }
+
+        $this->apCache->forget($this->apCache->profileKey($profile->id));
     }
 
     /**
@@ -39,6 +49,7 @@ class ProfileObserver implements ShouldHandleEventsAfterCommit
     public function deleted(Profile $profile): void
     {
         AccountService::del($profile->id);
+        $this->apCache->forget($this->apCache->profileKey($profile->id));
     }
 
     /**
@@ -47,6 +58,7 @@ class ProfileObserver implements ShouldHandleEventsAfterCommit
     public function restored(Profile $profile): void
     {
         AccountService::del($profile->id);
+        $this->apCache->forget($this->apCache->profileKey($profile->id));
     }
 
     /**
@@ -55,5 +67,6 @@ class ProfileObserver implements ShouldHandleEventsAfterCommit
     public function forceDeleted(Profile $profile): void
     {
         AccountService::del($profile->id);
+        $this->apCache->forget($this->apCache->profileKey($profile->id));
     }
 }

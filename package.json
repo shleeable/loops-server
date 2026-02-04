@@ -19,9 +19,9 @@
         "@tailwindcss/vite": "^4.1.18",
         "@tanstack/vue-query": "^5.92.9",
         "@unhead/vue": "^2.1.2",
-        "@vitejs/plugin-vue": "^6.0.3",
-        "@vueuse/core": "^14.1.0",
-        "autoprefixer": "^10.4.23",
+        "@vitejs/plugin-vue": "^6.0.4",
+        "@vueuse/core": "^14.2.0",
+        "autoprefixer": "^10.4.24",
         "axios": "^1.13.4",
         "boxicons": "^2.1.4",
         "date-fns": "^4.1.0",
@@ -45,7 +45,7 @@
         "vue-advanced-cropper": "^2.8.9",
         "vue-draggable-next": "^2.3.0",
         "vue-i18n": "^11.2.8",
-        "vue-router": "^5.0.0"
+        "vue-router": "^5.0.2"
     },
     "devDependencies": {
         "@eslint/css": "^0.14.1",
@@ -58,7 +58,7 @@
         "esbuild": "^0.27.2",
         "eslint": "^9.39.2",
         "eslint-plugin-vue": "^10.7.0",
-        "globals": "^17.2.0",
+        "globals": "^17.3.0",
         "prettier": "^3.8.1",
         "typescript": "^5.9.2",
         "typescript-eslint": "^8.54.0",
