@@ -34,8 +34,8 @@ class FetchNodeinfoCommand extends Command
             '/nodeinfo/2.1',
         ],
         'loops' => [
-            '/nodeinfo/2.0',
             '/nodeinfo/2.1',
+            '/nodeinfo/2.0',
         ],
         'peertube' => [
             '/nodeinfo/2.0.json',
@@ -45,6 +45,16 @@ class FetchNodeinfoCommand extends Command
         ],
         'writefreely' => [
             '/api/nodeinfo',
+        ],
+        'nodebb' => [
+            '/nodeinfo/2.0',
+        ],
+        'gotosocial' => [
+            '/nodeinfo/2.1',
+            '/nodeinfo/2.0',
+        ],
+        'socialhome' => [
+            '/nodeinfo/1.0',
         ],
     ];
 

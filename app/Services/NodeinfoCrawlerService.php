@@ -72,11 +72,14 @@ class NodeinfoCrawlerService
     }
 
     /**
-     * Pick the best NodeInfo URL, preferring 2.1 over 2.0 (aka "v2").
+     * Pick the best NodeInfo URL, preferring 2.2 > 2.1 > 2.0 > 1.1 > 1.0.
      *
      * Spec rels typically look like:
+     *   http://nodeinfo.diaspora.software/ns/schema/2.2
      *   http://nodeinfo.diaspora.software/ns/schema/2.1
      *   http://nodeinfo.diaspora.software/ns/schema/2.0
+     *   http://nodeinfo.diaspora.software/ns/schema/1.1
+     *   http://nodeinfo.diaspora.software/ns/schema/1.0
      */
     protected function pickBestNodeinfoUrl(array $links): ?string
     {
@@ -93,10 +96,16 @@ class NodeinfoCrawlerService
         }
 
         $preferredRels = [
+            'http://nodeinfo.diaspora.software/ns/schema/2.2',
+            'https://nodeinfo.diaspora.software/ns/schema/2.2',
             'http://nodeinfo.diaspora.software/ns/schema/2.1',
             'https://nodeinfo.diaspora.software/ns/schema/2.1',
             'http://nodeinfo.diaspora.software/ns/schema/2.0',
             'https://nodeinfo.diaspora.software/ns/schema/2.0',
+            'http://nodeinfo.diaspora.software/ns/schema/1.1',
+            'https://nodeinfo.diaspora.software/ns/schema/1.1',
+            'http://nodeinfo.diaspora.software/ns/schema/1.0',
+            'https://nodeinfo.diaspora.software/ns/schema/1.0',
         ];
 
         foreach ($preferredRels as $rel) {
@@ -106,12 +115,12 @@ class NodeinfoCrawlerService
         }
 
         $candidates = array_values(array_filter($byRel, function ($href) {
-            return preg_match('~/nodeinfo/(2\.[01])~', $href);
+            return preg_match('~/nodeinfo/([12]\.[012])~', $href);
         }));
 
         usort($candidates, function ($a, $b) {
-            $va = preg_match('~/nodeinfo/(2\.[01])~', $a, $ma) ? $ma[1] : '0.0';
-            $vb = preg_match('~/nodeinfo/(2\.[01])~', $b, $mb) ? $mb[1] : '0.0';
+            $va = preg_match('~/nodeinfo/([12]\.[012])~', $a, $ma) ? $ma[1] : '0.0';
+            $vb = preg_match('~/nodeinfo/([12]\.[012])~', $b, $mb) ? $mb[1] : '0.0';
 
             return version_compare($vb, $va);
         });
