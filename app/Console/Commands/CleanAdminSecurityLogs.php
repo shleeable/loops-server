@@ -14,7 +14,7 @@ class CleanAdminSecurityLogs extends Command
 
     public function handle()
     {
-        $days = $this->option('days');
+        $days = (int) $this->option('days');
         $path = storage_path('logs');
         $cutoffDate = Carbon::now()->subDays($days);
 
