@@ -234,6 +234,7 @@ class SanitizeService
      * - Blocks localhost/private/reserved IPs (IPv4/IPv6)
      * - Optionally verifies DNS and blocks records resolving to private/reserved IPs
      * - Normalizes IDNs to ASCII (punycode) when possible
+     * - Allows configured local domains (same-server instances)
      *
      * @param  string|array  $input
      * @return string|false Normalized safe URL or false
@@ -273,8 +274,34 @@ class SanitizeService
         }
 
         $host = strtolower($parts['host']);
-        if ($bypassAppHost && $host === $this->localDomain()) {
-            return $input;
+
+        $isTrustedLocal = false;
+        if ($bypassAppHost) {
+            $trustedDomains = $this->getTrustedLocalDomains();
+            foreach ($trustedDomains as $trustedDomain) {
+                if ($host === $trustedDomain) {
+                    $isTrustedLocal = true;
+                    break;
+                }
+            }
+        }
+
+        if ($isTrustedLocal) {
+            $path = $parts['path'] ?? '';
+            if ($path !== '' && strpos($path, '\\') !== false) {
+                return false;
+            }
+
+            $authority = (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false) ? '['.$host.']' : $host;
+            $query = isset($parts['query']) ? '?'.$parts['query'] : '';
+            $fragment = isset($parts['fragment']) ? '#'.$parts['fragment'] : '';
+            $normalized = 'https://'.$authority.$path.$query.$fragment;
+
+            if (! filter_var($normalized, FILTER_VALIDATE_URL)) {
+                return false;
+            }
+
+            return $normalized;
         }
 
         $isIpv4 = filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false;
@@ -323,6 +350,23 @@ class SanitizeService
         }
 
         return $normalized;
+    }
+
+    /**
+     * Get list of trusted local domains (same-server instances)
+     */
+    private function getTrustedLocalDomains(): array
+    {
+        $domains = [$this->localDomain()];
+
+        $configDomains = config('loops.local_domains');
+        if ($configDomains) {
+            $additional = array_map('trim', explode(',', $configDomains));
+            $additional = array_filter($additional, fn ($d) => $d !== '');
+            $domains = array_merge($domains, $additional);
+        }
+
+        return array_unique(array_map('strtolower', $domains));
     }
 
     private function idnToAscii(string $host)

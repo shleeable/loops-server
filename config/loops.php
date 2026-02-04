@@ -85,4 +85,16 @@ return [
         'enabled' => env('LOOPS_HEALTH_ENDPOINT_ENABLED', false),
         'secret' => env('LOOPS_HEALTH_ENDPOINT_SECRET'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Local Domains (Same-Server Instances)
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated list of domains hosted on the same server that should
+    | be allowed to federate even if they resolve to localhost/private IPs.
+    | Useful for multi-instance setups on a single server.
+    |
+    */
+    'local_domains' => env('LOOPS_LOCAL_DOMAINS', ''),
 ];
