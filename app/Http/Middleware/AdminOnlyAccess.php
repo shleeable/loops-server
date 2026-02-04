@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class AdminOnlyAccess
@@ -16,11 +17,20 @@ class AdminOnlyAccess
     public function handle(Request $request, Closure $next): Response
     {
         if (! $request->user()) {
-            return redirect('/');
+            abort(401, 'Unauthenticated');
         }
 
-        if (! $request->user()->is_admin) {
-            return redirect('/');
+        if ($request->user()->is_admin !== true) {
+            Log::channel('admin_security')->warning('Unauthorized admin access attempt', [
+                'user_id' => $request->user()->id,
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'route' => $request->path(),
+                'method' => $request->method(),
+                'timestamp' => now()->toIso8601String(),
+            ]);
+
+            abort(403, 'Unauthorized');
         }
 
         return $next($request);
