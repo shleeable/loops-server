@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\Activity;
-use App\Models\Profile;
 use App\Models\InstanceActor;
+use App\Models\Profile;
 use Illuminate\Support\Facades\Log;
 
 class ActivityService
