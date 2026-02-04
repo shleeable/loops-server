@@ -66,6 +66,38 @@
             </div>
         </div>
 
+        <div
+            v-if="hasActiveFilters"
+            class="px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800"
+        >
+            <div class="flex items-center justify-between flex-col sm:flex-row gap-2">
+                <div class="flex items-start sm:items-center gap-2 w-full sm:w-auto">
+                    <InformationCircleIcon
+                        class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5 sm:mt-0"
+                    />
+                    <p class="text-sm text-blue-800 dark:text-blue-200">
+                        <span class="font-medium">Filtered results:</span>
+                        <span class="ml-1">
+                            You are viewing
+                            <template v-if="searchQuery && selectedSort">
+                                {{ filterDescription }}
+                            </template>
+                            <template v-else-if="searchQuery">
+                                search results for "{{ searchQuery }}"
+                            </template>
+                            <template v-else> sorted results </template>
+                        </span>
+                    </p>
+                </div>
+                <button
+                    @click="clearFilters"
+                    class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline whitespace-nowrap transition-colors"
+                >
+                    Clear filters
+                </button>
+            </div>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
@@ -180,8 +212,13 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import { MagnifyingGlassIcon, ArrowPathIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { ref, watch, computed } from 'vue'
+import {
+    MagnifyingGlassIcon,
+    ArrowPathIcon,
+    ChevronDownIcon,
+    InformationCircleIcon
+} from '@heroicons/vue/24/outline'
 
 const props = defineProps({
     title: String,
@@ -202,6 +239,10 @@ const props = defineProps({
         type: String,
         default: ''
     },
+    initialSort: {
+        type: String,
+        default: ''
+    },
     showLocalFilter: {
         type: Boolean,
         default: false
@@ -215,7 +256,7 @@ const props = defineProps({
 const emit = defineEmits(['search', 'refresh', 'previous', 'next', 'sort', 'localChange'])
 
 const searchQuery = ref(props.initialSearchQuery)
-const selectedSort = ref('')
+const selectedSort = ref(props.initialSort)
 const localFilter = ref(props.initialLocalFilter)
 
 watch(
@@ -225,11 +266,36 @@ watch(
     }
 )
 
+const hasActiveFilters = computed(() => {
+    return searchQuery.value.trim() !== '' || selectedSort.value !== ''
+})
+
+const filterDescription = computed(() => {
+    const parts = []
+    if (searchQuery.value) {
+        parts.push(`search results for "${searchQuery.value}"`)
+    }
+    if (selectedSort.value) {
+        const sortOption = props.sortOptions.find((opt) => opt.value === selectedSort.value)
+        if (sortOption) {
+            parts.push(`sorted by ${sortOption.name.toLowerCase()}`)
+        }
+    }
+    return parts.join(' and ')
+})
+
 const handleSortChange = () => {
     emit('sort', selectedSort.value)
 }
 
 const handleLocalChange = () => {
     emit('localChange', localFilter.value)
+}
+
+const clearFilters = () => {
+    searchQuery.value = ''
+    selectedSort.value = ''
+    emit('search', '')
+    emit('sort', '')
 }
 </script>

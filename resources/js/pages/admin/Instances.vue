@@ -1,25 +1,27 @@
 <template>
     <div>
-        <div class="mb-6 flex justify-between items-center">
+        <div
+            class="mb-6 flex flex-col xl:flex-row justify-center lg:justify-between items-center gap-3"
+        >
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Instances</h1>
                 <p class="mt-2 text-gray-600 dark:text-gray-400">Manage fediverse instances</p>
             </div>
             <div
-                class="grid grid-cols-1 gap-px bg-gradient-to-b from-gray-100/50 to-gray-400/80 dark:from-gray-600/50 dark:to-gray-800/70 sm:grid-cols-2 lg:grid-cols-4 rounded-lg border border-gray-300 dark:border-gray-600/70 overflow-hidden transition-all duration-300 ease-in-out"
+                class="hidden lg:grid grid-cols-2 gap-px bg-gradient-to-b from-gray-100/50 to-gray-400/80 dark:from-gray-600/50 dark:to-gray-800/70 sm:grid-cols-2 lg:grid-cols-4 rounded-lg border border-gray-300 dark:border-gray-600/70 overflow-hidden transition-all duration-300 ease-in-out"
             >
                 <div
                     v-for="stat in instanceStats"
                     :key="stat.name"
                     class="relative bg-gradient-to-b from-white to-gray-50/80 dark:from-gray-900 dark:to-gray-800/90 px-4 py-3 sm:px-6 hover:from-gray-50/50 hover:to-gray-100/60 dark:hover:from-gray-800/90 dark:hover:to-gray-700/80 transition-all duration-200 ease-in-out overflow-hidden"
                 >
-                    <p class="text-sm/5 font-medium text-gray-600 dark:text-gray-300">
+                    <p class="text-xs/5 xl:text-sm/5 font-medium text-gray-600 dark:text-gray-300">
                         {{ stat.name }}
                     </p>
                     <p class="mt-1 flex items-baseline gap-x-2">
                         <span
-                            class="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white"
-                            >{{ stat.value }}</span
+                            class="text-lg xl:text-2xl font-semibold tracking-tight text-gray-900 dark:text-white"
+                            >{{ formatCount(stat.value) }}</span
                         >
                         <span v-if="stat.unit" class="text-sm text-gray-500 dark:text-gray-400">{{
                             stat.unit
@@ -27,7 +29,15 @@
                     </p>
                 </div>
             </div>
-            <AnimatedButton @click="openAddModal"> Add Instance </AnimatedButton>
+            <div class="flex gap-3">
+                <AnimatedButton @click="openAddModal"> Add Instance </AnimatedButton>
+                <AnimatedButton
+                    variant="primaryOutline"
+                    @click="router.push('/admin/instances/manage')"
+                >
+                    Manage
+                </AnimatedButton>
+            </div>
         </div>
         <DataTable
             title="Instances"
@@ -37,6 +47,7 @@
             :has-previous="pagination.prev_cursor"
             :has-next="pagination.next_cursor"
             :has-actions="false"
+            :initial-sort="sortBy"
             :sort-options="sortOptions"
             :initialSearchQuery="searchQuery"
             @sort="handleSort"
@@ -515,16 +526,18 @@
 
 <script setup>
 import { ref, onMounted, watch, onUnmounted, computed, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import DataTable from '@/components/DataTable.vue'
 import { instancesApi } from '@/services/adminApi'
 import { useUtils } from '@/composables/useUtils'
 import { useAlertModal } from '@/composables/useAlertModal.js'
 
 const { alertModal, confirmModal } = useAlertModal()
-const { truncateMiddle, formatDate, formatNumber, normalizeDomain, isValidDomain } = useUtils()
+const { truncateMiddle, formatDate, formatNumber, normalizeDomain, isValidDomain, formatCount } =
+    useUtils()
 
 const router = useRouter()
+const route = useRoute()
 const profiles = ref([])
 const instances = ref([])
 const instanceStats = ref([])
@@ -535,8 +548,8 @@ const pagination = ref({
     hasNext: false
 })
 
-const searchQuery = ref('')
-const sortBy = ref('')
+const searchQuery = ref(route.query.q || '')
+const sortBy = ref(route.query.sort || '')
 const DEBOUNCE_DELAY = 300
 const MAX_BULK_DOMAIN_LIMIT = 100
 let searchTimeout = null
@@ -575,6 +588,7 @@ const sortOptions = [
     { name: 'Most Users', value: 'user_count_desc' },
     { name: 'Most Comments', value: 'comment_count_desc' },
     { name: 'Most Replies', value: 'reply_count_desc' },
+    { name: 'Allows Video Posts', value: 'allow_video_posts' },
     { name: 'Newest', value: 'created_at_desc' },
     { name: 'Oldest', value: 'created_at_asc' },
     { name: 'Suspended', value: 'is_blocked' },
