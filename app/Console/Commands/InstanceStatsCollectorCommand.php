@@ -22,38 +22,39 @@ class InstanceStatsCollectorCommand extends Command
         $count = 0;
         $now = now();
 
-        Instance::query()
-            ->where(function ($query) {
-                $query->whereNull('stats_last_collected_at')
-                    ->orWhere('stats_last_collected_at', '<', now()->subDay());
-            })
+        $instances = Instance::where(function ($query) {
+            $query->whereNull('stats_last_collected_at')
+                ->orWhere('stats_last_collected_at', '<', now()->subDay());
+        })
+            ->where('is_blocked', false)
             ->limit(250)
-            ->lazyById()
-            ->each(function ($instance) use (&$count, $now) {
-                $instance->user_count = Profile::whereDomain($instance->domain)->count();
-                $instance->video_count = Video::join('profiles', 'videos.profile_id', '=', 'profiles.id')
-                    ->where('profiles.domain', $instance->domain)
-                    ->count();
-                $instance->comment_count = Comment::join('profiles', 'comments.profile_id', '=', 'profiles.id')
-                    ->where('profiles.domain', $instance->domain)
-                    ->count();
-                $instance->reply_count = CommentReply::join('profiles', 'comment_replies.profile_id', '=', 'profiles.id')
-                    ->where('profiles.domain', $instance->domain)
-                    ->count();
-                $instance->follower_count = Follower::join('profiles', 'followers.following_id', '=', 'profiles.id')
-                    ->where('profiles.domain', $instance->domain)
-                    ->count();
-                $instance->following_count = Follower::join('profiles', 'followers.profile_id', '=', 'profiles.id')
-                    ->where('profiles.domain', $instance->domain)
-                    ->count();
-                $instance->report_count = Report::join('profiles', 'reports.reported_profile_id', '=', 'profiles.id')
-                    ->where('profiles.domain', $instance->domain)
-                    ->count();
-                $instance->stats_last_collected_at = $now;
-                $instance->save();
+            ->get();
 
-                $count++;
-            });
+        foreach ($instances as $instance) {
+            $instance->user_count = Profile::whereDomain($instance->domain)->count();
+            $instance->video_count = Video::join('profiles', 'videos.profile_id', '=', 'profiles.id')
+                ->where('profiles.domain', $instance->domain)
+                ->count();
+            $instance->comment_count = Comment::join('profiles', 'comments.profile_id', '=', 'profiles.id')
+                ->where('profiles.domain', $instance->domain)
+                ->count();
+            $instance->reply_count = CommentReply::join('profiles', 'comment_replies.profile_id', '=', 'profiles.id')
+                ->where('profiles.domain', $instance->domain)
+                ->count();
+            $instance->follower_count = Follower::join('profiles', 'followers.following_id', '=', 'profiles.id')
+                ->where('profiles.domain', $instance->domain)
+                ->count();
+            $instance->following_count = Follower::join('profiles', 'followers.profile_id', '=', 'profiles.id')
+                ->where('profiles.domain', $instance->domain)
+                ->count();
+            $instance->report_count = Report::join('profiles', 'reports.reported_profile_id', '=', 'profiles.id')
+                ->where('profiles.domain', $instance->domain)
+                ->count();
+            $instance->stats_last_collected_at = $now;
+            $instance->save();
+
+            $count++;
+        }
 
         $this->info("Collected stats for {$count} instances");
     }
