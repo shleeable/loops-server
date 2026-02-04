@@ -930,40 +930,42 @@ class AdminController extends Controller
 
     public function instanceStats(Request $request)
     {
-        $res = [
-            [
-                'name' => 'Total',
-                'value' => Instance::active()->count(),
-            ],
-            [
-                'name' => 'New',
-                'value' => Instance::active()->where('created_at', '>', now()->subHours(24))->count(),
-            ],
-            [
-                'name' => 'Blocked',
-                'value' => Instance::whereFederationState(2)->count(),
-            ],
-            [
-                'name' => 'Users',
-                'value' => Instance::active()->sum('user_count'),
-            ],
-            [
-                'name' => 'Videos',
-                'value' => Instance::active()->sum('video_count'),
-            ],
-            [
-                'name' => 'Followers',
-                'value' => Instance::active()->sum('follower_count'),
-            ],
-            [
-                'name' => 'Following',
-                'value' => Instance::active()->sum('following_count'),
-            ],
-            [
-                'name' => 'Comments',
-                'value' => Instance::active()->sum('comment_count'),
-            ],
-        ];
+        $res = Cache::remember('loops:admin:api:instance-stats', now()->addHours(4), function () {
+            return [
+                [
+                    'name' => 'Total',
+                    'value' => Instance::active()->count(),
+                ],
+                [
+                    'name' => 'New',
+                    'value' => Instance::active()->where('created_at', '>', now()->subHours(24))->count(),
+                ],
+                [
+                    'name' => 'Blocked',
+                    'value' => Instance::whereFederationState(2)->count(),
+                ],
+                [
+                    'name' => 'Users',
+                    'value' => Instance::active()->sum('user_count'),
+                ],
+                [
+                    'name' => 'Videos',
+                    'value' => Instance::active()->sum('video_count'),
+                ],
+                [
+                    'name' => 'Followers',
+                    'value' => Instance::active()->sum('follower_count'),
+                ],
+                [
+                    'name' => 'Following',
+                    'value' => Instance::active()->sum('following_count'),
+                ],
+                [
+                    'name' => 'Comments',
+                    'value' => Instance::active()->sum('comment_count'),
+                ],
+            ];
+        });
 
         return $this->data($res);
     }

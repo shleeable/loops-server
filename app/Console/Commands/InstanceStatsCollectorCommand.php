@@ -10,6 +10,7 @@ use App\Models\Profile;
 use App\Models\Report;
 use App\Models\Video;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 
 class InstanceStatsCollectorCommand extends Command
 {
@@ -54,6 +55,10 @@ class InstanceStatsCollectorCommand extends Command
             $instance->save();
 
             $count++;
+        }
+
+        if ($count) {
+            Cache::forget('loops:admin:api:instance-stats');
         }
 
         $this->info("Collected stats for {$count} instances");
