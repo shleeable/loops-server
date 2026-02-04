@@ -10,7 +10,7 @@
             :class="[sidebarOpen ? 'translate-x-0' : '-translate-x-full']"
             class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform lg:translate-x-0 lg:relative lg:flex lg:flex-col"
         >
-            <div class="flex items-center justify-between h-16 px-6 bg-sky-500 flex-shrink-0">
+            <div class="flex items-center justify-between h-16 px-6 bg-[#F02C56] flex-shrink-0">
                 <h1 class="text-xl font-bold text-white">Loops Admin</h1>
                 <button
                     @click="sidebarOpen = false"
@@ -90,7 +90,9 @@
                     </button>
 
                     <div class="flex items-center space-x-4">
-                        <span class="text-sm text-gray-500 dark:text-gray-400">Hello Admin!</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400"
+                            >Hello {{ authStore.getUser.username }}!</span
+                        >
                     </div>
                 </div>
             </header>
@@ -108,6 +110,7 @@
 import { ref, onMounted, inject } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import { useAuthStore } from '@/stores/auth'
 import {
     ChartBarSquareIcon,
     Cog6ToothIcon,
@@ -127,6 +130,8 @@ import { useAdminStore } from '~/stores/admin'
 
 const route = useRoute()
 const sidebarOpen = ref(false)
+
+const authStore = useAuthStore()
 
 const navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: ChartBarSquareIcon },

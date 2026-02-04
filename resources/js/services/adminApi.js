@@ -453,6 +453,18 @@ export const instancesApi = {
 
     async createInstances(data) {
         return await apiClient.post(`/api/v1/admin/instances/bulk-create`, data)
+    },
+
+    async getManageStats() {
+        return await apiClient.get('/api/v1/admin/instances/manage/stats')
+    },
+
+    async toggleBySoftware(data) {
+        return await apiClient.post('/api/v1/admin/instances/manage/toggle-by-software', data)
+    },
+
+    async toggleByDomains(data) {
+        return await apiClient.post('/api/v1/admin/instances/manage/toggle-by-domains', data)
     }
 }
 

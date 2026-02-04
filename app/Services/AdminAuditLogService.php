@@ -57,6 +57,16 @@ class AdminAuditLogService
         return $this->log($user, 'instance:updated_settings', $changes, $instance, null, 1);
     }
 
+    public function logInstanceSoftwareUpdateAllowVideoPosts(User|int $user, $changes)
+    {
+        return $this->log($user, 'instance:software_allow_video_posts', $changes, null, null, 1);
+    }
+
+    public function logInstanceDomainsUpdateAllowVideoPosts(User|int $user, $changes)
+    {
+        return $this->log($user, 'instance:domains_allow_video_posts', $changes, null, null, 1);
+    }
+
     public function logInstanceUpdateNotes(User|int $user, $instance, $changes)
     {
         return $this->log($user, 'instance:update_notes', $changes, $instance, null, 1);

@@ -430,6 +430,12 @@ const router = createRouter({
                     meta: { requiresAdmin: true }
                 },
                 {
+                    path: 'instances/manage',
+                    name: 'instancesManage',
+                    component: () => import('~/pages/admin/InstanceManage.vue'),
+                    meta: { requiresAdmin: true }
+                },
+                {
                     path: 'instances/:id',
                     name: 'InstancesShow',
                     component: () => import('~/pages/admin/InstanceShow.vue'),

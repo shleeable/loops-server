@@ -319,6 +319,9 @@ Route::prefix('api')->group(function () {
 
         Route::get('/instances', [AdminController::class, 'instances'])->middleware('auth:web,api');
         Route::get('/instances/stats', [AdminController::class, 'instanceStats'])->middleware('auth:web,api');
+        Route::get('/instances/manage/stats', [AdminController::class, 'instanceAdvancedStats'])->middleware('auth:web,api');
+        Route::post('/instances/manage/toggle-by-software', [AdminController::class, 'manageInstanceToggleBySoftware'])->middleware('auth:web,api');
+        Route::post('/instances/manage/toggle-by-domains', [AdminController::class, 'manageInstanceToggleByDomains'])->middleware('auth:web,api');
         Route::post('/instances/create', [AdminController::class, 'instanceCreate'])->middleware('auth:web,api');
         Route::post('/instances/bulk-create', [AdminController::class, 'instanceBulkCreate'])->middleware('auth:web,api');
         Route::get('/instances/{id}', [AdminController::class, 'instanceShow'])->middleware('auth:web,api');

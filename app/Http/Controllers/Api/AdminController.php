@@ -743,7 +743,11 @@ class AdminController extends Controller
             if (str_starts_with($search, 'software:')) {
                 $software = trim(substr($search, 9));
                 if (! empty($software)) {
-                    $query->where('software', 'like', $software.'%');
+                    if ($software === 'unknown') {
+                        $query->whereNull('software');
+                    } else {
+                        $query->where('software', 'like', $software.'%');
+                    }
                 }
             } elseif (str_starts_with($search, 'description:')) {
                 $desc = trim(substr($search, 12));
@@ -893,6 +897,8 @@ class AdminController extends Controller
         $instance->report_count = Report::where('domain', $instance->domain)->count();
         $instance->save();
 
+        FetchInstanceNodeinfo::dispatch($instance)->onQueue('actor-update');
+
         return $this->success();
     }
 
@@ -926,11 +932,11 @@ class AdminController extends Controller
     {
         $res = [
             [
-                'name' => 'Total Instances',
+                'name' => 'Total',
                 'value' => Instance::whereNotNull('software')->whereFederationState(5)->count(),
             ],
             [
-                'name' => 'New (past 24h)',
+                'name' => 'New',
                 'value' => Instance::whereNotNull('software')->whereFederationState(5)->where('created_at', '>', now()->subHours(24))->count(),
             ],
             [
@@ -944,6 +950,78 @@ class AdminController extends Controller
         ];
 
         return $this->data($res);
+    }
+
+    public function instanceAdvancedStats()
+    {
+        $totalInstances = Instance::count();
+        $activeInstances = Instance::where('is_blocked', false)->count();
+        $allowedVideoPosts = Instance::where('allow_video_posts', true)->count();
+        $allowedInFyf = Instance::where('allow_videos_in_fyf', true)->count();
+
+        $softwareStats = Instance::select('software')
+            ->selectRaw('COUNT(*) as count')
+            ->selectRaw('SUM(CASE WHEN allow_video_posts = 1 THEN 1 ELSE 0 END) as allow_video_posts_count')
+            ->groupBy('software')
+            ->orderByDesc('count')
+            ->get();
+
+        return response()->json([
+            'data' => [
+                'stats' => [
+                    ['name' => 'Total Instances', 'value' => $totalInstances],
+                    ['name' => 'Active Instances', 'value' => $activeInstances],
+                    ['name' => 'Video Posts Allowed', 'value' => $allowedVideoPosts],
+                    ['name' => 'FYF Allowed', 'value' => $allowedInFyf],
+                ],
+                'software_stats' => $softwareStats,
+            ],
+        ]);
+    }
+
+    public function manageInstanceToggleBySoftware(Request $request)
+    {
+        $request->validate([
+            'software' => 'required|string',
+            'allow_video_posts' => 'required|boolean',
+        ]);
+
+        $software = $request->software;
+        $allowVideoPosts = (bool) $request->allow_video_posts;
+        $updatedCount = Instance::where('software', $software)
+            ->update(['allow_video_posts' => $request->allow_video_posts]);
+
+        app(AdminAuditLogService::class)->logInstanceSoftwareUpdateAllowVideoPosts($request->user(), ['software' => $software, 'allow_video_posts' => $allowVideoPosts]);
+
+        return response()->json([
+            'data' => [
+                'updated_count' => $updatedCount,
+            ],
+        ]);
+    }
+
+    public function manageInstanceToggleByDomains(Request $request)
+    {
+        $request->validate([
+            'domains' => 'required|array',
+            'domains.*' => 'string',
+            'allow_video_posts' => 'required|boolean',
+        ]);
+
+        $domains = array_map(function ($domain) {
+            return parse_url($domain, PHP_URL_HOST) ?: $domain;
+        }, $request->domains);
+
+        $updatedCount = Instance::whereIn('domain', $domains)
+            ->update(['allow_video_posts' => $request->allow_video_posts]);
+
+        app(AdminAuditLogService::class)->logInstanceDomainsUpdateAllowVideoPosts($request->user(), ['domains' => $domains, 'allow_video_posts' => $request->allow_video_posts]);
+
+        return response()->json([
+            'data' => [
+                'updated_count' => $updatedCount,
+            ],
+        ]);
     }
 
     public function instanceCreate(Request $request)
@@ -1156,6 +1234,10 @@ class AdminController extends Controller
 
     private function applySorting($query, $sort)
     {
+        if ($sort === 'allow_video_posts') {
+            return $query->where('allow_video_posts', 1);
+        }
+
         if ($sort === 'unprocessed') {
             return $query->where('status', 1);
         }
