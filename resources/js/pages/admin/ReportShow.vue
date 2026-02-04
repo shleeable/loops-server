@@ -308,9 +308,9 @@
                                         }}</router-link
                                     >
                                     <span>•</span>
-                                    <router-link :to="report.content_preview.url">{{
+                                    <a :href="report.content_preview.url">{{
                                         formatDate(report.content_preview.created_at)
-                                    }}</router-link>
+                                    }}</a>
                                 </div>
                             </div>
                         </div>
