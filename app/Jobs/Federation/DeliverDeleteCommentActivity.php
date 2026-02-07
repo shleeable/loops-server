@@ -95,6 +95,9 @@ class DeliverDeleteCommentActivity implements ShouldBeUnique, ShouldQueue
         ];
 
         $signatureService = app(HttpSignatureService::class);
+        $path = $parsedUrl['path'] ?? '/';
+        $queryString = isset($parsedUrl['query']) ? '?'.$parsedUrl['query'] : '';
+        $requestPath = $path.$queryString;
 
         try {
             $privateKey = app(SigningService::class)->getPrivateKey();
@@ -103,7 +106,7 @@ class DeliverDeleteCommentActivity implements ShouldBeUnique, ShouldQueue
                 $privateKey,
                 $headers,
                 'POST',
-                $parsedUrl['path'] ?? '/',
+                $requestPath,
                 json_encode($activity)
             );
 
