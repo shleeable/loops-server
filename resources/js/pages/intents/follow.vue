@@ -380,7 +380,7 @@ const handleSuccessRedirect = () => {
     } else if (onSuccess) {
         window.location.href = onSuccess
     } else {
-        router.push(`/${actor.value.username}`)
+        router.push(`/@${actor.value.username}`)
     }
 }
 
