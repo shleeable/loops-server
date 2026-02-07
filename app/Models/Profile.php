@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\DB;
  * @property int $video_count
  * @property bool $local
  * @property string|null $uri
+ * @property string|null $remote_url
  * @property string|null $domain
  * @property string|null $public_key
  * @property string|null $inbox_url
@@ -154,6 +155,7 @@ class Profile extends Model
         'manuallyApprovesFollowers',
         'domain',
         'uri',
+        'remote_url',
         'inbox_url',
         'outbox_url',
         'followers_url',
@@ -443,6 +445,7 @@ class Profile extends Model
                 'inbox_url' => $actorData['inbox'],
                 'avatar' => $avatar,
                 'uri' => $actorData['id'],
+                'remote_url' => data_get($actorData, 'url'),
                 'outbox_url' => $actorData['outbox'] ?? null,
                 'followers_url' => $actorData['followers'] ?? null,
                 'following_url' => $actorData['following'] ?? null,
