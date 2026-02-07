@@ -390,7 +390,7 @@ class SanitizeService
         return $host;
     }
 
-    private function isValidHostname(string $host): bool
+    public function isValidHostname(string $host): bool
     {
         if ($host === '' || strlen($host) > 253 || strpos($host, '.') === false) {
             return false;
@@ -681,25 +681,31 @@ class SanitizeService
             $appUrl = config('app.url');
             $baseDomain = parse_url($appUrl, PHP_URL_HOST);
             $allowedHosts = [$baseDomain];
+            $allowSubdomains = true;
         }
 
         $allowed = array_map('strtolower', (array) $allowedHosts);
 
-        $hostOk = false;
-        foreach ($allowed as $base) {
-            if ($host === $base) {
-                $hostOk = true;
-                break;
-            }
-            if ($allowSubdomains && str_ends_with('.'.$host, '.'.$base)) {
-                $hostOk = true;
-                break;
-            }
-            if ($allowSubdomains && str_ends_with($host, '.'.$base)) {
-                $hostOk = true;
-                break;
+        if (empty($allowed)) {
+            $hostOk = true;
+        } else {
+            $hostOk = false;
+            foreach ($allowed as $base) {
+                if ($host === $base) {
+                    $hostOk = true;
+                    break;
+                }
+                if ($allowSubdomains && str_ends_with('.'.$host, '.'.$base)) {
+                    $hostOk = true;
+                    break;
+                }
+                if ($allowSubdomains && str_ends_with($host, '.'.$base)) {
+                    $hostOk = true;
+                    break;
+                }
             }
         }
+
         if (! $hostOk) {
             return null;
         }
@@ -726,17 +732,26 @@ class SanitizeService
 
             // Match path segments
             foreach ($tplSeg as $i => $chunk) {
-                if (preg_match('/^\{([a-zA-Z_][a-zA-Z0-9_]*)\}$/', $chunk, $m)) {
-                    $name = $m[1];
+                if (preg_match('/^(.*)\{([a-zA-Z_][a-zA-Z0-9_]*)\}(.*)$/', $chunk, $m)) {
+                    $prefix = $m[1];
+                    $name = $m[2];
+                    $suffix = $m[3];
                     $val = $seg[$i];
 
+                    if (! str_starts_with($val, $prefix) || ! str_ends_with($val, $suffix)) {
+                        $ok = false;
+                        break;
+                    }
+
+                    $paramValue = substr($val, strlen($prefix), strlen($val) - strlen($prefix) - strlen($suffix));
+
                     if (isset($constraints[$name])) {
-                        if (! preg_match('~^'.$constraints[$name].'$~', $val)) {
+                        if (! preg_match('~^'.$constraints[$name].'$~', $paramValue)) {
                             $ok = false;
                             break;
                         }
                     }
-                    $params[$name] = $val;
+                    $params[$name] = $paramValue;
                 } else {
                     if ($chunk !== $seg[$i]) {
                         $ok = false;
