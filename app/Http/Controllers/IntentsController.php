@@ -24,10 +24,10 @@ class IntentsController extends Controller
         }
 
         $request->validate([
-            'query' => ['required', 'string'],
+            'query' => ['required', 'string', 'max:500'],
         ]);
 
-        $query = trim(urldecode($request->input('query')));
+        $query = trim($request->input('query'));
         $profile = null;
 
         if (preg_match('/^@?([\w.-]+)(?:@([\w.-]+\.\w+))?$/', $query, $matches)) {
@@ -56,7 +56,6 @@ class IntentsController extends Controller
 
                     if (! $profile) {
                         $profile = app(WebfingerService::class)->findOrCreateRemoteActor($username.'@'.$domain);
-                        sleep(5);
                     }
                 }
             } else {
@@ -92,7 +91,7 @@ class IntentsController extends Controller
                     useAppHost: true,
                     constraints: [
                         'profileId' => '\d+',
-                        'username' => '[a-zA-Z0-9][a-zA-Z0-9_.-]*[a-zA-Z0-9_]|[a-zA-Z0-9]',
+                        'username' => '^(?:[a-zA-Z0-9](?:[a-zA-Z0-9_.-]*[a-zA-Z0-9_])?)$',
                     ]
                 );
 
@@ -117,14 +116,15 @@ class IntentsController extends Controller
                     }
                 }
             } else {
-                $profile = Profile::where('uri', $safeUrl)
-                    ->orWhere('remote_url', $safeUrl)
+                $profile = Profile::where(function ($q) use ($safeUrl) {
+                    $q->where('uri', $safeUrl)
+                        ->orWhere('remote_url', $safeUrl);
+                })
                     ->where('status', 1)
                     ->first();
 
                 if (! $profile) {
                     $profile = Profile::findOrCreateFromUrl($safeUrl);
-                    sleep(5);
                 }
             }
         }
