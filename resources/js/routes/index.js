@@ -32,6 +32,12 @@ const router = createRouter({
             meta: { requiresAuth: false }
         },
         {
+            path: '/intents/follow',
+            name: 'followIntent',
+            component: () => import('~/pages/intents/follow.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
             path: '/notifications/system/:id/permalink',
             name: 'notificationSystemPermalink',
             component: () => import('~/pages/notifications/system-permalink.vue'),

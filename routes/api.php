@@ -25,6 +25,7 @@ use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\InstanceActorController;
+use App\Http\Controllers\IntentsController;
 use App\Http\Controllers\NodeInfoController;
 use App\Http\Controllers\ObjectController;
 use App\Http\Controllers\PageController;
@@ -118,6 +119,7 @@ Route::prefix('api')->group(function () {
     // Search
     Route::get('/v1/search', [SearchController::class, 'search'])->middleware(['auth:web,api', 'throttle:searchV1']);
     Route::post('/v1/search/users', [SearchController::class, 'getUsers'])->middleware(['auth:web,api', 'throttle:autocomplete']);
+    Route::post('/v1/intents/follow/account', [IntentsController::class, 'getFollowAccount'])->middleware(['auth:web,api', 'throttle:followIntents']);
 
     // Feeds
     Route::get('/v0/user/self', [AccountController::class, 'selfAccountInfo'])->middleware('auth:web,api');

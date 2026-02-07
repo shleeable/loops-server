@@ -15,7 +15,8 @@ export const useAuthStore = defineStore('auth', {
         error: null,
         authModalOpen: false,
         authModalMode: 'login',
-        needsTwoFactor: false
+        needsTwoFactor: false,
+        authRedirect: null
     }),
 
     getters: {
@@ -28,9 +29,10 @@ export const useAuthStore = defineStore('auth', {
     },
 
     actions: {
-        openAuthModal(mode = 'login') {
+        openAuthModal(mode = 'login', authRedirect = null) {
             this.authModalMode = mode
             this.authModalOpen = true
+            this.authRedirect = authRedirect
         },
 
         closeAuthModal() {
@@ -48,6 +50,7 @@ export const useAuthStore = defineStore('auth', {
             this.authenticated = false
             this.loading = false
             this.error = null
+            this.authRedirect = null
         },
 
         async resetMyPassword(data) {
@@ -108,7 +111,11 @@ export const useAuthStore = defineStore('auth', {
                 const userData = await axiosInstance.get('/api/v1/account/info/self')
                 this.user = userData.data.data
                 this.authenticated = true
-                window.location.reload()
+                if (this.authRedirect) {
+                    window.location.href = this.authRedirect
+                } else {
+                    window.location.reload()
+                }
                 return response
             } catch (error) {
                 console.log(error)
