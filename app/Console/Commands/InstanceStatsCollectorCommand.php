@@ -9,6 +9,7 @@ use App\Models\Instance;
 use App\Models\Profile;
 use App\Models\Report;
 use App\Models\Video;
+use App\Services\InstanceService;
 use Illuminate\Console\Command;
 
 class InstanceStatsCollectorCommand extends Command
@@ -54,6 +55,10 @@ class InstanceStatsCollectorCommand extends Command
             $instance->save();
 
             $count++;
+        }
+
+        if ($count) {
+            app(InstanceService::class)->flushStats();
         }
 
         $this->info("Collected stats for {$count} instances");

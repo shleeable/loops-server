@@ -29,6 +29,7 @@ use App\Services\AccountService;
 use App\Services\AccountSuggestionService;
 use App\Services\AdminAuditLogService;
 use App\Services\ExploreService;
+use App\Services\InstanceService;
 use App\Services\NodeinfoCrawlerService;
 use App\Services\SanitizeService;
 use App\Services\VersionCheckService;
@@ -881,6 +882,7 @@ class AdminController extends Controller
         $instance->update($validated);
 
         app(AdminAuditLogService::class)->logInstanceUpdateSettings($request->user(), $instance, ['old' => $oldValues, 'new' => $validated]);
+        app(InstanceService::class)->flushStats();
 
         return $this->success();
     }
@@ -898,6 +900,7 @@ class AdminController extends Controller
         $instance->save();
 
         FetchInstanceNodeinfo::dispatch($instance)->onQueue('actor-update');
+        app(InstanceService::class)->flushStats();
 
         return $this->success();
     }
@@ -911,6 +914,7 @@ class AdminController extends Controller
 
         app(AdminAuditLogService::class)->logInstanceActivated($request->user(), $instance);
         app(SanitizeService::class)->getBannedDomains(true);
+        app(InstanceService::class)->flushStats();
 
         return $this->success();
     }
@@ -924,59 +928,23 @@ class AdminController extends Controller
 
         app(AdminAuditLogService::class)->logInstanceSuspended($request->user(), $instance);
         app(SanitizeService::class)->getBannedDomains(true);
+        app(InstanceService::class)->flushStats();
 
         return $this->success();
     }
 
     public function instanceStats(Request $request)
     {
-        $res = [
-            [
-                'name' => 'Total',
-                'value' => Instance::whereNotNull('software')->whereFederationState(5)->count(),
-            ],
-            [
-                'name' => 'New',
-                'value' => Instance::whereNotNull('software')->whereFederationState(5)->where('created_at', '>', now()->subHours(24))->count(),
-            ],
-            [
-                'name' => 'Users',
-                'value' => Instance::whereNotNull('software')->where('federation_state', 5)->sum('user_count'),
-            ],
-            [
-                'name' => 'Comments',
-                'value' => Instance::whereNotNull('software')->where('federation_state', 5)->sum('comment_count'),
-            ],
-        ];
+        $res = app(InstanceService::class)->getStats();
 
         return $this->data($res);
     }
 
     public function instanceAdvancedStats()
     {
-        $totalInstances = Instance::count();
-        $activeInstances = Instance::where('is_blocked', false)->count();
-        $allowedVideoPosts = Instance::where('allow_video_posts', true)->count();
-        $allowedInFyf = Instance::where('allow_videos_in_fyf', true)->count();
+        $res = app(InstanceService::class)->getAdvancedStats();
 
-        $softwareStats = Instance::select('software')
-            ->selectRaw('COUNT(*) as count')
-            ->selectRaw('SUM(CASE WHEN allow_video_posts = 1 THEN 1 ELSE 0 END) as allow_video_posts_count')
-            ->groupBy('software')
-            ->orderByDesc('count')
-            ->get();
-
-        return response()->json([
-            'data' => [
-                'stats' => [
-                    ['name' => 'Total Instances', 'value' => $totalInstances],
-                    ['name' => 'Active Instances', 'value' => $activeInstances],
-                    ['name' => 'Video Posts Allowed', 'value' => $allowedVideoPosts],
-                    ['name' => 'FYF Allowed', 'value' => $allowedInFyf],
-                ],
-                'software_stats' => $softwareStats,
-            ],
-        ]);
+        return response()->json($res);
     }
 
     public function manageInstanceToggleBySoftware(Request $request)
@@ -992,6 +960,7 @@ class AdminController extends Controller
             ->update(['allow_video_posts' => $request->allow_video_posts]);
 
         app(AdminAuditLogService::class)->logInstanceSoftwareUpdateAllowVideoPosts($request->user(), ['software' => $software, 'allow_video_posts' => $allowVideoPosts]);
+        app(InstanceService::class)->flushStats();
 
         return response()->json([
             'data' => [
@@ -1016,6 +985,7 @@ class AdminController extends Controller
             ->update(['allow_video_posts' => $request->allow_video_posts]);
 
         app(AdminAuditLogService::class)->logInstanceDomainsUpdateAllowVideoPosts($request->user(), ['domains' => $domains, 'allow_video_posts' => $request->allow_video_posts]);
+        app(InstanceService::class)->flushStats();
 
         return response()->json([
             'data' => [
@@ -1062,6 +1032,7 @@ class AdminController extends Controller
 
         app(AdminAuditLogService::class)->logInstanceDomainAdded($request->user(), $instance);
         app(SanitizeService::class)->getBannedDomains(true);
+        app(InstanceService::class)->flushStats();
 
         return $this->success();
     }

@@ -55,6 +55,7 @@ class WebfingerService
 
         $actor = Profile::where('username', $parsed['username'])
             ->where('local', true)
+            ->where('status', 1)
             ->first();
 
         if (! $actor) {
@@ -254,7 +255,16 @@ class WebfingerService
                     'href' => $actorUrl,
                 ],
                 $this->getAvatarLink($actor),
+                $this->getIntents(),
             ]),
+        ];
+    }
+
+    protected function getIntents(): array
+    {
+        return [
+            'rel' => 'https://w3id.org/fep/3b86/Follow',
+            'template' => url('/intents/follow?object={object}'),
         ];
     }
 

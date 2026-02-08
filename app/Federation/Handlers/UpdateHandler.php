@@ -186,6 +186,10 @@ class UpdateHandler extends BaseHandler
             $updateData['header_bg'] = $object['image']['url'];
         }
 
+        if (isset($object['url'])) {
+            $updateData['remote_url'] = app(SanitizeService::class)->url($object['url']);
+        }
+
         if (isset($object['updated'])) {
             $updateData['updated_at'] = Carbon::parse($object['updated']);
         } else {

@@ -11,6 +11,7 @@ use App\Models\Hashtag;
 use App\Models\Profile;
 use App\Models\UserFilter;
 use App\Models\Video;
+use App\Services\SanitizeService;
 use App\Services\WebfingerService;
 use App\Support\CursorToken;
 use Illuminate\Http\Request;
@@ -307,7 +308,7 @@ class SearchController extends Controller
     protected function searchRemote(string $query, int $currentUserId): ?Profile
     {
         try {
-            if (filter_var($query, FILTER_VALIDATE_URL)) {
+            if (filter_var($query, FILTER_VALIDATE_URL) && app(SanitizeService::class)->url($query, true)) {
                 return $this->lookupByUrl($query, $currentUserId);
             }
 

@@ -321,6 +321,7 @@ class VerifyUserHttpSignature
                 'name' => app(SanitizeService::class)->cleanPlainText($actorData['name'] ?? $username),
                 'bio' => app(SanitizeService::class)->cleanHtmlWithSpacing($actorData['summary'] ?? null),
                 'inbox_url' => $actorData['inbox'] ?? null,
+                'remote_url' => data_get($actorData, 'url'),
                 'avatar' => data_get($actorData, 'icon.url'),
                 'outbox_url' => $actorData['outbox'] ?? null,
                 'followers_url' => $actorData['followers'] ?? null,

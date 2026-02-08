@@ -40,12 +40,16 @@ class DeliveryService
 
         try {
             $privateKey = app(SigningService::class)->getPrivateKey();
+            $path = $parsedUrl['path'] ?? '/';
+            $queryString = isset($parsedUrl['query']) ? '?'.$parsedUrl['query'] : '';
+            $requestPath = $path.$queryString;
+
             $signature = $this->signatureService->sign(
                 $actor->getKeyId(),
                 $privateKey,
                 $headers,
                 'POST',
-                $parsedUrl['path'] ?? '/',
+                $requestPath,
                 $body
             );
 

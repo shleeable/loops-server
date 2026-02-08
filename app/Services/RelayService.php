@@ -195,12 +195,16 @@ class RelayService
         ];
 
         $privateKey = $this->signingService->getPrivateKey();
+        $path = $parsedUrl['path'] ?? '/';
+        $queryString = isset($parsedUrl['query']) ? '?'.$parsedUrl['query'] : '';
+        $requestPath = $path.$queryString;
+
         $signature = app(HttpSignatureService::class)->sign(
             $actor->getKeyId(),
             $privateKey,
             $headers,
             'POST',
-            $parsedUrl['path'] ?? '/',
+            $requestPath,
             $body
         );
 

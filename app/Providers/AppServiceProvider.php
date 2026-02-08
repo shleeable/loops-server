@@ -98,6 +98,18 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('followIntents', function (Request $request) {
+            $user = $request->user();
+            if ($user->is_admin) {
+                return;
+            }
+
+            return [
+                Limit::perMinute(5)->by('minute:'.$user->id),
+                Limit::perDay(50)->by('day:'.$user->id),
+            ];
+        });
+
         Event::listen(Login::class, function ($e) {
             app(UserActivityService::class)->markActive($e->user);
         });

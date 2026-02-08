@@ -37,7 +37,7 @@ class WebfingerController extends Controller
             ], 404);
         }
 
-        return response()->json($result)
+        return response()->json($result, 200, [], JSON_UNESCAPED_SLASHES)
             ->header('Content-Type', 'application/jrd+json; charset=utf-8')
             ->header('Access-Control-Allow-Origin', '*');
     }

@@ -369,6 +369,7 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
                 'bio' => app(SanitizeService::class)->cleanHtmlWithSpacing($actorData['summary'] ?? null),
                 'inbox_url' => $actorData['inbox'] ?? null,
                 'avatar' => data_get($actorData, 'icon.url'),
+                'remote_url' => data_get($actorData, 'url'),
                 'outbox_url' => $actorData['outbox'] ?? null,
                 'followers_url' => $actorData['followers'] ?? null,
                 'following_url' => $actorData['following'] ?? null,
