@@ -3,7 +3,7 @@
         <div class="mb-6">
             <div class="mb-8">
                 <div class="mb-3">
-                    <router-link to="/admin/profiles/invites" class="text-sm text-gray-500">
+                    <router-link to="/admin/invites" class="text-sm text-gray-500">
                         ← Back to invites
                     </router-link>
                 </div>
@@ -742,7 +742,7 @@
                     <div class="flex gap-3">
                         <button
                             type="button"
-                            @click="router.push('/admin/profiles/invites')"
+                            @click="router.push('/admin/invites')"
                             class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition"
                         >
                             Cancel

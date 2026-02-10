@@ -8,9 +8,6 @@
                         Manage user profiles and account status
                     </p>
                 </div>
-                <AnimatedButton @click="router.push('/admin/profiles/invites')">
-                    Manage Invites
-                </AnimatedButton>
             </div>
         </div>
 

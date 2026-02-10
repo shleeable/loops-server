@@ -4,7 +4,7 @@
             <div class="mb-8">
                 <div class="mb-3">
                     <router-link
-                        to="/admin/profiles/invites"
+                        to="/admin/invites"
                         class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                     >
                         ← Back to invites
@@ -546,7 +546,7 @@ const handleSubmit = async () => {
     try {
         const response = await invitesApi.createInvite(form)
         success.value = true
-        router.push('/admin/profiles/invites/' + response.data.id)
+        router.push('/admin/invites/' + response.data.id)
     } catch (err) {
         error.value = err.message || 'Failed to create invite link'
     } finally {

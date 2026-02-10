@@ -392,19 +392,19 @@ const router = createRouter({
                     meta: { requiresAdmin: true }
                 },
                 {
-                    path: 'profiles/invites',
+                    path: 'invites',
                     name: 'adminInvites',
                     component: () => import('~/pages/admin/AdminInvites.vue'),
                     meta: { requiresAdmin: true }
                 },
                 {
-                    path: 'profiles/invites/create',
+                    path: 'invites/create',
                     name: 'adminInvitesCreate',
                     component: () => import('~/pages/admin/AdminInvitesCreate.vue'),
                     meta: { requiresAdmin: true }
                 },
                 {
-                    path: 'profiles/invites/:id',
+                    path: 'invites/:id',
                     name: 'adminInvitesShow',
                     component: () => import('~/pages/admin/AdminInvitesShow.vue'),
                     meta: { requiresAdmin: true }
