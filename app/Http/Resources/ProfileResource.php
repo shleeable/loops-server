@@ -30,6 +30,12 @@ class ProfileResource extends JsonResource
             $avatarUrl = AvatarService::remote($this->id);
         }
 
+        $remoteUrl = null;
+
+        if (! $this->local) {
+            $remoteUrl = $this->remote_url ?? $this->uri;
+        }
+
         return [
             'id' => (string) $this->id,
             'name' => $this->name ?? 'user'.$this->id,
@@ -42,6 +48,7 @@ class ProfileResource extends JsonResource
             'follower_count' => $this->followers,
             'following_count' => $this->following,
             'url' => url('/@'.$this->username),
+            'remote_url' => $remoteUrl,
             'is_blocking' => null,
             'links' => $this->links ?? [],
             'created_at' => $this->created_at->format('c'),
