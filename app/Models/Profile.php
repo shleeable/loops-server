@@ -257,14 +257,14 @@ class Profile extends Model
     {
         return $this->local ?
             url('/ap/users/'.$this->id.$suffix) :
-            $this->uri;
+            $this->uri.$suffix;
     }
 
     public function permalink($suffix = null)
     {
         return $this->local ?
             url('/ap/users/'.$this->id.$suffix) :
-            $this->uri;
+            $this->uri.$suffix;
     }
 
     public function getFollowingUrl()
