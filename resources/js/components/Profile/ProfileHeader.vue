@@ -108,6 +108,16 @@
                                         class="absolute right-0 top-12 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg border border-gray-200 dark:border-slate-600 z-50"
                                     >
                                         <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                                            <a
+                                                v-if="!profile.local && profile.remote_url"
+                                                :href="profile.remote_url"
+                                                target="_blank"
+                                                rel="noopener nofollow noreferrer"
+                                                class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                                            >
+                                                <ArrowTopRightOnSquareIcon class="w-4 h-4 mr-3" />
+                                                View full profile
+                                            </a>
                                             <button
                                                 @click="handleReport"
                                                 class="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
@@ -250,7 +260,8 @@ import {
     FlagIcon,
     NoSymbolIcon,
     LinkIcon,
-    CheckBadgeIcon
+    CheckBadgeIcon,
+    ArrowTopRightOnSquareIcon
 } from '@heroicons/vue/24/outline'
 
 const { t } = useI18n()
