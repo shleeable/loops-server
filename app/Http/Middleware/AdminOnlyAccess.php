@@ -20,7 +20,11 @@ class AdminOnlyAccess
             abort(401, 'Unauthenticated');
         }
 
-        if ($request->user()->is_admin !== true || $request->user()->status !== 1) {
+        if ($request->user()->status !== 1) {
+            abort(403, 'Unauthorized');
+        }
+
+        if ($request->user()->is_admin !== true) {
             Log::channel('admin_security')->warning('Unauthorized admin access attempt', [
                 'user_id' => $request->user()->id,
                 'ip' => $request->ip(),
