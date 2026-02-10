@@ -106,8 +106,6 @@ class ProcessSharedInboxActivity implements ShouldQueue
                     Log::info('No recipient URIs found in shared inbox activity', [
                         'activity_id' => $this->activity['id'] ?? null,
                         'type' => $this->activity['type'] ?? 'unknown',
-                        'activity' => $this->activity,
-                        'actor' => $this->actor,
                     ]);
                 }
 
