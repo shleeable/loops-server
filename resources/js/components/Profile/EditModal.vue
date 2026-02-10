@@ -355,6 +355,7 @@ const cropAndUpdateImage = async () => {
         const { coordinates } = cropper.value.getResult()
         const data = new FormData()
         data.append('avatar', file.value || '')
+        data.append('coordinates', JSON.stringify(coordinates))
 
         await authStore.updateAvatar(data)
         await authStore.checkAuth()
@@ -381,7 +382,7 @@ const deleteAvatar = async () => {
     const result = await confirmModal(
         t('profile.deleteAvatar'),
         t('profile.deleteAvatarConfirmMessage'),
-        t('profile.delete'),
+        t('post.delete'),
         t('common.cancel')
     )
 
