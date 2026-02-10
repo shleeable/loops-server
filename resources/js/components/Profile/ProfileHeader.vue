@@ -289,7 +289,9 @@ const handleToggleFollow = async () => {
         action,
         'Cancel'
     )
-    await toggleFollow()
+    if (result) {
+        await toggleFollow()
+    }
 }
 
 const openEditProfile = () => {
