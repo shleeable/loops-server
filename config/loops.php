@@ -30,6 +30,15 @@ return [
         ],
     ],
 
+    'explore' => [
+        'tags' => [
+            'min_likes' => [
+                'guest' => env('LOOPS_EXPLORE_MIN_LIKES_GUEST', 10),
+                'user' => env('LOOPS_EXPLORE_MIN_LIKES_USER', 10),
+            ],
+        ],
+    ],
+
     'reports' => [
         'rate_limits' => [
             'admin_exempt' => env('LOOPS_REPORT_ADMIN_EX_LIMIT', true),
