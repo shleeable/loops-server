@@ -128,7 +128,7 @@ class Report extends Model
             return $query;
         }
 
-        $adminSeen = $sort === 'closed';
+        $adminSeen = $sort === 'closed' ? true : false;
 
         return $query->where('admin_seen', $adminSeen);
     }
