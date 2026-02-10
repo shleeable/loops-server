@@ -725,7 +725,7 @@ class AdminController extends Controller
 
         app(ExploreService::class)->getTrendingTags(true);
 
-        Cache::forget('explore:getTagFeed:'.$hashtag->id);
+        Cache::forget(ExploreService::GUEST_TAG_FEED_KEY.$hashtag->id);
 
         return $this->success();
     }
