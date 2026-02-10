@@ -175,20 +175,26 @@ class AccountController extends Controller
 
         abort_if($count > 250, 422, 'You cannot block any more accounts');
 
-        UserFilter::updateOrCreate([
-            'profile_id' => $pid,
-            'account_id' => $profile->id,
-        ]);
+        $res = DB::transaction(function () use ($pid, $profile, $request) {
+            UserFilter::updateOrCreate([
+                'profile_id' => $pid,
+                'account_id' => $profile->id,
+            ]);
 
-        Follower::whereProfileId($pid)->whereFollowingId($profile->id)->delete();
-        Follower::whereProfileId($profile->id)->whereFollowingId($pid)->delete();
-        FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->delete();
-        FollowRequest::whereProfileId($profile->id)->whereFollowingId($pid)->delete();
-        FollowerService::refreshAndSync($pid, $profile->id);
-        AccountSuggestionService::removeForUser($pid, $profile->id);
-        AccountSuggestionService::invalidate($pid);
-        $res = (new ProfileResource($profile))->toArray($request);
-        $res['is_blocking'] = true;
+            Follower::whereProfileId($pid)->whereFollowingId($profile->id)->delete();
+            Follower::whereProfileId($profile->id)->whereFollowingId($pid)->delete();
+            FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->delete();
+            FollowRequest::whereProfileId($profile->id)->whereFollowingId($pid)->delete();
+
+            FollowerService::refreshAndSync($pid, $profile->id);
+            AccountSuggestionService::removeForUser($pid, $profile->id);
+            AccountSuggestionService::invalidate($pid);
+
+            $res = (new ProfileResource($profile))->toArray($request);
+            $res['is_blocking'] = true;
+
+            return $res;
+        });
 
         return response()->json($res);
     }
@@ -200,13 +206,19 @@ class AccountController extends Controller
 
         $profile = Profile::findOrFail($id);
 
-        UserFilter::whereProfileId($pid)
-            ->whereAccountId($profile->id)
-            ->delete();
-        AccountSuggestionService::invalidate($pid);
-        FollowerService::refreshAndSync($pid, $profile->id);
-        $res = (new ProfileResource($profile))->toArray($request);
-        $res['is_blocking'] = false;
+        $res = DB::transaction(function () use ($pid, $profile, $request) {
+            UserFilter::whereProfileId($pid)
+                ->whereAccountId($profile->id)
+                ->delete();
+
+            AccountSuggestionService::invalidate($pid);
+            FollowerService::refreshAndSync($pid, $profile->id);
+
+            $res = (new ProfileResource($profile))->toArray($request);
+            $res['is_blocking'] = false;
+
+            return $res;
+        });
 
         return response()->json($res);
     }
@@ -225,33 +237,37 @@ class AccountController extends Controller
             return $this->error('Account not found or is unavailable', 404);
         }
 
-        if ($profile->local) {
-            $res = Follower::updateOrCreate([
-                'profile_id' => $pid,
-                'following_id' => $id,
-            ], [
-                'following_is_local' => (bool) $profile->local,
-            ]);
+        $res = DB::transaction(function () use ($pid, $id, $profile) {
+            if ($profile->local) {
+                $res = Follower::updateOrCreate([
+                    'profile_id' => $pid,
+                    'following_id' => $id,
+                ], [
+                    'following_is_local' => (bool) $profile->local,
+                ]);
 
-            if ($res->wasRecentlyCreated) {
-                NotificationService::newFollower($id, $pid);
+                if ($res->wasRecentlyCreated) {
+                    NotificationService::newFollower($id, $pid);
+                }
+            } else {
+                // Delete existing follow request to force a new one, to fix broken federation
+                FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->delete();
+
+                $res = FollowRequest::firstOrCreate([
+                    'profile_id' => $pid,
+                    'following_id' => $profile->id,
+                    'profile_is_local' => true,
+                    'following_is_local' => false,
+                    'following_state' => 0,
+                ]);
+
+                DeliverFollowRequest::dispatch($res)->onQueue('activitypub-out');
             }
-        } else {
-            // Delete existing follow request to force a new one, to fix broken federation
-            FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->delete();
 
-            $res = FollowRequest::firstOrCreate([
-                'profile_id' => $pid,
-                'following_id' => $profile->id,
-                'profile_is_local' => true,
-                'following_is_local' => false,
-                'following_state' => 0,
-            ]);
+            return AccountService::get($id);
+        });
 
-            DeliverFollowRequest::dispatch($res)->onQueue('activitypub-out');
-        }
-
-        return $this->data(AccountService::get($id));
+        return $this->data($res);
     }
 
     public function unfollow(Request $request, $id)
@@ -273,20 +289,24 @@ class AccountController extends Controller
             return $this->data(AccountService::get($id));
         }
 
-        if ($profile->local) {
-            $res->delete();
-            NotificationService::unFollow($id, $pid);
-        } else {
-            $followRequest = FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->first();
-            if ($followRequest) {
-                DeliverUndoFollowRequestActivity::dispatch($followRequest)->onQueue('activitypub-out');
+        $res = DB::transaction(function () use ($pid, $id, $profile, $res) {
+            if ($profile->local) {
+                $res->delete();
+                NotificationService::unFollow($id, $pid);
             } else {
-                DeliverUndoFollowActivity::dispatch($res)->onQueue('activitypub-out');
+                $followRequest = FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->first();
+                if ($followRequest) {
+                    DeliverUndoFollowRequestActivity::dispatch($followRequest)->onQueue('activitypub-out');
+                } else {
+                    DeliverUndoFollowActivity::dispatch($res)->onQueue('activitypub-out');
+                }
+                $res->delete();
             }
-            $res->delete();
-        }
 
-        return $this->data(AccountService::get($id));
+            return AccountService::get($id);
+        });
+
+        return $this->data($res);
     }
 
     public function undoFollowRequest(Request $request, $id)
@@ -300,16 +320,20 @@ class AccountController extends Controller
         $profile = Profile::findOrFail($id);
         $followRequest = FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->firstOrFail();
 
-        if ($profile->local) {
-            $followRequest->delete();
+        $res = DB::transaction(function () use ($id, $profile, $followRequest) {
+            if ($profile->local) {
+                $followRequest->delete();
 
-            return $this->data(AccountService::get($id));
-        } else {
-            $followRequest->update(['following_state' => 5]);
-            DeliverUndoFollowRequestActivity::dispatch($followRequest)->onQueue('activitypub-out');
-        }
+                return $this->data(AccountService::get($id));
+            } else {
+                $followRequest->update(['following_state' => 5]);
+                DeliverUndoFollowRequestActivity::dispatch($followRequest)->onQueue('activitypub-out');
+            }
 
-        return $this->data(AccountService::get($id));
+            return AccountService::get($id);
+        });
+
+        return $this->data($res);
     }
 
     public function getRelationshipState(Request $request, $id)
