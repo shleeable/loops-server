@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\Page;
-use Cache;
-use Storage;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class PageService
 {
@@ -32,7 +32,7 @@ class PageService
                         'location' => $item->location,
                     ];
                 })
-                ->toJson(JSON_UNESCAPED_SLASHES);
+                ->toArray();
         });
     }
 

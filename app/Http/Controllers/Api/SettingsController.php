@@ -80,7 +80,11 @@ class SettingsController extends Controller
         $user = $request->user();
         $profile = $user->profile;
 
-        AvatarService::updateAvatar($profile, $request->file('avatar'));
+        $coordinates = $request->input('coordinates')
+            ? json_decode($request->input('coordinates'), true)
+            : null;
+
+        AvatarService::updateAvatar($profile, $request->file('avatar'), $coordinates);
         $this->auditService->logProfileAvatarUpdated($user);
 
         $res = AccountService::get($profile->id);

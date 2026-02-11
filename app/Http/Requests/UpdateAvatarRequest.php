@@ -23,6 +23,7 @@ class UpdateAvatarRequest extends FormRequest
                 'min:1',
                 'max:'.(2 * 1024),
             ],
+            'coordinates' => 'sometimes|nullable|json',
         ];
     }
 

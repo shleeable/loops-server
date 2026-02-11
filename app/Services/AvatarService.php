@@ -42,18 +42,22 @@ class AvatarService
         });
     }
 
-    public static function updateAvatar(Profile $profile, $avatarFile): string
+    public static function updateAvatar(Profile $profile, $avatarFile, ?array $coordinates = null): string
     {
         $profileId = $profile->id;
         try {
             $hashid = HashidService::safeEncode($profileId);
+
+            if (empty($hashid)) {
+                throw new Exception('Invalid hashid generated for profile');
+            }
         } catch (Exception $e) {
-            throw new Exception('Error storing avatar');
+            throw new Exception('Error storing avatar: '.$e->getMessage());
         }
 
-        self::deleteExistingAvatars($hashid);
+        self::deleteExistingAvatars($hashid, $profile->id);
 
-        $avatarUrl = self::processAndUploadAvatar($avatarFile, $profileId, $hashid);
+        $avatarUrl = self::processAndUploadAvatar($avatarFile, $profileId, $hashid, $coordinates);
 
         $profile->avatar = $avatarUrl;
         $profile->save();
@@ -68,11 +72,15 @@ class AvatarService
         $profileId = $profile->id;
         try {
             $hashid = HashidService::safeEncode($profileId);
+
+            if (empty($hashid)) {
+                throw new Exception('Invalid hashid generated for profile');
+            }
         } catch (Exception $e) {
-            throw new Exception('Error storing avatar');
+            throw new Exception('Error deleting avatar: '.$e->getMessage());
         }
 
-        self::deleteExistingAvatars($hashid);
+        self::deleteExistingAvatars($hashid, $profile->id);
 
         $profile->avatar = null;
         $profile->save();
@@ -82,17 +90,18 @@ class AvatarService
         return '';
     }
 
-    private static function deleteExistingAvatars($hashid): void
+    private static function deleteExistingAvatars($hashid, $profileId): void
     {
         Storage::disk('s3')->deleteDirectory('avatars/'.$hashid);
+        Storage::disk('s3')->deleteDirectory('avatars/'.$profileId);
     }
 
-    private static function processAndUploadAvatar($avatarFile, int $profileId, $hashid): string
+    private static function processAndUploadAvatar($avatarFile, int $profileId, $hashid, ?array $coordinates = null): string
     {
         $key = strtolower(Str::random(5)).random_int(1234, 9999);
-        $filename = 'avatars/'.$hashid.'/'.$key.'.jpg';
+        $filename = 'avatars/'.$hashid.'/'.$key.'.webp';
 
-        $processedImagePath = self::processImage($avatarFile, $profileId);
+        $processedImagePath = self::processImage($avatarFile, $profileId, $coordinates);
 
         try {
             Storage::disk('s3')->put(
@@ -109,9 +118,9 @@ class AvatarService
         }
     }
 
-    private static function processImage($avatarFile, int $profileId): string
+    private static function processImage($avatarFile, int $profileId, ?array $coordinates = null): string
     {
-        $tempFileName = 'avatar-'.$profileId.'-'.time().'.jpg';
+        $tempFileName = 'avatar-'.$profileId.'-'.time().'.webp';
         $tempPath = storage_path('app/avatars-temp/'.$tempFileName);
 
         $dirPath = storage_path('app/avatars-temp');
@@ -123,10 +132,22 @@ class AvatarService
             throw new \RuntimeException("avatars-temp directory is not writable: {$dirPath}");
         }
 
-        Image::read($avatarFile)
-            ->cover(300, 300)
-            ->toJpeg(85)
-            ->save($tempPath);
+        $image = Image::read($avatarFile);
+
+        if ($coordinates && isset($coordinates['left'], $coordinates['top'], $coordinates['width'], $coordinates['height'])) {
+            $image->crop(
+                width: (int) round($coordinates['width']),
+                height: (int) round($coordinates['height']),
+                offset_x: (int) round($coordinates['left']),
+                offset_y: (int) round($coordinates['top'])
+            );
+
+            $image->scaleDown(width: 300, height: 300);
+        } else {
+            $image->cover(300, 300);
+        }
+
+        $image->toWebp(quality: 95, strip: true)->save($tempPath);
 
         return $tempPath;
     }

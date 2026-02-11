@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\BootstrapService;
+use App\Services\PageService;
 use App\Services\SettingsFileService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -35,6 +36,7 @@ class ComposerPostInstallCommand extends Command
             Cache::forget('version_check_result');
             app(SettingsFileService::class)->flush();
             BootstrapService::ensureBoottimeEnvironment();
+            app(PageService::class)->getActiveSideLinks(true);
 
             $this->info('Post-install tasks completed successfully.');
         } catch (\Exception $e) {

@@ -15,6 +15,7 @@ export const useProfileStore = defineStore('profile', {
         avatar: '',
         post: null,
         posts: null,
+        local: null,
         postsNextCursor: null,
         postsSort: null,
         postCount: 0,
@@ -33,6 +34,7 @@ export const useProfileStore = defineStore('profile', {
             blocking: false
         },
         url: null,
+        remote_url: null,
         allLikes: 0,
         isLoadingMorePosts: false,
         hasMorePosts: true,
@@ -62,6 +64,8 @@ export const useProfileStore = defineStore('profile', {
                 this.avatar = res.data.data.avatar
                 this.url = res.data.data.url
                 this.links = res.data.data.links
+                this.local = res.data.data.local
+                this.remote_url = res.data.data.remote_url
                 this.postCount = res.data.data.post_count
                 this.followerCount = res.data.data.follower_count
                 this.followingCount = res.data.data.following_count
@@ -171,6 +175,8 @@ export const useProfileStore = defineStore('profile', {
                 this.bio = res.data.data.bio
                 this.avatar = res.data.data.avatar
                 this.url = res.data.data.url
+                this.local = res.data.data.local
+                this.remote_url = res.data.data.remote_url
                 this.links = res.data.data.links
                 this.postCount = res.data.data.post_count
                 this.followerCount = res.data.data.follower_count
@@ -278,6 +284,8 @@ export const useProfileStore = defineStore('profile', {
                 this.bio = res.bio
                 this.avatar = res.avatar
                 this.url = res.url
+                this.local = res.local
+                this.remote_url = res?.remote_url
                 this.links = res.links
                 this.postCount = res.post_count
                 this.allLikes = res.likes_count
@@ -447,10 +455,12 @@ export const useProfileStore = defineStore('profile', {
             this.bio = ''
             this.avatar = ''
             this.url = ''
+            this.remote_url = null
             this.postCount = 0
             this.followingCount = 0
             this.followerCount = 0
             this.posts = null
+            this.local = null
             this.postsNextCursor = null
             this.postsSort = null
             this.links = []

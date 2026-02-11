@@ -57,6 +57,6 @@ class AdminInvite extends Model
 
     public function getAdminLink()
     {
-        return url('/admin/profiles/invites/'.$this->id);
+        return url('/admin/invites/'.$this->id);
     }
 }

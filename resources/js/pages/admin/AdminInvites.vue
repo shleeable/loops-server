@@ -7,7 +7,7 @@
                     <p class="mt-2 text-gray-600 dark:text-gray-400">Manage user invites</p>
                 </div>
 
-                <AnimatedButton @click="router.push('/admin/profiles/invites/create')"
+                <AnimatedButton @click="router.push('/admin/invites/create')"
                     >Create Invite</AnimatedButton
                 >
             </div>
@@ -30,7 +30,7 @@
         >
             <template #cell-id="{ value, item }">
                 <router-link
-                    :to="`/admin/profiles/invites/${item.id}`"
+                    :to="`/admin/invites/${item.id}`"
                     class="text-blue-600 hover:text-blue-800 font-medium underline cursor-pointer"
                 >
                     {{ value }}

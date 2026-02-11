@@ -6,12 +6,9 @@ use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\VideoHashtagResource;
 use App\Models\VideoHashtag;
-use App\Services\AccountService;
 use App\Services\ExploreService;
-use App\Services\VideoService;
 use App\Support\CursorToken;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
 class ExploreController extends Controller
 {
@@ -55,6 +52,8 @@ class ExploreController extends Controller
             $decodedCursor = null;
             $hops = 0;
 
+            $minLikes = config('loops.explore.tags.min_likes.user', 10);
+
             $maxPages = $user->is_admin ? 100 : 10;
             $maxItems = $user->is_admin ? 300 : 120;
 
@@ -75,6 +74,7 @@ class ExploreController extends Controller
                 ->join('videos', 'videos.id', '=', 'video_hashtags.video_id')
                 ->join('profiles', 'profiles.id', '=', 'videos.profile_id')
                 ->where('videos.status', 2)
+                ->where('videos.likes', '>', $minLikes)
                 ->where('profiles.status', 1)
                 ->select('video_hashtags.*')
                 ->orderByDesc('video_hashtags.id')
@@ -106,30 +106,7 @@ class ExploreController extends Controller
             ]);
         } else {
             abort_if($request->has('cursor'), 404);
-            $key = 'explore:getTagFeed:'.$hashtagId;
-            $feed = Cache::remember($key, now()->addHours(12), function () use ($hashtagId) {
-                return VideoHashtag::whereHashtagId($hashtagId)
-                    ->whereVisibility(1)
-                    ->orderByDesc('id')
-                    ->cursorPaginate(15)
-                    ->withQueryString();
-            });
-
-            $filteredCollection = $feed->getCollection()->filter(function ($videoHashtag) {
-                $videoData = app(VideoService::class)->getMediaData($videoHashtag->video_id);
-                if (empty($videoData)) {
-                    return false;
-                }
-                $profileId = data_get($videoData, 'account.id');
-                if (! $profileId) {
-                    return false;
-                }
-                $account = app(AccountService::class)->get($profileId);
-
-                return $account;
-            })->values();
-
-            $feed->setCollection($filteredCollection);
+            $feed = app(ExploreService::class)->getGuestTagFeed($hashtagId);
         }
 
         return VideoHashtagResource::collection($feed);

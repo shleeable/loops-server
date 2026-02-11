@@ -36,11 +36,17 @@ class HashidService
     {
         self::init();
 
-        if (! ctype_digit($snowflakeId)) {
-            throw new InvalidArgumentException('Input must be a numeric string');
+        $snowflakeStr = (string) $snowflakeId;
+
+        if (! ctype_digit($snowflakeStr)) {
+            throw new InvalidArgumentException('Input must be a numeric value');
         }
 
-        $num = (int) $snowflakeId;
+        $num = (int) $snowflakeStr;
+
+        if ($num < 0) {
+            throw new InvalidArgumentException('Input must be a positive integer');
+        }
 
         if ($num === 0) {
             return self::ALPHABET[0];
@@ -124,7 +130,7 @@ class HashidService
     /**
      * Safely encode snowflake ID
      */
-    public static function safeEncode(int|string $snowflakeId): string|int|null
+    public static function safeEncode(int|string $snowflakeId): ?string
     {
         try {
             return self::encode($snowflakeId);
@@ -136,7 +142,7 @@ class HashidService
     /**
      * Safely decode snowflake ID
      */
-    public static function safeDecode(int|string $encoded): string|int|null
+    public static function safeDecode(string $encoded): ?string
     {
         try {
             return self::decode($encoded);

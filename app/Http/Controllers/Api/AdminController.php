@@ -405,6 +405,7 @@ class AdminController extends Controller
     {
         $search = $request->query('q');
         $sort = $request->query('sort', 'open');
+        $dir = $sort === 'open' ? 'asc' : 'desc';
 
         if ($request->filled('q') && ! $request->has('sort')) {
             $sort = 'all';
@@ -412,7 +413,7 @@ class AdminController extends Controller
 
         $reports = Report::search($search)
             ->filterByStatus($sort)
-            ->paginated()
+            ->orderBy('id', $dir)
             ->cursorPaginate(10)
             ->withQueryString();
 
@@ -724,7 +725,7 @@ class AdminController extends Controller
 
         app(ExploreService::class)->getTrendingTags(true);
 
-        Cache::forget('explore:getTagFeed:'.$hashtag->id);
+        Cache::forget(ExploreService::GUEST_TAG_FEED_KEY.$hashtag->id);
 
         return $this->success();
     }

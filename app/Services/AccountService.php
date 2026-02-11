@@ -111,7 +111,7 @@ class AccountService
 
     public static function isValidDisplayNameFormat($displayName)
     {
-        $pattern = '/^[a-zA-Z0-9 _-]+$/';
+        $pattern = '/^[\p{L}\p{N}\p{Z}\p{S}\p{P}]+$/u';
 
         return (bool) preg_match($pattern, $displayName);
     }

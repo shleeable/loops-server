@@ -5,8 +5,9 @@ namespace App\Observers;
 use App\Models\Follower;
 use App\Services\AccountSuggestionService;
 use App\Services\FollowerService;
+use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
-class FollowerObserver
+class FollowerObserver implements ShouldHandleEventsAfterCommit
 {
     /**
      * Handle the Follower "created" event.
