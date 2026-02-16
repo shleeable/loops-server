@@ -54,7 +54,7 @@ class VideoResource extends JsonResource
             'pinned' => $this->is_pinned,
             'likes' => $this->likes,
             'shares' => $this->shares,
-            'comments' => $this->comments,
+            'comments' => $this->comment_state === 4 ? $this->comments : 0,
             'bookmarks' => $this->bookmarks,
             'has_liked' => $hasLiked,
             'has_bookmarked' => (bool) $hasBookmarked,
@@ -73,6 +73,7 @@ class VideoResource extends JsonResource
                 'id' => (string) 'at:'.$this->id,
                 'count' => 0,
                 'key' => (string) Str::uuid(),
+                'sound_id' => $this->sound_id ? (string) $this->sound_id : null,
             ],
             'meta' => [
                 'contains_ai' => $this->contains_ai,

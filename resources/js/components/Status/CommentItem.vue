@@ -38,9 +38,9 @@
                         :to="`/@${comment.account.username}`"
                         class="flex items-center space-x-1"
                     >
-                        <span class="text-sm font-medium text-gray-500 dark:text-gray-400">{{
-                            comment.account.name
-                        }}</span>
+                        <span class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                            >@{{ comment.account.username }}</span
+                        >
                         <span
                             v-if="comment.account.id == activePost.account.id"
                             class="text-sm font-medium text-[#fe2c55]"
@@ -226,7 +226,6 @@
                     </div>
                 </div>
 
-                <!-- Initial load replies button - only show when NOT highlighting a specific reply -->
                 <div
                     v-if="shouldShowInitialLoadButton"
                     :class="[comment.tombstone ? 'pt-0' : 'pt-4']"
@@ -257,49 +256,132 @@
                 >
                     <button
                         @click.stop="toggleDropdown"
-                        class="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+                        type="button"
+                        aria-haspopup="menu"
+                        :aria-expanded="showDropdown"
+                        class="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-950"
                     >
-                        <i class="bx bx-dots-horizontal text-gray-400 text-lg"></i>
+                        <EllipsisHorizontalIcon class="w-5 h-5 text-gray-500 dark:text-gray-400" />
                     </button>
 
-                    <div
-                        v-show="showDropdown"
-                        class="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-900 rounded-lg shadow-lg z-10 border border-gray-200 dark:border-gray-700"
-                        @click.stop
+                    <transition
+                        enter-active-class="transition ease-out duration-120"
+                        enter-from-class="opacity-0 translate-y-1 scale-95"
+                        enter-to-class="opacity-100 translate-y-0 scale-100"
+                        leave-active-class="transition ease-in duration-90"
+                        leave-from-class="opacity-100 translate-y-0 scale-100"
+                        leave-to-class="opacity-0 translate-y-1 scale-95"
                     >
-                        <a
-                            :href="comment.url"
-                            class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        <div
+                            v-show="showDropdown"
+                            @click.stop
+                            role="menu"
+                            class="absolute right-0 mt-2 w-56 origin-top-right z-50"
                         >
-                            {{ $t('post.permalink') }}
-                        </a>
+                            <div
+                                class="rounded-xl bg-white/95 dark:bg-gray-900/95 backdrop-blur shadow-xl shadow-black/5 dark:shadow-black/30 ring-1 ring-black/5 dark:ring-white/10 border border-gray-200/70 dark:border-gray-800/70 p-1"
+                            >
+                                <a
+                                    v-if="comment.remote_url"
+                                    :href="comment.remote_url"
+                                    target="_blank"
+                                    rel="noopener"
+                                    role="menuitem"
+                                    class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100/80 dark:hover:bg-gray-800/70"
+                                >
+                                    <ArrowTopRightOnSquareIcon
+                                        class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                    />
+                                    <span class="flex-1">{{ $t('common.openOriginalPage') }}</span>
+                                </a>
 
-                        <button
-                            v-if="comment.is_owner"
-                            @click="startEdit"
-                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                        >
-                            {{ $t('common.edit') }}
-                        </button>
+                                <a
+                                    :href="comment.url"
+                                    role="menuitem"
+                                    class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100/80 dark:hover:bg-gray-800/70"
+                                >
+                                    <LinkIcon class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                    <span class="flex-1">{{ $t('post.permalink') }}</span>
+                                </a>
 
-                        <button
-                            v-if="comment.is_owner"
-                            @click="handleDelete"
-                            class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800"
-                            :disabled="isDeletingComment"
-                        >
-                            {{
-                                isDeletingComment ? $t('post.deletingDotDotDot') : $t('post.delete')
-                            }}
-                        </button>
-                        <button
-                            v-else
-                            @click="handleReport"
-                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                        >
-                            {{ $t('common.report') }}
-                        </button>
-                    </div>
+                                <div class="my-1 h-px bg-gray-100 dark:bg-gray-800"></div>
+
+                                <button
+                                    v-if="comment.is_owner"
+                                    @click="startEdit"
+                                    type="button"
+                                    role="menuitem"
+                                    class="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-left text-gray-700 dark:text-gray-200 hover:bg-gray-100/80 dark:hover:bg-gray-800/70"
+                                >
+                                    <PencilSquareIcon
+                                        class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                    />
+                                    <span class="flex-1">{{ $t('common.edit') }}</span>
+                                </button>
+
+                                <template v-if="isVideoOwner">
+                                    <button
+                                        v-if="!comment.is_hidden"
+                                        @click="handleHideComment"
+                                        type="button"
+                                        role="menuitem"
+                                        class="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-left text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10"
+                                    >
+                                        <EyeSlashIcon
+                                            class="w-4 h-4 text-red-600/80 dark:text-red-300/80"
+                                        />
+                                        <span class="flex-1">{{ $t('post.hideComment') }}</span>
+                                    </button>
+
+                                    <button
+                                        v-else
+                                        @click="handleUnhideComment"
+                                        type="button"
+                                        role="menuitem"
+                                        class="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-left text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10"
+                                    >
+                                        <EyeIcon
+                                            class="w-4 h-4 text-red-600/80 dark:text-red-300/80"
+                                        />
+                                        <span class="flex-1">{{ $t('post.unhideComment') }}</span>
+                                    </button>
+                                </template>
+
+                                <div class="my-1 h-px bg-gray-100 dark:bg-gray-800"></div>
+
+                                <button
+                                    v-if="comment.is_owner"
+                                    @click="handleDelete"
+                                    type="button"
+                                    role="menuitem"
+                                    :disabled="isDeletingComment"
+                                    class="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-left text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <TrashIcon
+                                        class="w-4 h-4 text-red-600/80 dark:text-red-300/80"
+                                    />
+                                    <span class="flex-1">
+                                        {{
+                                            isDeletingComment
+                                                ? $t('post.deletingDotDotDot')
+                                                : $t('post.delete')
+                                        }}
+                                    </span>
+                                </button>
+
+                                <button
+                                    v-else
+                                    @click="handleReport"
+                                    type="button"
+                                    role="menuitem"
+                                    class="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-left text-gray-700 dark:text-gray-200 hover:bg-gray-100/80 dark:hover:bg-gray-800/70"
+                                >
+                                    <FlagIcon class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                    <span class="flex-1">{{ $t('common.report') }}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </transition>
                 </div>
 
                 <div
@@ -379,6 +461,17 @@ import { useUtils } from '@/composables/useUtils'
 import { useI18n } from 'vue-i18n'
 import { useEditHistory } from '@/composables/useEditHistory'
 import MentionHashtagInput from '@/components/Status/MentionHashtagInput.vue'
+import { useHideCommentModal } from '@/composables/useHideCommentModal'
+import {
+    EllipsisHorizontalIcon,
+    ArrowTopRightOnSquareIcon,
+    LinkIcon,
+    PencilSquareIcon,
+    EyeSlashIcon,
+    EyeIcon,
+    TrashIcon,
+    FlagIcon
+} from '@heroicons/vue/24/outline'
 
 const props = defineProps({
     comment: {
@@ -424,6 +517,8 @@ const isDeletingComment = ref(false)
 const replyInputRef = ref()
 const replyEditInputRef = ref()
 
+const { openHideCommentModal, openUnhideCommentModal } = useHideCommentModal()
+
 // Edit state
 const isEditing = ref(false)
 const editedCaption = ref('')
@@ -432,8 +527,40 @@ const initialValidatedMentions = ref([])
 const initialValidatedHashtags = ref([])
 const showReplies = ref(false)
 
+const handleHideComment = async () => {
+    showDropdown.value = false
+
+    const success = await openHideCommentModal(
+        props.videoId,
+        props.comment.id,
+        props.parentCommentId
+    )
+
+    if (success) {
+        await videoStore.decrementCommentCount()
+    }
+}
+
+const handleUnhideComment = async () => {
+    showDropdown.value = false
+
+    const success = await openUnhideCommentModal(
+        props.videoId,
+        props.comment.id,
+        props.parentCommentId
+    )
+
+    if (success) {
+        await videoStore.incrementCommentCount()
+    }
+}
+
 const activePost = computed(() => {
     return videoStore.currentVideo
+})
+
+const isVideoOwner = computed(() => {
+    return videoStore.currentVideo.account.id === authStore.id
 })
 
 const isLoadingReplies = computed(() => {
@@ -765,10 +892,12 @@ const fetchHashtags = async (query) => {
         background-color: rgba(240, 44, 86, 0.15);
         box-shadow: 0 0 0 0 rgba(240, 44, 86, 0.4);
     }
+
     50% {
         background-color: rgba(240, 44, 86, 0.25);
         box-shadow: 0 0 0 8px rgba(240, 44, 86, 0);
     }
+
     100% {
         background-color: rgba(240, 44, 86, 0.1);
         box-shadow: 0 0 0 0 rgba(240, 44, 86, 0);
@@ -779,6 +908,7 @@ const fetchHashtags = async (query) => {
     0% {
         background-color: rgba(240, 44, 86, 0.1);
     }
+
     100% {
         background-color: transparent;
     }
@@ -817,10 +947,12 @@ const fetchHashtags = async (query) => {
         background-color: rgba(240, 44, 86, 0.25);
         box-shadow: 0 0 0 0 rgba(240, 44, 86, 0.5);
     }
+
     50% {
         background-color: rgba(240, 44, 86, 0.35);
         box-shadow: 0 0 0 8px rgba(240, 44, 86, 0);
     }
+
     100% {
         background-color: rgba(240, 44, 86, 0.15);
         box-shadow: 0 0 0 0 rgba(240, 44, 86, 0);
@@ -831,6 +963,7 @@ const fetchHashtags = async (query) => {
     0% {
         background-color: rgba(240, 44, 86, 0.15);
     }
+
     100% {
         background-color: transparent;
     }

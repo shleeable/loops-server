@@ -57,7 +57,9 @@ class CommentResource extends JsonResource
                 'is_edited' => false,
                 'liked' => false,
                 'url' => null,
+                'remote_url' => null,
                 'is_owner' => false,
+                'is_hidden' => false,
                 'tombstone' => true,
                 'created_at' => $this->created_at->format('c'),
             ];
@@ -75,8 +77,10 @@ class CommentResource extends JsonResource
             'likes' => $this->likes ?? 0,
             'liked' => $pid ? app(LikeService::class)->hasLikedComment((string) $this->id, (string) $pid) : false,
             'url' => $this->shareUrl(),
+            'remote_url' => $this->remote_url,
             'tombstone' => false,
             'is_edited' => $this->is_edited,
+            'is_hidden' => $this->is_hidden,
             'is_owner' => $pid ? (string) $this->profile_id === (string) $pid : false,
             'created_at' => $this->created_at->format('c'),
         ];

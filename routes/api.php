@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StudioController;
 use App\Http\Controllers\Api\UserPreferencesController;
 use App\Http\Controllers\Api\VideoController;
+use App\Http\Controllers\Api\VideoSoundController;
 use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailChangeController;
@@ -225,13 +226,17 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/comments/unlike/{vid}/{id}', [VideoController::class, 'storeCommentUnlike'])->middleware('auth:web,api');
     Route::post('/v1/comments/delete/{vid}/{id}', [VideoController::class, 'deleteComment'])->middleware('auth:web,api');
     Route::post('/v1/comments/delete/{vid}/{pid}/{id}', [VideoController::class, 'deleteCommentReply'])->middleware('auth:web,api');
+    Route::post('/v1/comments/hide/{vid}/{id}', [VideoController::class, 'hideComment'])->middleware('auth:web,api');
+    Route::post('/v1/comments/hide/{vid}/{pid}/{id}', [VideoController::class, 'hideCommentReply'])->middleware('auth:web,api');
+    Route::post('/v1/comments/unhide/{vid}/{id}', [VideoController::class, 'unhideComment'])->middleware('auth:web,api');
+    Route::get('/v1/comments/history/{vid}/{cid}', [VideoController::class, 'showCommentsHistory']);
+    Route::get('/v1/comments/history/{vid}/{cid}/{id}', [VideoController::class, 'showCommentReplyHistory']);
     Route::post('/v1/video/comments/reply/edit/{id}', [VideoController::class, 'storeCommentReplyUpdate'])->middleware('auth:web,api');
     Route::post('/v1/video/comments/edit/{id}', [VideoController::class, 'storeCommentUpdate'])->middleware('auth:web,api');
     Route::post('/v1/video/comments/{id}', [VideoController::class, 'storeComment'])->middleware('auth:web,api');
     Route::get('/v1/video/comments/{id}', [WebPublicController::class, 'comments'])->middleware('throttle:api');
+    Route::get('/v1/video/comments/{vid}/hidden', [VideoController::class, 'showHiddenComments'])->middleware('auth:web,api');
     Route::get('/v1/video/comments/{vid}/replies', [WebPublicController::class, 'commentsThread'])->middleware('throttle:api');
-    Route::get('/v1/comments/history/{vid}/{cid}', [VideoController::class, 'showCommentsHistory']);
-    Route::get('/v1/comments/history/{vid}/{cid}/{id}', [VideoController::class, 'showCommentReplyHistory']);
     Route::get('/v1/video/comments/{videoId}/comment/{commentId}', [WebPublicController::class, 'getCommentById'])->middleware('throttle:api');
     Route::get('/v1/video/comments/{videoId}/reply/{replyId}', [WebPublicController::class, 'getReplyById'])->middleware('throttle:api');
 
@@ -246,6 +251,10 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/video/likes/{id}', [VideoController::class, 'showVideoLikes'])->middleware('auth:web,api');
     Route::get('/v1/video/shares/{id}', [VideoController::class, 'showVideoShares'])->middleware('auth:web,api');
     Route::get('/v1/video/{id}', [WebPublicController::class, 'showVideo'])->middleware('throttle:api');
+
+    // Sounds
+    Route::get('/v1/sounds/details/{id}', [VideoSoundController::class, 'getSoundDetails'])->middleware('auth:web,api');
+    Route::get('/v1/sounds/feed/{id}', [VideoSoundController::class, 'getSoundFeed'])->middleware('auth:web,api');
 
     // Autocomplete
     Route::get('/v1/autocomplete/tags', [VideoController::class, 'showAutocompleteTags'])->middleware(['auth:web,api', 'throttle:autocomplete']);
