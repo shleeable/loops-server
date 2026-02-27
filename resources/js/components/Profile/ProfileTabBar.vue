@@ -7,13 +7,16 @@
                     :key="tab.key"
                     @click="activeTab = tab.key"
                     :class="[
-                        'px-10 py-4 text-[17px] font-semibold transition-colors duration-200 relative cursor-pointer flex items-center gap-1.5',
+                        'px-4 lg:px-10 py-4 text-xs lg:text-[17px] font-semibold transition-colors duration-200 relative cursor-pointer flex items-center gap-1 lg:gap-1.5',
                         activeTab === tab.key
                             ? 'text-black dark:text-white'
                             : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                     ]"
                 >
-                    <div v-if="tab.key === 'bookmarks'" class="relative inline-block w-6 h-6">
+                    <div
+                        v-if="tab.key === 'bookmarks'"
+                        class="hidden lg:relative lg:inline-block w-5 lg:w-6 h-5 lg:h-6"
+                    >
                         <BookmarkIcon class="w-full h-full" />
 
                         <div
@@ -38,7 +41,8 @@
                         :key="filter"
                         @click="activeFilter = filter"
                         :class="[
-                            'px-3 py-1.5 text-[10px] lg:text-[14px] font-medium rounded-md transition-all duration-200 relative cursor-pointer',
+                            'px-3 py-1.5 text-[10px] xl:text-[13px] font-medium rounded-md transition-all duration-200 relative cursor-pointer',
+                            filter === 'Oldest' ? 'hidden lg:block' : '',
                             activeFilter === filter
                                 ? 'bg-white dark:bg-slate-700 text-black dark:text-white shadow-sm'
                                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'

@@ -125,13 +125,13 @@ class VideoOptimizeJob implements ShouldQueue
                     '-t', (string) $maxDuration,
                 ]);
 
-            // @phpstan-ignore-next-line
             $media = FFMpeg::fromDisk('s3')
                 ->open($video->vid)
                 ->addFilter(['-vf', $scaleFilter.',format=yuv420p'])
                 ->addFilter('-sws_flags', 'lanczos')
                 ->addFilter('-err_detect', 'ignore_err')
                 ->addFilter('-fflags', '+genpts')
+            // @phpstan-ignore-next-line
                 ->export()
                 ->toDisk('s3')
                 ->inFormat($format)

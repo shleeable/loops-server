@@ -93,27 +93,37 @@
 
             <template #cell-account="{ item }">
                 <router-link :to="`/admin/profiles/${item.account.id}`">
-                    <div class="flex items-center">
+                    <div class="flex items-center min-w-0">
                         <img
                             :src="item.account.avatar"
                             :alt="item.account.username"
-                            class="w-8 h-8 rounded-full mr-2"
+                            class="w-8 h-8 rounded-full mr-2 flex-shrink-0"
                             @error="$event.target.src = '/storage/avatars/default.jpg'"
                         />
-                        <span>{{ item.account.username }}</span>
+                        <div class="min-w-0 max-w-[180px]">
+                            <span
+                                class="font-bold truncate block"
+                                :class="[item.account.username.length > 30 ? 'text-xs' : 'text-sm']"
+                                >{{ item.account.username }}</span
+                            >
+                        </div>
                     </div>
                 </router-link>
             </template>
 
             <template #cell-stats="{ item }">
                 <div class="space-y-1">
-                    <div class="text-sm">Likes: {{ formatNumber(item.likes) }}</div>
-                    <div class="text-sm">Comments: {{ formatNumber(item.comments) }}</div>
+                    <div class="text-xs font-light">Likes: {{ formatNumber(item.likes) }}</div>
+                    <div class="text-xs font-light">
+                        Comments: {{ formatNumber(item.comments) }}
+                    </div>
                 </div>
             </template>
 
             <template #cell-created_at="{ value }">
-                {{ formatDate(value) }}
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ formatRecentDate(value) }}
+                </div>
             </template>
         </DataTable>
     </div>
@@ -125,7 +135,7 @@ import { useRouter, useRoute } from 'vue-router'
 import DataTable from '@/components/DataTable.vue'
 import { videosApi } from '@/services/adminApi'
 import { useUtils } from '@/composables/useUtils'
-const { truncateMiddle, formatNumber, formatDate } = useUtils()
+const { truncateMiddle, formatNumber, formatDate, formatRecentDate } = useUtils()
 
 const router = useRouter()
 const route = useRoute()

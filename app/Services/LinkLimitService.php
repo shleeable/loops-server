@@ -16,6 +16,8 @@ class LinkLimitService
 
     private const TIER_4_LIMIT = 4;
 
+    private const TIER_5_LIMIT = 5;
+
     private const TIER_1_THRESHOLD = 5;
 
     private const TIER_2_THRESHOLD = 1500;
@@ -23,6 +25,8 @@ class LinkLimitService
     private const TIER_3_THRESHOLD = 2000;
 
     private const TIER_4_THRESHOLD = 2300;
+
+    private const TIER_5_THRESHOLD = 3000;
 
     public static function getMinThreshold(): int
     {
@@ -32,6 +36,10 @@ class LinkLimitService
     public static function getMaxLinks(Profile $profile): int
     {
         $followerCount = $profile->followers ?? 0;
+
+        if ($followerCount >= self::TIER_5_THRESHOLD) {
+            return self::TIER_5_LIMIT;
+        }
 
         if ($followerCount >= self::TIER_4_THRESHOLD) {
             return self::TIER_4_LIMIT;

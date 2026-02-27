@@ -73,7 +73,9 @@
             </template>
 
             <template #cell-created_at="{ value }">
-                {{ formatDate(value) }}
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ formatRecentDate(value) }}
+                </div>
             </template>
         </DataTable>
 
@@ -217,7 +219,7 @@ import DataTable from '@/components/DataTable.vue'
 import ToggleSwitch from '@/components/Form/ToggleSwitch.vue'
 import { hashtagsApi } from '@/services/adminApi'
 import { useUtils } from '@/composables/useUtils'
-const { formatNumber, formatDate } = useUtils()
+const { formatNumber, formatDate, formatRecentDate } = useUtils()
 
 const route = useRoute()
 const router = useRouter()

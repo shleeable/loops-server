@@ -76,7 +76,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->trustProxies(at: $trustedProxies, headers: $headers);
 
-        if (config('app.force_https', true)) {
+        if (env('FORCE_HTTPS')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
     })
