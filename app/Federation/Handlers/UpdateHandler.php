@@ -64,7 +64,6 @@ class UpdateHandler extends BaseHandler
     {
         $objectId = $object['id'];
         $status = $this->findLocalStatus($objectId);
-        $statusClass = get_class($status);
 
         if (! $status) {
             if (config('logging.dev_log')) {
@@ -76,6 +75,8 @@ class UpdateHandler extends BaseHandler
 
             return false;
         }
+
+        $statusClass = get_class($status);
 
         if ($status->profile_id !== $actor->id) {
             if (config('logging.dev_log')) {
