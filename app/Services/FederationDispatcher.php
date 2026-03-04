@@ -177,45 +177,41 @@ class FederationDispatcher
         }
     }
 
-    public function dispatchVideoDeleteToAllKnownInboxes(Profile $actor, $videoId, $objectUrl, int $chunkSize = 50): void
+    public function dispatchVideoDeleteToAllKnownInboxes(Profile $actor, $videoId, $objectUrl, int $chunkSize = 500): void
     {
-        $allInboxes = collect();
+        $batchNumber = 0;
 
         $this->resolver->chunkAllKnownInboxesFlat(
-            function ($inboxes) use (&$allInboxes) {
-                $allInboxes = $allInboxes->merge($inboxes);
+            function ($inboxes) use ($actor, $videoId, $objectUrl, &$batchNumber) {
+                $batchNumber++;
+
+                $jobs = $inboxes->map(fn ($inboxUrl) => new DeliverDeleteVideoActivity(
+                    $actor,
+                    $inboxUrl,
+                    $objectUrl
+                ))->toArray();
+
+                Bus::batch($jobs)
+                    ->name("Delete Video {$videoId} (chunk {$batchNumber})")
+                    ->allowFailures()
+                    ->onQueue('activitypub-out')
+                    ->dispatch();
+
+                if (config('logging.dev_log')) {
+                    Log::info('Delete Video batch dispatched', [
+                        'video_id' => $videoId,
+                        'batch' => $batchNumber,
+                        'inbox_count' => count($jobs),
+                    ]);
+                }
             },
             $chunkSize
         );
 
-        if ($allInboxes->isEmpty()) {
+        if ($batchNumber === 0) {
             Log::info('No remote inboxes to deliver delete to', [
                 'resource_type' => Video::class,
                 'resource_id' => $videoId,
-            ]);
-
-            return;
-        }
-
-        $jobs = $allInboxes->map(function ($inboxUrl) use ($actor, $objectUrl) {
-            return new DeliverDeleteVideoActivity(
-                $actor,
-                $inboxUrl,
-                $objectUrl
-            );
-        })->toArray();
-
-        Bus::batch($jobs)
-            ->name("Delete Video {$videoId}")
-            ->allowFailures()
-            ->onQueue('activitypub-out')
-            ->dispatch();
-
-        if (config('logging.dev_log')) {
-            Log::info('Delete Video activity dispatched to all known inboxes', [
-                'resource_type' => Video::class,
-                'resource_id' => $videoId,
-                'inbox_count' => count($jobs),
             ]);
         }
     }
@@ -368,45 +364,42 @@ class FederationDispatcher
         }
     }
 
-    public function dispatchCommentDeleteToAllKnownInboxes(Profile $actor, $commentId, $objectUrl, int $chunkSize = 50): void
+    public function dispatchCommentDeleteToAllKnownInboxes(Profile $actor, $commentId, $objectUrl, int $chunkSize = 500): void
     {
-        $allInboxes = collect();
+        $batchNumber = 0;
 
         $this->resolver->chunkAllKnownInboxesFlat(
-            function ($inboxes) use (&$allInboxes) {
-                $allInboxes = $allInboxes->merge($inboxes);
+            function ($inboxes) use ($actor, $commentId, $objectUrl, &$batchNumber) {
+                $batchNumber++;
+
+                $jobs = $inboxes->map(fn ($inboxUrl) => new DeliverDeleteCommentActivity(
+                    $actor,
+                    $inboxUrl,
+                    $objectUrl
+                ))->toArray();
+
+                Bus::batch($jobs)
+                    ->name("Delete Comment {$commentId} (chunk {$batchNumber})")
+                    ->allowFailures()
+                    ->onQueue('activitypub-out')
+                    ->dispatch();
+
+                if (config('logging.dev_log')) {
+                    Log::info('Delete Comment batch dispatched', [
+                        'resource_type' => Comment::class,
+                        'resource_id' => $commentId,
+                        'batch' => $batchNumber,
+                        'inbox_count' => count($jobs),
+                    ]);
+                }
             },
             $chunkSize
         );
 
-        if ($allInboxes->isEmpty()) {
+        if ($batchNumber === 0) {
             Log::info('No remote inboxes to deliver delete to', [
                 'resource_type' => Comment::class,
                 'resource_id' => $commentId,
-            ]);
-
-            return;
-        }
-
-        $jobs = $allInboxes->map(function ($inboxUrl) use ($actor, $objectUrl) {
-            return new DeliverDeleteCommentActivity(
-                $actor,
-                $inboxUrl,
-                $objectUrl
-            );
-        })->toArray();
-
-        Bus::batch($jobs)
-            ->name("Delete Comment {$commentId}")
-            ->allowFailures()
-            ->onQueue('activitypub-out')
-            ->dispatch();
-
-        if (config('logging.dev_log')) {
-            Log::info('Delete Comment activity dispatched to all known inboxes', [
-                'resource_type' => Comment::class,
-                'resource_id' => $commentId,
-                'inbox_count' => count($jobs),
             ]);
         }
     }
@@ -559,45 +552,42 @@ class FederationDispatcher
         }
     }
 
-    public function dispatchCommentReplyDeleteToAllKnownInboxes(Profile $actor, $commentId, $objectUrl, int $chunkSize = 50): void
+    public function dispatchCommentReplyDeleteToAllKnownInboxes(Profile $actor, $commentId, $objectUrl, int $chunkSize = 500): void
     {
-        $allInboxes = collect();
+        $batchNumber = 0;
 
         $this->resolver->chunkAllKnownInboxesFlat(
-            function ($inboxes) use (&$allInboxes) {
-                $allInboxes = $allInboxes->merge($inboxes);
+            function ($inboxes) use ($actor, $commentId, $objectUrl, &$batchNumber) {
+                $batchNumber++;
+
+                $jobs = $inboxes->map(fn ($inboxUrl) => new DeliverDeleteCommentReplyActivity(
+                    $actor,
+                    $inboxUrl,
+                    $objectUrl
+                ))->toArray();
+
+                Bus::batch($jobs)
+                    ->name("Delete Comment Reply {$commentId} (chunk {$batchNumber})")
+                    ->allowFailures()
+                    ->onQueue('activitypub-out')
+                    ->dispatch();
+
+                if (config('logging.dev_log')) {
+                    Log::info('Delete Comment Reply batch dispatched', [
+                        'resource_type' => CommentReply::class,
+                        'resource_id' => $commentId,
+                        'batch' => $batchNumber,
+                        'inbox_count' => count($jobs),
+                    ]);
+                }
             },
             $chunkSize
         );
 
-        if ($allInboxes->isEmpty()) {
+        if ($batchNumber === 0) {
             Log::info('No remote inboxes to deliver delete to', [
                 'resource_type' => CommentReply::class,
                 'resource_id' => $commentId,
-            ]);
-
-            return;
-        }
-
-        $jobs = $allInboxes->map(function ($inboxUrl) use ($actor, $objectUrl) {
-            return new DeliverDeleteCommentReplyActivity(
-                $actor,
-                $inboxUrl,
-                $objectUrl
-            );
-        })->toArray();
-
-        Bus::batch($jobs)
-            ->name("Delete Comment Reply {$commentId}")
-            ->allowFailures()
-            ->onQueue('activitypub-out')
-            ->dispatch();
-
-        if (config('logging.dev_log')) {
-            Log::info('Delete Comment Reply activity dispatched to all known inboxes', [
-                'resource_type' => CommentReply::class,
-                'resource_id' => $commentId,
-                'inbox_count' => count($jobs),
             ]);
         }
     }
