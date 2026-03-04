@@ -33,7 +33,7 @@ class DeliverDeleteVideoActivity implements ShouldBeUnique, ShouldQueue
 
     public $tries = 1;
 
-    public $timeout = 120;
+    public $timeout = 30;
 
     public $uniqueFor = 3600;
 
