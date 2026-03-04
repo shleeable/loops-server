@@ -34,7 +34,7 @@ class ProcessInboxActivity implements ShouldQueue
      *
      * @var int
      */
-    public $tries = 3;
+    public $tries = 2;
 
     /**
      * The number of seconds the job can run before timing out.
@@ -45,9 +45,9 @@ class ProcessInboxActivity implements ShouldQueue
 
     public $backoff = [10, 30, 40];
 
-    public $maxExceptions = 2;
+    public $maxExceptions = 1;
 
-    public $deleteWhenMissingModels = false;
+    public $deleteWhenMissingModels = true;
 
     /**
      * Create a new job instance.

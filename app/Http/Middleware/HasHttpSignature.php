@@ -7,9 +7,6 @@ use Illuminate\Http\Request;
 
 class HasHttpSignature
 {
-    /**
-     * Quick check if request has a signature header
-     */
     public function handle(Request $request, Closure $next)
     {
         $signature = $request->header('Signature');
@@ -25,6 +22,24 @@ class HasHttpSignature
         $request->attributes->set('raw_signature', $signature);
         $request->attributes->set('raw_headers', $request->headers->all());
 
+        $keyId = $this->extractKeyId($signature);
+        if ($keyId) {
+            $actorUrl = preg_replace('/#.*$/', '', $keyId);
+            $originDomain = parse_url($actorUrl, PHP_URL_HOST);
+            if ($originDomain) {
+                $request->attributes->set('activitypub_origin_domain', strtolower($originDomain));
+            }
+        }
+
         return $next($request);
+    }
+
+    protected function extractKeyId(string $signature): ?string
+    {
+        if (preg_match('/keyId="([^"]+)"/', $signature, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
     }
 }
