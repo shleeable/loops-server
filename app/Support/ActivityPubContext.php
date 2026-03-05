@@ -71,13 +71,57 @@ class ActivityPubContext
     {
         $visibility = $video->visibility ?? 2;
 
-        return $visibility === 1 ? [
-            'canQuote' => [
+        $res = [];
+        $permalink = null;
+
+        if ($video->is_local) {
+            $res['canLike'] = [
                 'automaticApproval' => [
                     'https://www.w3.org/ns/activitystreams#Public',
                 ],
-            ],
-        ] : [];
+            ];
+
+            $res['canAnnounce'] = [
+                'automaticApproval' => [
+                    'https://www.w3.org/ns/activitystreams#Public',
+                ],
+            ];
+
+            if ($video->comment_state === 4) {
+                $res['canReply'] = [
+                    'automaticApproval' => [
+                        'https://www.w3.org/ns/activitystreams#Public',
+                    ],
+                ];
+            } else {
+                $permalink = $video->profile->permalink();
+                $res['canReply'] = [
+                    'manualApproval' => [
+                        $permalink,
+                    ],
+                ];
+            }
+
+            if ($visibility === 1 && $video->comment_state === 4) {
+                $res['canQuote'] = [
+                    'automaticApproval' => [
+                        'https://www.w3.org/ns/activitystreams#Public',
+                    ],
+                ];
+            } else {
+                if (! $permalink) {
+                    $permalink = $video->profile->permalink();
+                }
+
+                $res['canQuote'] = [
+                    'manualApproval' => [
+                        $permalink,
+                    ],
+                ];
+            }
+        }
+
+        return $res;
     }
 
     protected function getVideoPublic()
@@ -100,6 +144,18 @@ class ActivityPubContext
                 ],
                 'canQuote' => [
                     '@id' => 'gts:canQuote',
+                    '@type' => '@id',
+                ],
+                'canLike' => [
+                    '@id' => 'gts:canLike',
+                    '@type' => '@id',
+                ],
+                'canReply' => [
+                    '@id' => 'gts:canReply',
+                    '@type' => '@id',
+                ],
+                'canAnnounce' => [
+                    '@id' => 'gts:canAnnounce',
                     '@type' => '@id',
                 ],
                 'automaticApproval' => [

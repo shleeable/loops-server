@@ -136,26 +136,18 @@ class InboxResolverService
      */
     public function chunkAllKnownInboxesFlat(callable $callback, int $chunkSize = 500): void
     {
-        $processedInboxes = collect();
-
         DB::table('profiles')
             ->where('local', false)
             ->whereNotNull('inbox_url')
-            ->select([
-                'id',
-                DB::raw('COALESCE(shared_inbox_url, inbox_url) as inbox'),
-            ])
-            ->chunkById($chunkSize, function ($profiles) use (&$processedInboxes) {
-                $inboxes = $profiles->pluck('inbox')->unique();
+            ->selectRaw('DISTINCT COALESCE(shared_inbox_url, inbox_url) as inbox')
+            ->orderBy('inbox')
+            ->chunk($chunkSize, function ($rows) use ($callback) {
+                $inboxes = $rows->pluck('inbox');
 
-                foreach ($inboxes as $inbox) {
-                    $processedInboxes[$inbox] = true;
+                if ($inboxes->isNotEmpty()) {
+                    $callback($inboxes);
                 }
-            }, 'id');
-
-        if ($processedInboxes->isNotEmpty()) {
-            $callback($processedInboxes->keys());
-        }
+            });
     }
 
     /**

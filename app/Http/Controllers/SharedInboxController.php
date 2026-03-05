@@ -19,15 +19,7 @@ class SharedInboxController extends Controller
     {
         $activity = $request->json()->all();
 
-        if (isset($activity['type']) && $activity['type'] === 'Delete') {
-            if (! $this->validateDeleteOrigin($activity, $request)) {
-                return response()->json(['status' => 'accepted'], 202);
-            }
-        }
-
-        $headers = collect($request->headers->all())->mapWithKeys(function ($value, $key) {
-            return [strtolower($key) => $value];
-        })->toArray();
+        $headers = $request->attributes->get('raw_headers') ?? $request->headers->all();
 
         ProcessInboxActivityWithVerification::dispatch(
             $activity,
@@ -40,37 +32,5 @@ class SharedInboxController extends Controller
         )->onQueue('activitypub-in');
 
         return response()->json(['status' => 'accepted'], 202);
-    }
-
-    /**
-     * Validate that a Delete activity's object matches the signed Host header
-     */
-    protected function validateDeleteOrigin(array $activity, Request $request): bool
-    {
-        if (! isset($activity['object'])) {
-            return false;
-        }
-
-        $objectUrl = is_array($activity['object'])
-            ? data_get($activity, 'object.id', null)
-            : data_get($activity, 'object', null);
-
-        if (! $objectUrl) {
-            return false;
-        }
-
-        $signedOriginDomain = $request->attributes->get('activitypub_origin_domain');
-
-        if (! $signedOriginDomain) {
-            return false;
-        }
-
-        $objectDomain = parse_url($objectUrl, PHP_URL_HOST);
-
-        if (! $objectDomain) {
-            return false;
-        }
-
-        return strtolower($signedOriginDomain) === strtolower($objectDomain);
     }
 }

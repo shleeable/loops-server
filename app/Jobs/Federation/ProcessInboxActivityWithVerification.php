@@ -98,9 +98,11 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
             }
 
             if ($this->isUserInbox && $this->targetActor) {
-                ProcessInboxActivity::dispatchSync($this->activity, $verifiedActor, $this->targetActor);
+                ProcessInboxActivity::dispatch($this->activity, $verifiedActor, $this->targetActor)
+                    ->onQueue('activitypub-in');
             } else {
-                ProcessSharedInboxActivity::dispatchSync($this->activity, $verifiedActor);
+                ProcessSharedInboxActivity::dispatch($this->activity, $verifiedActor)
+                    ->onQueue('activitypub-in');
             }
 
         } catch (Exception $e) {

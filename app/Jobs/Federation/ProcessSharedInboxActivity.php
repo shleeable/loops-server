@@ -41,8 +41,6 @@ class ProcessSharedInboxActivity implements ShouldQueue
      */
     public $timeout = 60;
 
-    public $maxExceptions = 1;
-
     public $deleteWhenMissingModels = true;
 
     /**
