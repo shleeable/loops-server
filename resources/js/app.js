@@ -18,6 +18,7 @@ import router from './routes/index'
 import '@mdi/font/css/materialdesignicons.min.css'
 import 'boxicons/css/boxicons.min.css'
 import 'remixicon/fonts/remixicon.css'
+import '../css/fonts.css'
 import '../sass/next.css'
 import i18n from './i18n/locales'
 
