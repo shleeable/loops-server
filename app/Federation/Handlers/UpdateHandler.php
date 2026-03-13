@@ -94,7 +94,7 @@ class UpdateHandler extends BaseHandler
             $updateData['caption'] = app(SanitizeService::class)->cleanHtmlWithSpacing($object['content']);
         }
 
-        if (isset($object['summary']) && $statusClass == Video::class) {
+        if (isset($object['summary']) && $statusClass === 'App\Models\Video') {
             $updateData['cw_body'] = $object['summary'];
         }
 
