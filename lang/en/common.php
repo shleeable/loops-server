@@ -281,7 +281,7 @@ return [
     'thisKitAbidesByThe' => 'This kit abides by the',
     'thisKitWasRejectedYouCanUpdateTheDetailsAndResubmitForReview' => 'This kit was rejected. You can update the details and resubmit for review.',
     'thisRequirementHelpsEnsureQualityStarterKitsForTheCommunity' => 'This requirement helps ensure quality Starter Kits for the community',
-    'thisStarterKitDoesNotExistOrMayHaveBeenRemoved' => 'This Starter Kit doesn\'t exist or may have been removed.',
+    'thisStarterKitDoesNotExistOrMayHaveBeenRemoved' => 'This Starter Kit doesn\'t exist or may have been removed',
     'thisStarterKitHasBeenMarkedAsContainingSensitiveContent' => 'This Starter Kit has been marked as containing sensitive content',
     'thisVerificationLinkWillExpireIn24Hours' => 'This verification code will expire in 24 hours from when it was sent.',
     'timesUsed' => 'times used',
