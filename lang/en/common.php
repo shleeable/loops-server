@@ -328,7 +328,7 @@ return [
     'videos' => 'Videos',
     'viewAll' => 'View all',
     'viewKit' => 'View Kit',
-    'weCouldNotLoadThisStarterKitPleaseTryAgain' => 'We could not load this starter kit. Please try again.',
+    'weCouldNotLoadThisStarterKitPleaseTryAgain' => 'We couldn\'t load this Starter Kit. Please try again.',
     'weNeedYourBirthdateToVerifyAge' => 'We need your birthdate to verify your age.',
     'weSentAVerificationCodeToYourEmail' => 'We sent a verification code to your email',
     'weUseThisToVerifyAge' => 'We use this to verify your age. It won’t be public.',
