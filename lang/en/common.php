@@ -162,6 +162,7 @@ return [
     'signUp' => 'Sign up',
     'skipForNow' => 'Skip for now',
     'somethingWentWrong' => 'Something went wrong',
+    'starterKit' => 'Starter Kit',
     'starterKits' => 'Starter Kits',
     'status' => 'Status',
     'step' => 'Step',
