@@ -364,6 +364,7 @@ return [
     'tryARelatedOrSimilarHashtag' => 'Try a related or similar hashtag',
     'tryAgain' => 'Try again',
     'typeToSearchAccounts' => 'Type to search accounts',
+    'unexpectedError' => 'An unexpected error occured. Please try again later. If the problem persists, please contact support.',
     'unfollow' => 'Unfollow',
     'unread' => 'Unread',
     'unsavedChanges' => 'Unsaved changes',
