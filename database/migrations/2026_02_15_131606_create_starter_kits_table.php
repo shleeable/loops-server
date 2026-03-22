@@ -62,7 +62,7 @@ return new class extends Migration
         Schema::table('profiles', function (Blueprint $table) {
             $table->dropColumn('starter_kit_state');
         });
-        
+
         Schema::dropIfExists('starter_kits');
     }
 };

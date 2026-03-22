@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('profile_id')->index();
             $table->unsignedBigInteger('starter_kit_id')->index();
-            $table->json('followed_profile_ids')->nullable();  
+            $table->json('followed_profile_ids')->nullable();
             $table->unique(['profile_id', 'starter_kit_id']);
             $table->foreign('profile_id')->references('id')->on('profiles')->onDelete('cascade');
             $table->foreign('starter_kit_id')->references('id')->on('starter_kits')->onDelete('cascade');
