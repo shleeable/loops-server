@@ -343,7 +343,9 @@ class AdminController extends Controller
             $res['email_verified'] = (bool) $user->email_verified_at;
             $res['delete_after'] = $user->delete_after;
             $res['user_id'] = $user->id;
-            $res['last_active_at'] = $user->last_active_at->format('c');
+            if ($user->last_active_at) {
+                $res['last_active_at'] = $user->last_active_at->format('c');
+            }
         }
         $res['comments_count'] = Comment::whereProfileId($profile->id)->count();
         $res['comment_replies_count'] = CommentReply::whereProfileId($profile->id)->count();

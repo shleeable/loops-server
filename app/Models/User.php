@@ -46,7 +46,7 @@ use Laravel\Passport\HasApiTokens;
  * @property string|null $two_factor_backups
  * @property string|null $delete_after
  * @property string|null $email_verification_token
- * @property string|null $last_active_at
+ * @property \Illuminate\Support\Carbon|null $last_active_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $comments
  * @property-read int|null $comments_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\DataExport> $dataExports
