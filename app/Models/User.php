@@ -190,6 +190,7 @@ class User extends Authenticatable implements OAuthenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_active_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'device' => 'json',

@@ -220,6 +220,14 @@
                             {{ profile.user_id }}
                         </div>
                     </div>
+                    <div v-if="profile?.last_active_at">
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400"
+                            >Last Active At</label
+                        >
+                        <div class="mt-1 text-sm text-gray-900 dark:text-white">
+                            {{ formatTimeAgo(profile.last_active_at) }}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -566,7 +574,7 @@ import { useUtils } from '@/composables/useUtils'
 import { UserIcon, ArrowLeftIcon } from '@heroicons/vue/24/outline'
 import { useAlertModal } from '@/composables/useAlertModal.js'
 
-const { formatNumber, formatDate } = useUtils()
+const { formatNumber, formatDate, formatTimeAgo } = useUtils()
 const { alertModal, confirmModal } = useAlertModal()
 
 const router = useRouter()
