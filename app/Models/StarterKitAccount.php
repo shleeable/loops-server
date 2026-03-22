@@ -23,7 +23,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read \App\Models\StarterKit $starterKit
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StarterKitAccount approved()
- * @method static \Database\Factories\StarterKitAccountFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StarterKitAccount newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StarterKitAccount newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StarterKitAccount onlyTrashed()

@@ -904,7 +904,7 @@ const accountDropdownIndex = ref(-1)
 const showHashtagDropdown = ref(false)
 const hashtagDropdownIndex = ref(-1)
 const hashtagSuggestions = ref([])
-const MAX_ACCOUNTS = 5
+const MAX_ACCOUNTS = 25
 
 let searchDebounceTimer = null
 let hashtagDebounceTimer = null

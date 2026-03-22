@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read \App\Models\StarterKit $starterKit
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StarterKitTag approved()
- * @method static \Database\Factories\StarterKitTagFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StarterKitTag newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StarterKitTag newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StarterKitTag query()

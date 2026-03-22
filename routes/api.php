@@ -189,7 +189,7 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/account/settings/push-notifications/status', [AccountController::class, 'getPushNotificationStatus'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/push-notifications/enable', [AccountController::class, 'enablePushNotifications'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/push-notifications/disable', [AccountController::class, 'disablePushNotifications'])->middleware(['auth:web,api']);
-    
+
     Route::get('/v1/account/settings/starter-kits/status', [AccountController::class, 'getStarterKitsStatus'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/starter-kits/update', [AccountController::class, 'updateStarterKitsStatus'])->middleware(['auth:web,api']);
     Route::post('/v1/starter-kits/compose/search/accounts', [StarterKitController::class, 'accountSearch'])->middleware(['auth:web,api']);
@@ -363,7 +363,7 @@ Route::prefix('api')->group(function () {
         Route::post('/settings/update-logo', [AdminSettingsController::class, 'updateLogo'])->middleware('auth:web,api');
         Route::post('/settings/delete-logo', [AdminSettingsController::class, 'deleteLogo'])->middleware('auth:web,api');
         Route::post('/settings/recheck-redis-bf-support', [AdminSettingsController::class, 'recheckRedisBloomFilterSupport'])->middleware('auth:web,api');
-        
+
         Route::get('/relays', [AdminRelayController::class, 'index'])->middleware('auth:web,api');
         Route::post('/relays', [AdminRelayController::class, 'store'])->middleware('auth:web,api');
         Route::put('/relays/{relay}', [AdminRelayController::class, 'update'])->middleware('auth:web,api');
@@ -371,7 +371,7 @@ Route::prefix('api')->group(function () {
         Route::post('/relays/{relay}/enable', [AdminRelayController::class, 'enable'])->middleware('auth:web,api');
         Route::post('/relays/{relay}/disable', [AdminRelayController::class, 'disable'])->middleware('auth:web,api');
         Route::get('/relays/stats', [AdminRelayController::class, 'stats'])->middleware('auth:web,api');
-        
+
         Route::get('/instances', [AdminController::class, 'instances'])->middleware('auth:web,api');
         Route::get('/instances/stats', [AdminController::class, 'instanceStats'])->middleware('auth:web,api');
         Route::get('/instances/manage/stats', [AdminController::class, 'instanceAdvancedStats'])->middleware('auth:web,api');
@@ -403,7 +403,7 @@ Route::prefix('api')->group(function () {
         Route::get('/starter-kits/pending-changes', [AdminController::class, 'starterKitsReview'])->middleware('auth:web,api');
         Route::get('/starter-kits/pending-changes/{changeset}', [AdminController::class, 'starterKitsReviewShow'])->middleware('auth:web,api');
         Route::post('/starter-kits/pending-changes/{changeset}/fields/{field}/approve', [AdminController::class, 'starterKitsReviewApproveField'])->middleware('auth:web,api');
-        Route::post('/starter-kits/pending-changes/{changeset}/fields/{field}/reject',  [AdminController::class, 'starterKitsReviewRejectField'])->middleware('auth:web,api');
+        Route::post('/starter-kits/pending-changes/{changeset}/fields/{field}/reject', [AdminController::class, 'starterKitsReviewRejectField'])->middleware('auth:web,api');
     });
 
     Route::any('{any}', function () {
