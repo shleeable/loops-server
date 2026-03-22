@@ -239,7 +239,7 @@ const STARTER_KIT_TYPES = [
 const isStarterKitNotification = computed(() => STARTER_KIT_TYPES.includes(props.notification.type))
 
 const newFollowerMessage = computed(() =>
-    props.notification.starter_kit?.path
+    props.notification.kit?.path
         ? t('notifications.messageTypes.newFollower') + ' from a Starter Kit'
         : t('notifications.messageTypes.newFollower')
 )
