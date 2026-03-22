@@ -538,6 +538,7 @@
         "messageTypes": {
             "videoLike": "liked your video",
             "newFollower": "started following you",
+            "newFollowerFromStarterKit": "started following you from a Starter Kit",
             "videoComment": "commented on your video",
             "videoCommentReply": "replied to a comment on your video",
             "videoCommentLike": "liked your comment",
@@ -545,6 +546,11 @@
             "videoCommentShare": "shared your comment",
             "videoCommentReplyShare": "shared your comment reply",
             "videoShare": "shared your video",
+            "videoDuet": "dueted your video",
+            "starterKitAwaitingApproval": "wants to add you to",
+            "starterKitAccountApproved": "accepted to be included in",
+            "starterKitDeclinedToBeIncludedIn": "declined to be included in",
+            "starterKitRemovedYouFrom": "removed you from",
             "default": "interacted with your content"
         },
         "messages": "Messages",
