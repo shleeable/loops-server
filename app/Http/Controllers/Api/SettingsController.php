@@ -15,6 +15,7 @@ use App\Models\UserFilter;
 use App\Services\AccountService;
 use App\Services\AccountSuggestionService;
 use App\Services\AvatarService;
+use App\Services\StarterKitService;
 use App\Services\TwoFactorService;
 use App\Services\UserAuditLogService;
 use Illuminate\Http\Request;
@@ -327,6 +328,10 @@ class SettingsController extends Controller
             $user->comments()->where('status', 'active')->update(['status' => 'account_disabled']);
             $user->commentReplies()->where('status', 'active')->update(['status' => 'account_disabled']);
             $user->actorNotifications()->update(['actor_state' => 7]);
+            $user->starterKits()->update([
+                'previous_status' => DB::raw('status'),
+            ]);
+            $user->starterKits()->update(['status' => 7]);
 
             AccountSuggestionService::removeFromAll($user->profile_id);
             AccountService::del($user->profile_id);
@@ -336,6 +341,8 @@ class SettingsController extends Controller
                 $token->refreshToken?->revoke();
             });
         });
+
+        app(StarterKitService::class)->flushStatsAndPopular();
 
         if ($request->hasSession()) {
             Auth::guard('web')->logout();
@@ -367,6 +374,10 @@ class SettingsController extends Controller
             $user->comments()->whereIn('status', ['active'])->update(['status' => 'account_pending_deletion']);
             $user->commentReplies()->whereIn('status', ['active'])->update(['status' => 'account_pending_deletion']);
             $user->actorNotifications()->update(['actor_state' => 8]);
+            $user->starterKits()->update([
+                'previous_status' => DB::raw('status'),
+            ]);
+            $user->starterKits()->update(['status' => 8]);
 
             AccountSuggestionService::removeFromAll($user->profile_id);
             AccountService::del($user->profile_id);
@@ -376,6 +387,8 @@ class SettingsController extends Controller
                 $token->refreshToken?->revoke();
             });
         });
+
+        app(StarterKitService::class)->flushStatsAndPopular();
 
         if ($request->hasSession()) {
             Auth::guard('web')->logout();

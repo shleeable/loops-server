@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Notification;
+use App\Models\StarterKit;
 use Illuminate\Support\Facades\Cache;
 
 class NotificationService
@@ -40,6 +41,7 @@ class NotificationService
                     'activity' => Notification::whereUserId($profileId)->whereIn('type', Notification::activityTypes())->whereNull('read_at')->count(),
                     'followers' => Notification::whereUserId($profileId)->whereIn('type', Notification::followerTypes())->whereNull('read_at')->count(),
                     'system' => Notification::whereUserId($profileId)->whereIn('type', Notification::systemTypes())->whereNull('read_at')->count(),
+                    'starterKits' => Notification::whereUserId($profileId)->whereIn('type', Notification::starterKitTypes())->whereNull('read_at')->count(),
                 ];
             }
         );
@@ -149,6 +151,44 @@ class NotificationService
             'type' => Notification::NEW_FOLLOWER,
             'user_id' => $uid,
             'profile_id' => $pid,
+        ]);
+
+        self::clearUnreadCount($uid);
+
+        return $res;
+    }
+
+    public static function newFollowerFromStarterKit($uid, $pid, StarterKit $starterKit)
+    {
+        $res = Notification::updateOrCreate([
+            'type' => Notification::NEW_FOLLOWER,
+            'user_id' => $uid,
+            'profile_id' => $pid,
+        ], [
+            'meta' => [
+                'starter_kit_id' => $starterKit->id,
+            ],
+        ]);
+
+        self::clearUnreadCount($uid);
+
+        return $res;
+    }
+
+    public static function starterKitNewMember(
+        int $uid,
+        int $pid,
+        int $starterKitId,
+        int $newMemberProfileId,
+    ) {
+        $res = Notification::create([
+            'type' => Notification::KIT_YOU_IN_NEW_MEMBERS,
+            'user_id' => $uid,
+            'profile_id' => $pid,
+            'meta' => [
+                'starter_kit_id' => $starterKitId,
+                'new_profile_id' => $newMemberProfileId,
+            ],
         ]);
 
         self::clearUnreadCount($uid);
@@ -343,5 +383,96 @@ class NotificationService
             $res->delete();
             self::clearUnreadCount($uid);
         }
+    }
+
+    public static function starterKitAddAccount($uid, $pid, $kitId)
+    {
+        if ($uid == $pid) {
+            return;
+        }
+
+        $res = Notification::updateOrCreate([
+            'type' => Notification::KIT_AWAIT_APPROVAL,
+            'user_id' => $uid,
+            'profile_id' => $pid,
+            'meta' => [
+                'starter_kit_id' => $kitId,
+            ],
+        ]);
+        self::clearUnreadCount($uid);
+
+        return $res;
+    }
+
+    public static function starterKitAccountApproved($uid, $pid, $kitId)
+    {
+        if ($uid == $pid) {
+            return;
+        }
+
+        $res = Notification::updateOrCreate([
+            'type' => Notification::KIT_ACCOUNT_APPROVED,
+            'user_id' => $uid,
+            'profile_id' => $pid,
+            'meta' => [
+                'starter_kit_id' => $kitId,
+            ],
+        ]);
+        self::clearUnreadCount($uid);
+
+        return $res;
+    }
+
+    public static function starterKitAccountRejected($uid, $pid, $kitId)
+    {
+        if ($uid == $pid) {
+            return;
+        }
+
+        $res = Notification::updateOrCreate([
+            'type' => Notification::KIT_ACCOUNT_REJECTED,
+            'user_id' => $uid,
+            'profile_id' => $pid,
+            'meta' => [
+                'starter_kit_id' => $kitId,
+            ],
+        ]);
+        self::clearUnreadCount($uid);
+
+        return $res;
+    }
+
+    public static function starterKitAddAccountDelete($uid, $pid, $kitId)
+    {
+        $res = Notification::where([
+            'type' => Notification::KIT_AWAIT_APPROVAL,
+            'user_id' => $uid,
+            'profile_id' => $pid,
+            'meta->starter_kit_id' => $kitId,
+        ])->first();
+
+        if ($res) {
+            $res->delete();
+            self::clearUnreadCount($uid);
+        }
+    }
+
+    public static function starterKitYourAccountRemoved($uid, $pid, $kitId)
+    {
+        if ($uid == $pid) {
+            return;
+        }
+
+        $res = Notification::updateOrCreate([
+            'type' => Notification::KIT_YOU_IN_REMOVED,
+            'user_id' => $uid,
+            'profile_id' => $pid,
+            'meta' => [
+                'starter_kit_id' => $kitId,
+            ],
+        ]);
+        self::clearUnreadCount($uid);
+
+        return $res;
     }
 }

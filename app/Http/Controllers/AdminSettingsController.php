@@ -69,6 +69,12 @@ class AdminSettingsController extends Controller
             'federation.autoAcceptFollows' => 'sometimes|boolean',
             'federation.allowedInstances' => 'sometimes|array',
             'federation.blockedInstances' => 'sometimes|array',
+            'starterKits.enabled' => 'sometimes|boolean',
+            'starterKits.allowAutoApproveKitsByCreatorsWithMinFollowers' => 'sometimes|boolean',
+            'starterKits.kitCreationRequiresAdminApproval' => 'sometimes|boolean',
+            'starterKits.autoApproveKitsByCreatorsWithMinFollowers' => 'sometimes|integer|min:1|max:10000000',
+            'starterKits.maxKitsPerAccount' => 'sometimes|integer|min:1|max:100',
+            'starterKits.minFollowersToCreate' => 'sometimes|integer|min:0|max:1000000',
         ]);
 
         $supportsBf = app(RedisService::class)->supportsBloomFilters();
@@ -154,6 +160,7 @@ class AdminSettingsController extends Controller
             'media.allowedVideoFormats',
             'federation.enableFederation',
             'federation.federationMode',
+            'starterKits.enabled',
         ];
 
         return in_array($key, $publicSettings);

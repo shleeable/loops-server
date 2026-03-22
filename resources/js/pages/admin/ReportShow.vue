@@ -147,6 +147,22 @@
                         >
                             Manage Hashtag
                         </button>
+
+                        <button
+                            v-if="report.content_type === 'starter_kit'"
+                            @click="dismissAndManageStarterKit"
+                            class="px-4 py-2.5 bg-orange-50 dark:bg-orange-950 text-orange-600 dark:text-orange-400 border border-orange-600 dark:border-orange-500 text-sm font-medium rounded-lg hover:bg-orange-600 hover:text-white dark:hover:bg-orange-600 dark:hover:border-orange-600 transition-colors cursor-pointer"
+                        >
+                            Dismiss & Manage Starter Kit
+                        </button>
+
+                        <button
+                            v-if="report.content_type === 'starter_kit'"
+                            @click="manageStarterKit"
+                            class="px-4 py-2.5 bg-orange-50 dark:bg-orange-950 text-orange-600 dark:text-orange-400 border border-orange-600 dark:border-orange-500 text-sm font-medium rounded-lg hover:bg-orange-600 hover:text-white dark:hover:bg-orange-600 dark:hover:border-orange-600 transition-colors cursor-pointer"
+                        >
+                            Manage Starter Kit
+                        </button>
                     </div>
                 </div>
             </div>
@@ -624,6 +640,55 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div
+                            v-else-if="
+                                report.content_type === 'starter_kit' && report.content_preview
+                            "
+                            class="space-y-3"
+                        >
+                            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                <h3 class="text-lg text-gray-900 dark:text-white font-bold mb-1">
+                                    {{ report.content_preview?.title }}
+                                </h3>
+                                <p class="text-sm text-gray-900 dark:text-white">
+                                    {{ report.content_preview?.description }}
+                                </p>
+                                <div
+                                    class="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400"
+                                >
+                                    <router-link
+                                        :to="`/@${report.content_preview.creator.username}`"
+                                        >by @{{
+                                            report.content_preview.creator.username
+                                        }}</router-link
+                                    >
+                                    <span>•</span>
+                                    <span>{{ formatCount(report.content_preview.uses) }} uses</span>
+                                    <span>•</span>
+                                    <span
+                                        >{{
+                                            formatCount(report.content_preview.total_accounts)
+                                        }}
+                                        accounts</span
+                                    >
+                                    <span>•</span>
+                                    <span
+                                        >{{
+                                            formatCount(report.content_preview.approved_accounts)
+                                        }}
+                                        approved</span
+                                    >
+                                    <span>•</span>
+                                    <a
+                                        :href="report.content_preview.url"
+                                        target="_blank"
+                                        class="font-bold text-blue-500"
+                                        >{{ formatDate(report.content_preview.created_at) }}</a
+                                    >
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -678,7 +743,7 @@ import { reportsApi } from '@/services/adminApi'
 import { useRoute, useRouter } from 'vue-router'
 import { useAlertModal } from '@/composables/useAlertModal.js'
 import { useUtils } from '@/composables/useUtils'
-const { formatDate, formatNumber } = useUtils()
+const { formatDate, formatNumber, formatCount } = useUtils()
 import { useAdminStore } from '~/stores/admin'
 
 const { alertModal, confirmModal } = useAlertModal()
@@ -771,6 +836,29 @@ const manageHashtag = async () => {
     router.push(
         `/admin/hashtags?q=${report?.value.content_preview?.name}&id=${report?.value.content_preview?.id}`
     )
+}
+
+const dismissAndManageStarterKit = async () => {
+    const result = await confirmModal(
+        'Dismiss Report',
+        `Are you sure you want to dismiss this starter kit report?`,
+        'Mark as Resolved',
+        'Cancel'
+    )
+
+    if (result) {
+        const response = await reportsApi.dismissReport(report?.value.id).finally(async () => {
+            await adminStore.fetchReportsCount()
+
+            router.push(`/admin/starterkits/${report?.value.content_preview?.id}`)
+        })
+    } else {
+        loading.value = false
+    }
+}
+
+const manageStarterKit = async () => {
+    router.push(`/admin/starterkits/${report?.value.content_preview?.id}`)
 }
 
 const deleteVideo = async () => {

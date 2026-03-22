@@ -12,6 +12,7 @@
         <div
             v-if="!notification.read_at"
             class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"
+            aria-hidden="true"
         ></div>
 
         <router-link
@@ -28,6 +29,7 @@
             <div
                 class="absolute -bottom-1 -right-1 flex items-center justify-center w-5 h-5 rounded-full ring-2 ring-white dark:ring-gray-900"
                 :class="getIconBackgroundClass()"
+                aria-hidden="true"
             >
                 <component
                     :is="getNotificationIcon()"
@@ -53,9 +55,24 @@
                             : notification.actor.username
                     }}
                 </span>
-                <span class="text-gray-600 dark:text-gray-400 font-normal">
-                    {{ ' ' + getNotificationMessage() }}
+                <span
+                    class="text-gray-600 dark:text-gray-400 font-normal"
+                    v-html="' ' + getNotificationMessage()"
+                ></span>
+                <span
+                    v-if="isStarterKitNotification && notification.kit?.title"
+                    ref="kitTitleRef"
+                    class="font-bold text-red-500 dark:text-red-400 cursor-pointer ml-0.5"
+                    :aria-describedby="`starter-kit-hover-card-${notification.kit.id}`"
+                    @mouseenter="handleKitHover"
+                    @mouseleave="handleKitLeave"
+                    @click.stop="handleNotificationClick"
+                >
+                    {{ notification.kit.title }}
                 </span>
+                <span v-if="isStarterKitNotification && notification.kit?.title">{{
+                    ' ' + $t('common.starterKit')
+                }}</span>
                 <span class="text-gray-400 text-xs whitespace-nowrap ml-1.5">
                     {{ formatTimeAgo(notification.created_at) }}
                 </span>
@@ -83,7 +100,58 @@
                 />
             </div>
 
-            <div v-else-if="!notification.read_at" class="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <div
+                v-else-if="
+                    notification.type === 'starterKit.awaitingApproval' && notification.kit?.path
+                "
+            >
+                <AnimatedButton
+                    size="xs"
+                    :aria-label="`Review Starter Kit: ${notification.kit?.title}`"
+                    @click="handleNotificationClick"
+                >
+                    Review
+                </AnimatedButton>
+            </div>
+
+            <div
+                v-else-if="
+                    [
+                        'starterKit.accountApproved',
+                        'starterKit.accountRejected',
+                        'starterKit.removedFromKit'
+                    ].includes(notification.type) && notification.kit?.path
+                "
+            >
+                <AnimatedButton
+                    size="xs"
+                    :aria-label="`View Starter Kit: ${notification.kit?.title}`"
+                    @click="handleNotificationClick()"
+                >
+                    View Kit
+                </AnimatedButton>
+            </div>
+
+            <div
+                v-else-if="
+                    ['new_follower', 'starterKit.newMember'].includes(notification.type) &&
+                    notification.kit?.path
+                "
+            >
+                <AnimatedButton
+                    size="xs"
+                    :aria-label="`View Starter Kit: ${notification.kit?.title}`"
+                    @click="handleNotificationClick()"
+                >
+                    View Kit
+                </AnimatedButton>
+            </div>
+
+            <div
+                v-else-if="!notification.read_at"
+                class="w-2 h-2 bg-blue-500 rounded-full"
+                aria-hidden="true"
+            ></div>
         </div>
 
         <Teleport to="body">
@@ -98,11 +166,22 @@
                 @mouseleave="handleCardLeave"
             />
         </Teleport>
+
+        <Teleport to="body">
+            <StarterKitHoverCard
+                v-if="!isMobile && isStarterKitNotification && notification.kit?.id"
+                :show="showKitCard"
+                :kit="notification.kit"
+                :position="kitCardPosition"
+                @mouseenter="handleKitCardEnter"
+                @mouseleave="handleKitCardLeave"
+            />
+        </Teleport>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
     HeartIcon,
@@ -115,6 +194,9 @@ import {
 import { useHashids } from '@/composables/useHashids'
 import { useI18n } from 'vue-i18n'
 import UserHoverCard from '@/components/ProfileHoverCard.vue'
+import StarterKitHoverCard from '@/components/Notification/NotificationStarterKitHoverCard.vue'
+import AnimatedButton from './../AnimatedButton.vue'
+import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
     notification: {
@@ -140,6 +222,33 @@ const hoverTimeout = ref(null)
 const isOverCard = ref(false)
 const nameRef = ref(null)
 
+const showKitCard = ref(false)
+const kitCardPosition = ref({ top: '0px', left: '0px' })
+const kitHoverTimeout = ref(null)
+const isOverKitCard = ref(false)
+const kitTitleRef = ref(null)
+
+const STARTER_KIT_TYPES = [
+    'starterKit.awaitingApproval',
+    'starterKit.accountApproved',
+    'starterKit.accountRejected',
+    'starterKit.removedFromKit',
+    'starterKit.newMember'
+]
+
+const isStarterKitNotification = computed(() => STARTER_KIT_TYPES.includes(props.notification.type))
+
+const newFollowerMessage = computed(() =>
+    props.notification.starter_kit?.path
+        ? t('notifications.messageTypes.newFollower') + ' from a Starter Kit'
+        : t('notifications.messageTypes.newFollower')
+)
+
+const newKitMemberAdded = computed(
+    () =>
+        `added <strong class="text-black dark:text-white">@${props.notification.new_member?.username}</strong> to the `
+)
+
 const notificationConfig = {
     'video.like': {
         message: t('notifications.messageTypes.videoLike'),
@@ -154,7 +263,7 @@ const notificationConfig = {
         bgColor: 'bg-red-500'
     },
     new_follower: {
-        message: t('notifications.messageTypes.newFollower'),
+        message: newFollowerMessage.value,
         icon: UserPlusIcon,
         iconColor: 'text-white',
         bgColor: 'bg-blue-500'
@@ -200,10 +309,39 @@ const notificationConfig = {
         icon: ArrowPathIcon,
         iconColor: 'text-white',
         bgColor: 'bg-purple-500'
+    },
+    'starterKit.awaitingApproval': {
+        message: 'wants to add you to the ',
+        icon: UserPlusIcon,
+        iconColor: 'text-white',
+        bgColor: 'bg-red-500'
+    },
+    'starterKit.accountApproved': {
+        message: 'accepted to be included in the ',
+        icon: PlusIcon,
+        iconColor: 'text-white',
+        bgColor: 'bg-green-500'
+    },
+    'starterKit.newMember': {
+        message: newKitMemberAdded.value,
+        icon: PlusIcon,
+        iconColor: 'text-white',
+        bgColor: 'bg-green-500'
+    },
+    'starterKit.accountRejected': {
+        message: 'declined to be included in the ',
+        icon: XMarkIcon,
+        iconColor: 'text-white',
+        bgColor: 'bg-red-500'
+    },
+    'starterKit.removedFromKit': {
+        message: 'removed you from the ',
+        icon: XMarkIcon,
+        iconColor: 'text-white',
+        bgColor: 'bg-red-500'
     }
 }
 
-// Check if device is mobile
 const checkMobile = () => {
     isMobile.value =
         'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth < 768
@@ -217,6 +355,7 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('resize', checkMobile)
     clearTimeout(hoverTimeout.value)
+    clearTimeout(kitHoverTimeout.value)
 })
 
 const calculatePosition = () => {
@@ -226,31 +365,19 @@ const calculatePosition = () => {
     const cardWidth = 288
     const cardHeight = 220
     const spacing = 12
+    const margin = 16
 
     let left = rect.left + rect.width / 2 - cardWidth / 2
-
-    const margin = 16
-    if (left < margin) {
-        left = margin
-    } else if (left + cardWidth > window.innerWidth - margin) {
-        left = window.innerWidth - cardWidth - margin
-    }
+    left = Math.max(margin, Math.min(left, window.innerWidth - cardWidth - margin))
 
     let top = rect.top - cardHeight - spacing
+    if (top < margin) top = rect.bottom + spacing
 
-    if (top < margin) {
-        top = rect.bottom + spacing
-    }
-
-    return {
-        top: `${top}px`,
-        left: `${left}px`
-    }
+    return { top: `${top}px`, left: `${left}px` }
 }
 
 const handleNameHover = () => {
     if (isMobile.value) return
-
     clearTimeout(hoverTimeout.value)
     hoverTimeout.value = setTimeout(() => {
         hoverCardPosition.value = calculatePosition()
@@ -261,9 +388,7 @@ const handleNameHover = () => {
 const handleNameLeave = () => {
     clearTimeout(hoverTimeout.value)
     hoverTimeout.value = setTimeout(() => {
-        if (!isOverCard.value) {
-            showHoverCard.value = false
-        }
+        if (!isOverCard.value) showHoverCard.value = false
     }, 200)
 }
 
@@ -277,6 +402,51 @@ const handleCardLeave = () => {
     showHoverCard.value = false
 }
 
+const calculateKitCardPosition = () => {
+    const anchor = kitTitleRef.value
+    if (!anchor) return { top: '0px', left: '0px' }
+
+    const rect = anchor.getBoundingClientRect()
+    const cardWidth = 288
+    const cardHeight = 280
+    const spacing = 8
+    const margin = 16
+
+    let left = rect.left
+    left = Math.max(margin, Math.min(left, window.innerWidth - cardWidth - margin))
+
+    let top = rect.top - cardHeight - spacing
+    if (top < margin) top = rect.bottom + spacing
+
+    return { top: `${top}px`, left: `${left}px` }
+}
+
+const handleKitHover = () => {
+    if (isMobile.value || !props.notification.kit?.id) return
+    clearTimeout(kitHoverTimeout.value)
+    kitHoverTimeout.value = setTimeout(() => {
+        kitCardPosition.value = calculateKitCardPosition()
+        showKitCard.value = true
+    }, 400)
+}
+
+const handleKitLeave = () => {
+    clearTimeout(kitHoverTimeout.value)
+    kitHoverTimeout.value = setTimeout(() => {
+        if (!isOverKitCard.value) showKitCard.value = false
+    }, 200)
+}
+
+const handleKitCardEnter = () => {
+    clearTimeout(kitHoverTimeout.value)
+    isOverKitCard.value = true
+}
+
+const handleKitCardLeave = () => {
+    isOverKitCard.value = false
+    showKitCard.value = false
+}
+
 const navigateToProfile = () => {
     markAsRead()
     router.push(`/@${props.notification.actor.username}`)
@@ -284,22 +454,19 @@ const navigateToProfile = () => {
 
 const getNotificationMessage = () => {
     const config = notificationConfig[props.notification.type]
-    return config?.message || t('notifications.messageTypes.default')
+    return config?.message ?? t('notifications.messageTypes.default')
 }
 
 const getNotificationIcon = () => {
-    const config = notificationConfig[props.notification.type]
-    return config?.icon || BellIcon
+    return notificationConfig[props.notification.type]?.icon ?? BellIcon
 }
 
 const getIconColorClass = () => {
-    const config = notificationConfig[props.notification.type]
-    return config?.iconColor || 'text-white'
+    return notificationConfig[props.notification.type]?.iconColor ?? 'text-white'
 }
 
 const getIconBackgroundClass = () => {
-    const config = notificationConfig[props.notification.type]
-    return config?.bgColor || 'bg-gray-400'
+    return notificationConfig[props.notification.type]?.bgColor ?? 'bg-gray-400'
 }
 
 const markAsRead = () => {
@@ -330,7 +497,26 @@ const handleNotificationClick = () => {
             const vid = encodeHashid(props.notification.video_id)
             router.push(`/v/${vid}`)
         } else if (props.notification.type === 'new_follower') {
-            router.push(`/@${props.notification.actor.username}`)
+            if (props.notification.kit?.path) {
+                router.push(props.notification.kit.path)
+            } else {
+                router.push(`/@${props.notification.actor.username}`)
+            }
+        } else if (
+            props.notification.type === 'starterKit.awaitingApproval' &&
+            props.notification.kit?.path
+        ) {
+            router.push(`${props.notification.kit.path}/review`)
+        } else if (
+            [
+                'starterKit.newMember',
+                'starterKit.accountApproved',
+                'starterKit.accountRejected',
+                'starterKit.removedFromKit'
+            ].includes(props.notification.type) &&
+            props.notification.kit?.path
+        ) {
+            router.push(`${props.notification.kit.path}`)
         }
     } catch (error) {
         console.error('Navigation error:', error)

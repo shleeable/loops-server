@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/r/pl/{pid}/{lid}', [ProfileLinkRedirectController::class, 'redirect']);
 
+Route::get('/starter-kits/{hid}/{slug}', [ObjectController::class, 'showStarterKitRedirect']);
 Route::get('v/{hashId}', [ObjectController::class, 'showVideo']);
 Route::get('@{username}', [ObjectController::class, 'showProfile']);
 

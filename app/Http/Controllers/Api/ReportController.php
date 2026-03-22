@@ -10,7 +10,9 @@ use App\Models\CommentReply;
 use App\Models\Hashtag;
 use App\Models\Profile;
 use App\Models\Report;
+use App\Models\StarterKit;
 use App\Models\Video;
+use App\Services\AdminDashboardService;
 
 class ReportController extends Controller
 {
@@ -73,7 +75,15 @@ class ReportController extends Controller
                 'reporter_profile_id' => $pid,
                 'reported_hashtag_id' => $tag->id,
             ], $extra);
+        } elseif ($type === 'starter_kit') {
+            $kit = StarterKit::findOrFail($id);
+            Report::firstOrCreate([
+                'reporter_profile_id' => $pid,
+                'reported_starter_kit_id' => $kit->id,
+            ], $extra);
         }
+
+        app(AdminDashboardService::class)->getReportsCount(true);
 
         return $this->success();
     }

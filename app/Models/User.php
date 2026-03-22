@@ -30,6 +30,9 @@ use Laravel\Passport\HasApiTokens;
  * @property int $can_comment
  * @property int $can_like
  * @property int $can_follow
+ * @property int $can_create_starter_kits
+ * @property int $can_use_starter_kits
+ * @property int $can_report
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -159,6 +162,9 @@ class User extends Authenticatable implements OAuthenticatable
         'push_token',
         'push_token_verified_at',
         'push_token_platform',
+        'can_create_starter_kits',
+        'can_use_starter_kits',
+        'can_report',
     ];
 
     protected $hidden = [
@@ -190,6 +196,9 @@ class User extends Authenticatable implements OAuthenticatable
             'push_token_verified_at' => 'datetime',
             'birth_date' => 'date',
             'status' => 'integer',
+            'can_create_starter_kits' => 'boolean',
+            'can_use_starter_kits' => 'boolean',
+            'can_report' => 'boolean',
         ];
     }
 
@@ -250,6 +259,12 @@ class User extends Authenticatable implements OAuthenticatable
     public function following(): HasMany
     {
         return $this->hasMany(Follower::class, 'profile_id', 'profile_id');
+    }
+
+    /** @return HasMany<StarterKit, $this> */
+    public function starterKits(): HasMany
+    {
+        return $this->hasMany(StarterKit::class, 'profile_id', 'profile_id');
     }
 
     public function videoViews(): HasMany

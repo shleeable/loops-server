@@ -119,6 +119,26 @@ class ConfigService
         });
     }
 
+    public function starterKits($flush = false)
+    {
+        $key = self::CACHE_KEY.'starterKits:enabled';
+
+        if ($flush) {
+            Cache::forget($key);
+        }
+
+        return Cache::rememberForever($key, function () {
+            $config = AdminSetting::where('key', 'starterKits.enabled')->first();
+            if (! $config) {
+                app(SettingsFileService::class)->generatePublicConfig();
+
+                return [];
+            }
+
+            return $config->value;
+        });
+    }
+
     public function federationAllowedServers($flush = false)
     {
         $key = self::CACHE_KEY.'federation:lockdown:allowed';

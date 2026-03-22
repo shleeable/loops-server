@@ -6,6 +6,7 @@ use App\Models\Comment;
 use App\Models\CommentReply;
 use App\Models\Hashtag;
 use App\Models\Report;
+use App\Models\StarterKit;
 use App\Models\Video;
 use App\Services\AccountService;
 use App\Services\ReportService;
@@ -53,6 +54,10 @@ class ReportResource extends JsonResource
             $contentType = 'hashtag';
             $hashtag = Hashtag::findOrFail($this->reported_hashtag_id);
             $contentPreview = (new AdminHashtagResource($hashtag))->toArray(request());
+        } elseif ($this->reported_starter_kit_id) {
+            $contentType = 'starter_kit';
+            $kit = StarterKit::find($this->reported_starter_kit_id);
+            $contentPreview = $kit ? (new AdminStarterKitResource($kit))->toArray(request()) : [];
         }
 
         return [

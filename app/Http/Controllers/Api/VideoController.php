@@ -45,6 +45,7 @@ use App\Models\VideoCaptionEdit;
 use App\Models\VideoLike;
 use App\Models\VideoRepost;
 use App\Services\AccountService;
+use App\Services\ActivityPubCacheService;
 use App\Services\ConfigService;
 use App\Services\FederationDispatcher;
 use App\Services\LikeService;
@@ -275,6 +276,7 @@ class VideoController extends Controller
         VideoService::deleteMediaData($video->id);
         $res = new VideoResource($video);
         $config = app(ConfigService::class);
+        app(ActivityPubCacheService::class)->forget('video:'.$video->id);
 
         if ($config->federation()) {
             app(FederationDispatcher::class)->dispatchVideoUpdate($video->fresh());

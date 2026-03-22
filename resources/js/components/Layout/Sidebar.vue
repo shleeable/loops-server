@@ -379,6 +379,9 @@ const getCopyright = () => {
 }
 
 const isActive = (path) => {
+    if (path === '/starter-kits' && route.path.startsWith('/starter-kits')) {
+        return true
+    }
     return route.path === path
 }
 
@@ -451,6 +454,15 @@ const mainLinks = computed(() => {
             })
         }
 
+        if (appConfig.starterKits) {
+            links.splice(4, 0, {
+                id: 'starterKits',
+                name: t('common.starterKits'),
+                path: `/starter-kits`,
+                icon: 'bx bx-book-add'
+            })
+        }
+
         const userCustomPages = filterNavItemsByLocation('side_menu_user')
         const allCustomPages = filterNavItemsByLocation('side_menu_all')
 
@@ -481,6 +493,15 @@ const mainLinks = computed(() => {
                 icon: 'bx bx-compass'
             }
         ]
+
+        if (appConfig.starterKits) {
+            links.push({
+                id: 'starterKits',
+                name: t('common.starterKits'),
+                path: `/starter-kits`,
+                icon: 'bx bx-book-add'
+            })
+        }
 
         const guestCustomPages = filterNavItemsByLocation('side_menu_guest')
         const allCustomPages = filterNavItemsByLocation('side_menu_all')

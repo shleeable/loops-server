@@ -14,6 +14,8 @@ use App\Models\Hashtag;
 use App\Models\Instance;
 use App\Models\Profile;
 use App\Models\Report;
+use App\Models\StarterKit;
+use App\Models\StarterKitPendingChange;
 use App\Models\UsageSnapshots;
 use App\Models\User;
 use App\Models\Video;
@@ -31,7 +33,24 @@ class AdminDashboardService
      */
     protected string $baseCacheKey = 'admin_dashboard_stats_';
 
-    public const CACHE_VERSION = 'v1.4';
+    public const CACHE_VERSION = 'v1.5';
+
+    public function getReportsCount($refresh = false)
+    {
+        $key = 'admin:reports_counts';
+
+        if ($refresh) {
+            Cache::forget($key);
+        }
+
+        return Cache::remember($key, 86400, function () {
+            return [
+                'count' => Report::where('admin_seen', false)->count(),
+                'starter_kit_awaiting_approval' => StarterKit::where('status', 0)->count(),
+                'starter_kit_updates' => StarterKitPendingChange::where('status', 'pending')->where('bundled_with_kit_review', false)->count(),
+            ];
+        });
+    }
 
     /**
      * Main entrypoint for controller & command.
@@ -58,6 +77,7 @@ class AdminDashboardService
             Cache::forget('admin_dashboard_stats_partial:active_users_today');
             Cache::forget("{$this->baseCacheKey}partial:recent_activity");
             Cache::forget($cacheKey);
+            Cache::forget('admin:reports_counts');
         }
 
         if ($hardRefresh) {
@@ -77,6 +97,7 @@ class AdminDashboardService
             Cache::forget("{$this->baseCacheKey}partial:top_hashtags:period:90");
             Cache::forget("{$this->baseCacheKey}partial:top_hashtags:period:365");
             Cache::forget($cacheKey);
+            Cache::forget('admin:reports_counts');
         }
 
         // Partials

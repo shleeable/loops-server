@@ -9,12 +9,17 @@ use App\Http\Resources\AdminHashtagResource;
 use App\Http\Resources\AdminInstanceResource;
 use App\Http\Resources\AdminInviteResource;
 use App\Http\Resources\AdminProfileResource;
+use App\Http\Resources\AdminStarterKitHistoryResource;
+use App\Http\Resources\AdminStarterKitResource;
 use App\Http\Resources\CommentReplyResource;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\ProfileResource;
 use App\Http\Resources\ReportResource;
+use App\Http\Resources\StarterKitPendingChangeResource;
 use App\Http\Resources\VideoResource;
+use App\Jobs\Admin\AdminApproveStarterKitJob;
 use App\Jobs\Federation\FetchInstanceNodeinfo;
+use App\Models\AdminAuditLog;
 use App\Models\AdminInvite;
 use App\Models\Comment;
 use App\Models\CommentReply;
@@ -23,15 +28,21 @@ use App\Models\Hashtag;
 use App\Models\Instance;
 use App\Models\Profile;
 use App\Models\Report;
+use App\Models\StarterKit;
+use App\Models\StarterKitPendingChange;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\AccountService;
 use App\Services\AccountSuggestionService;
 use App\Services\AdminAuditLogService;
+use App\Services\AdminDashboardService;
 use App\Services\ExploreService;
 use App\Services\InstanceService;
 use App\Services\NodeinfoCrawlerService;
+use App\Services\PrivateMediaTokenService;
 use App\Services\SanitizeService;
+use App\Services\StarterKitPendingChangeService;
+use App\Services\StarterKitService;
 use App\Services\VersionCheckService;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
@@ -39,6 +50,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
@@ -330,6 +342,7 @@ class AdminController extends Controller
             $res['email'] = $user->email;
             $res['email_verified'] = (bool) $user->email_verified_at;
             $res['delete_after'] = $user->delete_after;
+            $res['user_id'] = $user->id;
         }
         $res['comments_count'] = Comment::whereProfileId($profile->id)->count();
         $res['comment_replies_count'] = CommentReply::whereProfileId($profile->id)->count();
@@ -342,6 +355,9 @@ class AdminController extends Controller
         $res['can_comment'] = (bool) $profile->can_comment;
         $res['can_follow'] = (bool) $profile->can_follow;
         $res['can_like'] = (bool) $profile->can_like;
+        $res['can_create_starter_kits'] = (bool) $profile->can_create_starter_kits;
+        $res['can_use_starter_kits'] = (bool) $profile->can_use_starter_kits;
+        $res['can_report'] = (bool) $profile->can_report;
 
         return $this->data($res);
     }
@@ -354,6 +370,8 @@ class AdminController extends Controller
             'can_comment' => 'sometimes|boolean',
             'can_like' => 'sometimes|boolean',
             'can_share' => 'sometimes|boolean',
+            'can_create_starter_kits' => 'sometimes|boolean',
+            'can_use_starter_kits' => 'sometimes|boolean',
         ]);
 
         $userValidated = $request->validate([
@@ -361,6 +379,8 @@ class AdminController extends Controller
             'can_follow' => 'sometimes|boolean',
             'can_comment' => 'sometimes|boolean',
             'can_like' => 'sometimes|boolean',
+            'can_create_starter_kits' => 'sometimes|boolean',
+            'can_use_starter_kits' => 'sometimes|boolean',
         ]);
 
         $profile = Profile::find($id);
@@ -369,7 +389,7 @@ class AdminController extends Controller
             return $this->error('Ooops!');
         }
 
-        $oldValues = $profile->only(['can_upload', 'can_follow', 'can_comment', 'can_like', 'can_share']);
+        $oldValues = $profile->only(['can_upload', 'can_follow', 'can_comment', 'can_like', 'can_share', 'can_create_starter_kits', 'can_use_starter_kits']);
 
         $profile->update($validated);
         if ($profile->local) {
@@ -464,9 +484,9 @@ class AdminController extends Controller
 
     public function reportCount(Request $request)
     {
-        $count = Report::where('admin_seen', false)->count();
+        $res = app(AdminDashboardService::class)->getReportsCount();
 
-        return $this->data(['count' => $count]);
+        return $this->data($res);
     }
 
     public function reports(Request $request)
@@ -505,6 +525,7 @@ class AdminController extends Controller
         $report->save();
 
         app(AdminAuditLogService::class)->logReportUpdateMarkAsNsfw($request->user(), $report, ['vid' => $video->id, 'profile_id' => $report->reporter_profile_id]);
+        app(AdminDashboardService::class)->getReportsCount(true);
 
         return $this->success();
     }
@@ -519,6 +540,7 @@ class AdminController extends Controller
         $report->save();
 
         app(AdminAuditLogService::class)->logReportUpdateMarkAsAi($request->user(), $report, ['vid' => $video->id, 'profile_id' => $report->reporter_profile_id]);
+        app(AdminDashboardService::class)->getReportsCount(true);
 
         return $this->success();
     }
@@ -533,6 +555,7 @@ class AdminController extends Controller
         $report->save();
 
         app(AdminAuditLogService::class)->logReportUpdateMarkAsAd($request->user(), $report, ['vid' => $video->id, 'profile_id' => $report->reporter_profile_id]);
+        app(AdminDashboardService::class)->getReportsCount(true);
 
         return $this->success();
     }
@@ -548,6 +571,7 @@ class AdminController extends Controller
         $report->save();
 
         app(AdminAuditLogService::class)->logReportUpdateMarkAsAiAndAd($request->user(), $report, ['vid' => $video->id, 'profile_id' => $report->reporter_profile_id]);
+        app(AdminDashboardService::class)->getReportsCount(true);
 
         return $this->success();
     }
@@ -559,6 +583,7 @@ class AdminController extends Controller
         $report->save();
 
         app(AdminAuditLogService::class)->logReportDismiss($request->user(), $report, ['profile_id' => $report->reporter_profile_id]);
+        app(AdminDashboardService::class)->getReportsCount(true);
 
         return $this->success();
     }
@@ -574,6 +599,8 @@ class AdminController extends Controller
                 'handled' => true,
                 'admin_seen' => true,
             ]);
+
+        app(AdminDashboardService::class)->getReportsCount(true);
 
         return $this->success();
     }
@@ -604,7 +631,9 @@ class AdminController extends Controller
         $video->forceDelete();
 
         AccountService::del($pid);
+        app(AdminDashboardService::class)->getReportsCount(true);
 
+        return $this->success();
     }
 
     public function reportDeleteComment(Request $request, $id)
@@ -630,6 +659,8 @@ class AdminController extends Controller
             Video::findOrFail($vid)->recalculateCommentsCount();
         }
 
+        app(AdminDashboardService::class)->getReportsCount(true);
+
         return $this->success();
     }
 
@@ -649,6 +680,8 @@ class AdminController extends Controller
         if ($vid) {
             Video::findOrFail($vid)->recalculateCommentsCount();
         }
+
+        app(AdminDashboardService::class)->getReportsCount(true);
 
         return $this->success();
     }
@@ -1289,8 +1322,320 @@ class AdminController extends Controller
         return $this->success();
     }
 
+    public function starterKits(Request $request)
+    {
+        $search = $request->query('q');
+        $sort = $request->query('sort');
+        $local = $request->query('local');
+
+        $query = StarterKit::query();
+
+        $query->select('starter_kits.*');
+
+        if ($local == true) {
+            $query->where('starter_kits.is_local', true);
+        }
+
+        if (! empty($search)) {
+            if (str_starts_with($search, 'user:')) {
+                $user = trim(substr($search, 5));
+                if (! empty($user)) {
+                    $query->join('profiles', 'starter_kits.profile_id', '=', 'profiles.id')
+                        ->where('profiles.username', 'like', '%'.$user.'%');
+                }
+            } else {
+                $query->where('starter_kits.title', 'like', '%'.$search.'%')->orWhere('description', 'like', '%'.$search.'%');
+            }
+        }
+
+        $query = $this->applySorting($query, $sort);
+
+        $kits = $query->cursorPaginate(10)->withQueryString();
+
+        return AdminStarterKitResource::collection($kits);
+    }
+
+    public function starterKitsShow(Request $request, $id)
+    {
+        $kit = StarterKit::findOrFail($id);
+
+        return (new AdminStarterKitResource($kit))->response()->setEncodingOptions(JSON_UNESCAPED_SLASHES);
+    }
+
+    public function starterKitHistory(Request $request, $id)
+    {
+        $starterKit = StarterKit::findOrFail($id);
+
+        $logs = AdminAuditLog::where('activity_type', StarterKit::class)->where('activity_id', $starterKit->id)->orderByDesc('id')->cursorPaginate(10);
+
+        return AdminStarterKitHistoryResource::collection($logs);
+    }
+
+    public function starterKitsUpdate(Request $request, $id)
+    {
+        $starterKit = StarterKit::findOrFail($id);
+
+        $validated = $request->validate([
+            'title' => 'sometimes|string|max:80',
+            'description' => 'nullable|string|max:500',
+            'hashtags' => 'nullable|array|max:10',
+            'hashtags.*' => 'string|max:20',
+            'is_discoverable' => 'boolean',
+            'is_sensitive' => 'boolean',
+        ]);
+
+        if (isset($validated['title'])) {
+            $validated['slug'] = Str::slug($validated['title']);
+        }
+
+        $hashtags = $validated['hashtags'] ?? null;
+        unset($validated['hashtags']);
+
+        $watchedFields = ['title', 'description', 'is_discoverable', 'is_sensitive'];
+        $before = collect($watchedFields)
+            ->mapWithKeys(fn ($f) => [$f => $starterKit->$f])
+            ->all();
+
+        $oldHashtags = $starterKit->hashtags()->pluck('name')->all();
+
+        $starterKit->update($validated);
+
+        if ($request->has('hashtags')) {
+            (new StarterKitController)->syncHashtags($starterKit, $hashtags ?? []);
+        }
+
+        $fresh = $starterKit->fresh();
+        $newHashtags = $fresh->hashtags()->pluck('name')->all();
+
+        $old = [];
+        $new = [];
+
+        foreach ($watchedFields as $field) {
+            if (array_key_exists($field, $validated) && $before[$field] !== $fresh->$field) {
+                $old[$field] = $before[$field];
+                $new[$field] = $fresh->$field;
+            }
+        }
+
+        if ($oldHashtags !== $newHashtags) {
+            $old['hashtags'] = $oldHashtags;
+            $new['hashtags'] = $newHashtags;
+        }
+
+        if (! empty($new)) {
+            (new AdminAuditLogService)->logStarterKitUpdate(
+                $request->user()->profile_id,
+                $starterKit,
+                ['old' => $old, 'new' => $new]
+            );
+        }
+
+        app(StarterKitService::class)->forget($starterKit->id);
+        app(AdminDashboardService::class)->getReportsCount(true);
+
+        return new AdminStarterKitResource($fresh);
+    }
+
+    public function starterKitsModerate(Request $request, $id)
+    {
+        $starterKit = StarterKit::findOrFail($id);
+
+        $validated = $request->validate([
+            'action' => 'required|string|in:approve,suspend,delete,pending',
+        ]);
+
+        $config = app(StarterKitService::class)->getConfig();
+        $adminApproval = data_get($config, 'requires_admin_approval', true);
+
+        $action = $validated['action'];
+
+        if ($action === 'approve') {
+            abort_if($starterKit->approvedAccountsWithoutTrashed()->count() === 0, 403, 'You cannot approve a Starter Kit with 0 approved accounts.');
+            if (! $starterKit->admin_approved_at && $adminApproval) {
+                AdminApproveStarterKitJob::dispatch($starterKit);
+            } else {
+                $starterKit->status = 10;
+                $starterKit->admin_approved_at = now();
+                $starterKit->save();
+            }
+            (new AdminAuditLogService)->logStarterKitApproved($request->user()->profile_id, $starterKit->fresh(), null);
+            app(StarterKitService::class)->applyBundledPendingChanges($starterKit->fresh());
+        } elseif ($action === 'suspend') {
+            $starterKit->status = 5;
+            $starterKit->admin_approved_at = null;
+            $starterKit->save();
+            (new AdminAuditLogService)->logStarterKitSuspend($request->user()->profile_id, $starterKit, null);
+        } elseif ($action === 'pending') {
+            $starterKit->status = 2;
+            $starterKit->admin_approved_at = null;
+            $starterKit->save();
+            (new AdminAuditLogService)->logStarterKitPending($request->user()->profile_id, $starterKit, null);
+        } elseif ($action === 'delete') {
+            (new AdminAuditLogService)->logStarterKitDelete($request->user()->profile_id, $starterKit, ['title' => $starterKit->title, 'profile_id' => $starterKit->profile_id]);
+            app(StarterKitService::class)->forget($starterKit->id);
+            $starterKit->delete();
+            app(AdminDashboardService::class)->getReportsCount(true);
+
+            return $this->success();
+        }
+
+        app(StarterKitService::class)->forget($starterKit->id);
+        app(AdminDashboardService::class)->getReportsCount(true);
+
+        return new AdminStarterKitResource($starterKit->fresh());
+    }
+
+    public function starterKitsModerateMedia(Request $request, $id)
+    {
+        $starterKit = StarterKit::findOrFail($id);
+
+        $validated = $request->validate([
+            'type' => 'required|string|in:header,icon',
+        ]);
+
+        switch ($validated['type']) {
+            case 'header':
+                app(StarterKitService::class)->unlinkHeaderMedia($starterKit);
+                $starterKit->update(['header_path' => null, 'header_url' => null]);
+                (new AdminAuditLogService)->logStarterKitMediaDelete($request->user()->profile_id, $starterKit->fresh(), ['header_path' => null, 'header_url' => null]);
+                break;
+
+            case 'icon':
+                app(StarterKitService::class)->unlinkIconMedia($starterKit);
+                $starterKit->update(['icon_path' => null, 'icon_url' => null]);
+                (new AdminAuditLogService)->logStarterKitMediaDelete($request->user()->profile_id, $starterKit->fresh(), ['icon_path' => null, 'icon_url' => null]);
+                break;
+        }
+
+        app(StarterKitService::class)->forget($starterKit->id);
+
+        return new AdminStarterKitResource($starterKit->fresh());
+    }
+
+    public function starterKitsReview(Request $request)
+    {
+        $request->validate([
+            'status' => ['sometimes', Rule::in(['pending', 'in_review', 'applied', 'rejected'])],
+        ]);
+
+        $changesets = StarterKitPendingChange::query()
+            ->with(['starterKit:id,title,icon_url,header_url', 'profile:id,username,avatar'])
+            ->where('bundled_with_kit_review', false)
+            ->when(
+                $request->input('status', 'pending'),
+                fn ($q, $status) => $status === 'pending'
+                    ? $q->whereIn('status', ['pending', 'in_review'])
+                    : $q->where('status', $status)
+            )
+            ->latest()
+            ->paginate(5);
+
+        app(AdminDashboardService::class)->getReportsCount(true);
+
+        return StarterKitPendingChangeResource::collection($changesets);
+    }
+
+    public function starterKitsReviewShow(StarterKitPendingChange $changeset)
+    {
+        $changeset->load([
+            'starterKit:id,title,description,icon_url,header_url',
+            'profile:id,username,avatar',
+            'reviewer:id,username',
+        ]);
+
+        return new StarterKitPendingChangeResource($changeset);
+    }
+
+    public function starterKitsReviewApproveField(Request $request, StarterKitPendingChange $changeset, string $field)
+    {
+        $this->validateField($changeset, $field);
+        $this->validateFieldIsReviewable($changeset, $field);
+
+        $starterKit = StarterKit::find($changeset->starter_kit_id);
+        app(StarterKitPendingChangeService::class)->approveField($changeset, $field, $request->user()->profile_id);
+        (new AdminAuditLogService)->logStarterKitApproveFieldUpdate($request->user()->profile_id, $starterKit->fresh(), [$field]);
+
+        app(AdminDashboardService::class)->getReportsCount(true);
+        app(PrivateMediaTokenService::class)->revokeFor($changeset);
+
+        return response()->json([
+            'field' => $field,
+            'status' => 'approved',
+            'applied' => $changeset->fresh()->status === 'applied',
+        ]);
+    }
+
+    public function starterKitsReviewRejectField(Request $request, StarterKitPendingChange $changeset, string $field)
+    {
+        $request->validate([
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $this->validateField($changeset, $field);
+        $this->validateFieldIsReviewable($changeset, $field);
+
+        $starterKit = StarterKit::find($changeset->starter_kit_id);
+
+        app(StarterKitPendingChangeService::class)->rejectField(
+            $changeset,
+            $field,
+            $request->user()->profile_id,
+            $request->input('reason')
+        );
+        (new AdminAuditLogService)->logStarterKitRejectFieldUpdate($request->user()->profile_id, $starterKit->fresh(), [$field]);
+
+        app(AdminDashboardService::class)->getReportsCount(true);
+        app(PrivateMediaTokenService::class)->revokeFor($changeset);
+
+        return response()->json([
+            'field' => $field,
+            'status' => 'rejected',
+            'applied' => $changeset->fresh()->status === 'applied',
+        ]);
+    }
+
+    private function validateField(StarterKitPendingChange $changeset, string $field): void
+    {
+        abort_unless(
+            array_key_exists($field, $changeset->changeset),
+            422,
+            "Field [{$field}] does not exist in this changeset."
+        );
+    }
+
+    private function validateFieldIsReviewable(StarterKitPendingChange $changeset, string $field): void
+    {
+        abort_unless(
+            $changeset->changeset[$field]['status'] === 'pending',
+            422,
+            "Field [{$field}] has already been reviewed."
+        );
+
+        abort_if(
+            $changeset->status === 'applied' && $changeset->allFieldsReviewed(),
+            422,
+            'Changeset has already been fully applied.'
+        );
+    }
+
     private function applySorting($query, $sort)
     {
+        if ($sort === 'starter_kits.awaiting_review') {
+            return $query->where('status', 0);
+        }
+
+        if ($sort === 'starter_kits.approved') {
+            return $query->where('status', 10);
+        }
+
+        if ($sort === 'starter_kits.suspended') {
+            return $query->where('status', 5);
+        }
+
+        if ($sort === 'starter_kits.disabled') {
+            return $query->where('status', 2);
+        }
+
         if ($sort === 'comment_replies.is_hidden') {
             return $query->where('comment_replies.is_hidden', true);
         }
@@ -1329,6 +1674,8 @@ class AdminController extends Controller
             'updated_at_asc' => ['updated_at', 'asc'],
             'updated_at_desc' => ['updated_at', 'desc'],
             'replies_desc' => ['replies', 'desc'],
+            'title_desc' => ['title', 'desc'],
+            'title_asc' => ['title', 'asc'],
             'popular' => ['followers', 'desc'],
             'newest' => ['created_at', 'desc'],
             'oldest' => ['created_at', 'asc'],

@@ -85,7 +85,7 @@ class AccountController extends Controller
     public function notifications(Request $request)
     {
         $validated = $request->validate([
-            'type' => 'sometimes|in:all,activity,system,followers,videoLike,videoShare,comments,commentLike,commentShare',
+            'type' => 'sometimes|in:all,activity,system,followers,videoLike,videoShare,comments,commentLike,commentShare,starterKits',
         ]);
 
         $pid = $request->user()->profile_id;
@@ -101,6 +101,7 @@ class AccountController extends Controller
             'comments' => Notification::commentsTypes(),
             'commentLike' => Notification::commentLikeTypes(),
             'commentShare' => Notification::commentShareTypes(),
+            'starterKits' => Notification::starterKitTypes(),
             default => Notification::allTypes()
         };
 
@@ -118,7 +119,7 @@ class AccountController extends Controller
             'meta' => [
                 'unread_counts' => NotificationService::getTotalUnreadCount($pid),
             ],
-        ]);
+        ])->response()->setEncodingOptions(JSON_UNESCAPED_SLASHES);
     }
 
     public function notificationUnreadCount(Request $request)
@@ -961,5 +962,37 @@ class AccountController extends Controller
         ];
 
         return $this->data($res);
+    }
+
+    public function getStarterKitsStatus(Request $request)
+    {
+        $profile = $request->user()->profile;
+
+        $state = match ($profile->starter_kit_state ?? 5) {
+            0 => 'STATUS_DISABLED',
+            1 => 'STATUS_FOLLOWING_ONLY',
+            2 => 'STATUS_FOLLOWING_WITH_APPROVAL',
+            3 => 'STATUS_LOCAL_ONLY',
+            4 => 'STATUS_LOCAL_WITH_APPROVAL',
+            5 => 'STATUS_PERMISSION_REQUIRED',
+            6 => 'STATUS_AUTO_ALLOW_EVERYONE',
+            default => 'STATUS_DISABLED',
+        };
+
+        return $this->data(['state' => $state, 'state_int' => $profile->starter_kit_state ?? 5]);
+    }
+
+    public function updateStarterKitsStatus(Request $request)
+    {
+        $validated = $request->validate([
+            'state' => 'required|int|min:0|max:6',
+        ]);
+
+        $state = $request->input('state');
+        $profile = $request->user()->profile;
+
+        $profile->update(['starter_kit_state' => $validated['state']]);
+
+        return $this->data(['state_int' => $state]);
     }
 }

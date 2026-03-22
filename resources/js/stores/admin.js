@@ -5,14 +5,32 @@ export const useAdminStore = defineStore('admin', {
     state: () => ({
         isDarkMode: false,
         reportsCount: 0,
+        starterKitsAwaitingApproval: 0,
+        starterKitsUpdates: 0,
         isLoading: false,
         error: null
     }),
 
     getters: {
         displayReportsCount(state) {
-            if (state.reportsCount > 99) return '99+'
+            if (state.reportsCount > 99) {
+                return '99+'
+            }
             return state.reportsCount
+        },
+
+        displayAwaitingStarterKitsCount(state) {
+            if (state.starterKitsAwaitingApproval > 99) {
+                return '99+'
+            }
+            return state.starterKitsAwaitingApproval
+        },
+
+        displayUpdatedStarterKitsCount(state) {
+            if (state.starterKitsUpdates > 99) {
+                return '99+'
+            }
+            return state.starterKitsUpdates
         }
     },
 
@@ -43,13 +61,28 @@ export const useAdminStore = defineStore('admin', {
                 const response = await axiosInstance('/api/v1/admin/reports-count')
 
                 const rawCount = Number(response.data?.data?.count ?? 0)
+                const rawStarterKitsAwaitingApproval = Number(
+                    response.data?.data?.starter_kit_awaiting_approval ?? 0
+                )
+                const rawStarterKitsUpdates = Number(response.data?.data?.starter_kit_updates ?? 0)
 
                 this.reportsCount =
                     Number.isFinite(rawCount) && rawCount > 0 ? Math.floor(rawCount) : 0
+                this.starterKitsAwaitingApproval =
+                    Number.isFinite(rawStarterKitsAwaitingApproval) &&
+                    rawStarterKitsAwaitingApproval > 0
+                        ? Math.floor(rawStarterKitsAwaitingApproval)
+                        : 0
+                this.starterKitsUpdates =
+                    Number.isFinite(rawStarterKitsUpdates) && rawStarterKitsUpdates > 0
+                        ? Math.floor(rawStarterKitsUpdates)
+                        : 0
             } catch (error) {
                 console.error('Error fetching reports count:', error)
                 this.error = error
                 this.reportsCount = 0
+                this.starterKitsAwaitingApproval = 0
+                this.starterKitsUpdates = 0
             } finally {
                 this.isLoading = false
             }
@@ -63,6 +96,12 @@ export const useAdminStore = defineStore('admin', {
         decrementReportsCount() {
             if (this.reportsCount > 0) {
                 this.reportsCount -= 1
+            }
+        },
+
+        decrementKitsUpdatesCount() {
+            if (this.starterKitsUpdates > 0) {
+                this.starterKitsUpdates -= 1
             }
         },
 

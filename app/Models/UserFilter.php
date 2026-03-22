@@ -40,4 +40,13 @@ class UserFilter extends Model
     {
         return $this->belongsTo(Profile::class, 'account_id');
     }
+
+    public static function isBlocked(int $requesterId, int $targetId): bool
+    {
+        return static::where(function ($q) use ($requesterId, $targetId) {
+            $q->whereProfileId($requesterId)->whereAccountId($targetId);
+        })->orWhere(function ($q) use ($requesterId, $targetId) {
+            $q->whereProfileId($targetId)->whereAccountId($requesterId);
+        })->exists();
+    }
 }

@@ -7,6 +7,7 @@ use App\Rules\HCaptchaRule;
 use App\Rules\TurnstileRule;
 use App\Services\AccountService;
 use App\Services\CaptchaService;
+use App\Services\StarterKitService;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -205,7 +206,9 @@ class LoginController extends Controller
                 $user->comments()->whereIn('status', ['account_pending_deletion', 'account_disabled'])->update(['status' => 'active']);
                 $user->commentReplies()->whereIn('status', ['account_pending_deletion', 'account_disabled'])->update(['status' => 'active']);
                 $user->actorNotifications()->whereIn('actor_state', [7, 8])->update(['actor_state' => 1]);
+                $user->starterKits()->update(['status' => DB::raw('previous_status')]);
             });
+            app(StarterKitService::class)->flushStatsAndPopular();
             AccountService::del($user->profile_id);
             AccountService::get($user->profile_id);
         }

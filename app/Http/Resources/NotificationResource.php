@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\Notification;
 use App\Services\AccountService;
 use App\Services\HashidService;
+use App\Services\StarterKitService;
 use App\Services\SystemMessageService;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
@@ -42,6 +43,11 @@ class NotificationResource extends JsonResource
             Notification::SYSTEM_MESSAGE_INFO => $this->systemMessageInfo(),
             Notification::SYSTEM_MESSAGE_FEATURE => $this->systemMessageInfo(),
             Notification::SYSTEM_MESSAGE_UPDATE => $this->systemMessageInfo(),
+            Notification::KIT_AWAIT_APPROVAL => $this->addedToStarterKit(),
+            Notification::KIT_ACCOUNT_APPROVED => $this->starterKitAccountApproved(),
+            Notification::KIT_ACCOUNT_REJECTED => $this->starterKitAccountRejected(),
+            Notification::KIT_YOU_IN_REMOVED => $this->starterKitYouInRemoved(),
+            Notification::KIT_YOU_IN_NEW_MEMBERS => $this->starterKitYouInNewMembers(),
             default => [
                 'id' => (string) $this->id,
                 'type' => 'internal',
@@ -66,6 +72,67 @@ class NotificationResource extends JsonResource
             'type' => 'system.message',
             'systemType' => $subType,
             'systemMessage' => $systemMessage,
+            'read_at' => $this->read_at,
+            'created_at' => $this->created_at,
+        ];
+    }
+
+    protected function starterKitYouInNewMembers()
+    {
+        return [
+            'id' => (string) $this->id,
+            'type' => 'starterKit.newMember',
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
+            'kit' => app(StarterKitService::class)->getCompact($this->meta['starter_kit_id']),
+            'new_member' => app(AccountService::class)->compact($this->meta['new_profile_id']),
+            'read_at' => $this->read_at,
+            'created_at' => $this->created_at,
+        ];
+    }
+
+    protected function starterKitYouInRemoved()
+    {
+        return [
+            'id' => (string) $this->id,
+            'type' => 'starterKit.removedFromKit',
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
+            'kit' => app(StarterKitService::class)->getCompact($this->meta['starter_kit_id']),
+            'read_at' => $this->read_at,
+            'created_at' => $this->created_at,
+        ];
+    }
+
+    protected function addedToStarterKit()
+    {
+        return [
+            'id' => (string) $this->id,
+            'type' => 'starterKit.awaitingApproval',
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
+            'kit' => app(StarterKitService::class)->getCompact($this->meta['starter_kit_id']),
+            'read_at' => $this->read_at,
+            'created_at' => $this->created_at,
+        ];
+    }
+
+    protected function starterKitAccountApproved()
+    {
+        return [
+            'id' => (string) $this->id,
+            'type' => 'starterKit.accountApproved',
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
+            'kit' => app(StarterKitService::class)->getCompact($this->meta['starter_kit_id']),
+            'read_at' => $this->read_at,
+            'created_at' => $this->created_at,
+        ];
+    }
+
+    protected function starterKitAccountRejected()
+    {
+        return [
+            'id' => (string) $this->id,
+            'type' => 'starterKit.accountRejected',
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
+            'kit' => app(StarterKitService::class)->getCompact($this->meta['starter_kit_id']),
             'read_at' => $this->read_at,
             'created_at' => $this->created_at,
         ];
@@ -262,13 +329,21 @@ class NotificationResource extends JsonResource
 
     protected function newFollower()
     {
-        return [
+        $hasMeta = $this->meta && isset($this->meta['starter_kit_id']);
+
+        $res = [
             'id' => (string) $this->id,
             'type' => 'new_follower',
             'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
             'read_at' => $this->read_at,
             'created_at' => $this->created_at,
         ];
+
+        if ($hasMeta) {
+            $res['kit'] = app(StarterKitService::class)->getCompact($this->meta['starter_kit_id']);
+        }
+
+        return $res;
     }
 
     protected function newVideoComment()

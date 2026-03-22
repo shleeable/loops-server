@@ -62,6 +62,72 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
+            path: '/starter-kits',
+            name: 'starterKitsLandingPage',
+            component: () => import('~/pages/starterKits/index.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
+            path: '/starter-kits/about',
+            name: 'starterKitsAboutPage',
+            component: () => import('~/pages/starterKits/about.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
+            path: '/starter-kits/faq',
+            name: 'starterKitsFAQPage',
+            component: () => import('~/pages/starterKits/faq.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
+            path: '/starter-kits/browse',
+            name: 'starterKitsBrowsePage',
+            component: () => import('~/pages/starterKits/browse.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
+            path: '/starter-kits/hashtag/:tag',
+            name: 'starterKitsHashtagPage',
+            component: () => import('~/pages/starterKits/hashtag.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
+            path: '/starter-kits/my-kits',
+            name: 'starterKitsMyKitsPage',
+            component: () => import('~/pages/starterKits/my-kits.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/starter-kits/joined-kits',
+            name: 'starterKitsJoinedKitsPage',
+            component: () => import('~/pages/starterKits/joined-kits.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/starter-kits/create',
+            name: 'starterKitsCreatePage',
+            component: () => import('~/pages/starterKits/create.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/starter-kits/:id/:slug/edit',
+            name: 'starterKitsEditPage',
+            component: () => import('~/pages/starterKits/edit.vue'),
+            meta: { requiresAuth: true, params: true }
+        },
+        {
+            path: '/starter-kits/:id/:slug/review',
+            name: 'starterKitsReviewPage',
+            component: () => import('~/pages/starterKits/review.vue'),
+            meta: { requiresAuth: true, params: true }
+        },
+        {
+            path: '/starter-kits/:id/:slug',
+            name: 'starterKitsPage',
+            component: () => import('~/pages/starterKits/show.vue'),
+            meta: { requiresAuth: false, params: true }
+        },
+        {
             path: '/invite/:id',
             name: 'invitePage',
             component: () => import('~/pages/invite/index.vue'),
@@ -315,6 +381,12 @@ const router = createRouter({
             component: () => import('~/pages/dashboard/safety/SafetyBlockedAccounts.vue'),
             meta: { requiresAuth: true }
         },
+        {
+            path: '/dashboard/privacy',
+            name: 'dashboardPrivacy',
+            component: () => import('~/pages/dashboard/privacy.vue'),
+            meta: { requiresAuth: true }
+        },
         // {
         //   path: '/dashboard/federation',
         //   name: 'dashboardFederation',
@@ -389,6 +461,30 @@ const router = createRouter({
                     path: 'reports',
                     name: 'Reports',
                     component: () => import('~/pages/admin/Reports.vue'),
+                    meta: { requiresAdmin: true }
+                },
+                {
+                    path: 'starter-kits-review',
+                    name: 'StarterKitsReviewAdmin',
+                    component: () => import('~/pages/admin/StarterKitsReview.vue'),
+                    meta: { requiresAdmin: true }
+                },
+                {
+                    path: 'starter-kits-review/:id',
+                    name: 'StarterKitsReviewShowAdmin',
+                    component: () => import('~/pages/admin/StarterKitsReviewShow.vue'),
+                    meta: { requiresAdmin: true }
+                },
+                {
+                    path: 'starterkits/:id',
+                    name: 'StarterKitsShowAdmin',
+                    component: () => import('~/pages/admin/StarterKitsShow.vue'),
+                    meta: { requiresAdmin: true }
+                },
+                {
+                    path: 'starterkits',
+                    name: 'StarterKitsAdmin',
+                    component: () => import('~/pages/admin/StarterKits.vue'),
                     meta: { requiresAdmin: true }
                 },
                 {
@@ -472,7 +568,10 @@ const router = createRouter({
             name: 'NotFound',
             component: () => import('~/pages/notFound.vue')
         }
-    ]
+    ],
+    scrollBehavior(to, from, savedPosition) {
+        return { top: 0 }
+    }
 })
 
 let authInitialized = false

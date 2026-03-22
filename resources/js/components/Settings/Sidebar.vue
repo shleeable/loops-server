@@ -6,18 +6,25 @@
                     class="flex items-center text-gray-500 hover:text-gray-400 cursor-pointer"
                     to="/"
                 >
-                    <span class="mr-2">←</span> {{ t('settings.back') }}
+                    <ArrowLeftIcon class="w-4 h-4 mr-2" /> {{ t('settings.back') }}
                 </router-link>
             </div>
 
             <div class="flex-1">
-                <SidebarItem
+                <router-link
                     v-for="item in menuItems"
                     :key="item.name"
-                    :icon="item.icon"
-                    :name="item.name"
                     :to="item.path"
-                />
+                    class="flex items-center p-4 py-2 font-light rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900"
+                    :class="[
+                        isRouteActive(item.path)
+                            ? 'text-red-500 font-medium'
+                            : 'text-gray-700 dark:text-gray-400'
+                    ]"
+                >
+                    <component :is="item.icon" class="w-4 h-4 mr-3 text-gray-400" />
+                    <span>{{ item.name }}</span>
+                </router-link>
             </div>
         </nav>
     </aside>
@@ -25,52 +32,53 @@
 
 <script setup>
 import { ref } from 'vue'
-import SidebarItem from './SidebarItem.vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+import {
+    ArrowLeftIcon,
+    EyeSlashIcon,
+    UserIcon,
+    MoonIcon,
+    LockClosedIcon
+} from '@heroicons/vue/24/outline'
 
 const { t } = useI18n()
+const route = useRoute()
 
 const menuItems = ref([
     {
         name: t('settings.manageAccount'),
-        icon: 'bx bx-user',
-        path: '/dashboard/account',
-        highlight: true
+        icon: UserIcon,
+        path: '/dashboard/account'
     },
     {
         name: t('nav.appearance'),
-        icon: 'bx bx-moon',
+        icon: MoonIcon,
         path: '/dashboard/appearance'
     },
     {
+        name: t('settings.privacy'),
+        icon: EyeSlashIcon,
+        path: '/dashboard/privacy'
+    },
+    {
         name: t('settings.safety'),
-        icon: 'bx bx-lock',
+        icon: LockClosedIcon,
         path: '/dashboard/safety'
     }
-    // {
-    //   name: 'Federation',
-    //   icon: 'bx bx-broadcast',
-    //   path: '/dashboard/federation'
-    // },
-    // {
-    //   name: 'Push notifications',
-    //   icon: 'bx bx-bell',
-    //   path: '/dashboard/notifications'
-    // },
-    // {
-    //   name: 'Integrations',
-    //   icon: 'bx bx-code-alt',
-    //   path: '/dashboard/business'
-    // },
-    // {
-    //   name: 'Screen time',
-    //   icon: 'bx bx-time',
-    //   path: '/dashboard/screen-time'
-    // },
-    // {
-    //   name: 'Content preferences',
-    //   icon: 'bx bx-poll',
-    //   path: '/dashboard/preferences'
-    // }
 ])
+
+const isRouteActive = (navPath) => {
+    const currentPath = route.path
+
+    if (currentPath === navPath) {
+        return true
+    }
+
+    if (currentPath.startsWith(navPath + '/')) {
+        return true
+    }
+
+    return false
+}
 </script>

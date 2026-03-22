@@ -49,6 +49,54 @@ export const pagesApi = {
     }
 }
 
+// Starter Kits API
+export const starterKitsApi = {
+    async getStarterKits({
+        cursor = null,
+        direction = 'next',
+        search = '',
+        limit = 15,
+        sort = null,
+        local = false
+    } = {}) {
+        const params = {
+            cursor: cursor,
+            limit: limit,
+            q: search,
+            sort: sort
+        }
+
+        if (local) {
+            params.local = 1
+        }
+
+        return await apiClient.get('/api/v1/admin/starterkits', params)
+    },
+
+    async getStarterKit(id) {
+        return await apiClient.get(`/api/v1/admin/starterkits/${id}`)
+    },
+
+    async getStarterKitHistory(id, data = false) {
+        if (data) {
+            return await apiClient.get(`/api/v1/admin/starterkits/${id}/history`, data)
+        }
+        return await apiClient.get(`/api/v1/admin/starterkits/${id}/history`)
+    },
+
+    async updateStarterKit(id, params) {
+        return await apiClient.post(`/api/v1/admin/starterkits/${id}/update`, params)
+    },
+
+    async moderateStarterKit(id, params) {
+        return await apiClient.post(`/api/v1/admin/starterkits/${id}/moderate`, params)
+    },
+
+    async moderateStarterKitMedia(id, params) {
+        return await apiClient.post(`/api/v1/admin/starterkits/${id}/moderate-media`, params)
+    }
+}
+
 // Comments API
 export const commentsApi = {
     async getComments({

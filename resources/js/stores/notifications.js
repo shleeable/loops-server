@@ -5,6 +5,7 @@ export const useNotificationStore = defineStore('notifications', () => {
     const notifications = ref({
         activity: [],
         followers: [],
+        starterKits: [],
         system: []
     })
 
@@ -14,30 +15,35 @@ export const useNotificationStore = defineStore('notifications', () => {
     const unreadCounts = ref({
         activity: 0,
         followers: 0,
+        starterKits: 0,
         system: 0
     })
 
     const loading = ref({
         activity: false,
         followers: false,
+        starterKits: false,
         system: false
     })
 
     const hasMore = ref({
         activity: true,
         followers: true,
+        starterKits: false,
         system: true
     })
 
     const nextCursor = ref({
         activity: null,
         followers: null,
+        starterKits: null,
         system: null
     })
 
     const error = ref({
         activity: null,
         followers: null,
+        starterKits: null,
         system: null
     })
 
@@ -184,22 +190,27 @@ export const useNotificationStore = defineStore('notifications', () => {
 
     const activityNotifications = computed(() => notifications.value.activity)
     const followersNotifications = computed(() => notifications.value.followers)
+    const starterKitsNotifications = computed(() => notifications.value.starterKits)
     const systemNotifications = computed(() => notifications.value.system)
 
     const activityLoading = computed(() => loading.value.activity)
     const followersLoading = computed(() => loading.value.followers)
+    const starterKitsLoading = computed(() => loading.value.starterKits)
     const systemLoading = computed(() => loading.value.system)
 
     const activityHasMore = computed(() => hasMore.value.activity)
     const followersHasMore = computed(() => hasMore.value.followers)
+    const starterKitsHasMore = computed(() => hasMore.value.starterKits)
     const systemHasMore = computed(() => hasMore.value.system)
 
     const activityError = computed(() => error.value.activity)
     const followersError = computed(() => error.value.followers)
+    const starterKitsError = computed(() => error.value.starterKits)
     const systemError = computed(() => error.value.system)
 
     const activityUnreadCount = computed(() => unreadCount.value.activity)
     const followersUnreadCount = computed(() => unreadCount.value.followers)
+    const starterKitsUnreadCount = computed(() => unreadCount.value.starterKits)
     const systemUnreadCount = computed(() => unreadCount.value.system)
 
     const totalUnreadCount = computed(() => {
@@ -218,18 +229,23 @@ export const useNotificationStore = defineStore('notifications', () => {
         groupedNotifications,
         activityNotifications,
         followersNotifications,
+        starterKitsNotifications,
         systemNotifications,
         activityLoading,
         followersLoading,
+        starterKitsLoading,
         systemLoading,
         activityHasMore,
         followersHasMore,
+        starterKitsHasMore,
         systemHasMore,
         activityError,
         followersError,
+        starterKitsError,
         systemError,
         activityUnreadCount,
         followersUnreadCount,
+        starterKitsUnreadCount,
         systemUnreadCount,
         totalUnreadCount,
 

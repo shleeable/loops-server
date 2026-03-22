@@ -66,6 +66,8 @@ class AdminProfileResource extends JsonResource
             'can_like' => $this->can_like,
             'can_comment' => $this->can_comment,
             'can_follow' => $this->can_follow,
+            'can_create_starter_kits' => $this->can_create_starter_kits,
+            'can_report' => $this->can_report,
             'delete_after' => $deleteAfter,
             'created_at' => $this->created_at->format('c'),
         ];

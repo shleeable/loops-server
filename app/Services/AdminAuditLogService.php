@@ -187,6 +187,51 @@ class AdminAuditLogService
         return $this->log($user, 'video:publish', $changes, $video, null, 1);
     }
 
+    public function logStarterKitApproved(User|int $user, $starterKit, $changes)
+    {
+        return $this->log($user, 'starterkit:approved', $changes, $starterKit, null, 1);
+    }
+
+    public function logStarterKitSuspend(User|int $user, $starterKit, $changes)
+    {
+        return $this->log($user, 'starterkit:suspend', $changes, $starterKit, null, 1);
+    }
+
+    public function logStarterKitPending(User|int $user, $starterKit, $changes)
+    {
+        return $this->log($user, 'starterkit:pending', $changes, $starterKit, null, 1);
+    }
+
+    public function logStarterKitDelete(User|int $user, $starterKit, $changes)
+    {
+        return $this->log($user, 'starterkit:delete', $changes, $starterKit, null, 1);
+    }
+
+    public function logStarterKitUpdate(User|int $user, $starterKit, $changes)
+    {
+        return $this->log($user, 'starterkit:update', $changes, $starterKit, null, 1);
+    }
+
+    public function logStarterKitApproveFieldUpdate(User|int $user, $starterKit, $changes)
+    {
+        return $this->log($user, 'starterkit:field_update_approve', $changes, $starterKit, null, 1);
+    }
+
+    public function logStarterKitRejectFieldUpdate(User|int $user, $starterKit, $changes)
+    {
+        return $this->log($user, 'starterkit:field_update_reject', $changes, $starterKit, null, 1);
+    }
+
+    public function logStarterKitMediaUpdate(User|int $user, $starterKit, $changes)
+    {
+        return $this->log($user, 'starterkit:media_update', $changes, $starterKit, null, 1);
+    }
+
+    public function logStarterKitMediaDelete(User|int $user, $starterKit, $changes)
+    {
+        return $this->log($user, 'starterkit:media_delete', $changes, $starterKit, null, 1);
+    }
+
     public function logSpamDetectionUserSuspension($user)
     {
         return AdminAuditLog::create([
