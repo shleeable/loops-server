@@ -177,7 +177,7 @@ class StarterKitController extends Controller
             'title' => 'required|string|max:50',
             'description' => 'nullable|string|max:500',
             'sensitive' => 'boolean',
-            'account_ids' => 'nullable|array|max:5',
+            'account_ids' => 'nullable|array|max:25',
             'account_ids.*' => 'exists:profiles,id',
             'hashtags' => 'nullable|array|max:10',
             'hashtags.*' => 'alpha_dash|max:40',
@@ -250,7 +250,7 @@ class StarterKitController extends Controller
         }
 
         app(StarterKitService::class)->getAccountStats($user->profile_id, true);
-        app(StarterKitService::class)->submitToObservatory($starterKit);
+        app(StarterKitService::class)->submitToObservatory($starterKit->fresh());
         app(AdminDashboardService::class)->getReportsCount(true);
 
         $starterKit->update([
