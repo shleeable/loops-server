@@ -10,9 +10,6 @@ class SettingsFileService
 {
     public function flush()
     {
-        $this->syncDefaultSettings();
-        $this->generatePublicConfig();
-        $this->generateAdminConfig();
         app(ConfigService::class)->forYouFeed(true);
         app(ConfigService::class)->federation(true);
         app(ConfigService::class)->federationMode(true);
@@ -20,6 +17,11 @@ class SettingsFileService
         app(ConfigService::class)->pushNotifications(true);
         app(ConfigService::class)->federationAllowedServers(true);
         app(ConfigService::class)->federationAuthorizedFetch(true);
+        app(ConfigService::class)->starterKits(true);
+        app(StarterKitService::class)->getConfig(true);
+        $this->syncDefaultSettings();
+        $this->generatePublicConfig();
+        $this->generateAdminConfig();
     }
 
     /**
@@ -49,6 +51,7 @@ class SettingsFileService
             'registration' => $settings['general.openRegistration'] ?? false,
             'federation' => $settings['federation.enableFederation'] ?? false,
             'pushNotifications' => $settings['general.pushNotifications'] ?? false,
+            'starterKits' => $settings['starterKits.enabled'] ?? false,
         ];
 
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -371,6 +374,50 @@ class SettingsFileService
                 'type' => 'number',
                 'is_public' => false,
                 'description' => 'Federation rate limit in requests per hour',
+            ],
+
+            // Starter Kits
+            [
+                'key' => 'starterKits.enabled',
+                'value' => true,
+                'type' => 'boolean',
+                'is_public' => true,
+                'description' => 'Enable Starter Kits feature',
+            ],
+            [
+                'key' => 'starterKits.minFollowersToCreate',
+                'value' => 100,
+                'type' => 'number',
+                'is_public' => false,
+                'description' => 'Min # of followers an account needs to create a new Starter Kit',
+            ],
+            [
+                'key' => 'starterKits.maxKitsPerAccount',
+                'value' => 5,
+                'type' => 'number',
+                'is_public' => false,
+                'description' => 'Max # of Starter Kits allowed per account',
+            ],
+            [
+                'key' => 'starterKits.kitCreationRequiresAdminApproval',
+                'value' => true,
+                'type' => 'boolean',
+                'is_public' => false,
+                'description' => 'Admins must approve new Kits before they go live',
+            ],
+            [
+                'key' => 'starterKits.allowAutoApproveKitsByCreatorsWithMinFollowers',
+                'value' => false,
+                'type' => 'boolean',
+                'is_public' => false,
+                'description' => 'Allow Auto approve Starter Kits created by accounts with that many followers',
+            ],
+            [
+                'key' => 'starterKits.autoApproveKitsByCreatorsWithMinFollowers',
+                'value' => 1000,
+                'type' => 'number',
+                'is_public' => false,
+                'description' => 'Auto approve Starter Kits created by accounts with this many followers or more',
             ],
         ];
     }

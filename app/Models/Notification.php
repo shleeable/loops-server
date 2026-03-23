@@ -102,12 +102,24 @@ class Notification extends Model
 
     public const DUET_YOUR_VIDEO = 31;
 
+    public const KIT_AWAIT_APPROVAL = 40;
+
+    public const KIT_ACCOUNT_APPROVED = 43;
+
+    public const KIT_ACCOUNT_REJECTED = 44;
+
+    public const KIT_YOU_IN_UPDATED = 45;
+
+    public const KIT_YOU_IN_REMOVED = 46;
+
+    public const KIT_YOU_IN_NEW_MEMBERS = 47;
+
     /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
      */
-    protected $fillable = ['user_id', 'type', 'video_id', 'read_at', 'profile_id', 'actor_state', 'comment_id', 'comment_reply_id', 'system_message_id', 'created_at', 'updated_at'];
+    protected $fillable = ['user_id', 'type', 'video_id', 'read_at', 'profile_id', 'actor_state', 'comment_id', 'comment_reply_id', 'system_message_id', 'meta', 'created_at', 'updated_at'];
 
     protected function casts(): array
     {
@@ -165,5 +177,10 @@ class Notification extends Model
     public static function systemTypes()
     {
         return [8, 9, 10];
+    }
+
+    public static function starterKitTypes()
+    {
+        return [40, 43, 44, 45, 46, 47];
     }
 }

@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Federation\ActivityBuilders\CreateActivityBuilder;
+use App\Federation\ActivityBuilders\StarterKitActivityBuilder;
 use App\Models\Comment;
 use App\Models\CommentReply;
 use App\Models\Profile;
 use App\Models\QuoteAuthorization;
+use App\Models\StarterKit;
+use App\Models\StarterKitAccount;
 use App\Models\Video;
 use App\Services\ActivityPubCacheService;
 use App\Services\ConfigService;
@@ -312,6 +315,59 @@ class ObjectController extends Controller
         }, 900);
 
         return $this->activityPubResponseWithCache($activityPub);
+    }
+
+    public function showStarterKitRedirect(Request $request, $hid, $slug)
+    {
+        abort_unless(app(ConfigService::class)->starterKits(), 404);
+
+        $hashId = HashidService::safeDecode($hid);
+        $kit = StarterKit::active()->findOrFail($hashId);
+
+        if ($request->wantsJson()) {
+            $cacheKey = "starter_kit_obj:v1:{$kit->id}";
+
+            $activityPub = $this->apCache->getOrCache($cacheKey, function () use ($kit) {
+                return StarterKitActivityBuilder::buildKit($kit);
+            }, 900);
+
+            return $this->activityPubResponseWithCache($activityPub);
+        }
+
+        return view('welcome');
+    }
+
+    public function showStarterKit(Request $request, $id)
+    {
+        abort_unless(app(ConfigService::class)->starterKits(), 404);
+
+        $kit = StarterKit::active()->findOrFail($id);
+
+        if ($request->wantsJson()) {
+            return $this->activityPubResponseWithCache(StarterKitActivityBuilder::buildKit($kit));
+        }
+
+        return view('welcome');
+    }
+
+    public function showStarterKitAccountItem(Request $request, $kit, $pid)
+    {
+        abort_unless(app(ConfigService::class)->starterKits(), 404);
+
+        $kit = StarterKit::active()->findOrFail($kit);
+        $account = StarterKitAccount::approved()->whereStarterKitId($kit->id)->whereProfileId($pid)->firstOrFail();
+
+        return StarterKitActivityBuilder::buildAccountItem($account);
+    }
+
+    public function showStarterKitAccountAttestation(Request $request, $kit, $id)
+    {
+        abort_unless(app(ConfigService::class)->starterKits(), 404);
+
+        $kit = StarterKit::active()->findOrFail($kit);
+        $account = StarterKitAccount::approved()->whereStarterKitId($kit->id)->findOrFail($id);
+
+        return StarterKitActivityBuilder::buildAccountAttestation($account, $kit);
     }
 
     /**

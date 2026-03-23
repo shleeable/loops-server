@@ -1617,6 +1617,216 @@
                     </div>
                 </div>
 
+                <div v-if="activeTab === 'starterKits'" class="space-y-8">
+                    <div>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label
+                                        class="text-sm font-medium text-gray-900 dark:text-white"
+                                    >
+                                        Enable Starter Kits
+                                    </label>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        Allow users to publish and share curated Starter Kits of
+                                        accounts to follow
+                                    </p>
+                                </div>
+                                <button
+                                    @click="
+                                        settings.starterKits.enabled = !settings.starterKits.enabled
+                                    "
+                                    :class="[
+                                        'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                                        settings.starterKits.enabled
+                                            ? 'bg-blue-600'
+                                            : 'bg-gray-200 dark:bg-gray-600'
+                                    ]"
+                                >
+                                    <span
+                                        :class="[
+                                            'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                                            settings.starterKits.enabled
+                                                ? 'translate-x-5'
+                                                : 'translate-x-0'
+                                        ]"
+                                    ></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <template v-if="settings.starterKits.enabled">
+                        <div class="border-t border-gray-200 dark:border-gray-700 pt-8">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                                Creation Requirements
+                            </h3>
+                            <div class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                        >
+                                            Max Kits Per Account
+                                        </label>
+                                        <input
+                                            v-model.number="settings.starterKits.maxKitsPerAccount"
+                                            type="number"
+                                            min="1"
+                                            max="100"
+                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                            Maximum number of Starter Kits a single account can
+                                            create
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                        >
+                                            Minimum Followers to Create
+                                        </label>
+                                        <input
+                                            v-model.number="
+                                                settings.starterKits.minFollowersToCreate
+                                            "
+                                            type="number"
+                                            min="0"
+                                            max="1000000"
+                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                            Accounts must have at least this many followers to
+                                            create a Starter Kit. Set to 0 to allow all.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-gray-200 dark:border-gray-700 pt-8">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                                Approval &amp; Moderation
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <label
+                                            class="text-sm font-medium text-gray-900 dark:text-white"
+                                        >
+                                            Require Admin Approval
+                                        </label>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                                            New Starter Kits must be reviewed and approved by an
+                                            admin before going live
+                                        </p>
+                                    </div>
+                                    <button
+                                        @click="
+                                            settings.starterKits.kitCreationRequiresAdminApproval =
+                                                !settings.starterKits
+                                                    .kitCreationRequiresAdminApproval
+                                        "
+                                        :class="[
+                                            'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                                            settings.starterKits.kitCreationRequiresAdminApproval
+                                                ? 'bg-blue-600'
+                                                : 'bg-gray-200 dark:bg-gray-600'
+                                        ]"
+                                    >
+                                        <span
+                                            :class="[
+                                                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                                                settings.starterKits
+                                                    .kitCreationRequiresAdminApproval
+                                                    ? 'translate-x-5'
+                                                    : 'translate-x-0'
+                                            ]"
+                                        ></span>
+                                    </button>
+                                </div>
+
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <label
+                                            class="text-sm font-medium text-gray-900 dark:text-white"
+                                        >
+                                            Auto-Approve by Follower Count
+                                        </label>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                                            Automatically approve Starter Kits created by accounts
+                                            that meet a minimum follower threshold
+                                        </p>
+                                    </div>
+                                    <button
+                                        @click="
+                                            settings.starterKits.allowAutoApproveKitsByCreatorsWithMinFollowers =
+                                                !settings.starterKits
+                                                    .allowAutoApproveKitsByCreatorsWithMinFollowers
+                                        "
+                                        :disabled="
+                                            !settings.starterKits.kitCreationRequiresAdminApproval
+                                        "
+                                        :class="[
+                                            'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                                            settings.starterKits.kitCreationRequiresAdminApproval
+                                                ? 'cursor-pointer'
+                                                : 'cursor-not-allowed opacity-50',
+                                            settings.starterKits
+                                                .allowAutoApproveKitsByCreatorsWithMinFollowers &&
+                                            settings.starterKits.kitCreationRequiresAdminApproval
+                                                ? 'bg-blue-600'
+                                                : 'bg-gray-200 dark:bg-gray-600'
+                                        ]"
+                                    >
+                                        <span
+                                            :class="[
+                                                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                                                settings.starterKits
+                                                    .allowAutoApproveKitsByCreatorsWithMinFollowers &&
+                                                settings.starterKits
+                                                    .kitCreationRequiresAdminApproval
+                                                    ? 'translate-x-5'
+                                                    : 'translate-x-0'
+                                            ]"
+                                        ></span>
+                                    </button>
+                                </div>
+
+                                <div
+                                    v-if="
+                                        settings.starterKits
+                                            .allowAutoApproveKitsByCreatorsWithMinFollowers &&
+                                        settings.starterKits.kitCreationRequiresAdminApproval
+                                    "
+                                    class="ml-0 pl-4 border-l-2 border-blue-200 dark:border-blue-800"
+                                >
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                    >
+                                        Auto-Approve Follower Threshold
+                                    </label>
+                                    <input
+                                        v-model.number="
+                                            settings.starterKits
+                                                .autoApproveKitsByCreatorsWithMinFollowers
+                                        "
+                                        type="number"
+                                        min="1"
+                                        max="1000000"
+                                        class="w-full md:w-64 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                        Kits from creators with at least this many followers will be
+                                        approved automatically
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
                 <div
                     v-if="['pages', 'branding'].indexOf(activeTab) == -1"
                     class="flex justify-end pt-6 mt-6 border-t border-gray-200 dark:border-gray-700"
@@ -1646,7 +1856,8 @@ import {
     PlusIcon,
     MagnifyingGlassIcon,
     TrashIcon,
-    QueueListIcon
+    QueueListIcon,
+    WalletIcon
 } from '@heroicons/vue/24/outline'
 import { settingsApi, pagesApi } from '@/services/adminApi'
 import AnimatedButton from '@/components/AnimatedButton.vue'
@@ -1663,7 +1874,8 @@ const tabs = [
     { id: 'branding', name: 'Branding', icon: PaintBrushIcon },
     // { id: 'media', name: 'Media', icon: PhotoIcon },
     { id: 'pages', name: 'Pages', icon: DocumentIcon },
-    { id: 'federation', name: 'Federation', icon: GlobeAltIcon }
+    { id: 'federation', name: 'Federation', icon: GlobeAltIcon },
+    { id: 'starterKits', name: 'Starter Kits', icon: WalletIcon }
 ]
 
 const activeTab = ref('general')
@@ -1768,6 +1980,14 @@ const settings = reactive({
         autoAcceptFollows: true,
         authorizedFetch: true,
         rateLimit: 1000
+    },
+    starterKits: {
+        enabled: false,
+        allowAutoApproveKitsByCreatorsWithMinFollowers: false,
+        autoApproveKitsByCreatorsWithMinFollowers: 1000,
+        kitCreationRequiresAdminApproval: true,
+        maxKitsPerAccount: 5,
+        minFollowersToCreate: 100
     }
 })
 

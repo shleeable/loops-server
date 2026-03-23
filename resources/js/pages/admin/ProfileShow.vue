@@ -212,6 +212,22 @@
                             {{ profile.bio || 'No bio set' }}
                         </div>
                     </div>
+                    <div v-if="profile?.user_id">
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400"
+                            >User ID</label
+                        >
+                        <div class="mt-1 text-sm text-gray-900 dark:text-white">
+                            {{ profile.user_id }}
+                        </div>
+                    </div>
+                    <div v-if="profile?.last_active_at">
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400"
+                            >Last Active At</label
+                        >
+                        <div class="mt-1 text-sm text-gray-900 dark:text-white">
+                            {{ formatTimeAgo(profile.last_active_at) }}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -222,7 +238,7 @@
                     Permissions & Restrictions
                 </h3>
                 <div class="space-y-6">
-                    <div v-if="profile.status != 'deleted'">
+                    <div v-if="profile.status != 'deleted'" class="space-y-6">
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <h4 class="text-sm font-medium text-gray-900 dark:text-white">
@@ -256,9 +272,7 @@
                         >
                             Comments are restricted for this user
                         </div>
-                    </div>
 
-                    <div v-if="profile.status != 'deleted'">
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <h4 class="text-sm font-medium text-gray-900 dark:text-white">
@@ -292,9 +306,7 @@
                         >
                             Video uploads are restricted for this user
                         </div>
-                    </div>
 
-                    <div v-if="profile.status != 'deleted'">
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <h4 class="text-sm font-medium text-gray-900 dark:text-white">
@@ -328,9 +340,7 @@
                         >
                             Following is restricted for this user
                         </div>
-                    </div>
 
-                    <div v-if="profile.status != 'deleted'">
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <h4 class="text-sm font-medium text-gray-900 dark:text-white">
@@ -364,6 +374,78 @@
                         >
                             Likes are restricted for this user
                         </div>
+
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+                                    Starter Kit Permissions
+                                </h4>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">
+                                    Control user's ability to create Starter Kits
+                                </p>
+                            </div>
+                            <button
+                                @click="toggleStarterKitPermission"
+                                :disabled="profile.is_admin"
+                                :class="[
+                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
+                                    profile.can_create_starter_kits
+                                        ? 'bg-blue-600'
+                                        : 'bg-gray-200 dark:bg-gray-600'
+                                ]"
+                            >
+                                <span
+                                    :class="[
+                                        'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                                        profile.can_create_starter_kits
+                                            ? 'translate-x-5'
+                                            : 'translate-x-0'
+                                    ]"
+                                ></span>
+                            </button>
+                        </div>
+                        <div
+                            v-if="!profile.can_create_starter_kits"
+                            class="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded"
+                        >
+                            Creating Starter Kits are restricted for this user
+                        </div>
+
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+                                    Starter Kit Use Permissions
+                                </h4>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">
+                                    Control user's ability to use Starter Kits
+                                </p>
+                            </div>
+                            <button
+                                @click="toggleStarterKitUsePermission"
+                                :disabled="profile.is_admin"
+                                :class="[
+                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
+                                    profile.can_use_starter_kits
+                                        ? 'bg-blue-600'
+                                        : 'bg-gray-200 dark:bg-gray-600'
+                                ]"
+                            >
+                                <span
+                                    :class="[
+                                        'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                                        profile.can_use_starter_kits
+                                            ? 'translate-x-5'
+                                            : 'translate-x-0'
+                                    ]"
+                                ></span>
+                            </button>
+                        </div>
+                        <div
+                            v-if="!profile.can_use_starter_kits"
+                            class="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded"
+                        >
+                            Using Starter Kits are restricted for this user
+                        </div>
                     </div>
 
                     <div>
@@ -386,7 +468,9 @@
             v-if="profile.status != 'deleted'"
             class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6"
         >
-            <h3 class="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">Danger Zone</h3>
+            <h3 class="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">
+                {{ $t('common.dangerZone') }}
+            </h3>
             <p class="text-sm text-red-700 dark:text-red-300 mb-4">
                 Once you delete this account, there is no going back. This will permanently delete
                 all user data, videos, and associated content.
@@ -490,7 +574,7 @@ import { useUtils } from '@/composables/useUtils'
 import { UserIcon, ArrowLeftIcon } from '@heroicons/vue/24/outline'
 import { useAlertModal } from '@/composables/useAlertModal.js'
 
-const { formatNumber, formatDate } = useUtils()
+const { formatNumber, formatDate, formatTimeAgo } = useUtils()
 const { alertModal, confirmModal } = useAlertModal()
 
 const router = useRouter()
@@ -622,6 +706,28 @@ const toggleLikePermission = async () => {
             can_like: !profile.value.can_like
         })
         profile.value.can_like = !profile.value.can_like
+    } catch (error) {
+        console.error('Error updating permission:', error)
+    }
+}
+
+const toggleStarterKitPermission = async () => {
+    try {
+        await profilesApi.updateProfilePermissions(profile.value.id, {
+            can_create_starter_kits: !profile.value.can_create_starter_kits
+        })
+        profile.value.can_create_starter_kits = !profile.value.can_create_starter_kits
+    } catch (error) {
+        console.error('Error updating permission:', error)
+    }
+}
+
+const toggleStarterKitUsePermission = async () => {
+    try {
+        await profilesApi.updateProfilePermissions(profile.value.id, {
+            can_use_starter_kits: !profile.value.can_use_starter_kits
+        })
+        profile.value.can_use_starter_kits = !profile.value.can_use_starter_kits
     } catch (error) {
         console.error('Error updating permission:', error)
     }

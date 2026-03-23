@@ -9,6 +9,7 @@ use App\Http\Resources\CommentResource;
 use App\Http\Resources\FollowerResource;
 use App\Http\Resources\FollowingResource;
 use App\Http\Resources\ProfileResource;
+use App\Http\Resources\StarterKitResource;
 use App\Http\Resources\VideoHashtagResource;
 use App\Http\Resources\VideoResource;
 use App\Models\Comment;
@@ -17,15 +18,18 @@ use App\Models\Follower;
 use App\Models\Hashtag;
 use App\Models\Page;
 use App\Models\Profile;
+use App\Models\StarterKit;
 use App\Models\SystemMessage;
 use App\Models\Video;
 use App\Models\VideoBookmark;
 use App\Models\VideoHashtag;
 use App\Services\AccountService;
+use App\Services\ConfigService;
 use App\Services\FeedService;
 use App\Services\FrontendService;
 use App\Services\IntlService;
 use App\Services\ReportService;
+use App\Services\StarterKitService;
 use App\Services\SystemMessageService;
 use App\Support\CursorToken;
 use Illuminate\Http\Request;
@@ -272,6 +276,9 @@ class WebPublicController extends Controller
         $keys = ['general.adminEmail', 'general.supportEmail', 'general.supportForum', 'general.supportFediverseAccount'];
 
         $keys = Cache::get('settings:admin');
+        if (! $keys) {
+            return response()->json();
+        }
         $contactInfo = [
             'admin_email' => $keys['general.adminEmail'],
             'support_email' => $keys['general.supportEmail'],
@@ -446,6 +453,148 @@ class WebPublicController extends Controller
         unset($config['branding']);
 
         return response()->json($config);
+    }
+
+    public function showStarterKit(Request $request, $id)
+    {
+        abort_unless(app(ConfigService::class)->starterKits(), 404);
+
+        $starterKit = StarterKit::findOrFail($id);
+
+        $user = $request->user();
+
+        if ($starterKit->status != 10) {
+            if ($user?->profile_id === $starterKit->profile_id || $user?->is_admin) {
+
+            } else {
+                return response()->json(['error' => 'Not found'], 404);
+            }
+        }
+
+        if ($starterKit->visibility === StarterKit::VISIBILITY_PRIVATE) {
+            if (! $user || $user->profile_id !== $starterKit->profile_id) {
+                return response()->json(['error' => 'Not found'], 404);
+            }
+        }
+
+        return $this->data(new StarterKitResource($starterKit));
+    }
+
+    public function getStarterKitPopularKits(Request $request)
+    {
+        abort_unless(app(ConfigService::class)->starterKits(), 404);
+
+        $kits = StarterKit::activeDiscoverable()->orderByDesc('uses')->take(4)->get();
+
+        return $this->data(StarterKitResource::collection($kits));
+    }
+
+    public function getStarterKitLatestKits(Request $request)
+    {
+        abort_unless(app(ConfigService::class)->starterKits(), 404);
+
+        $kits = StarterKit::activeDiscoverable()->orderByDesc('created_at')->take(4)->get();
+
+        return $this->data(StarterKitResource::collection($kits));
+    }
+
+    public function getStarterKitsBrowse(Request $request)
+    {
+        abort_unless(app(ConfigService::class)->starterKits(), 404);
+
+        $validated = $request->validate([
+            'sort' => 'sometimes|string|in:popular,latest,oldest',
+            'limit' => 'sometimes|integer|min:1|max:12',
+            'tag' => 'sometimes|nullable|exists:hashtags,name_normalized',
+            'q' => 'nullable|sometimes|alpha_dash|min:1|max:20',
+            'cursor' => 'sometimes|string',
+        ]);
+
+        $sort = $validated['sort'] ?? 'popular';
+        $limit = $validated['limit'] ?? 6;
+        $tag = $validated['tag'] ?? null;
+        $search = ! empty($validated['q']) ? $validated['q'] : false;
+        $hasCursor = $request->filled('cursor');
+
+        $query = StarterKit::activeDiscoverable()
+            ->when($search, fn ($q) => $q->where('title', 'like', $search.'%'))
+            ->when($tag, fn ($q) => $q->whereHas('hashtags', fn ($q) => $q->where('name_normalized', $tag)));
+
+        match ($sort) {
+            'latest' => $query->orderByDesc('id'),
+            'oldest' => $query->orderBy('id'),
+            default => $query->orderByDesc('uses'),
+        };
+
+        $kits = $query->cursorPaginate($limit)->withQueryString();
+
+        if ($hasCursor || $search || $tag || $sort != 'popular') {
+            return StarterKitResource::collection($kits);
+        }
+
+        return StarterKitResource::collection($kits)->additional([
+            'hashtags' => app(StarterKitService::class)->getPopularHashtags(),
+            'stats' => app(StarterKitService::class)->getStats(),
+        ]);
+    }
+
+    public function getStarterKitPopularHashtags(Request $request)
+    {
+        $res = app(StarterKitService::class)->getPopularHashtags();
+
+        return $this->data($res);
+    }
+
+    public function getStarterKitsConfig(Request $request)
+    {
+        abort_unless(app(ConfigService::class)->starterKits(), 404);
+
+        return $this->data(app(StarterKitService::class)->getConfig());
+    }
+
+    public function getKitsByHashtag(Request $request)
+    {
+        abort_unless(app(ConfigService::class)->starterKits(), 404);
+
+        $validated = $request->validate([
+            'tag' => 'required|alpha_dash|min:1|max:20',
+            'sort' => 'nullable|in:popular,latest,oldest',
+            'cursor' => 'nullable|string',
+        ]);
+
+        $tag = Hashtag::where('name_normalized', $validated['tag'])->firstOrFail();
+
+        $sort = $validated['sort'] ?? 'popular';
+
+        $query = StarterKit::join('starter_kit_tags', 'starter_kits.id', '=', 'starter_kit_tags.starter_kit_id')
+            ->where('starter_kit_tags.hashtag_id', $tag->id)
+            ->where('starter_kits.status', 10)
+            ->where('starter_kits.is_discoverable', true)
+            ->select('starter_kits.*');
+
+        match ($sort) {
+            'latest' => $query->orderByDesc('starter_kits.id'),
+            'oldest' => $query->orderBy('starter_kits.id'),
+            default => $query->orderByDesc('starter_kits.uses')->orderByDesc('starter_kits.id'),
+        };
+
+        $kits = $query->cursorPaginate(10);
+
+        return StarterKitResource::collection($kits);
+    }
+
+    public function getStarterKitStats(Request $request)
+    {
+        abort_unless(app(ConfigService::class)->starterKits(), 404);
+
+        return $this->data(['stats' => app(StarterKitService::class)->getStats()]);
+    }
+
+    public function getStarterKitTopCreators(Request $request)
+    {
+        abort_unless(app(ConfigService::class)->starterKits(), 404);
+
+        return $this->data(['top_creators' => app(StarterKitService::class)->getTopCreatorsWeekly()]);
     }
 
     private function defaultCollection($meta = [])

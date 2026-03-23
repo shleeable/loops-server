@@ -30,6 +30,9 @@ use Laravel\Passport\HasApiTokens;
  * @property int $can_comment
  * @property int $can_like
  * @property int $can_follow
+ * @property int $can_create_starter_kits
+ * @property int $can_use_starter_kits
+ * @property int $can_report
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -43,7 +46,7 @@ use Laravel\Passport\HasApiTokens;
  * @property string|null $two_factor_backups
  * @property string|null $delete_after
  * @property string|null $email_verification_token
- * @property string|null $last_active_at
+ * @property \Illuminate\Support\Carbon|null $last_active_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $comments
  * @property-read int|null $comments_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\DataExport> $dataExports
@@ -159,6 +162,9 @@ class User extends Authenticatable implements OAuthenticatable
         'push_token',
         'push_token_verified_at',
         'push_token_platform',
+        'can_create_starter_kits',
+        'can_use_starter_kits',
+        'can_report',
     ];
 
     protected $hidden = [
@@ -184,12 +190,16 @@ class User extends Authenticatable implements OAuthenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_active_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'device' => 'json',
             'push_token_verified_at' => 'datetime',
             'birth_date' => 'date',
             'status' => 'integer',
+            'can_create_starter_kits' => 'boolean',
+            'can_use_starter_kits' => 'boolean',
+            'can_report' => 'boolean',
         ];
     }
 
@@ -250,6 +260,12 @@ class User extends Authenticatable implements OAuthenticatable
     public function following(): HasMany
     {
         return $this->hasMany(Follower::class, 'profile_id', 'profile_id');
+    }
+
+    /** @return HasMany<StarterKit, $this> */
+    public function starterKits(): HasMany
+    {
+        return $this->hasMany(StarterKit::class, 'profile_id', 'profile_id');
     }
 
     public function videoViews(): HasMany

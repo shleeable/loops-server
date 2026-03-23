@@ -40,6 +40,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $followers_url
  * @property int $is_suspended
  * @property int $is_hidden
+ * @property int $starter_kit_state
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property array<array-key, mixed>|null $links
@@ -54,6 +55,9 @@ use Illuminate\Support\Facades\DB;
  * @property int $can_comment
  * @property int $can_like
  * @property int $can_share
+ * @property int $can_create_starter_kits
+ * @property int $can_use_starter_kits
+ * @property int $can_report
  * @property int $manuallyApprovesFollowers
  * @property-read \App\Models\User|null $user
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Video> $videos
@@ -118,6 +122,20 @@ class Profile extends Model
 {
     use HasFactory, HasSnowflakePrimary;
 
+    const STARTER_KIT_DISABLED = 0;
+
+    const STARTER_KIT_FOLLOWING_ONLY = 1;
+
+    const STARTER_KIT_FOLLOWING_WITH_APPROVAL = 2;
+
+    const STARTER_KIT_LOCAL_ONLY = 3;
+
+    const STARTER_KIT_LOCAL_WITH_APPROVAL = 4;
+
+    const STARTER_KIT_PERMISSION_REQUIRED = 5;
+
+    const STARTER_KIT_AUTO_ALLOW_EVERYONE = 6;
+
     /**
      * Status Bitmask
      * 0 = Unused
@@ -168,6 +186,10 @@ class Profile extends Model
         'status',
         'has_playlists',
         'links',
+        'starter_kit_state',
+        'can_create_starter_kits',
+        'can_use_starter_kits',
+        'can_report',
     ];
 
     protected $guarded = [];
@@ -183,6 +205,9 @@ class Profile extends Model
         'can_comment' => 'boolean',
         'can_share' => 'boolean',
         'can_like' => 'boolean',
+        'can_create_starter_kits' => 'boolean',
+        'can_use_starter_kits' => 'boolean',
+        'can_report' => 'boolean',
         'discoverable' => 'boolean',
         'manuallyApprovesFollowers' => 'boolean',
     ];
@@ -320,6 +345,15 @@ class Profile extends Model
             ->toArray();
 
         $this->update(['links' => $linksData]);
+    }
+
+    public function starterKitRequiresApproval(): bool
+    {
+        if (in_array($this->starter_kit_state, [6])) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

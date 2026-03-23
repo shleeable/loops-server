@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Mail;
  * @property int|null $reported_video_id
  * @property int|null $reported_comment_id
  * @property int|null $reported_comment_reply_id
+ * @property int|null $reported_hashtag_id
+ * @property int|null $reported_starter_kit_id
  * @property string $report_type
  * @property array<array-key, mixed>|null $metadata
  * @property int $admin_seen
@@ -175,6 +177,10 @@ class Report extends Model
 
         if ($this->reported_comment_id) {
             return 'comment';
+        }
+
+        if ($this->reported_starter_kit_id) {
+            return 'starter_kit';
         }
 
         return 'Undefined Type';

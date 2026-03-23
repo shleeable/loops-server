@@ -33,6 +33,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton('push_relay', function () {
             return 'https://push.loopsplatform.com';
         });
+
+        $this->app->singleton('observatory', function () {
+            return 'https://beacon.joinloops.org';
+        });
     }
 
     /**

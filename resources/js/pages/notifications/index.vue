@@ -284,6 +284,78 @@
                 </div>
             </div>
 
+            <div v-else-if="activeTab === 'starterKits'">
+                <div
+                    v-if="isCurrentTabLoading && currentNotifications.length === 0"
+                    class="space-y-4"
+                >
+                    <div v-for="i in 5" :key="i" class="animate-pulse">
+                        <div
+                            class="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700"
+                        >
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-12 h-12 bg-gray-300 rounded-full dark:bg-gray-600"
+                                ></div>
+                                <div class="space-y-2">
+                                    <div
+                                        class="h-4 bg-gray-300 rounded w-32 dark:bg-gray-600"
+                                    ></div>
+                                    <div
+                                        class="h-3 bg-gray-300 rounded w-24 dark:bg-gray-600"
+                                    ></div>
+                                </div>
+                            </div>
+                            <div class="h-8 w-20 bg-gray-300 rounded-lg dark:bg-gray-600"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-else-if="currentNotifications.length > 0" class="space-y-2">
+                    <NotificationItem
+                        v-for="notification in currentNotifications"
+                        :key="notification.id"
+                        :notification="notification"
+                        :current-user-id="authStore?.user?.id"
+                        @mark-as-read="(id) => markAsRead(id, activeTab)"
+                    />
+
+                    <div class="flex justify-center py-8">
+                        <button
+                            v-if="currentHasMore && !isCurrentTabLoading"
+                            @click="loadMore(activeTab)"
+                            class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 cursor-pointer"
+                        >
+                            {{ t('common.loadMore') }}
+                        </button>
+
+                        <div
+                            v-else-if="isCurrentTabLoading"
+                            class="flex items-center text-gray-500 dark:text-gray-400"
+                        >
+                            <ArrowPathIcon class="w-5 h-5 animate-spin" />
+                        </div>
+
+                        <p
+                            v-else-if="!currentHasMore"
+                            class="text-gray-500 dark:text-gray-400 text-sm"
+                        >
+                            {{ t('notifications.allCaughtUp') }}
+                        </p>
+                    </div>
+                </div>
+
+                <div v-else class="text-center py-12">
+                    <UserPlusIcon class="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {{ t('notifications.noStarterKits') }}
+                    </h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        {{ t('notifications.newStarterKitWillAppearHere') }}
+                    </p>
+                </div>
+            </div>
+
             <div v-else-if="activeTab === 'system'">
                 <div
                     v-if="isCurrentTabLoading && currentNotifications.length === 0"
@@ -374,7 +446,7 @@ import {
     CheckIcon
 } from '@heroicons/vue/24/outline'
 import MainLayout from '~/layouts/MainLayout.vue'
-import NotificationItem from '~/components/NotificationItem.vue'
+import NotificationItem from '~/components/Notification/NotificationItem.vue'
 import NotificationSystemItem from '~/components/Notification/NotificationSystemItem.vue'
 import { useAlertModal } from '@/composables/useAlertModal.js'
 import { useUtils } from '@/composables/useUtils'
@@ -388,7 +460,7 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
-const validTabs = ['activity', 'followers', 'system']
+const validTabs = ['activity', 'followers', 'starterKits', 'system']
 
 const getInitialTab = () => {
     const tabParam = route.query.tab
@@ -420,22 +492,27 @@ const activeFilterLabel = computed(() => {
 
 const activityNotifications = computed(() => notificationStore.activityNotifications)
 const followersNotifications = computed(() => notificationStore.followersNotifications)
+const starterKitsNotifications = computed(() => notificationStore.starterKitsNotifications)
 const systemNotifications = computed(() => notificationStore.systemNotifications)
 
 const activityLoading = computed(() => notificationStore.activityLoading)
 const followersLoading = computed(() => notificationStore.followersLoading)
+const starterKitsLoading = computed(() => notificationStore.starterKitsLoading)
 const systemLoading = computed(() => notificationStore.systemLoading)
 
 const activityHasMore = computed(() => notificationStore.activityHasMore)
 const followersHasMore = computed(() => notificationStore.followersHasMore)
+const starterKitsHasMore = computed(() => notificationStore.starterKitsHasMore)
 const systemHasMore = computed(() => notificationStore.systemHasMore)
 
 const activityError = computed(() => notificationStore.activityError)
 const followersError = computed(() => notificationStore.followersError)
+const starterKitsError = computed(() => notificationStore.starterKitsError)
 const systemError = computed(() => notificationStore.systemError)
 
 const activityUnreadCount = computed(() => notificationStore.unreadCounts['activity'])
 const followersUnreadCount = computed(() => notificationStore.unreadCounts['followers'])
+const starterKitsUnreadCount = computed(() => notificationStore.unreadCounts['starterKits'])
 const systemUnreadCount = computed(() => notificationStore.unreadCounts['system'])
 const totalUnreadCount = computed(() => notificationStore.totalUnreadCount)
 
@@ -447,6 +524,8 @@ const currentNotifications = computed(() => {
             return activityNotifications.value || []
         case 'followers':
             return followersNotifications.value || []
+        case 'starterKits':
+            return starterKitsNotifications.value || []
         case 'system':
             return systemNotifications.value || []
         default:
@@ -460,6 +539,8 @@ const isCurrentTabLoading = computed(() => {
             return activityLoading.value
         case 'followers':
             return followersLoading.value
+        case 'starterKits':
+            return starterKitsLoading.value
         case 'system':
             return systemLoading.value
         default:
@@ -473,6 +554,8 @@ const currentHasMore = computed(() => {
             return activityHasMore.value
         case 'followers':
             return followersHasMore.value
+        case 'starterKits':
+            return starterKitsHasMore.value
         case 'system':
             return systemHasMore.value
         default:
@@ -486,6 +569,8 @@ const currentError = computed(() => {
             return activityError.value
         case 'followers':
             return followersError.value
+        case 'starterKits':
+            return starterKitsError.value
         case 'system':
             return systemError.value
         default:
@@ -506,6 +591,8 @@ const showMarkAllRead = computed(() => {
             return activityUnreadCount.value > 0
         case 'followers':
             return followersUnreadCount.value > 0
+        case 'starterKits':
+            return starterKitsUnreadCount.value > 0
         case 'system':
             return systemUnreadCount.value > 0
         default:
@@ -523,6 +610,11 @@ const tabs = computed(() => [
         id: 'followers',
         label: t('notifications.newFollowers'),
         unreadCount: followersUnreadCount.value
+    },
+    {
+        id: 'starterKits',
+        label: t('notifications.starterKits'),
+        unreadCount: starterKitsUnreadCount.value
     },
     {
         id: 'system',

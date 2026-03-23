@@ -160,17 +160,44 @@
                                     />
                                     <span class="flex-1 min-w-0 truncate">{{ item.name }}</span>
 
-                                    <span
-                                        v-if="item.href === '/admin/reports' && reportsCount > 0"
-                                        class="ml-auto inline-flex items-center justify-center min-w-[1.6rem] h-6 px-2 rounded-full text-[11px] font-semibold bg-[#F02C56] text-white shadow-sm ring-1 ring-black/5"
-                                    >
-                                        {{ displayReportsCount }}
-                                    </span>
+                                    <template v-if="item.href === '/admin/reports'">
+                                        <span
+                                            v-if="reportsCount > 0"
+                                            class="ml-auto inline-flex items-center justify-center min-w-[1.6rem] h-6 px-2 rounded-full text-[11px] font-semibold bg-[#F02C56] text-white shadow-sm ring-1 ring-black/5"
+                                        >
+                                            {{ displayReportsCount }}
+                                        </span>
+                                        <span
+                                            v-else-if="isLoading"
+                                            class="ml-auto inline-flex h-4 w-10 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse"
+                                        ></span>
+                                    </template>
 
-                                    <span
-                                        v-else-if="item.href === '/admin/reports' && isLoading"
-                                        class="ml-auto inline-flex h-4 w-10 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse"
-                                    ></span>
+                                    <template v-if="item.href === '/admin/starter-kits-review'">
+                                        <span
+                                            v-if="starterKitsUpdates > 0"
+                                            class="ml-auto inline-flex items-center justify-center min-w-[1.6rem] h-6 px-2 rounded-full text-[11px] font-semibold bg-[#F02C56] text-white shadow-sm ring-1 ring-black/5"
+                                        >
+                                            {{ displayUpdatedStarterKitsCount }}
+                                        </span>
+                                        <span
+                                            v-else-if="isLoading"
+                                            class="ml-auto inline-flex h-4 w-10 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse"
+                                        ></span>
+                                    </template>
+
+                                    <template v-if="item.href === '/admin/starterkits'">
+                                        <span
+                                            v-if="starterKitsAwaitingApproval > 0"
+                                            class="ml-auto inline-flex items-center justify-center min-w-[1.6rem] h-6 px-2 rounded-full text-[11px] font-semibold bg-[#F02C56] text-white shadow-sm ring-1 ring-black/5"
+                                        >
+                                            {{ displayAwaitingStarterKitsCount }}
+                                        </span>
+                                        <span
+                                            v-else-if="isLoading"
+                                            class="ml-auto inline-flex h-4 w-10 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse"
+                                        ></span>
+                                    </template>
                                 </router-link>
                             </template>
                         </div>
@@ -308,7 +335,8 @@ import {
     MoonIcon,
     ArrowPathIcon,
     MagnifyingGlassIcon,
-    ChevronDownIcon
+    ChevronDownIcon,
+    WalletIcon
 } from '@heroicons/vue/24/outline'
 import { useAdminStore } from '~/stores/admin'
 
@@ -338,12 +366,16 @@ const navigation = [
     },
     {
         title: 'Moderation',
-        items: [{ name: 'Reports', href: '/admin/reports', icon: ExclamationTriangleIcon }]
+        items: [
+            { name: 'Reports', href: '/admin/reports', icon: ExclamationTriangleIcon },
+            { name: 'Kit Updates', href: '/admin/starter-kits-review', icon: UserPlusIcon }
+        ]
     },
     {
         title: 'Users',
         items: [
             { name: 'Profiles', href: '/admin/profiles', icon: UserGroupIcon },
+            { name: 'Starter Kits', href: '/admin/starterkits', icon: WalletIcon },
             {
                 name: 'Invites',
                 icon: UserPlusIcon,
@@ -427,7 +459,16 @@ watch(
 )
 
 const adminStore = useAdminStore()
-const { isDarkMode, reportsCount, isLoading, displayReportsCount } = storeToRefs(adminStore)
+const {
+    isDarkMode,
+    reportsCount,
+    starterKitsAwaitingApproval,
+    starterKitsUpdates,
+    isLoading,
+    displayReportsCount,
+    displayAwaitingStarterKitsCount,
+    displayUpdatedStarterKitsCount
+} = storeToRefs(adminStore)
 const isDark = isDarkMode
 
 const handleToggleDarkMode = () => {

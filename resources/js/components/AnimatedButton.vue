@@ -56,9 +56,15 @@ export default {
             type: String,
             default: 'primary',
             validator: (value) =>
-                ['primary', 'secondary', 'light', 'outline', 'ghost', 'primaryOutline'].includes(
-                    value
-                )
+                [
+                    'primary',
+                    'secondary',
+                    'light',
+                    'outline',
+                    'ghost',
+                    'primaryOutline',
+                    'primaryGradient'
+                ].includes(value)
         },
         size: {
             type: String,
@@ -67,20 +73,23 @@ export default {
         },
         loading: { type: Boolean, default: false },
         disabled: { type: Boolean, default: false },
-        type: { type: String, default: 'button' }
+        type: { type: String, default: 'button' },
+        pill: { type: Boolean, default: false }
     },
     setup(props) {
         const sizeClasses = computed(() => {
+            const rounded = props.pill ? 'rounded-full' : null
+
             switch (props.size) {
                 case 'xs':
-                    return 'px-3 py-1.5 text-xs rounded-md'
+                    return `px-3 py-1.5 text-xs ${rounded ?? 'rounded-md'}`
                 case 'sm':
-                    return 'px-4 py-2 text-sm rounded-md'
+                    return `px-4 py-2 text-sm ${rounded ?? 'rounded-md'}`
                 case 'lg':
-                    return 'px-8 py-3.5 text-base rounded-xl'
+                    return `px-8 py-3.5 text-base ${rounded ?? 'rounded-xl'}`
                 case 'md':
                 default:
-                    return 'px-6 py-3 text-sm rounded-lg'
+                    return `px-6 py-3 text-sm ${rounded ?? 'rounded-lg'}`
             }
         })
 
@@ -111,6 +120,16 @@ export default {
                         'hover:bg-[#D7284A] active:bg-[#C62445]',
                         'focus:ring-[#F02C56]',
                         'disabled:bg-opacity-50 disabled:opacity-50'
+                    ].join(' ')
+                case 'primaryGradient':
+                    return [
+                        baseClasses,
+                        'bg-[linear-gradient(130deg,#ff6347_0%,#ff1478_100%)]',
+                        'shadow-[0_0_28px_rgba(255,99,71,0.35)]',
+                        'hover:shadow-[0_0_50px_rgba(255,99,71,0.55)]',
+                        'text-white',
+                        'focus:ring-[#ff6347]',
+                        'disabled:opacity-50'
                     ].join(' ')
                 case 'secondary':
                     return `${baseClasses} bg-gray-600 dark:bg-gray-500 text-white hover:bg-gray-700 dark:hover:bg-gray-600 focus:ring-gray-500 dark:focus:ring-gray-400 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:opacity-50`

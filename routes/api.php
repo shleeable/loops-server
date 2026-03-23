@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\ForYouFeedController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\StarterKitController;
 use App\Http\Controllers\Api\StudioController;
 use App\Http\Controllers\Api\UserPreferencesController;
 use App\Http\Controllers\Api\VideoController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\NodeInfoController;
 use App\Http\Controllers\ObjectController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PlaylistController;
+use App\Http\Controllers\PrivateMediaTokenController;
 use App\Http\Controllers\SharedInboxController;
 use App\Http\Controllers\UserRegisterVerifyController;
 use App\Http\Controllers\VideoBookmarkController;
@@ -188,6 +190,42 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/account/settings/push-notifications/enable', [AccountController::class, 'enablePushNotifications'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/push-notifications/disable', [AccountController::class, 'disablePushNotifications'])->middleware(['auth:web,api']);
 
+    Route::get('/v1/account/settings/starter-kits/status', [AccountController::class, 'getStarterKitsStatus'])->middleware(['auth:web,api']);
+    Route::post('/v1/account/settings/starter-kits/update', [AccountController::class, 'updateStarterKitsStatus'])->middleware(['auth:web,api']);
+    Route::post('/v1/starter-kits/compose/search/accounts', [StarterKitController::class, 'accountSearch'])->middleware(['auth:web,api']);
+    Route::post('/v1/starter-kits/compose/search/hashtags', [StarterKitController::class, 'hashtagSearch'])->middleware(['auth:web,api']);
+    Route::post('/v1/starter-kits/edit/search/accounts/{id}', [StarterKitController::class, 'editKitAccountSearch'])->middleware(['auth:web,api']);
+
+    Route::post('/v1/starter-kits/create', [StarterKitController::class, 'store'])->middleware(['auth:web,api']);
+    Route::get('/v1/starter-kits/hashtag/popular', [WebPublicController::class, 'getStarterKitPopularHashtags']);
+    Route::get('/v1/starter-kits/hashtag/kits', [WebPublicController::class, 'getKitsByHashtag']);
+    Route::get('/v1/starter-kits/my-kits', [StarterKitController::class, 'getMyKits'])->middleware(['auth:web,api']);
+    Route::get('/v1/starter-kits/joined-kits', [StarterKitController::class, 'getJoinedKits'])->middleware(['auth:web,api']);
+    Route::post('/v1/starter-kits/details/{id}/use', [StarterKitController::class, 'use'])->middleware(['auth:web,api']);
+    Route::post('/v1/starter-kits/details/{id}/reuse', [StarterKitController::class, 'reuse'])->middleware(['auth:web,api']);
+    Route::get('/v1/starter-kits/details/{id}/used', [StarterKitController::class, 'hasUsedKit'])->middleware(['auth:web,api']);
+    Route::get('/v1/starter-kits/details/{id}/accounts', [StarterKitController::class, 'showKitAccounts'])->middleware(['auth:web,api']);
+    Route::delete('/v1/starter-kits/details/{id}/accounts/{accountId}', [StarterKitController::class, 'removeAccount'])->middleware(['auth:web,api']);
+    Route::get('/v1/starter-kits/details/{id}/membership', [StarterKitController::class, 'checkKitMembership'])->middleware(['auth:web,api']);
+    Route::post('/v1/starter-kits/details/{id}/membership/revoke', [StarterKitController::class, 'revokeKitMembership'])->middleware(['auth:web,api']);
+    Route::post('/v1/starter-kits/details/{id}/membership', [StarterKitController::class, 'handleKitMembership'])->middleware(['auth:web,api']);
+    Route::post('/v1/starter-kits/details/{id}', [StarterKitController::class, 'update'])->middleware(['auth:web,api']);
+    Route::get('/v1/starter-kits/details/{id}/pending-changes', [StarterKitController::class, 'getKitPendingChanges'])->middleware(['auth:web,api']);
+    Route::delete('/v1/starter-kits/details/{id}', [StarterKitController::class, 'destroy'])->middleware(['auth:web,api']);
+    Route::get('/v1/starter-kits/details/{id}', [WebPublicController::class, 'showStarterKit'])->middleware('throttle:api');
+    Route::post('/v1/starter-kits/details/{id}/accounts/add', [StarterKitController::class, 'addAccount'])->middleware(['auth:web,api']);
+    Route::get('/v1/starter-kits/config', [WebPublicController::class, 'getStarterKitsConfig']);
+    Route::get('/v1/starter-kits/stats', [WebPublicController::class, 'getStarterKitStats']);
+    Route::get('/v1/starter-kits/self/config', [StarterKitController::class, 'getSelfConfig']);
+    Route::get('/v1/starter-kits/top-creators', [WebPublicController::class, 'getStarterKitTopCreators']);
+    Route::get('/v1/starter-kits/popular', [WebPublicController::class, 'getStarterKitPopularKits']);
+    Route::get('/v1/starter-kits/latest', [WebPublicController::class, 'getStarterKitLatestKits']);
+    Route::get('/v1/starter-kits/browse', [WebPublicController::class, 'getStarterKitsBrowse']);
+    Route::post('/v1/starter-kits/details/{id}/icon', [StarterKitController::class, 'uploadIcon'])->middleware(['auth:web,api']);
+    Route::delete('/v1/starter-kits/details/{id}/icon', [StarterKitController::class, 'deleteIcon'])->middleware(['auth:web,api']);
+    Route::post('/v1/starter-kits/details/{id}/header', [StarterKitController::class, 'uploadHeader'])->middleware(['auth:web,api']);
+    Route::delete('/v1/starter-kits/details/{id}/header', [StarterKitController::class, 'deleteHeader'])->middleware(['auth:web,api']);
+
     // Account Data
     Route::get('/v1/account/data/insights', [AccountDataController::class, 'getDataInsights'])->middleware(['auth:web,api']);
     Route::get('/v1/account/data/settings', [AccountDataController::class, 'getDataSettings'])->middleware(['auth:web,api']);
@@ -269,6 +307,8 @@ Route::prefix('api')->group(function () {
     // App Preferences
     Route::get('/v1/app/preferences', [UserPreferencesController::class, 'show'])->middleware(['auth:web,api']);
     Route::post('/v1/app/preferences', [UserPreferencesController::class, 'update'])->middleware(['auth:web,api']);
+
+    Route::get('/v2026.3/pmt/{tokenId}', [PrivateMediaTokenController::class, 'show'])->name('media.private.show')->middleware(['auth:web,api']);
 
     // Admin
     Route::prefix('/v1/admin')->middleware(['auth:web,api', AdminOnlyAccess::class])->group(function () {
@@ -354,6 +394,16 @@ Route::prefix('api')->group(function () {
         Route::get('/invites/show/{id}', [AdminController::class, 'showAdminInvite'])->middleware('auth:web,api');
         Route::post('/invites/delete/{id}', [AdminController::class, 'deleteAdminInvite'])->middleware('auth:web,api');
         Route::post('/invites/update/{id}', [AdminController::class, 'updateAdminInvite'])->middleware('auth:web,api');
+        Route::get('/starterkits', [AdminController::class, 'starterKits'])->middleware('auth:web,api');
+        Route::get('/starterkits/{id}', [AdminController::class, 'starterKitsShow'])->middleware('auth:web,api');
+        Route::get('/starterkits/{id}/history', [AdminController::class, 'starterKitHistory'])->middleware('auth:web,api');
+        Route::post('/starterkits/{id}/update', [AdminController::class, 'starterKitsUpdate'])->middleware('auth:web,api');
+        Route::post('/starterkits/{id}/moderate', [AdminController::class, 'starterKitsModerate'])->middleware('auth:web,api');
+        Route::post('/starterkits/{id}/moderate-media', [AdminController::class, 'starterKitsModerateMedia'])->middleware('auth:web,api');
+        Route::get('/starter-kits/pending-changes', [AdminController::class, 'starterKitsReview'])->middleware('auth:web,api');
+        Route::get('/starter-kits/pending-changes/{changeset}', [AdminController::class, 'starterKitsReviewShow'])->middleware('auth:web,api');
+        Route::post('/starter-kits/pending-changes/{changeset}/fields/{field}/approve', [AdminController::class, 'starterKitsReviewApproveField'])->middleware('auth:web,api');
+        Route::post('/starter-kits/pending-changes/{changeset}/fields/{field}/reject', [AdminController::class, 'starterKitsReviewRejectField'])->middleware('auth:web,api');
     });
 
     Route::any('{any}', function () {
@@ -376,5 +426,8 @@ Route::prefix('/ap')->middleware([AuthorizedFetch::class])->group(function () {
     Route::get('users/{actor}/video/{id}/shares', [ObjectController::class, 'showVideoObjectShares'])->middleware(AuthorizedFetch::class);
     Route::get('users/{actor}/comment/{id}', [ObjectController::class, 'showCommentObject'])->middleware(AuthorizedFetch::class);
     Route::get('users/{actor}/reply/{id}', [ObjectController::class, 'showReplyObject'])->middleware(AuthorizedFetch::class);
+    Route::get('kit/{id}', [ObjectController::class, 'showStarterKit'])->middleware(AuthorizedFetch::class);
+    Route::get('kit/{kit}/items/{pid}', [ObjectController::class, 'showStarterKitAccountItem'])->middleware(AuthorizedFetch::class);
+    Route::get('kit/{kit}/attestation/{id}', [ObjectController::class, 'showStarterKitAccountAttestation'])->middleware(AuthorizedFetch::class);
     Route::get('users/{profileId}/quote_authorizations/{authId}', [ObjectController::class, 'getQuoteAuthorization'])->middleware(AuthorizedFetch::class);
 });
