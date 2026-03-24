@@ -21,6 +21,7 @@ class UserObserver implements ShouldHandleEventsAfterCommit
             'username' => $user->username,
             'name' => $user->name,
             'local' => true,
+            'starter_kit_state' => 5,
         ]);
         $user->profile_id = $profile->id;
         $user->save();
