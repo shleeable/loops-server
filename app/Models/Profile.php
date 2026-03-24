@@ -461,6 +461,25 @@ class Profile extends Model
         return $res;
     }
 
+    public function resolveStarterKitState(array $canFeature): int
+    {
+        $auto = $canFeature['automaticApproval'] ?? [];
+        $manual = $canFeature['manualApproval'] ?? [];
+
+        $public = 'https://www.w3.org/ns/activitystreams#Public';
+        $followers = $this->getFollowingUrl();
+        $actor = $this->getActorId();
+
+        return match (true) {
+            $auto === [$followers] && $manual === [$public] => 1,
+            $auto === [] && $manual === [$followers] => 2,
+            $auto === [] && $manual === [$public] => 5,
+            $auto === [$public] && $manual === [] => 6,
+            $auto === [$actor] && $manual === [] => 3,
+            default => 0,
+        };
+    }
+
     public function scopeWithFollowingStatus($query, $authProfileId = null)
     {
         if (! $authProfileId) {
@@ -481,12 +500,44 @@ class Profile extends Model
     /**
      * Find or create a remote actor from an ActivityPub URL
      */
-    public static function findOrCreateFromUrl(string $url, ?array $actorData = null, $forceRefresh = false): ?self
+    public function findOrCreateFromUrl(string $url, ?array $actorData = null, $forceRefresh = false): ?self
     {
-        $validUrl = app(SanitizeService::class)->url($url, true);
         $localUrl = app(SanitizeService::class)->isLocalObject($url);
 
-        if (! $validUrl || $localUrl) {
+        if ($localUrl) {
+            $sanitize = app(SanitizeService::class);
+
+            $match = $sanitize->matchUrlTemplate(
+                url: $url,
+                templates: [
+                    '/ap/users/{id}',
+                    '/@{username}',
+                ],
+                useAppHost: true,
+                constraints: [
+                    'id' => '[0-9]+',
+                    'username' => '[a-zA-Z0-9_.-]+',
+                ],
+            );
+
+            if (! $match) {
+                return null;
+            }
+
+            if (isset($match['id'])) {
+                return static::where('id', $match['id'])->where('local', true)->first();
+            }
+
+            if (isset($match['username'])) {
+                return static::where('username', $match['username'])->where('local', true)->first();
+            }
+
+            return null;
+        }
+
+        $validUrl = app(SanitizeService::class)->url($url, true);
+
+        if (! $validUrl) {
             return null;
         }
 
@@ -508,6 +559,12 @@ class Profile extends Model
             $acct = $username.'@'.$domain;
             $sharedInbox = data_get($actorData, 'endpoints.sharedInbox');
             $avatar = data_get($actorData, 'icon.url');
+            $starterKitStateCanFeature = data_get($actorData, 'interactionPolicy.canFeature', false);
+            $starterKitState = 0;
+
+            if ($starterKitStateCanFeature) {
+                $starterKitState = $this->resolveStarterKitState($starterKitStateCanFeature);
+            }
 
             if (! $actor) {
                 $actor = static::where('username', $acct)->where('local', false)->first();
@@ -537,6 +594,7 @@ class Profile extends Model
                 'local' => false,
                 'domain' => $domain,
                 'shared_inbox_url' => $sharedInbox,
+                'starter_kit_state' => $starterKitState,
             ])->save();
         }
 

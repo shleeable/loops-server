@@ -25,11 +25,11 @@ class StarterKitAccountResource extends JsonResource
     public function toArray(Request $request): array
     {
         $account = AccountService::get($this->profile_id);
+        unset($account['is_blocking'], $account['is_owner'], $account['links'], $account['created_at'], $account['remote_url']);
         $account['kit_status'] = $this->kit_status;
         $account['approved_at'] = $this->approved_at;
         $account['rejected_at'] = $this->rejected_at;
         $account['order'] = $this->order;
-        $account['starter_kit_id'] = (string) $this->starter_kit_id;
 
         return $account;
     }

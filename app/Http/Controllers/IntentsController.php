@@ -124,7 +124,7 @@ class IntentsController extends Controller
                     ->first();
 
                 if (! $profile) {
-                    $profile = Profile::findOrCreateFromUrl($safeUrl);
+                    $profile = app(Profile::class)->findOrCreateFromUrl($safeUrl);
                 }
             }
         }

@@ -35,7 +35,7 @@ class StarterKitService
                 return [];
             }
 
-            $accounts = $kit->approvedAccounts()->get()->map(fn ($acct) => AccountService::get($acct->id))->values();
+            $accounts = $kit->approvedAccounts()->get()->map(fn ($acct) => AccountService::compact($acct->id))->values();
 
             return (new StarterKitResource($kit))->additional(['accounts' => $accounts])->resolve();
         });
@@ -308,7 +308,7 @@ class StarterKitService
      */
     public function submitToObservatory(StarterKit $starterKit): bool
     {
-        if (! $starterKit->is_discoverable || ! $starterKit->getPermalink()) {
+        if ($starterKit->status !== 10 || ! $starterKit->is_discoverable || ! $starterKit->getPermalink()) {
             return false;
         }
 
