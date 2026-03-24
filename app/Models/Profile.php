@@ -411,6 +411,19 @@ class Profile extends Model
         }
 
         if ($this->starter_kit_state) {
+            $context = [
+                'loops' => 'https://joinloops.org/ns#',
+                'interactionPolicy' => [
+                    '@id' => 'loops:interactionPolicy',
+                    '@type' => '@id',
+                ],
+                'canFeature' => [
+                    '@id' => 'loops:canFeature',
+                    '@type' => '@id',
+                ],
+            ];
+
+            $res['@context'][] = $context;
             $public = 'https://www.w3.org/ns/activitystreams#Public';
             $canFeature = match ($this->starter_kit_state) {
                 1 => [
