@@ -337,7 +337,7 @@ class SearchController extends Controller
             return $this->isBlocked($existing->id, $currentUserId) ? null : $existing;
         }
 
-        return Profile::findOrCreateFromUrl($url, null, true);
+        return app(Profile::class)->findOrCreateFromUrl($url, null, true);
     }
 
     protected function isBlocked(int $profileId, int $currentUserId): bool
