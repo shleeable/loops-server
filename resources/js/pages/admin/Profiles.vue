@@ -17,11 +17,12 @@
             :data="profiles"
             :loading="loading"
             :has-previous="pagination.prev_cursor"
+            :initial-sort="sortBy"
             :has-next="pagination.next_cursor"
             :has-actions="false"
             :sort-options="sortOptions"
             :show-local-filter="true"
-            :initial-local-filter="true"
+            :initial-local-filter="localOnly"
             :initial-search-query="searchQuery"
             @local-change="handleLocalChange"
             @sort="handleSort"
@@ -196,26 +197,23 @@
 
             <template #cell-created_at="{ item }">
                 <div class="flex flex-col gap-1 text-sm min-w-[140px]">
-                    <div class="text-gray-900 dark:text-white font-medium">
-                        {{ formatDate(item.created_at) }}
-                    </div>
-                    <div class="text-xs text-gray-500 dark:text-gray-500" :title="item.created_at">
+                    <div
+                        class="text-xs"
+                        :class="[
+                            item.local
+                                ? 'text-gray-400 dark:text-gray-400'
+                                : ' text-gray-500 dark:text-gray-300'
+                        ]"
+                        :title="item.created_at"
+                    >
+                        {{ item.local ? 'Joined' : 'Discovered' }}:
                         {{ formatRelativeTime(item.created_at) }}
                     </div>
                     <div
-                        v-if="item.url"
-                        class="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-600 truncate max-w-[140px]"
+                        v-if="item.last_active_at"
+                        class="text-xs text-gray-500 dark:text-gray-300"
                     >
-                        <GlobeAltIcon class="w-3 h-3 flex-shrink-0" />
-                        <a
-                            :href="item.url"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="hover:text-blue-500 dark:hover:text-blue-400 truncate"
-                            :title="item.url"
-                        >
-                            {{ item.username }}
-                        </a>
+                        Last Active: {{ formatRelativeTime(item.last_active_at) }}
                     </div>
                 </div>
             </template>
@@ -280,8 +278,8 @@ const pagination = ref({
 })
 
 const searchQuery = ref(route.query.q || '')
-const sortBy = ref('')
-const localOnly = ref(true)
+const sortBy = ref(route.query.sortBy || localStorage.getItem('loops_admin_profiles_sortby') || '')
+const localOnly = ref(localStorage.getItem('loops_admin_profiles_localOnly') || false)
 const DEBOUNCE_DELAY = 300
 let searchTimeout = null
 
@@ -290,7 +288,7 @@ const columns = [
     { key: 'stats', label: 'Stats' },
     { key: 'permissions', label: 'Permissions' },
     { key: 'status', label: 'Status' },
-    { key: 'created_at', label: 'Joined / Instance' }
+    { key: 'created_at', label: 'Created' }
 ]
 
 const sortOptions = [
@@ -391,9 +389,15 @@ watch(
     }
 )
 
-watch(localOnly, () => {
+watch(localOnly, (newQuery) => {
     if (searchTimeout) {
         clearTimeout(searchTimeout)
+    }
+
+    if (newQuery) {
+        localStorage.setItem('loops_admin_profiles_localOnly', newQuery)
+    } else {
+        localStorage.removeItem('loops_admin_profiles_localOnly')
     }
 
     searchTimeout = setTimeout(() => {
@@ -414,6 +418,12 @@ watch(searchQuery, (newQuery) => {
 watch(sortBy, (newQuery) => {
     if (searchTimeout) {
         clearTimeout(searchTimeout)
+    }
+
+    if (newQuery) {
+        localStorage.setItem('loops_admin_profiles_sortby', newQuery)
+    } else {
+        localStorage.removeItem('loops_admin_profiles_sortby')
     }
 
     searchTimeout = setTimeout(() => {

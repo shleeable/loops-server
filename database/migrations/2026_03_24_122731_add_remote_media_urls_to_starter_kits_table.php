@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('starter_kits', function (Blueprint $table) {
+            $table->string('remote_header_url')->nullable();
+            $table->string('remote_icon_url')->nullable();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('starter_kits', function (Blueprint $table) {
+            $table->dropColumn('remote_header_url');
+            $table->dropColumn('remote_icon_url');
+        });
+    }
+};

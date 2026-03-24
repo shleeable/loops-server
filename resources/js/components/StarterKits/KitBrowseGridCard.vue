@@ -70,7 +70,9 @@
                 <div class="flex items-center gap-2">
                     <span class="text-xs text-gray-400">{{ t('common.curatedBy') }}</span>
                     <img :src="kit.creator.avatar" class="hidden lg:block w-5 h-5 rounded-full" />
-                    <span class="text-xs text-gray-400">@{{ kit.creator.username }}</span>
+                    <span class="text-xs text-gray-400"
+                        >@{{ textTruncate(kit.creator.username, 14) }}</span
+                    >
                 </div>
                 <div class="flex items-center gap-4">
                     <span class="text-xs text-gray-400 flex items-center gap-1">
@@ -102,5 +104,5 @@ const props = defineProps({
 
 const { t } = useI18n()
 
-const { formatCount } = useUtils()
+const { formatCount, textTruncate } = useUtils()
 </script>

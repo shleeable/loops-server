@@ -775,11 +775,16 @@ const loadKit = async () => {
         error.value = [403, 404].includes(e?.response?.status) ? 'not_found' : 'generic'
         loading.value = false
         return
-    }
-    if (authStore.isAuthenticated) {
-        await loadUsed()
-    } else {
-        await finishedLoading()
+    } finally {
+        if (authStore.isAuthenticated) {
+            await loadUsed()
+
+            if (starterKit.value.is_owner) {
+                await loadAccounts()
+            }
+        } else {
+            await finishedLoading()
+        }
     }
 }
 

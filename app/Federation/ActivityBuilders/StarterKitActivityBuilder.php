@@ -43,8 +43,10 @@ class StarterKitActivityBuilder
             'sensitive' => $kit->is_sensitive,
             'discoverable' => $kit->is_discoverable,
             'topic' => [],
+            'hashtags' => [],
             'icon' => [],
             'image' => [],
+            'totalUses' => $kit->uses,
             'totalItems' => count($accounts),
             'orderedItems' => $approved,
             'published' => $kit->created_at->format('c'),
@@ -56,8 +58,11 @@ class StarterKitActivityBuilder
                 'type' => 'Hashtag',
                 'name' => '#'.$hashtags[0],
             ];
+
+            $res['hashtags'] = $hashtags;
         } else {
             unset($res['topic']);
+            unset($res['hashtags']);
         }
 
         if ($kit->icon_url) {

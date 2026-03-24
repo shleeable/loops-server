@@ -29,6 +29,8 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $header_url
  * @property string|null $icon_path
  * @property string|null $icon_url
+ * @property string|null $remote_icon_url
+ * @property string|null $remote_header_url
  * @property int|null $profile_id
  * @property int $uses
  * @property int $total_reach
@@ -161,6 +163,8 @@ class StarterKit extends Model
         'icon_url',
         'header_path',
         'header_url',
+        'remote_header_url',
+        'remote_icon_url',
         'disabled_message',
         'rejected_message',
         'delete_after',

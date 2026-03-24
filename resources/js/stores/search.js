@@ -98,6 +98,11 @@ export const useSearchStore = defineStore('search', () => {
                         ...searchResults.value.hashtags,
                         ...(data.data.hashtags || [])
                     ]
+                } else if (activeTab.value === 'starter_kits') {
+                    searchResults.value.starter_kits = [
+                        ...searchResults.value.starter_kits,
+                        ...(data.data.starter_kits || [])
+                    ]
                 }
             } else {
                 if (activeTab.value === 'users') {
@@ -106,11 +111,14 @@ export const useSearchStore = defineStore('search', () => {
                     searchResults.value.videos = data.data.videos || []
                 } else if (activeTab.value === 'tags') {
                     searchResults.value.hashtags = data.data.hashtags || []
+                } else if (activeTab.value === 'starter_kits') {
+                    searchResults.value.starter_kits = data.data.starter_kits || []
                 } else {
                     searchResults.value = {
                         hashtags: data.data.hashtags || [],
                         users: data.data.users || [],
-                        videos: data.data.videos || []
+                        videos: data.data.videos || [],
+                        starter_kits: data.data.starter_kits || []
                     }
                 }
             }
@@ -121,7 +129,8 @@ export const useSearchStore = defineStore('search', () => {
             const hasResults =
                 searchResults.value.users?.length > 0 ||
                 searchResults.value.videos?.length > 0 ||
-                searchResults.value.hashtags?.length > 0
+                searchResults.value.hashtags?.length > 0 ||
+                searchResults.value.starter_kits?.length > 0
 
             if (!hasResults && isRemoteQuery(searchQuery.value)) {
                 showRemoteLookupCta.value = true
@@ -146,23 +155,42 @@ export const useSearchStore = defineStore('search', () => {
 
         const axiosInstance = axios.getAxiosInstance()
         try {
-            const response = await axiosInstance.post('/api/v1/search/users', {
+            const response = await axiosInstance.post('/api/v1/search/remote', {
                 q: searchQuery.value
             })
 
-            const users = response.data.data || []
+            const data = response.data.data
 
-            if (users.length > 0) {
-                searchResults.value.users = users
-                if (activeTab.value === 'top') {
-                    activeTab.value = 'users'
-                }
-            } else {
-                error.value = 'No remote account found with that address'
+            const users = data.users || []
+            const videos = data.videos || []
+            const hashtags = data.hashtags || []
+            const starterKits = data.starter_kits || []
+
+            const hasResults =
+                users.length || videos.length || hashtags.length || starterKits.length
+
+            if (!hasResults) {
+                error.value = 'No results found for that address'
+                return
+            }
+
+            searchResults.value.users = users
+            searchResults.value.videos = videos
+            searchResults.value.hashtags = hashtags
+            searchResults.value.starter_kits = starterKits
+
+            if (starterKits.length) {
+                activeTab.value = 'starter_kits'
+            } else if (users.length) {
+                activeTab.value = 'users'
+            } else if (videos.length) {
+                activeTab.value = 'videos'
+            } else if (hashtags.length) {
+                activeTab.value = 'tags'
             }
         } catch (err) {
             console.error('Remote lookup error:', err)
-            error.value = err.response?.data?.message || 'Failed to lookup remote account'
+            error.value = err.response?.data?.message || 'Failed to lookup remote content'
         } finally {
             remoteLookupLoading.value = false
         }
@@ -231,7 +259,8 @@ export const useSearchStore = defineStore('search', () => {
         searchResults.value = {
             hashtags: [],
             users: [],
-            videos: []
+            videos: [],
+            starter_kits: []
         }
         error.value = null
         nextCursor.value = null

@@ -140,16 +140,16 @@ const visibilityOptions = [
         label: 'Accounts I Follow (With Approval)',
         description: 'People you follow can request to add you (requires your approval)'
     },
-    {
-        value: 3,
-        label: 'Local Accounts Only',
-        description: 'Local Loops users can add you automatically'
-    },
-    {
-        value: 4,
-        label: 'Local Accounts (With Approval)',
-        description: 'Local users can request to add you (requires your approval)'
-    },
+    // {
+    //     value: 3,
+    //     label: 'Local Accounts Only',
+    //     description: 'Local Loops users can add you automatically'
+    // },
+    // {
+    //     value: 4,
+    //     label: 'Local Accounts (With Approval)',
+    //     description: 'Local users can request to add you (requires your approval)'
+    // },
     {
         value: 5,
         label: 'Permission Required',

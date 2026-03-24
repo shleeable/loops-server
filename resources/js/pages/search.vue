@@ -10,7 +10,7 @@
                 @selectTab="handleTabChange"
             />
 
-            <div class="max-w-5xl px-4 sm:px-6 lg:px-8 py-6">
+            <div class="max-w-5xl xl:max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
                 <div v-if="loading && !loadingMore" class="flex justify-center items-center py-12">
                     <Spinner />
                 </div>
@@ -236,6 +236,19 @@
                         <div class="h-50"></div>
                     </div>
 
+                    <div v-else-if="activeTab === 'starter_kits'">
+                        <StarterKitsGrid
+                            v-if="searchResults.starter_kits?.length > 0"
+                            :kits="searchResults.starter_kits"
+                        />
+                        <div v-else class="text-center py-12">
+                            <div class="text-gray-500 dark:text-gray-400 mb-4 text-sm">
+                                {{ $t('nav.noResultsFound') }}
+                            </div>
+                        </div>
+                        <div class="h-50"></div>
+                    </div>
+
                     <div v-if="hasMore && activeTab !== 'top'" class="mt-6">
                         <div v-if="loadingMore" class="flex justify-center py-8">
                             <Spinner />
@@ -273,6 +286,7 @@ import {
     ArrowPathIcon,
     ExclamationTriangleIcon
 } from '@heroicons/vue/24/outline'
+import StarterKitsGrid from '@/components/Search/StarterKitsGrid.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -329,6 +343,8 @@ const getCurrentResults = () => {
             return searchResults.value.videos || []
         case 'tags':
             return searchResults.value.hashtags || []
+        case 'starter_kits':
+            return searchResults.value.starter_kits || []
         default:
             return []
     }

@@ -67,6 +67,7 @@ class StarterKitAccount extends Model
         'order',
         'kit_account_local',
         'attestation_url',
+        'remote_object_id',
         'approved_at',
         'rejected_at',
     ];

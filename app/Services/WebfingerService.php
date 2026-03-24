@@ -132,7 +132,7 @@ class WebfingerService
             return null;
         }
 
-        return Profile::findOrCreateFromUrl($actorUrl, null, true);
+        return app(Profile::class)->findOrCreateFromUrl($actorUrl, null, true);
     }
 
     /**

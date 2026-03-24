@@ -148,7 +148,7 @@ class StarterKitController extends Controller
                 $accounts = StarterKitAccount::whereStarterKitId($starterKit->id)->whereKitStatus(1)->get();
             }
         } else {
-            if ($user && $user->is_admin || $user->profile_id == $starterKit->profile_id) {
+            if ($user && ($user->is_admin || $user->profile_id == $starterKit->profile_id)) {
                 $accounts = StarterKitAccount::whereStarterKitId($starterKit->id)->get();
             } else {
                 $accounts = [];
@@ -167,7 +167,7 @@ class StarterKitController extends Controller
         $profile = $user->profile;
 
         if ($request->user()->cannot('create', StarterKit::class)) {
-            return $this->error('You are not authorized to perform this actions.');
+            return $this->error('You are not authorized to perform this action.');
         }
 
         $config = app(StarterKitService::class)->getConfig();
@@ -910,7 +910,7 @@ class StarterKitController extends Controller
         ]);
 
         if ($user->is_admin) {
-            if ($starterKit->icon_path) {
+            if ($starterKit->icon_path && Storage::disk('s3')->exists($starterKit->icon_path)) {
                 Storage::disk('s3')->delete($starterKit->icon_path);
             }
 
@@ -918,7 +918,8 @@ class StarterKitController extends Controller
                 ->cover(400, 400)
                 ->toWebp(quality: 85);
 
-            $path = 'starterkit/'.$starterKit->id.'/icon-'.Str::random(12).'.webp';
+            $rand = random_int(1, 99999);
+            $path = 'starterkit/'.$starterKit->id.'/icon-'.$rand.'.webp';
             Storage::disk('s3')->put($path, $encoded, 'public');
 
             $url = Storage::disk('s3')->url($path);
@@ -999,7 +1000,7 @@ class StarterKitController extends Controller
         ]);
 
         if ($user->is_admin) {
-            if ($starterKit->header_path) {
+            if ($starterKit->header_path && Storage::disk('s3')->exists($starterKit->header_path)) {
                 Storage::disk('s3')->delete($starterKit->header_path);
             }
 
@@ -1007,7 +1008,8 @@ class StarterKitController extends Controller
                 ->cover(1500, 600)
                 ->toWebp(quality: 85);
 
-            $path = 'starterkit/'.$starterKit->id.'/header-'.Str::random(12).'.webp';
+            $rand = random_int(1, 99999);
+            $path = 'starterkit/'.$starterKit->id.'/header-'.$rand.'.webp';
             Storage::disk('s3')->put($path, $encoded, 'public');
 
             $url = Storage::disk('s3')->url($path);
@@ -1069,7 +1071,7 @@ class StarterKitController extends Controller
                 Storage::disk('s3')->delete($starterKit->header_path);
             }
             $starterKit->update(['header_path' => null, 'header_url' => null]);
-            app(StarterKitService::class)->forget($starterKit->id);
+            // app(StarterKitService::class)->forget($starterKit->id);  # Dupe of line 1078?
         } else {
             app(StarterKitPendingChangeService::class)->deleteMedia($starterKit, $user->profile_id, 'header_path');
             app(AdminDashboardService::class)->getReportsCount(true);
