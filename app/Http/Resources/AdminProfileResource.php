@@ -38,9 +38,14 @@ class AdminProfileResource extends JsonResource
 
         $statusDesc = $this->getStatusDescription();
 
-        // For local accounts, check if email is verified
         if ($this->local && $this->status === 1 && $this->user && ! $this->user->email_verified_at) {
             $statusDesc = 'unverified';
+        }
+
+        $lastActiveAt = null;
+
+        if ($this->local && $this->user_id) {
+            $lastActiveAt = $this->user->last_active_at?->format('c');
         }
 
         return [
@@ -69,6 +74,7 @@ class AdminProfileResource extends JsonResource
             'can_create_starter_kits' => $this->can_create_starter_kits,
             'can_report' => $this->can_report,
             'delete_after' => $deleteAfter,
+            'last_active_at' => $lastActiveAt,
             'created_at' => $this->created_at->format('c'),
         ];
     }

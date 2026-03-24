@@ -197,26 +197,23 @@
 
             <template #cell-created_at="{ item }">
                 <div class="flex flex-col gap-1 text-sm min-w-[140px]">
-                    <div class="text-gray-900 dark:text-white font-medium">
-                        {{ formatDate(item.created_at) }}
-                    </div>
-                    <div class="text-xs text-gray-500 dark:text-gray-500" :title="item.created_at">
+                    <div
+                        class="text-xs"
+                        :class="[
+                            item.local
+                                ? 'text-gray-400 dark:text-gray-400'
+                                : ' text-gray-500 dark:text-gray-300'
+                        ]"
+                        :title="item.created_at"
+                    >
+                        {{ item.local ? 'Joined' : 'Discovered' }}:
                         {{ formatRelativeTime(item.created_at) }}
                     </div>
                     <div
-                        v-if="item.url"
-                        class="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-600 truncate max-w-[140px]"
+                        v-if="item.last_active_at"
+                        class="text-xs text-gray-500 dark:text-gray-300"
                     >
-                        <GlobeAltIcon class="w-3 h-3 flex-shrink-0" />
-                        <a
-                            :href="item.url"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="hover:text-blue-500 dark:hover:text-blue-400 truncate"
-                            :title="item.url"
-                        >
-                            {{ item.username }}
-                        </a>
+                        Last Active: {{ formatRelativeTime(item.last_active_at) }}
                     </div>
                 </div>
             </template>
@@ -291,7 +288,7 @@ const columns = [
     { key: 'stats', label: 'Stats' },
     { key: 'permissions', label: 'Permissions' },
     { key: 'status', label: 'Status' },
-    { key: 'created_at', label: 'Joined / Instance' }
+    { key: 'created_at', label: 'Created' }
 ]
 
 const sortOptions = [
