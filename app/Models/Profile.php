@@ -410,6 +410,41 @@ class Profile extends Model
             ];
         }
 
+        if ($this->starter_kit_state) {
+            $public = 'https://www.w3.org/ns/activitystreams#Public';
+            $canFeature = match ($this->starter_kit_state) {
+                1 => [
+                    'automaticApproval' => [$this->getFollowingUrl()],
+                    'manualApproval' => [$public],
+                ],
+                2 => [
+                    'automaticApproval' => [],
+                    'manualApproval' => [$this->getFollowingUrl()],
+                ],
+                3 => [
+                    'automaticApproval' => [$this->getActorId()],
+                    'manualApproval' => [],
+                ],
+                4 => [
+                    'automaticApproval' => [$this->getActorId()],
+                    'manualApproval' => [],
+                ],
+                5 => [
+                    'automaticApproval' => [],
+                    'manualApproval' => [$public],
+                ],
+                6 => [
+                    'automaticApproval' => [$public],
+                    'manualApproval' => [],
+                ],
+                default => [
+                    'automaticApproval' => [$this->getActorId()],
+                    'manualApproval' => [],
+                ]
+            };
+            $res['interactionPolicy']['canFeature'] = $canFeature;
+        }
+
         return $res;
     }
 
