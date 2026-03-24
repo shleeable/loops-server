@@ -80,7 +80,8 @@ const tabs = [
     { value: 'top', label: 'Top' },
     { value: 'users', label: 'Users' },
     { value: 'videos', label: 'Videos' },
-    { value: 'tags', label: 'Tags' }
+    { value: 'tags', label: 'Tags' },
+    { value: 'starter_kits', label: 'Starter Kits' }
 ]
 
 const handleSearch = () => {
@@ -100,7 +101,6 @@ watch(
 )
 
 onMounted(() => {
-    // Auto-focus search input when component mounts
     if (searchInputRef.value && !props.query) {
         searchInputRef.value.focus()
     }

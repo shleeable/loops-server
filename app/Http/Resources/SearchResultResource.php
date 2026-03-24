@@ -15,6 +15,7 @@ class SearchResultResource extends JsonResource
         $hashtags = $this->resource['hashtags'] ?? collect();
         $videos = $this->resource['videos'] ?? collect();
         $users = $this->resource['users'] ?? collect();
+        $starterKits = $this->resource['starter_kits'] ?? collect();
         /** @var CursorPaginator|null $pager */
         $pager = $this->resource['pager'] ?? null;
 
@@ -23,6 +24,7 @@ class SearchResultResource extends JsonResource
                 'hashtags' => HashtagResource::collection($hashtags),
                 'users' => AccountResource::collection($users),
                 'videos' => VideoCompactResource::collection($videos),
+                'starter_kits' => StarterKitResource::collection($starterKits),
             ],
             'links' => [
                 'first' => null,
