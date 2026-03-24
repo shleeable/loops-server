@@ -609,6 +609,10 @@ class SearchController extends Controller
         $query = trim($validated['q']);
         $currentUserId = $request->user()->profile_id;
 
+        $validUrl = app(SanitizeService::class)->url($query, true, false);
+
+        abort_if(! $validUrl, 403, 'Invalid url');
+
         if (! filter_var($query, FILTER_VALIDATE_URL)) {
             $cleanQuery = Str::of($query)->startsWith('@') ? Str::substr($query, 1) : $query;
 
