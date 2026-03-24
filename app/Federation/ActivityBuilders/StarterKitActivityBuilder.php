@@ -46,6 +46,7 @@ class StarterKitActivityBuilder
             'hashtags' => [],
             'icon' => [],
             'image' => [],
+            'totalUses' => $kit->uses,
             'totalItems' => count($accounts),
             'orderedItems' => $approved,
             'published' => $kit->created_at->format('c'),
