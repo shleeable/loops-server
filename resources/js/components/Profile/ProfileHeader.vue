@@ -1,5 +1,5 @@
 <template>
-    <div class="flex w-full lg:w-[calc(100vw-240px)] px-4 lg:px-0">
+    <div class="flex w-full px-4 lg:px-0">
         <div class="flex justify-between flex-col w-full">
             <div class="flex flex-col lg:flex-row lg:space-x-10 lg:items-center mb-5">
                 <div class="flex justify-center lg:justify-start mb-4 lg:mb-0">
