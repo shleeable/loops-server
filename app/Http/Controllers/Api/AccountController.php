@@ -985,7 +985,7 @@ class AccountController extends Controller
     public function updateStarterKitsStatus(Request $request)
     {
         $validated = $request->validate([
-            'state' => 'required|int|min:0|max:6',
+            'state' => 'required|int|in:0,1,2,5,6',
         ]);
 
         $state = $request->input('state');
