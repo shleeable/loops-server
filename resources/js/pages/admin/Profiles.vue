@@ -17,11 +17,12 @@
             :data="profiles"
             :loading="loading"
             :has-previous="pagination.prev_cursor"
+            :initial-sort="sortBy"
             :has-next="pagination.next_cursor"
             :has-actions="false"
             :sort-options="sortOptions"
             :show-local-filter="true"
-            :initial-local-filter="true"
+            :initial-local-filter="localOnly"
             :initial-search-query="searchQuery"
             @local-change="handleLocalChange"
             @sort="handleSort"
@@ -280,8 +281,8 @@ const pagination = ref({
 })
 
 const searchQuery = ref(route.query.q || '')
-const sortBy = ref('')
-const localOnly = ref(true)
+const sortBy = ref(route.query.sortBy || localStorage.getItem('loops_admin_profiles_sortby') || '')
+const localOnly = ref(localStorage.getItem('loops_admin_profiles_localOnly') || false)
 const DEBOUNCE_DELAY = 300
 let searchTimeout = null
 
@@ -391,9 +392,15 @@ watch(
     }
 )
 
-watch(localOnly, () => {
+watch(localOnly, (newQuery) => {
     if (searchTimeout) {
         clearTimeout(searchTimeout)
+    }
+
+    if (newQuery) {
+        localStorage.setItem('loops_admin_profiles_localOnly', newQuery)
+    } else {
+        localStorage.removeItem('loops_admin_profiles_localOnly')
     }
 
     searchTimeout = setTimeout(() => {
@@ -414,6 +421,12 @@ watch(searchQuery, (newQuery) => {
 watch(sortBy, (newQuery) => {
     if (searchTimeout) {
         clearTimeout(searchTimeout)
+    }
+
+    if (newQuery) {
+        localStorage.setItem('loops_admin_profiles_sortby', newQuery)
+    } else {
+        localStorage.removeItem('loops_admin_profiles_sortby')
     }
 
     searchTimeout = setTimeout(() => {
