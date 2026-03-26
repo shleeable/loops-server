@@ -12,12 +12,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use Lcobucci\JWT\Encoding\CannotDecodeContent;
-use Lcobucci\JWT\Encoding\JoseEncoder;
-use Lcobucci\JWT\Token\InvalidTokenStructure;
-use Lcobucci\JWT\Token\Parser;
-use Lcobucci\JWT\Token\UnsupportedHeaderFound;
-use Lcobucci\JWT\UnencryptedToken;
 
 class AppleAuthController extends Controller
 {
@@ -102,50 +96,22 @@ class AppleAuthController extends Controller
 
     private function verifyAppleToken(string $token): ?array
     {
-        $keys = app(AppleAuthService::class)->getApplePublicKeys();
-
-        $parser = new Parser(new JoseEncoder);
         try {
-            $parsed = $parser->parse($token);
-        } catch (CannotDecodeContent|InvalidTokenStructure|UnsupportedHeaderFound $e) {
+            $jwksResponse = app(AppleAuthService::class)->getApplePublicKeys();
+            $keys = \Firebase\JWT\JWK::parseKeySet($jwksResponse->json(), 'RS256');
+            $claims = \Firebase\JWT\JWT::decode($token, $keys);
+        } catch (\Exception $e) {
             return null;
         }
 
-        assert($parsed instanceof UnencryptedToken);
-
-        $kid = $parsed->headers()->get('kid');
-
-        $appleKey = collect($keys)->firstWhere('kid', $kid);
-
-        if (! $appleKey) {
+        if ($claims->iss !== 'https://appleid.apple.com') {
+            return null;
+        }
+        if ($claims->aud !== config('services.apple.bundle_id')) {
             return null;
         }
 
-        $publicKey = $this->buildPublicKey($appleKey);
-
-        $claims = $parsed->claims()->all();
-
-        if ($claims['iss'] !== 'https://appleid.apple.com') {
-            return null;
-        }
-        if ($claims['aud'] !== config('services.apple.bundle_id')) {
-            return null;
-        }
-        if ($claims['exp'] < time()) {
-            return null;
-        }
-
-        return $claims;
-    }
-
-    private function buildPublicKey(array $key): string
-    {
-        $rsa = \openssl_pkey_get_public([
-            'n' => $key['n'],
-            'e' => $key['e'],
-        ]);
-
-        return \openssl_pkey_get_details($rsa)['key'];
+        return (array) $claims;
     }
 
     private function formatName(?array $fullName): ?string
