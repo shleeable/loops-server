@@ -14,8 +14,8 @@ class AppleAuthService
 
     public function getApplePublicKeys()
     {
-        return Cache::remember(self::CACHE_KEY.'pubkeys', now()->addDay(), function () {
-            return Http::get('https://appleid.apple.com/auth/keys')->json('keys');
+        return Cache::remember(self::CACHE_KEY.'pubkeys:v1', now()->addDay(), function () {
+            return Http::get('https://appleid.apple.com/auth/keys')->json();
         });
     }
 
