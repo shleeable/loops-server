@@ -98,7 +98,7 @@ class AppleAuthController extends Controller
     {
         try {
             $jwksResponse = app(AppleAuthService::class)->getApplePublicKeys();
-            $keys = \Firebase\JWT\JWK::parseKeySet($jwksResponse->json(), 'RS256');
+            $keys = \Firebase\JWT\JWK::parseKeySet($jwksResponse, 'RS256');
             $claims = \Firebase\JWT\JWT::decode($token, $keys);
         } catch (\Exception $e) {
             return null;
