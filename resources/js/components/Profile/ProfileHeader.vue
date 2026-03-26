@@ -18,7 +18,7 @@
                             class="text-lg sm:text-[20px] font-bold truncate dark:text-slate-50"
                             :title="profile.name"
                         >
-                            {{ textTruncate(profile.name, 30) }}
+                            {{ textTruncate(profile.name || profile.username, 30) }}
                         </div>
                         <div
                             class="text-base sm:text-[20px] text-gray-600 dark:text-slate-400"
