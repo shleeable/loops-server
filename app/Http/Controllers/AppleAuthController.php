@@ -34,12 +34,12 @@ class AppleAuthController extends Controller
 
         $user = User::where('apple_id', $request->user_id)->first();
 
-        abort_if($user->status === 6, 403, 'Your account has been suspended');
+        abort_if($user && $user->status === 6, 403, 'Your account has been suspended');
 
         if (! $user && $email) {
             $user = User::where('email', $email)->first();
 
-            abort_if($user->status === 6, 403, 'Your account has been suspended');
+            abort_if($user && $user->status === 6, 403, 'Your account has been suspended');
 
             if ($user) {
                 $user->update(['apple_id' => $request->user_id]);
