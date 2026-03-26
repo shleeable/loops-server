@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\UserPreferencesController;
 use App\Http\Controllers\Api\VideoController;
 use App\Http\Controllers\Api\VideoSoundController;
 use App\Http\Controllers\Api\WebPublicController;
+use App\Http\Controllers\AppleAuthController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailChangeController;
 use App\Http\Controllers\EmailVerificationController;
@@ -107,6 +108,7 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/auth/verify/email', [EmailVerificationController::class, 'initiate']);
     Route::post('/v1/auth/verify/email/confirm', [EmailVerificationController::class, 'confirm']);
     Route::post('/v1/auth/verify/email/resend', [EmailVerificationController::class, 'resend']);
+    Route::post('/v1/auth/apple', [AppleAuthController::class, 'handle']);
 
     // Studio
     Route::get('/v1/studio/posts', [StudioController::class, 'getPosts'])->middleware('auth:web,api');

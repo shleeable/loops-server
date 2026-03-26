@@ -165,6 +165,8 @@ class User extends Authenticatable implements OAuthenticatable
         'can_create_starter_kits',
         'can_use_starter_kits',
         'can_report',
+        'apple_refresh_token',
+        'apple_id',
     ];
 
     protected $hidden = [
@@ -184,6 +186,8 @@ class User extends Authenticatable implements OAuthenticatable
         'register_ip',
         'last_ip',
         'push_token_platform',
+        'apple_refresh_token',
+        'apple_id',
     ];
 
     protected function casts(): array
