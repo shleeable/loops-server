@@ -105,6 +105,9 @@ use Laravel\Passport\HasApiTokens;
  * @property int|null $admin_invite_id
  * @property string|null $register_ip
  * @property string|null $last_ip
+ * @property string|null $register_source
+ * @property string|null $apple_id
+ * @property string|null $apple_refresh_token
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Notification> $actorNotifications
  * @property-read int|null $actor_notifications_count
  * @property-read \App\Models\UserAppPreference|null $appPreferences
@@ -167,6 +170,7 @@ class User extends Authenticatable implements OAuthenticatable
         'can_report',
         'apple_refresh_token',
         'apple_id',
+        'register_source',
     ];
 
     protected $hidden = [
@@ -179,8 +183,23 @@ class User extends Authenticatable implements OAuthenticatable
         'admin_note',
         'two_factor_secret',
         'two_factor_backups',
+        'email_verified_at',
         'email_verification_token',
         'last_active_at',
+        'status',
+        'role',
+        'has_2fa',
+        'can_upload',
+        'can_comment',
+        'can_like',
+        'can_follow',
+        'can_share',
+        'can_create_starter_kits',
+        'can_use_starter_kits',
+        'can_report',
+        'trust_level',
+        'is_admin',
+        'delete_after',
         'birth_date',
         'admin_invite_id',
         'register_ip',
@@ -188,6 +207,7 @@ class User extends Authenticatable implements OAuthenticatable
         'push_token_platform',
         'apple_refresh_token',
         'apple_id',
+        'register_source',
     ];
 
     protected function casts(): array

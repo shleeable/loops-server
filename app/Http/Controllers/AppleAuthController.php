@@ -9,7 +9,6 @@ use App\Services\SnowflakeService;
 use App\Services\StarterKitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -58,10 +57,11 @@ class AppleAuthController extends Controller
                 'apple_id' => $request->user_id,
                 'email' => $email,
                 'name' => $this->formatName($request->full_name) ?? $username,
-                'password' => Hash::make(Str::random(50)),
+                'password' => 'app_placeholder_'.Str::random(30),
                 'register_ip' => request()->ip(),
                 'last_ip' => request()->ip(),
                 'email_verified_at' => now(),
+                'register_source' => 'SignInWithApple',
             ]);
         }
 
