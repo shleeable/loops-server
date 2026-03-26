@@ -116,7 +116,7 @@ class AppleAuthController extends Controller
         $kid = $parsed->headers()->get('kid');
 
         $appleKey = collect($keys)->firstWhere('kid', $kid);
-        
+
         if (! $appleKey) {
             return null;
         }
