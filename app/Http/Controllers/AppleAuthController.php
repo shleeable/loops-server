@@ -57,7 +57,7 @@ class AppleAuthController extends Controller
                 'username' => $username,
                 'apple_id' => $request->user_id,
                 'email' => $email,
-                'name' => $this->formatName($request->full_name),
+                'name' => $this->formatName($request->full_name) ?? $username,
                 'password' => Hash::make(Str::random(50)),
                 'register_ip' => request()->ip(),
                 'last_ip' => request()->ip(),
