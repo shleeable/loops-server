@@ -221,6 +221,7 @@ class UserRegisterVerifyController extends Controller
         $user->birth_date = $birthDate;
         $user->register_ip = $request->ip();
         $user->last_ip = $request->ip();
+        $user->register_source = $request->filled('mobile') ? 'mobile' : 'web';
         $user->save();
 
         sleep(1);
