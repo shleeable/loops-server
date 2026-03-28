@@ -409,7 +409,11 @@ class StarterKitController extends Controller
         }
         $pid = $user->profile_id;
 
-        $kit = StarterKit::active()->findOrFail($id);
+        $kit = StarterKit::active()->find($id);
+
+        if (! $kit) {
+            return $this->data(['used' => false, 'delta' => null]);
+        }
 
         $use = StarterKitUse::whereStarterKitId($kit->id)->whereProfileId($pid)->first();
 
