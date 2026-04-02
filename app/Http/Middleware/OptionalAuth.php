@@ -9,8 +9,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class OptionalAuth
 {
-    public function handle(Request $request, Closure $next, ...$guards): Response
+    public function handle(Request $request, Closure $next): Response
     {
+        $guards = ['web', 'api'];
+
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
                 Auth::shouldUse($guard);
