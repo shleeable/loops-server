@@ -10,7 +10,6 @@ use App\Models\StarterKit;
 use App\Models\Video;
 use App\Services\AccountService;
 use App\Services\ReportService;
-use App\Services\VideoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -40,20 +39,28 @@ class ReportResource extends JsonResource
         } elseif ($this->reported_video_id) {
             $contentType = 'video';
             $videoContent = Video::find($this->reported_video_id);
-            $contentPreview = $videoContent ? (new VideoResource($videoContent)) : VideoService::getMediaData($this->reported_video_id);
+            if ($videoContent) {
+                $contentPreview = (new VideoResource($videoContent));
+            }
         } elseif ($this->reported_comment_id) {
             $contentType = 'comment';
-            $comment = Comment::findOrFail($this->reported_comment_id);
-            $contentPreview = new CommentResource($comment);
+            $comment = Comment::find($this->reported_comment_id);
+            if ($comment) {
+                $contentPreview = new CommentResource($comment);
+            }
         } elseif ($this->reported_comment_reply_id) {
             $contentType = 'reply';
-            $comment = CommentReply::with('parent')->findOrFail($this->reported_comment_reply_id);
-            $contentPreview = (new CommentReplyResource($comment))->toArray(request());
-            $contentPreview['parent'] = new CommentResource($comment->parent);
+            $comment = CommentReply::find($this->reported_comment_reply_id);
+            if ($comment) {
+                $contentPreview = (new CommentReplyResource($comment))->toArray(request());
+                $contentPreview['parent'] = new CommentResource($comment->parent);
+            }
         } elseif ($this->reported_hashtag_id) {
             $contentType = 'hashtag';
-            $hashtag = Hashtag::findOrFail($this->reported_hashtag_id);
-            $contentPreview = (new AdminHashtagResource($hashtag))->toArray(request());
+            $hashtag = Hashtag::find($this->reported_hashtag_id);
+            if ($hashtag) {
+                $contentPreview = (new AdminHashtagResource($hashtag))->toArray(request());
+            }
         } elseif ($this->reported_starter_kit_id) {
             $contentType = 'starter_kit';
             $kit = StarterKit::find($this->reported_starter_kit_id);
