@@ -41,6 +41,7 @@ use App\Http\Controllers\WebfingerController;
 use App\Http\Middleware\AdminOnlyAccess;
 use App\Http\Middleware\AuthorizedFetch;
 use App\Http\Middleware\FederationEnabled;
+use App\Http\Middleware\OptionalAuth;
 use Illuminate\Support\Facades\Route;
 
 // Health check endpoints
@@ -215,7 +216,7 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/starter-kits/details/{id}', [StarterKitController::class, 'update'])->middleware(['auth:web,api']);
     Route::get('/v1/starter-kits/details/{id}/pending-changes', [StarterKitController::class, 'getKitPendingChanges'])->middleware(['auth:web,api']);
     Route::delete('/v1/starter-kits/details/{id}', [StarterKitController::class, 'destroy'])->middleware(['auth:web,api']);
-    Route::get('/v1/starter-kits/details/{id}', [WebPublicController::class, 'showStarterKit'])->middleware('throttle:api');
+    Route::get('/v1/starter-kits/details/{id}', [WebPublicController::class, 'showStarterKit'])->middleware([OptionalAuth::class, 'throttle:api']);
     Route::post('/v1/starter-kits/details/{id}/accounts/add', [StarterKitController::class, 'addAccount'])->middleware(['auth:web,api']);
     Route::get('/v1/starter-kits/config', [WebPublicController::class, 'getStarterKitsConfig']);
     Route::get('/v1/starter-kits/stats', [WebPublicController::class, 'getStarterKitStats']);
