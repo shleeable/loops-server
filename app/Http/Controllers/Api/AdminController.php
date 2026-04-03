@@ -232,7 +232,7 @@ class AdminController extends Controller
         $comment->update(['is_hidden' => false]);
         $totalHidden = DB::selectOne('
             SELECT (
-                (SELECT COUNT(*) FROM comments WHERE video_id = :vid1 AND is_hidden = 1) + 
+                (SELECT COUNT(*) FROM comments WHERE video_id = :vid1 AND is_hidden = 1) +
                 (SELECT COUNT(*) FROM comment_replies WHERE video_id = :vid2 AND is_hidden = 1)
             ) as total',
             ['vid1' => $video->id, 'vid2' => $video->id]
@@ -1453,7 +1453,6 @@ class AdminController extends Controller
         $action = $validated['action'];
 
         if ($action === 'approve') {
-            abort_if($starterKit->approvedAccountsWithoutTrashed()->count() === 0, 403, 'You cannot approve a Starter Kit with 0 approved accounts.');
             if (! $starterKit->admin_approved_at && $adminApproval) {
                 AdminApproveStarterKitJob::dispatch($starterKit);
             } else {
