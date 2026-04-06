@@ -311,7 +311,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useCuratedApplicationsAdmin } from '@/composables/useCuratedOnboarding'
-import StatusBadge from '@/components/admin/StatusBadge.vue'
+import StatusBadge from '@/components/Admin/StatusBadge.vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import AnimatedButton from '@/components/AnimatedButton.vue'

@@ -527,7 +527,7 @@
 import { ref, computed, onMounted, defineComponent, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCuratedApplicationsAdmin } from '@/composables/useCuratedOnboarding'
-import StatusBadge from '@/components/admin/StatusBadge.vue'
+import StatusBadge from '@/components/Admin/StatusBadge.vue'
 import AnimatedButton from '@/components/AnimatedButton.vue'
 import { ArrowLeftIcon, TrashIcon, UserPlusIcon, XCircleIcon } from '@heroicons/vue/24/outline'
 import { useAlertModal } from '@/composables/useAlertModal.js'
