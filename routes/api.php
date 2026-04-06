@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AccountDataController;
 use App\Http\Controllers\ActorController;
+use App\Http\Controllers\AdminCuratedApplicationController;
+use App\Http\Controllers\AdminCuratedSettingsController;
 use App\Http\Controllers\AdminInviteController;
 use App\Http\Controllers\AdminRelayController;
 use App\Http\Controllers\AdminSettingsController;
@@ -23,6 +25,7 @@ use App\Http\Controllers\Api\VideoSoundController;
 use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\AppleAuthController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CuratedOnboardingController;
 use App\Http\Controllers\EmailChangeController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\HealthController;
@@ -314,6 +317,17 @@ Route::prefix('api')->group(function () {
 
     Route::get('/v2026.3/pmt/{tokenId}', [PrivateMediaTokenController::class, 'show'])->name('media.private.show')->middleware(['auth:web,api']);
 
+    // Curated Onboarding
+    Route::get('/v1/onboarding/config', [CuratedOnboardingController::class, 'config']);
+    Route::prefix('/v1/onboarding')->group(function () {
+        Route::post('apply', [CuratedOnboardingController::class, 'apply'])->middleware(['throttle:curated-apply']);
+        Route::post('verify-email', [CuratedOnboardingController::class, 'verifyEmail']);
+        Route::post('verify-invite', [CuratedOnboardingController::class, 'verifyInvite']);
+        Route::post('username-check', [CuratedOnboardingController::class, 'usernameCheck']);
+        Route::post('complete', [CuratedOnboardingController::class, 'completeOnboarding']);
+        Route::get('status', [CuratedOnboardingController::class, 'status']);
+    });
+
     // Admin
     Route::prefix('/v1/admin')->middleware(['auth:web,api', AdminOnlyAccess::class])->group(function () {
 
@@ -325,6 +339,38 @@ Route::prefix('api')->group(function () {
             Route::delete('pages/{id}', [PageController::class, 'destroy']);
         });
 
+        Route::prefix('curated-applications')
+            ->middleware(['auth:web,api', AdminOnlyAccess::class])
+            ->group(function () {
+                Route::get('/', [AdminCuratedApplicationController::class, 'index']);
+                Route::get('stats', [AdminCuratedApplicationController::class, 'stats']);
+                Route::get('{application}', [AdminCuratedApplicationController::class, 'show']);
+                Route::post('{application}/delete', [AdminCuratedApplicationController::class, 'deleteApplication']);
+                Route::post('{application}/delete-note/{noteId}', [AdminCuratedApplicationController::class, 'deleteNote']);
+                Route::post('{application}/approve', [AdminCuratedApplicationController::class, 'approve']);
+                Route::post('{application}/force-approve', [AdminCuratedApplicationController::class, 'forceApprove']);
+                Route::post('{application}/reject', [AdminCuratedApplicationController::class, 'reject']);
+                Route::post('{application}/notes', [AdminCuratedApplicationController::class, 'addNote']);
+                Route::post('bulk-approve', [AdminCuratedApplicationController::class, 'bulkApprove']);
+                Route::post('bulk-reject', [AdminCuratedApplicationController::class, 'bulkReject']);
+            });
+
+        Route::prefix('curated-onboarding/settings')
+            ->middleware(['auth:web,api', AdminOnlyAccess::class])
+            ->group(function () {
+                Route::get('/', [AdminCuratedSettingsController::class, 'show']);
+                Route::put('/', [AdminCuratedSettingsController::class, 'update']);
+
+                Route::post('questions', [AdminCuratedSettingsController::class, 'addQuestion']);
+                Route::put('questions/reorder', [AdminCuratedSettingsController::class, 'reorderQuestions']);
+                Route::put('questions/{questionId}', [AdminCuratedSettingsController::class, 'updateQuestion']);
+                Route::delete('questions/{questionId}', [AdminCuratedSettingsController::class, 'deleteQuestion']);
+                Route::post('/rejection-reasons', [AdminCuratedSettingsController::class, 'addRejectionReason']);
+                Route::put('/rejection-reasons/reorder', [AdminCuratedSettingsController::class, 'reorderRejectionReasons']);
+                Route::put('/rejection-reasons/{reasonId}', [AdminCuratedSettingsController::class, 'updateRejectionReason']);
+                Route::delete('/rejection-reasons/{reasonId}', [AdminCuratedSettingsController::class, 'deleteRejectionReason']);
+            });
+        Route::get('/dashboard/config', [AdminDashboardController::class, 'adminConfig']);
         Route::get('/dashboard/stats', [AdminDashboardController::class, 'index']);
         Route::get('/version-check', [AdminController::class, 'versionCheck'])->middleware('auth:web,api');
         Route::get('/reports-count', [AdminController::class, 'reportCount'])->middleware('auth:web,api');

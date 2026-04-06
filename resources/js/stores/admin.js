@@ -5,9 +5,11 @@ export const useAdminStore = defineStore('admin', {
     state: () => ({
         isDarkMode: false,
         reportsCount: 0,
+        onboardingAwaitingApproval: 0,
         starterKitsAwaitingApproval: 0,
         starterKitsUpdates: 0,
         isLoading: false,
+        config: {},
         error: null
     }),
 
@@ -31,6 +33,13 @@ export const useAdminStore = defineStore('admin', {
                 return '99+'
             }
             return state.starterKitsUpdates
+        },
+
+        displayAwaitingOnboardingCount(state) {
+            if (state.onboardingAwaitingApproval > 99) {
+                return '99+'
+            }
+            return state.onboardingAwaitingApproval
         }
     },
 
@@ -52,6 +61,15 @@ export const useAdminStore = defineStore('admin', {
             }
         },
 
+        async fetchConfig() {
+            try {
+                const axiosInstance = axios.getAxiosInstance()
+                const response = await axiosInstance('/api/v1/admin/dashboard/config')
+
+                this.config = response.data
+            } catch (error) {}
+        },
+
         async fetchReportsCount() {
             try {
                 this.isLoading = true
@@ -65,6 +83,9 @@ export const useAdminStore = defineStore('admin', {
                     response.data?.data?.starter_kit_awaiting_approval ?? 0
                 )
                 const rawStarterKitsUpdates = Number(response.data?.data?.starter_kit_updates ?? 0)
+                const rawOnboardingAwaitingApproval = Number(
+                    response.data?.data?.onboarding_awaiting_approval ?? 0
+                )
 
                 this.reportsCount =
                     Number.isFinite(rawCount) && rawCount > 0 ? Math.floor(rawCount) : 0
@@ -76,6 +97,11 @@ export const useAdminStore = defineStore('admin', {
                 this.starterKitsUpdates =
                     Number.isFinite(rawStarterKitsUpdates) && rawStarterKitsUpdates > 0
                         ? Math.floor(rawStarterKitsUpdates)
+                        : 0
+                this.onboardingAwaitingApproval =
+                    Number.isFinite(rawOnboardingAwaitingApproval) &&
+                    rawOnboardingAwaitingApproval > 0
+                        ? Math.floor(rawOnboardingAwaitingApproval)
                         : 0
             } catch (error) {
                 console.error('Error fetching reports count:', error)

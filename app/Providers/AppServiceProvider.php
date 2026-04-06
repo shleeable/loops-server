@@ -102,6 +102,13 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('curated-apply', function ($request) {
+            return [
+                Limit::perHour(10)->by($request->ip()),
+                Limit::perHour(5)->by('email:'.$request->input('email', '')),
+            ];
+        });
+
         RateLimiter::for('followIntents', function (Request $request) {
             $user = $request->user();
             if ($user->is_admin) {

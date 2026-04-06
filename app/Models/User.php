@@ -208,6 +208,7 @@ class User extends Authenticatable implements OAuthenticatable
         'apple_refresh_token',
         'apple_id',
         'register_source',
+        'must_change_password',
     ];
 
     protected function casts(): array

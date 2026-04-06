@@ -158,6 +158,24 @@ const router = createRouter({
             meta: { requiresAuth: false }
         },
         {
+            path: '/auth/curated',
+            name: 'curatedOnboardingPage',
+            component: () => import('~/pages/auth/CuratedOnboarding/register.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
+            path: '/auth/curated/verify/email',
+            name: 'curatedOnboardingVerifyEmailPage',
+            component: () => import('~/pages/auth/CuratedOnboarding/verify-email.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
+            path: '/auth/curated/complete',
+            name: 'curatedOnboardingCompletePage',
+            component: () => import('~/pages/auth/CuratedOnboarding/complete.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
             path: '/about',
             name: 'About',
             component: DynamicPage,
@@ -560,6 +578,24 @@ const router = createRouter({
                     name: 'Relays',
                     component: () => import('~/pages/admin/Relays.vue'),
                     meta: { requiresAdmin: true }
+                },
+                {
+                    path: 'curated-onboarding',
+                    name: 'curatedOnboardingAdminHome',
+                    component: () => import('~/pages/admin/Onboarding.vue'),
+                    meta: { requiresAdmin: true }
+                },
+                {
+                    path: 'curated-onboarding-settings',
+                    name: 'curatedOnboardingAdminSettings',
+                    component: () => import('~/pages/admin/OnboardingSettings.vue'),
+                    meta: { requiresAdmin: true }
+                },
+                {
+                    path: 'curated-onboarding/:id',
+                    name: 'curatedOnboardingAdminShow',
+                    component: () => import('~/pages/admin/OnboardingShow.vue'),
+                    meta: { requiresAdmin: true, params: true }
                 }
             ]
         },

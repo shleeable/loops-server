@@ -15,6 +15,8 @@ Schedule::command('version:check --force')->twiceDaily(9, 17)->withoutOverlappin
 Schedule::command('videos:retry-failed')->everyThirtyMinutes()->onOneServer();
 Schedule::command('app:instance-stats-collector-command')->hourlyAt(20)->onOneServer();
 Schedule::command('logs:clean-admin-security --days=14')->dailyAt('03:00')->onOneServer();
+Schedule::command('curated:expire-stale')->hourly()->onOneServer();
+Schedule::command('admin:check-activity')->everySixHours(15)->onOneServer();
 
 if (config('loops.admin_dashboard.autoUpdate')) {
     Schedule::command('admin:refresh-dashboard-30d')->everyThirtyMinutes()->onOneServer();

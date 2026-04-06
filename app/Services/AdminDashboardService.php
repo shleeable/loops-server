@@ -8,6 +8,7 @@ use App\Models\CommentReply;
 use App\Models\CommentReplyLike;
 use App\Models\CommentReplyRepost;
 use App\Models\CommentRepost;
+use App\Models\CuratedApplication;
 use App\Models\FeedImpression;
 use App\Models\Follower;
 use App\Models\Hashtag;
@@ -28,12 +29,9 @@ use Illuminate\Support\Facades\DB;
 
 class AdminDashboardService
 {
-    /**
-     * Cache key base + version so you can bump when structure changes.
-     */
     protected string $baseCacheKey = 'admin_dashboard_stats_';
 
-    public const CACHE_VERSION = 'v1.5';
+    public const CACHE_VERSION = 'v1.6';
 
     public function getReportsCount($refresh = false)
     {
@@ -44,11 +42,17 @@ class AdminDashboardService
         }
 
         return Cache::remember($key, 86400, function () {
-            return [
+            $res = [
                 'count' => Report::where('admin_seen', false)->count(),
                 'starter_kit_awaiting_approval' => StarterKit::where('status', 0)->count(),
                 'starter_kit_updates' => StarterKitPendingChange::where('status', 'pending')->where('bundled_with_kit_review', false)->count(),
             ];
+            $curActive = app(CuratedOnboardingService::class)->isEnabled();
+            if ($curActive) {
+                $res['onboarding_awaiting_approval'] = CuratedApplication::ready()->count();
+            }
+
+            return $res;
         });
     }
 
@@ -76,6 +80,7 @@ class AdminDashboardService
             Cache::forget('admin_dashboard_stats_partial:pending_reports');
             Cache::forget('admin_dashboard_stats_partial:active_users_today');
             Cache::forget("{$this->baseCacheKey}partial:recent_activity");
+            Cache::forget("{$this->baseCacheKey}config_data");
             Cache::forget($cacheKey);
             Cache::forget('admin:reports_counts');
         }
@@ -96,6 +101,7 @@ class AdminDashboardService
             Cache::forget("{$this->baseCacheKey}partial:top_hashtags:period:60");
             Cache::forget("{$this->baseCacheKey}partial:top_hashtags:period:90");
             Cache::forget("{$this->baseCacheKey}partial:top_hashtags:period:365");
+            Cache::forget("{$this->baseCacheKey}config_data");
             Cache::forget($cacheKey);
             Cache::forget('admin:reports_counts');
         }
@@ -164,6 +170,23 @@ class AdminDashboardService
     public function warmThirtyDayDashboard(): array
     {
         return $this->getDashboardData('30d', true);
+    }
+
+    public function getConfigData($clear = false)
+    {
+        $key = $this->baseCacheKey.'config_data';
+
+        if ($clear) {
+            Cache::forget($key);
+        }
+
+        return Cache::rememberForever($key, function () {
+            $curActive = app(CuratedOnboardingService::class)->isEnabled();
+
+            return [
+                'curated_onboarding_enabled' => (bool) $curActive,
+            ];
+        });
     }
 
     protected function validateAndParsePeriod(string $period): array
@@ -661,7 +684,7 @@ class AdminDashboardService
             ->selectRaw('COUNT(DISTINCT videos.id) as recent_video_count')
             ->selectRaw('SUM(videos.likes + videos.comments + videos.shares + (videos.views / 10)) as engagement_score')
             ->selectRaw('(
-                COUNT(DISTINCT videos.id) * 10 + 
+                COUNT(DISTINCT videos.id) * 10 +
                 SUM(videos.likes + videos.comments + videos.shares + (videos.views / 10))
             ) as trend_score')
             ->join('video_hashtags', 'hashtags.id', '=', 'video_hashtags.hashtag_id')

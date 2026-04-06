@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Http\Resources\ProfileResource;
 use App\Models\Profile;
+use App\Models\User;
 use App\Models\Video;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -31,6 +32,33 @@ class AccountService
         }
 
         return $grace ? [] : false;
+    }
+
+    public static function getByUserId($uid, $grace = true, $compact = false)
+    {
+        $id = Cache::remember(self::CACHE_KEY.'userid2pid:'.$uid, now()->addDays(7), function () use ($uid) {
+            $user = User::find($uid);
+
+            return $user->profile_id;
+        });
+
+        $res = self::get($id, $grace);
+
+        if (! $res) {
+            return $grace ? [] : false;
+        }
+
+        if ($compact) {
+            return [
+                'id' => (string) $res['id'],
+                'name' => $res['name'],
+                'username' => $res['username'],
+                'avatar' => $res['avatar'],
+            ];
+        }
+
+        return $res;
+
     }
 
     public static function getActorId($id)

@@ -198,6 +198,19 @@
                                             class="ml-auto inline-flex h-4 w-10 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse"
                                         ></span>
                                     </template>
+
+                                    <template v-if="item.href === '/admin/curated-onboarding'">
+                                        <span
+                                            v-if="onboardingAwaitingApproval > 0"
+                                            class="ml-auto inline-flex items-center justify-center min-w-[1.6rem] h-6 px-2 rounded-full text-[11px] font-semibold bg-[#F02C56] text-white shadow-sm ring-1 ring-black/5"
+                                        >
+                                            {{ displayAwaitingOnboardingCount }}
+                                        </span>
+                                        <span
+                                            v-else-if="isLoading"
+                                            class="ml-auto inline-flex h-4 w-10 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse"
+                                        ></span>
+                                    </template>
                                 </router-link>
                             </template>
                         </div>
@@ -315,7 +328,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
@@ -347,7 +360,7 @@ const expandedGroups = ref([])
 
 const authStore = useAuthStore()
 
-const navigation = [
+const navigation = computed(() => [
     {
         title: 'Overview',
         items: [
@@ -368,7 +381,16 @@ const navigation = [
         title: 'Moderation',
         items: [
             { name: 'Reports', href: '/admin/reports', icon: ExclamationTriangleIcon },
-            { name: 'Kit Updates', href: '/admin/starter-kits-review', icon: UserPlusIcon }
+            { name: 'Kit Updates', href: '/admin/starter-kits-review', icon: WalletIcon },
+            ...(config.value?.curated_onboarding_enabled
+                ? [
+                      {
+                          name: 'User Onboarding',
+                          href: '/admin/curated-onboarding',
+                          icon: UserPlusIcon
+                      }
+                  ]
+                : [])
         ]
     },
     {
@@ -404,7 +426,7 @@ const navigation = [
         title: 'System',
         items: [{ name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon }]
     }
-]
+])
 
 const isRouteActive = (navPath) => {
     const currentPath = route.path
@@ -432,7 +454,7 @@ const toggleGroup = (groupName) => {
 const initializeExpandedGroups = () => {
     const activeGroups = []
 
-    navigation.forEach((group) => {
+    navigation.value.forEach((group) => {
         group.items.forEach((item) => {
             if (item.subItems) {
                 const hasActiveSubItem = item.subItems.some((subItem) => {
@@ -462,10 +484,13 @@ const adminStore = useAdminStore()
 const {
     isDarkMode,
     reportsCount,
+    config,
     starterKitsAwaitingApproval,
     starterKitsUpdates,
     isLoading,
     displayReportsCount,
+    onboardingAwaitingApproval,
+    displayAwaitingOnboardingCount,
     displayAwaitingStarterKitsCount,
     displayUpdatedStarterKitsCount
 } = storeToRefs(adminStore)
@@ -478,6 +503,7 @@ const handleToggleDarkMode = () => {
 
 onMounted(() => {
     adminStore.initTheme()
+    adminStore.fetchConfig()
     adminStore.fetchReportsCount()
     initializeExpandedGroups()
 })
