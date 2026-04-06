@@ -24,9 +24,10 @@ class ChangeEmailRequest extends FormRequest
         return [
             'email' => [
                 'required',
-                'email:rfc,dns',
+                'email:rfc,dns,spoof,strict',
                 'max:255',
                 'different:current_email',
+                'unique:curated_applications',
             ],
             'password' => 'required|string|min:1',
         ];
