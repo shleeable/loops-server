@@ -31,6 +31,7 @@ use App\Services\FollowerService;
 use App\Services\LinkLimitService;
 use App\Services\NotificationService;
 use App\Services\SystemMessageService;
+use App\Services\UserActivityService;
 use App\Services\UserFilterService;
 use App\Support\CursorToken;
 use Illuminate\Http\Request;
@@ -59,6 +60,8 @@ class AccountController extends Controller
         $res['is_owner'] = true;
         $res['likes_count'] = (int) AccountService::getAccountLikesCount($pid);
 
+        app(UserActivityService::class)->markActive($user);
+
         return response()->json(['data' => $res]);
     }
 
@@ -68,6 +71,7 @@ class AccountController extends Controller
         $user = auth('web')->user() ?? auth('api')->user();
         if ($user) {
             $pid = $user->profile_id;
+            app(UserActivityService::class)->markActive($user);
         }
         $profile = Profile::active()->find($id);
 
@@ -110,6 +114,8 @@ class AccountController extends Controller
             ->where('actor_state', 1)
             ->orderByDesc('created_at')
             ->cursorPaginate(20);
+
+        app(UserActivityService::class)->markActive($request->user());
 
         if ($hasCursor) {
             return NotificationResource::collection($res);
@@ -186,6 +192,8 @@ class AccountController extends Controller
 
         abort_if($count > 250, 422, 'You cannot block any more accounts');
 
+        app(UserActivityService::class)->markActive($request->user());
+
         $res = DB::transaction(function () use ($pid, $profile, $request) {
             UserFilter::updateOrCreate([
                 'profile_id' => $pid,
@@ -247,6 +255,8 @@ class AccountController extends Controller
         if ($request->user()->cannot('view', $profile)) {
             return $this->error('Account not found or is unavailable', 404);
         }
+
+        app(UserActivityService::class)->markActive($request->user());
 
         $res = DB::transaction(function () use ($pid, $id, $profile) {
             if ($profile->local) {

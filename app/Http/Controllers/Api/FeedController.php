@@ -33,6 +33,7 @@ class FeedController extends Controller
         $limit = data_get($validated, 'limit', 10);
         $sort = data_get($validated, 'sort', 'Latest');
         $showPinned = $sort === 'Latest';
+        app(UserActivityService::class)->markActive($request->user());
 
         return FeedService::getAccountFeed($request->user()->profile_id, $limit, $sort, $showPinned);
     }
@@ -54,6 +55,8 @@ class FeedController extends Controller
         if ($request->user()->cannot('viewAny', [Video::class])) {
             return $this->error('Please finish setting up your account', 403);
         }
+
+        app(UserActivityService::class)->markActive($request->user());
 
         FeedService::enforceFollowingPaginationLimit($request);
 

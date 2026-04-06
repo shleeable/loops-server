@@ -17,6 +17,7 @@ use App\Services\AccountSuggestionService;
 use App\Services\AvatarService;
 use App\Services\StarterKitService;
 use App\Services\TwoFactorService;
+use App\Services\UserActivityService;
 use App\Services\UserAuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,6 +46,8 @@ class SettingsController extends Controller
         $pid = $user->profile_id;
         $profile = $user->profile;
         $originalData = $user->only(['name', 'bio']);
+
+        app(UserActivityService::class)->markActive($user);
 
         if ($request->filled('name')) {
             $name = $request->input('name') ?: AccountService::getDefaultDisplayName($user->profile_id);
@@ -87,6 +90,7 @@ class SettingsController extends Controller
 
         AvatarService::updateAvatar($profile, $request->file('avatar'), $coordinates);
         $this->auditService->logProfileAvatarUpdated($user);
+        app(UserActivityService::class)->markActive($user);
 
         $res = AccountService::get($profile->id);
         $res['is_owner'] = true;
@@ -101,6 +105,7 @@ class SettingsController extends Controller
 
         AvatarService::deleteAvatar($profile);
         $this->auditService->logProfileAvatarDeleted($user);
+        app(UserActivityService::class)->markActive($user);
 
         $res = AccountService::get($profile->id);
         $res['is_owner'] = true;
@@ -120,6 +125,8 @@ class SettingsController extends Controller
         $user->password = Hash::make($newPassword);
         $user->save();
         $this->auditService->logPasswordChanged($user);
+
+        app(UserActivityService::class)->markActive($user);
 
         return $this->success();
     }
