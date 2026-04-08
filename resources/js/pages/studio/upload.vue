@@ -480,36 +480,42 @@
                                 </p>
                             </div>
 
-                            <div class="hidden mb-6">
+                            <div class="mb-6">
                                 <label
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                                    >{{ $t('studio.customCover') }}</label
                                 >
+                                    {{ $t('studio.customThumbnail') }}
+                                </label>
                                 <div class="flex items-center space-x-4">
                                     <div
-                                        class="relative w-24 h-32 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center overflow-hidden"
+                                        class="relative w-30 h-50 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center overflow-hidden"
                                     >
                                         <img
-                                            v-if="coverImage"
-                                            :src="coverImage"
-                                            alt="Cover"
+                                            v-if="thumbnailPreview"
+                                            :src="thumbnailPreview"
+                                            alt="Thumbnail"
                                             class="w-full h-full object-cover rounded-md"
                                         />
-                                        <svg
-                                            v-else
-                                            class="w-8 h-8 text-gray-400 dark:text-gray-500"
-                                            fill="currentColor"
-                                            viewBox="0 0 20 20"
-                                        >
-                                            <path
-                                                fill-rule="evenodd"
-                                                d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                                                clip-rule="evenodd"
-                                            />
-                                        </svg>
+                                        <div v-else class="text-center">
+                                            <svg
+                                                class="w-8 h-8 mx-auto text-gray-400 dark:text-gray-500"
+                                                fill="currentColor"
+                                                viewBox="0 0 20 20"
+                                            >
+                                                <path
+                                                    fill-rule="evenodd"
+                                                    d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                                                    clip-rule="evenodd"
+                                                />
+                                            </svg>
+                                            <span
+                                                class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                                                >1080x1920</span
+                                            >
+                                        </div>
                                         <button
-                                            v-if="coverImage"
-                                            @click="removeCoverImage"
+                                            v-if="thumbnailPreview"
+                                            @click="removeThumbnail"
                                             class="absolute top-1 right-1 w-6 h-6 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-70"
                                         >
                                             <svg
@@ -527,22 +533,44 @@
                                             </svg>
                                         </button>
                                     </div>
-                                    <div class="flex flex-col space-y-2">
-                                        <button
-                                            @click="$refs.coverInput.click()"
-                                            class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm"
+                                    <div class="flex flex-col justify-start align-start space-y-1">
+                                        <div>
+                                            <AnimatedButton
+                                                @click="$refs.thumbnailInput.click()"
+                                                :variant="
+                                                    thumbnailPreview
+                                                        ? 'primaryOutline'
+                                                        : 'primaryGradient'
+                                                "
+                                                size="sm"
+                                                pill
+                                            >
+                                                {{
+                                                    thumbnailPreview
+                                                        ? $t('studio.changeThumbnail')
+                                                        : $t('studio.uploadThumbnail')
+                                                }}
+                                            </AnimatedButton>
+                                        </div>
+                                        <div
+                                            class="flex flex-col text-xs text-gray-500 dark:text-gray-400"
                                         >
-                                            {{ coverImage ? 'Change cover' : 'Upload cover' }}
-                                        </button>
+                                            <div class="">Formats: JPG or PNG</div>
+                                            <div class="">Aspect: 1080x1920</div>
+                                            <div class="">Max size: 5mb</div>
+                                        </div>
                                     </div>
                                     <input
-                                        ref="coverInput"
+                                        ref="thumbnailInput"
                                         type="file"
-                                        accept="image/*"
-                                        @change="handleCoverUpload"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        @change="handleThumbnailUpload"
                                         class="hidden"
                                     />
                                 </div>
+                                <p v-if="thumbnailError" class="text-sm text-red-500 mt-1">
+                                    {{ thumbnailError }}
+                                </p>
                             </div>
                         </div>
 
@@ -879,6 +907,7 @@ import {
     QUALITY_VERY_HIGH,
     QUALITY_HIGH
 } from 'mediabunny'
+import AnimatedButton from '@/components/AnimatedButton.vue'
 
 const router = useRouter()
 const axios = inject('axios')
@@ -886,7 +915,6 @@ const showWarning = ref(false)
 const uploadedFile = ref(null)
 const isDragging = ref(false)
 const description = ref('')
-const coverImage = ref(null)
 const privacy = ref('everyone')
 const previewMode = ref('feed')
 const isSubmitting = ref(false)
@@ -922,6 +950,9 @@ const progress = ref(0)
 const needsConversion = ref(true)
 const convertedFile = ref(null)
 const transcodeProgress = ref(0)
+const thumbnailFile = ref(null)
+const thumbnailPreview = ref(null)
+const thumbnailError = ref(null)
 
 const ffmpegInstance = ref(null)
 const isFFmpegLoaded = ref(false)
@@ -1130,19 +1161,38 @@ const handleDrop = async (event) => {
     }
 }
 
-const handleCoverUpload = (event) => {
+const handleThumbnailUpload = (event) => {
     const file = event.target.files[0]
-    if (file && file.type.startsWith('image/')) {
+    if (!file || !file.type.startsWith('image/')) return
+
+    thumbnailError.value = null
+
+    const img = new Image()
+    img.onload = () => {
+        URL.revokeObjectURL(img.src)
+        if (img.width !== 1080 || img.height !== 1920) {
+            thumbnailError.value = `Image must be 1080x1920. Yours is ${img.width}×${img.height}.`
+            thumbnailFile.value = null
+            thumbnailPreview.value = null
+            return
+        }
+        thumbnailFile.value = file
         const reader = new FileReader()
         reader.onload = (e) => {
-            coverImage.value = e.target.result
+            thumbnailPreview.value = e.target.result
         }
         reader.readAsDataURL(file)
     }
+    img.onerror = () => {
+        thumbnailError.value = 'Failed to load image'
+    }
+    img.src = URL.createObjectURL(file)
 }
 
-const removeCoverImage = () => {
-    coverImage.value = null
+const removeThumbnail = () => {
+    thumbnailFile.value = null
+    thumbnailPreview.value = null
+    thumbnailError.value = null
 }
 
 const handleDescriptionInput = async (event) => {
@@ -1267,7 +1317,9 @@ const resetForm = () => {
     uploadedFile.value = null
     description.value = ''
     altText.value = ''
-    coverImage.value = null
+    thumbnailFile.value = null
+    thumbnailPreview.value = null
+    thumbnailError.value = null
     privacy.value = 'everyone'
     settings.allowComments = true
     settings.allowDuets = true
@@ -1581,8 +1633,8 @@ const handleSubmit = async () => {
         formData.append('contains_ad', settings.containsAd ? 1 : 0)
         formData.append('contains_ai', settings.containsAi ? 1 : 0)
 
-        if (coverImage.value) {
-            formData.append('cover_image', coverImage.value)
+        if (thumbnailFile.value) {
+            formData.append('thumbnail', thumbnailFile.value)
         }
 
         const response = await axios.post('/api/v1/studio/upload', formData, {

@@ -50,9 +50,15 @@ class VideoService
 
             $thumb = url('/storage/videos/video-placeholder.jpg');
             if ($video->has_thumb) {
-                $ext = pathinfo($video->vid, PATHINFO_EXTENSION);
-                $url = str_replace('.'.$ext, '.jpg', $video->vid);
-                $thumb = Storage::disk('s3')->url($url);
+                if ($video->thumbnail) {
+                    $thumb = $video->thumbnail;
+                } elseif ($video->thumbnail_path) {
+                    $thumb = Storage::disk('s3')->url($video->thumbnail_path);
+                } else {
+                    $ext = pathinfo($video->vid, PATHINFO_EXTENSION);
+                    $url = str_replace('.'.$ext, '.jpg', $video->vid);
+                    $thumb = Storage::disk('s3')->url($url);
+                }
             }
 
             $mediaUrl = Storage::disk('s3')->url($video->vid_optimized);

@@ -28,6 +28,7 @@ use App\Jobs\Federation\DeliverUndoCommentLikeActivity;
 use App\Jobs\Federation\DeliverUndoCommentReplyLikeActivity;
 use App\Jobs\Federation\DeliverUndoVideoLikeActivity;
 use App\Jobs\Federation\DeliverVideoLikeActivity;
+use App\Jobs\Video\VideoCustomThumbnailJob;
 use App\Jobs\Video\VideoOptimizeJob;
 use App\Jobs\Video\VideoProcessingCompleteJob;
 use App\Jobs\Video\VideoThumbnailJob;
@@ -121,6 +122,7 @@ class VideoController extends Controller
 
         $model = null;
         $s3Path = null;
+        $thumbnailPath = null;
 
         try {
             DB::beginTransaction();
@@ -177,10 +179,42 @@ class VideoController extends Controller
             $model->processing_status = 'processing';
             $model->save();
 
-            VideoThumbnailJob::withChain([
-                new VideoOptimizeJob($model),
-                new VideoProcessingCompleteJob($model),
-            ])->dispatch($model);
+            if ($request->hasFile('thumbnail')) {
+                try {
+                    $thumbName = 'custom_thumb.'.$request->file('thumbnail')->getClientOriginalExtension();
+                    $thumbnailPath = $request->file('thumbnail')->storeAs(
+                        'videos/'.$pid.'/'.$model->id,
+                        $thumbName,
+                        's3'
+                    );
+
+                    if (! $thumbnailPath) {
+                        throw new \Exception('Failed to upload thumbnail to S3');
+                    }
+
+                    $model->thumbnail_path = $thumbnailPath;
+                    $model->save();
+                } catch (\Exception $e) {
+                    if (config('logging.dev_log')) {
+                        Log::error('Thumbnail upload failed', [
+                            'video_id' => $model->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+            }
+
+            if ($model->thumbnail_path) {
+                VideoCustomThumbnailJob::withChain([
+                    new VideoOptimizeJob($model),
+                    new VideoProcessingCompleteJob($model),
+                ])->dispatch($model);
+            } else {
+                VideoThumbnailJob::withChain([
+                    new VideoOptimizeJob($model),
+                    new VideoProcessingCompleteJob($model),
+                ])->dispatch($model);
+            }
 
             return $this->success();
 

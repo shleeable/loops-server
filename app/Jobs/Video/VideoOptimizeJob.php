@@ -96,14 +96,20 @@ class VideoOptimizeJob implements ShouldQueue
                 $scaleFilter = 'scale=720:-2';
                 $maxBitrate = '2500k';
                 $bufSize = '5000k';
+                $video->width = 720;
+                $video->height = (int) round($height * (720 / $width) / 2) * 2;
             } elseif ($width > $height) {
                 $scaleFilter = 'scale=-2:720';
                 $maxBitrate = '3000k';
                 $bufSize = '6000k';
+                $video->width = (int) round($width * (720 / $height) / 2) * 2;
+                $video->height = 720;
             } else {
                 $scaleFilter = 'scale=720:720';
                 $maxBitrate = '2500k';
                 $bufSize = '5000k';
+                $video->width = 720;
+                $video->height = 720;
             }
 
             $format = new X264('aac');

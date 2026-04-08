@@ -51,6 +51,14 @@ class StoreVideoRequest extends FormRequest
                     ->min(250)
                     ->max($maxSize * 1024),
             ],
+            'thumbnail' => [
+                'nullable',
+                'sometimes',
+                File::image()
+                    ->types(['jpg', 'jpeg', 'png', 'webp'])
+                    ->max(5 * 1024)
+                    ->dimensions(Rule::dimensions()->width(1080)->height(1920)),
+            ],
             'description' => 'nullable|string|max:200',
             'comment_state' => 'sometimes|string|in:0,4',
             'can_download' => 'nullable|boolean',

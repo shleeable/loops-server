@@ -11,6 +11,7 @@ use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 
 class VideoThumbnailJob implements ShouldQueue
@@ -60,9 +61,11 @@ class VideoThumbnailJob implements ShouldQueue
             }
 
             $ext = pathinfo($video->vid, PATHINFO_EXTENSION);
-            $thumb = str_replace('.'.$ext, '.jpg', $video->vid);
+            $randomStr = Str::random(8);
+            $thumb = str_replace('.'.$ext, '_thumb_'.$randomStr.'.jpg', $video->vid);
 
             if (Storage::disk('s3')->exists($thumb)) {
+                $video->thumbnail_path = $thumb;
                 $video->has_thumb = true;
                 $video->save();
                 VideoService::deleteMediaData($video->id);
@@ -88,6 +91,7 @@ class VideoThumbnailJob implements ShouldQueue
             }
 
             // @phpstan-ignore-next-line
+            $video->thumbnail_path = $thumb;
             $video->has_thumb = true;
             $video->save();
 
