@@ -266,12 +266,13 @@
                         </template>
                     </div>
 
-                    <div class="mt-3 sm:mt-3">
+                    <div class="mt-3 sm:mt-3 leading-relaxed break-words">
                         <AutolinkedText
                             :caption="currentVideo?.caption"
                             :mentions="currentVideo?.mentions"
                             :tags="currentVideo?.tags"
                             :max-char-limit="140"
+                            root-class="whitespace-pre-wrap leading-relaxed"
                         />
                     </div>
 
@@ -795,7 +796,6 @@ const onVideoLoadStart = () => {
 }
 
 const onVideoMetadataLoaded = (e) => {
-    console.log('Video metadata loaded')
     if (videoLoadTimeout.value) {
         clearTimeout(videoLoadTimeout.value)
     }
@@ -807,7 +807,6 @@ const onVideoMetadataLoaded = (e) => {
 }
 
 const onVideoCanPlay = (e) => {
-    console.log('Video can play')
     if (videoLoadTimeout.value) {
         clearTimeout(videoLoadTimeout.value)
     }
@@ -821,7 +820,6 @@ const onVideoCanPlay = (e) => {
 }
 
 const onVideoError = (e) => {
-    console.error('Video error:', e)
     if (videoLoadTimeout.value) {
         clearTimeout(videoLoadTimeout.value)
     }
