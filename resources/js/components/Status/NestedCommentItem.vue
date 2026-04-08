@@ -92,7 +92,7 @@
 
             <div v-else class="mb-2">
                 <p
-                    class="text-[16px] leading-relaxed break-all"
+                    class="text-[16px] leading-relaxed break-words"
                     :class="[
                         comment.tombstone
                             ? 'italic text-gray-500 dark:text-gray-500'
