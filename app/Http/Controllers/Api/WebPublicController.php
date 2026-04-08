@@ -227,7 +227,7 @@ class WebPublicController extends Controller
             return $this->error('Unavailable', 403);
         }
 
-        $followers = Follower::whereFollowingId($id)->orderBy('id')->limit(15)->get();
+        $followers = Follower::whereFollowingId($id)->whereHas('profile', fn ($q) => $q->where('status', 1))->orderBy('id')->limit(15)->get();
 
         return FollowerResource::collection($followers);
     }
@@ -244,7 +244,7 @@ class WebPublicController extends Controller
             return $this->error('Unavailable', 403);
         }
 
-        $followers = Follower::whereProfileId($id)->orderBy('id')->limit(15)->get();
+        $followers = Follower::whereProfileId($id)->whereHas('following', fn ($q) => $q->where('status', 1))->orderBy('id')->limit(15)->get();
 
         return FollowingResource::collection($followers);
     }

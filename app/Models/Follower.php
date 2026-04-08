@@ -6,6 +6,7 @@ use App\Observers\FollowerObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[ObservedBy([FollowerObserver::class])]
 /**
@@ -45,12 +46,12 @@ class Follower extends Model
         'following_is_local' => 'boolean',
     ];
 
-    public function profile()
+    public function profile(): BelongsTo
     {
         return $this->belongsTo(Profile::class, 'profile_id');
     }
 
-    public function following()
+    public function following(): BelongsTo
     {
         return $this->belongsTo(Profile::class, 'following_id');
     }
