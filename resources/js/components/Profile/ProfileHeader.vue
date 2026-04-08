@@ -12,7 +12,7 @@
 
                 <div class="w-full text-center lg:text-left">
                     <div
-                        class="flex flex-col sm:flex-row sm:gap-5 sm:items-end justify-center lg:justify-start mb-3"
+                        class="flex flex-col sm:flex-row sm:gap-5 sm:items-end justify-center lg:justify-start"
                     >
                         <div
                             class="text-lg sm:text-[20px] font-bold truncate dark:text-slate-50"
@@ -25,6 +25,57 @@
                             :title="profile.username"
                         >
                             &commat;{{ textTruncate(profile.username, 50) }}
+                        </div>
+                    </div>
+
+                    <div
+                        class="flex items-center justify-center lg:justify-start gap-8 lg:gap-6 flex-wrap mt-3 sm:mt-0"
+                    >
+                        <div class="text-center lg:flex items-center gap-1 lg:text-left">
+                            <div class="text-base">
+                                <span class="font-bold dark:text-slate-300">{{
+                                    formatCount(profile.postCount)
+                                }}</span>
+                            </div>
+                            <div class="dark:text-slate-300 font-light">
+                                {{ t('common.videos') }}
+                            </div>
+                        </div>
+                        <div
+                            @click="handleFollowersModal()"
+                            class="text-center lg:text-left lg:flex items-center gap-1 cursor-pointer hover:opacity-80"
+                        >
+                            <div class="text-base">
+                                <span class="font-bold dark:text-slate-300">{{
+                                    formatCount(profile.followerCount)
+                                }}</span>
+                            </div>
+                            <div class="dark:text-slate-300 font-light">
+                                {{ t('common.followers') }}
+                            </div>
+                        </div>
+                        <div
+                            @click="handleFollowingModal()"
+                            class="text-center lg:text-left lg:flex items-center gap-1 cursor-pointer hover:opacity-80"
+                        >
+                            <div class="text-base">
+                                <span class="font-bold dark:text-slate-300">{{
+                                    formatCount(profile.followingCount)
+                                }}</span>
+                            </div>
+                            <div class="dark:text-slate-300 font-light">
+                                {{ t('common.following') }}
+                            </div>
+                        </div>
+                        <div class="text-center lg:text-left lg:flex items-center gap-1">
+                            <div class="text-base">
+                                <span class="font-bold dark:text-slate-300">{{
+                                    formatCount(profile.allLikes)
+                                }}</span>
+                            </div>
+                            <div class="dark:text-slate-300 font-light">
+                                {{ t('profile.likes') }}
+                            </div>
                         </div>
                     </div>
 
@@ -185,44 +236,6 @@
                     </template>
 
                     <div
-                        class="flex items-center justify-center lg:justify-start pt-4 gap-8 lg:gap-10 flex-wrap"
-                    >
-                        <div class="text-center lg:flex items-center gap-1 lg:text-left">
-                            <div class="text-base sm:text-lg">
-                                <span class="font-bold dark:text-slate-300">{{
-                                    formatCount(profile.postCount)
-                                }}</span>
-                            </div>
-                            <div class="text-xs sm:text-sm lg:text-lg text-gray-500 font-light">
-                                {{ t('common.videos') }}
-                            </div>
-                        </div>
-                        <div
-                            @click="showFollowersModal = true"
-                            class="text-center lg:text-left lg:flex items-center gap-1 cursor-pointer hover:opacity-80"
-                        >
-                            <div class="text-base sm:text-lg">
-                                <span class="font-bold dark:text-slate-300">{{
-                                    formatCount(profile.followerCount)
-                                }}</span>
-                            </div>
-                            <div class="text-xs sm:text-sm lg:text-lg text-gray-500 font-light">
-                                {{ t('common.followers') }}
-                            </div>
-                        </div>
-                        <div class="text-center lg:text-left lg:flex items-center gap-1">
-                            <div class="text-base sm:text-lg">
-                                <span class="font-bold dark:text-slate-300">{{
-                                    formatCount(profile.allLikes)
-                                }}</span>
-                            </div>
-                            <div class="text-xs sm:text-sm lg:text-lg text-gray-500 font-light">
-                                {{ t('profile.likes') }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div
                         class="pt-4 text-gray-500 dark:text-slate-400 font-light text-sm sm:text-[15px] max-w-full lg:max-w-[500px] text-center lg:text-left"
                     >
                         {{ profile.bio }}
@@ -262,6 +275,7 @@
         :followings="profile.following"
         @close="showFollowersModal = false"
         @gotoProfile="gotoProfile"
+        :tab="followersTab"
     />
 
     <Teleport to="body">
@@ -313,6 +327,7 @@ const showFollowersModal = ref(false)
 const showEditModal = ref(false)
 const showMenu = ref(false)
 const menuRef = ref(null)
+const followersTab = ref('followers')
 const isFollowing = computed(() => profile.isFollowing)
 const isFollowingRequestPending = computed(() => profile.isFollowingRequestPending)
 
@@ -328,6 +343,16 @@ const handleToggleFollow = async () => {
     if (result) {
         await toggleFollow()
     }
+}
+
+const handleFollowersModal = () => {
+    followersTab.value = 'followers'
+    showFollowersModal.value = true
+}
+
+const handleFollowingModal = () => {
+    followersTab.value = 'following'
+    showFollowersModal.value = true
 }
 
 const openEditProfile = () => {

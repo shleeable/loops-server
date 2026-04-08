@@ -190,6 +190,10 @@ const props = defineProps({
     show: {
         type: Boolean,
         required: true
+    },
+    tab: {
+        type: String,
+        default: 'followers'
     }
 })
 
@@ -197,7 +201,7 @@ const emit = defineEmits(['close', 'gotoProfile'])
 
 const { t } = useI18n()
 const containerRef = ref(null)
-const activeTab = ref('followers')
+const activeTab = ref(props.tab)
 const isInitialLoading = ref(false)
 const isPaginationLoading = ref(false)
 
@@ -271,13 +275,18 @@ const loadMore = async () => {
                 ? profileStore.followersNextCursor
                 : profileStore.followingNextCursor
 
-        const result = await (activeTab.value === 'followers'
+        await (activeTab.value === 'followers'
             ? profileStore.getFollowers(profileStore.id, nextCursor)
             : profileStore.getFollowing(profileStore.id, nextCursor))
 
         hasLoadedInitially.value[activeTab.value] = true
 
-        if (!nextCursor) {
+        const newNextCursor =
+            activeTab.value === 'followers'
+                ? profileStore.followersNextCursor
+                : profileStore.followingNextCursor
+
+        if (!newNextCursor) {
             hasMore.value[activeTab.value] = false
         } else {
             page.value[activeTab.value]++
@@ -285,26 +294,36 @@ const loadMore = async () => {
     } catch (error) {
         hasLoadedInitially.value[activeTab.value] = true
         hasMore.value[activeTab.value] = false
-        console.error(`Error loading ${activeTab.value}:`, error)
     } finally {
         isInitialLoading.value = false
         isPaginationLoading.value = false
     }
 }
 
-watch(activeTab, (newTab) => {
-    containerRef.value?.scrollTo({ top: 0 })
-
-    if (!hasLoadedInitially.value[newTab]) {
-        loadMore()
+watch(
+    () => props.tab,
+    (newTab) => {
+        containerRef.value?.scrollTo({ top: 0 })
+        activeTab.value = newTab
+        if (props.show && !hasLoadedInitially.value[newTab]) {
+            loadMore()
+        }
     }
-})
+)
 
 watch(
     () => props.show,
     (isShown) => {
-        if (isShown && !hasLoadedInitially.value[activeTab.value]) {
-            loadMore()
+        if (isShown) {
+            activeTab.value = props.tab
+            if (!hasLoadedInitially.value[activeTab.value]) {
+                loadMore()
+            }
+        } else {
+            hasLoadedInitially.value = { followers: false, following: false }
+            hasMore.value = { followers: true, following: true }
+            page.value = { followers: 1, following: 1 }
+            profileStore.resetFollowers?.()
         }
     }
 )
