@@ -270,6 +270,7 @@ const handleSubmit = async () => {
 
     try {
         emit('save', { ...form.value, id: props.playlist?.id })
+        resetForm()
     } catch (err) {
         error.value = err.message || 'An error occurred'
     } finally {
