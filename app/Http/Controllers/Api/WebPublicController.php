@@ -273,8 +273,6 @@ class WebPublicController extends Controller
 
     public function getContactInfo()
     {
-        $keys = ['general.adminEmail', 'general.supportEmail', 'general.supportForum', 'general.supportFediverseAccount'];
-
         $keys = Cache::get('settings:admin');
         if (! $keys) {
             return response()->json();
