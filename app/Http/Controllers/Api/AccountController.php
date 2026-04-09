@@ -190,7 +190,7 @@ class AccountController extends Controller
 
         $count = UserFilter::where('profile_id', $pid)->count();
 
-        abort_if($count > 250, 422, 'You cannot block any more accounts');
+        abort_if($count > 500, 422, 'You cannot block any more accounts');
 
         app(UserActivityService::class)->markActive($request->user());
 
