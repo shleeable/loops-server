@@ -212,6 +212,10 @@ class WebPublicController extends Controller
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_owner'] = $request->user()?->profile_id == $profile->id;
         $res['likes_count'] = AccountService::getAccountLikesCount($profile->id);
+        if ($profile->user_id && $profile->user->has_atom) {
+            $res['has_atom'] = true;
+            $res['has_atom_url'] = route('user.atom', $profile->id);
+        }
 
         return response()->json(['data' => $res], 200, [], JSON_UNESCAPED_SLASHES);
     }
