@@ -79,7 +79,7 @@ class CreateActivityBuilder
             'published' => $video->created_at->toIso8601String(),
             'to' => [],
             'cc' => [],
-            'icon' => [],
+            'preview' => [],
             'attachment' => [
                 [
                     'type' => 'Document',
@@ -123,17 +123,18 @@ class CreateActivityBuilder
                 $thumbMime = $mimeTypes[$ext] ?? null;
             }
 
-            $videoObject['icon'] = [
-                [
-                    'type' => 'Image',
-                    'url' => $thumbUrl,
+            $videoObject['preview'] = [
+                'type' => 'Image',
+                'name' => $video->alt_text,
+                'width' => $video->thumbnail_width ?? 720,
+                'height' => $video->thumbnail_height ?? 1280,
+                'url' => [
+                    'href' => $thumbUrl,
                     'mediaType' => $thumbMime,
-                    'width' => $video->thumbnail_width ?? 720,
-                    'height' => $video->thumbnail_height ?? 1280,
                 ],
             ];
         } else {
-            unset($videoObject['icon']);
+            unset($videoObject['preview']);
         }
 
         if ($video->caption) {
