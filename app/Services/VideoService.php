@@ -81,7 +81,7 @@ class VideoService
                 'media' => [
                     'duration' => $video->duration,
                     'width' => $video->width ?? 720,
-                    'height' => $video->height ?? 1080,
+                    'height' => $video->height ?? 1280,
                     'thumbnail' => $thumb,
                     'src_url' => $mediaUrl,
                 ],
