@@ -13,6 +13,7 @@
             :has-previous="pagination.prev_cursor"
             :has-next="pagination.next_cursor"
             :has-actions="false"
+            :initial-sort="sortBy"
             :initial-search-query="searchQuery"
             :sort-options="sortOptions"
             @search="handleSearch"
@@ -156,7 +157,7 @@ const columns = [
 ]
 
 const searchQuery = ref(route.query.q || '')
-const sortBy = ref('')
+const sortBy = ref(route.query.sortBy || localStorage.getItem('loops_admin_videos_sortby') || '')
 const DEBOUNCE_DELAY = 300
 let searchTimeout = null
 
@@ -228,6 +229,12 @@ watch(searchQuery, (newQuery) => {
 watch(sortBy, (newQuery) => {
     if (searchTimeout) {
         clearTimeout(searchTimeout)
+    }
+
+    if (newQuery) {
+        localStorage.setItem('loops_admin_videos_sortby', newQuery)
+    } else {
+        localStorage.removeItem('loops_admin_videos_sortby')
     }
 
     searchTimeout = setTimeout(() => {
