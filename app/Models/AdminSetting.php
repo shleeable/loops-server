@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Events\SettingsUpdated;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -54,17 +53,6 @@ class AdminSetting extends Model
         'version' => 'integer',
         'updated_at' => 'datetime',
     ];
-
-    protected static function booted()
-    {
-        static::saved(function ($setting) {
-            event(new SettingsUpdated($setting));
-        });
-
-        static::deleted(function ($setting) {
-            event(new SettingsUpdated($setting));
-        });
-    }
 
     public function updatedBy()
     {
