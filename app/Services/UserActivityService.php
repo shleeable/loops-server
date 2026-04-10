@@ -13,9 +13,9 @@ class UserActivityService
     {
         $ts = ($ts ?? Carbon::now('UTC'))->toImmutable();
         $ymd = $ts->format('Ymd');
-        $key = "ua:{$user->id}:{$ymd}";
+        $key = "uas:{$user->id}:{$ymd}";
 
-        $ttl = (int) ($ts->startOfDay()->addDay()->diffInSeconds($ts) + 5);
+        $ttl = (int) $ts->diffInSeconds($ts->endOfDay());
 
         Cache::remember($key, $ttl, function () use ($ts, $user) {
             $user->forceFill(['last_active_at' => $ts])->saveQuietly();

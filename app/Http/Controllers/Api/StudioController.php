@@ -41,7 +41,6 @@ class StudioController extends Controller
         $total = VideoService::totalUserCount($pid, false);
 
         $videos = Video::whereProfileId($pid)
-            ->published()
             ->when($search, function ($query, $search) {
                 $query->where('caption', 'like', "%{$search}%");
             })

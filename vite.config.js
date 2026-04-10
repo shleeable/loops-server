@@ -4,6 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { resolve } from 'path'
 import { ensureDir, copy } from 'fs-extra'
+import AutoImport from 'unplugin-auto-import/vite'
 
 export default defineConfig({
     plugins: [
@@ -18,6 +19,11 @@ export default defineConfig({
                     includeAbsolute: false
                 }
             }
+        }),
+        AutoImport({
+            imports: ['vue', 'vue-router'],
+            dirs: ['resources/js/composables'],
+            vueTemplate: true
         })
     ],
     resolve: {

@@ -168,27 +168,14 @@
                                         Allow new users to register without approval
                                     </p>
                                 </div>
-                                <button
-                                    @click="
-                                        settings.general.openRegistration =
-                                            !settings.general.openRegistration
-                                    "
-                                    :class="[
-                                        'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
-                                        settings.general.openRegistration
-                                            ? 'bg-blue-600'
-                                            : 'bg-gray-200 dark:bg-gray-600'
-                                    ]"
+                                <select
+                                    v-model="settings.general.registration_mode"
+                                    class="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 >
-                                    <span
-                                        :class="[
-                                            'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                                            settings.general.openRegistration
-                                                ? 'translate-x-5'
-                                                : 'translate-x-0'
-                                        ]"
-                                    ></span>
-                                </button>
+                                    <option value="open">Open</option>
+                                    <option value="curated">Curated</option>
+                                    <option value="closed">Closed</option>
+                                </select>
                             </div>
 
                             <div class="flex items-center justify-between">
@@ -1948,7 +1935,8 @@ const settings = reactive({
         userSpamDetection: false,
         defaultContentStatus: 'published',
         autoModerateNSFW: true,
-        pushNotifications: false
+        pushNotifications: false,
+        registration_mode: 'open'
     },
     branding: {
         logo: null,
@@ -2553,6 +2541,22 @@ watch(
             if (document.activeElement?.tagName !== 'TEXTAREA') {
                 blockedInstancesBulk.value = newVal.filter((i) => i.trim()).join(',')
             }
+        }
+    },
+    { deep: true }
+)
+
+watch(
+    () => settings.general.registration_mode,
+    (newVal) => {
+        if (newVal === 'open') {
+            settings.general.openRegistration = true
+        } else if (newVal === 'curated') {
+            settings.general.openRegistration = false
+        } else if (newVal === 'closed') {
+            settings.general.openRegistration = false
+        } else {
+            settings.general.openRegistration = false
         }
     },
     { deep: true }

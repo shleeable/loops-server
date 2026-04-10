@@ -79,6 +79,7 @@ class CreateActivityBuilder
             'published' => $video->created_at->toIso8601String(),
             'to' => [],
             'cc' => [],
+            'preview' => [],
             'attachment' => [
                 [
                     'type' => 'Document',
@@ -103,6 +104,37 @@ class CreateActivityBuilder
 
         if ($video->visibility === 1) {
             $videoObject['interactionPolicy'] = app(ActivityPubContext::class)->forVideoInteractionPolicy($video);
+        }
+
+        if ($video->has_thumb) {
+            $thumbUrl = $video->thumb();
+            $thumbMime = $video->thumbnail_mime;
+
+            if (! $thumbMime) {
+                $ext = strtolower(pathinfo($thumbUrl, PATHINFO_EXTENSION));
+
+                $mimeTypes = [
+                    'jpg' => 'image/jpeg',
+                    'jpeg' => 'image/jpeg',
+                    'png' => 'image/png',
+                    'webp' => 'image/webp',
+                ];
+
+                $thumbMime = $mimeTypes[$ext] ?? null;
+            }
+
+            $videoObject['preview'] = [
+                'type' => 'Image',
+                'name' => $video->alt_text,
+                'width' => $video->thumbnail_width ?? 720,
+                'height' => $video->thumbnail_height ?? 1280,
+                'url' => [
+                    'href' => $thumbUrl,
+                    'mediaType' => $thumbMime,
+                ],
+            ];
+        } else {
+            unset($videoObject['preview']);
         }
 
         if ($video->caption) {

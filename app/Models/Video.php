@@ -229,9 +229,15 @@ class Video extends Model
     {
         $thumb = url('/storage/videos/video-placeholder.jpg');
         if ($this->has_thumb) {
-            $ext = pathinfo($this->vid, PATHINFO_EXTENSION);
-            $url = str_replace('.'.$ext, '.jpg', $this->vid);
-            $thumb = Storage::disk('s3')->url($url);
+            if ($this->thumbnail) {
+                $thumb = $this->thumbnail;
+            } elseif ($this->thumbnail_path) {
+                $thumb = Storage::disk('s3')->url($this->thumbnail_path);
+            } else {
+                $ext = pathinfo($this->vid, PATHINFO_EXTENSION);
+                $url = str_replace('.'.$ext, '.jpg', $this->vid);
+                $thumb = Storage::disk('s3')->url($url);
+            }
         }
 
         return $thumb;

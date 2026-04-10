@@ -51,6 +51,7 @@ class AdminSettingsController extends Controller
             'media' => 'array',
             'federation' => 'array',
             'fyf' => 'array',
+            'general.registration_mode' => 'required|string|in:open,curated,closed',
             'general.instanceName' => 'required|string|min:2,max:15',
             'general.instanceUrl' => 'sometimes|nullable|url',
             'general.instanceDescription' => 'sometimes|nullable|max:150',
@@ -161,6 +162,7 @@ class AdminSettingsController extends Controller
             'federation.enableFederation',
             'federation.federationMode',
             'starterKits.enabled',
+            'general.registration_mode',
         ];
 
         return in_array($key, $publicSettings);

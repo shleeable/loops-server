@@ -18,7 +18,9 @@ class SettingsFileService
         app(ConfigService::class)->federationAllowedServers(true);
         app(ConfigService::class)->federationAuthorizedFetch(true);
         app(ConfigService::class)->starterKits(true);
+        app(ConfigService::class)->registrationMode(true);
         app(StarterKitService::class)->getConfig(true);
+        app(AdminDashboardService::class)->getConfigData(true);
         $this->syncDefaultSettings();
         $this->generatePublicConfig();
         $this->generateAdminConfig();
@@ -49,6 +51,7 @@ class SettingsFileService
             ],
             'fyf' => $settings['fyf.enabled'] ?? false,
             'registration' => $settings['general.openRegistration'] ?? false,
+            'registration_mode' => $settings['general.registration_mode'] ?? 'closed',
             'federation' => $settings['federation.enableFederation'] ?? false,
             'pushNotifications' => $settings['general.pushNotifications'] ?? false,
             'starterKits' => $settings['starterKits.enabled'] ?? false,
@@ -418,6 +421,13 @@ class SettingsFileService
                 'type' => 'number',
                 'is_public' => false,
                 'description' => 'Auto approve Starter Kits created by accounts with this many followers or more',
+            ],
+            [
+                'key' => 'general.registration_mode',
+                'value' => 'open',
+                'type' => 'string',
+                'is_public' => true,
+                'description' => 'Registration mode: open, curated, closed',
             ],
         ];
     }

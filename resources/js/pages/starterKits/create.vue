@@ -489,7 +489,9 @@
                                                             <p
                                                                 class="text-sm font-semibold text-gray-900 dark:text-white truncate"
                                                             >
-                                                                {{ account.name }}
+                                                                {{
+                                                                    account.name || account.username
+                                                                }}
                                                             </p>
                                                             <p
                                                                 class="text-xs text-gray-400 truncate"

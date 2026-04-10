@@ -13,6 +13,7 @@ use App\Models\Report;
 use App\Models\StarterKit;
 use App\Models\Video;
 use App\Services\AdminDashboardService;
+use App\Services\UserActivityService;
 
 class ReportController extends Controller
 {
@@ -27,6 +28,8 @@ class ReportController extends Controller
     {
         $user = $request->user();
         $pid = $user->profile_id;
+
+        app(UserActivityService::class)->markActive($user);
 
         if ($user->is_admin === true && config('loops.reports.rate_limits.admin_exempt')) {
             // skip for exempt admins

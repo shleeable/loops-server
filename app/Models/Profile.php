@@ -577,6 +577,8 @@ class Profile extends Model
                 ]);
             }
 
+            $remoteUrl = is_string(data_get($actorData, 'url')) ? data_get($actorData, 'url') : null;
+
             $actor->forceFill([
                 'username' => $acct,
                 'name' => app(SanitizeService::class)->cleanPlainText($actorData['name'] ?? $username),
@@ -584,7 +586,7 @@ class Profile extends Model
                 'inbox_url' => $actorData['inbox'],
                 'avatar' => $avatar,
                 'uri' => $actorData['id'],
-                'remote_url' => data_get($actorData, 'url'),
+                'remote_url' => $remoteUrl,
                 'outbox_url' => $actorData['outbox'] ?? null,
                 'followers_url' => $actorData['followers'] ?? null,
                 'following_url' => $actorData['following'] ?? null,

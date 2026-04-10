@@ -228,7 +228,11 @@
                         </button>
 
                         <button
-                            v-if="!authStore.isAuthenticated && appConfig.registration"
+                            v-if="
+                                !authStore.isAuthenticated &&
+                                (appConfig.registration ||
+                                    appConfig.registration_mode === 'curated')
+                            "
                             @click="handleJoinClick"
                             class="w-full flex items-center justify-center border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 rounded-lg px-4 py-3 font-medium hover:bg-gray-50 dark:hover:bg-slate-800"
                         >
@@ -402,12 +406,6 @@ const mainLinks = computed(() => {
         links = [
             { id: 'home', name: t('nav.local'), path: '/', icon: 'bx bx-home' },
             {
-                id: 'following',
-                name: t('common.following'),
-                path: '/feed/following',
-                icon: 'bx bx-user-plus'
-            },
-            {
                 id: 'explore',
                 name: t('common.explore'),
                 path: '/explore',
@@ -444,6 +442,15 @@ const mainLinks = computed(() => {
                 icon: 'bx bx-user'
             }
         ]
+
+        if (authStore.getUser.following_count) {
+            links.splice(1, 0, {
+                id: 'following',
+                name: t('common.following'),
+                path: '/feed/following',
+                icon: 'bx bx-user-plus'
+            })
+        }
 
         if (appConfig.fyf) {
             links.splice(2, 0, {
@@ -622,6 +629,11 @@ const handleLoginClick = () => {
 }
 
 const handleJoinClick = () => {
+    if (appConfig.registration_mode === 'curated') {
+        closeMobileDrawer()
+        router.push('/auth/curated')
+        return
+    }
     authStore.openAuthModal('register')
     closeMobileDrawer()
 }

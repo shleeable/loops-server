@@ -178,4 +178,24 @@ class ConfigService
             return (bool) $config->value;
         });
     }
+
+    public function registrationMode($flush = false)
+    {
+        $key = self::CACHE_KEY.'general.registration_mode';
+
+        if ($flush) {
+            Cache::forget($key);
+        }
+
+        return Cache::rememberForever($key, function () {
+            $config = AdminSetting::where('key', 'general.registration_mode')->first();
+            if (! $config) {
+                app(SettingsFileService::class)->generatePublicConfig();
+
+                return false;
+            }
+
+            return $config->value;
+        });
+    }
 }

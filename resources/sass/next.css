@@ -94,3 +94,62 @@ a {
 .dfi {
     display: flex !important;
 }
+
+@keyframes drift-slow {
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+    33% {
+        transform: translate(60px, -40px) scale(1.08);
+    }
+    66% {
+        transform: translate(-40px, 30px) scale(0.95);
+    }
+}
+
+@keyframes drift-slow-reverse {
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+    33% {
+        transform: translate(-50px, 50px) scale(0.95);
+    }
+    66% {
+        transform: translate(50px, -30px) scale(1.08);
+    }
+}
+
+@utility animate-drift-slow {
+    animation: drift-slow 20s ease-in-out infinite;
+}
+
+@utility animate-drift-slow-reverse {
+    animation: drift-slow-reverse 25s ease-in-out infinite;
+}
+
+@utility duration-400 {
+    transition-duration: 400ms;
+}
+
+@layer components {
+    .form-input {
+        @apply w-full rounded-xl border border-gray-200 dark:border-gray-700/60
+               bg-white dark:bg-gray-800/60
+               px-4 py-3
+               text-sm text-gray-900 dark:text-white
+               placeholder:text-gray-400 dark:placeholder:text-gray-500
+               outline-none
+               ring-2 ring-transparent
+               transition-all duration-200
+               focus:border-[#F02C56]/50 focus:ring-[#F02C56]/15
+               disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .onboarding {
+        .form-input {
+            @apply w-full rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-4 py-3 text-base text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 focus:border-[#F02C56] dark:focus:border-[#F02C56] focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-[#F02C56]/10 dark:focus:ring-[#F02C56]/10;
+        }
+    }
+}

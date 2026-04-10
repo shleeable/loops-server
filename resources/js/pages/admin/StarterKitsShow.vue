@@ -818,7 +818,8 @@ import {
     ChevronDownIcon,
     SparklesIcon,
     PhotoIcon,
-    ArrowTopRightOnSquareIcon
+    ArrowTopRightOnSquareIcon,
+    ArrowLeftIcon
 } from '@heroicons/vue/24/outline'
 import { CheckIcon } from '@heroicons/vue/24/solid'
 import { starterKitsApi } from '@/services/adminApi'

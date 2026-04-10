@@ -108,10 +108,16 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                                {{ post.likes.toLocaleString() }}
+                                {{
+                                    post.status === 'processing' ? '-' : post.likes.toLocaleString()
+                                }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                                {{ post.comments.toLocaleString() }}
+                                {{
+                                    post.status === 'processing'
+                                        ? '-'
+                                        : post.comments.toLocaleString()
+                                }}
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center space-x-5">
