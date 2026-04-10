@@ -10,6 +10,7 @@ class SettingsFileService
 {
     public function flush()
     {
+        $this->syncDefaultSettings();
         app(ConfigService::class)->forYouFeed(true);
         app(ConfigService::class)->federation(true);
         app(ConfigService::class)->federationMode(true);
@@ -22,7 +23,6 @@ class SettingsFileService
         app(ConfigService::class)->atomFeeds(true);
         app(StarterKitService::class)->getConfig(true);
         app(AdminDashboardService::class)->getConfigData(true);
-        $this->syncDefaultSettings();
         $this->generatePublicConfig();
         $this->generateAdminConfig();
     }
