@@ -25,11 +25,9 @@
         @if($video['captionLinked'])<content type="html">{{ $video['captionLinked'] }}</content>@endif
 
         <link rel="enclosure" href="{{ $video['media']['src_url'] }}" type="video/mp4" />
-        <media:group>
-            <media:content url="{{ $video['media']['src_url'] }}" type="video/mp4" medium="video" duration="{{ $video['media']['duration'] }}" width="{{ $video['media']['width'] }}" height="{{ $video['media']['height'] }}"/>
-            <media:thumbnail url="{{ $video['media']['thumbnail'] }}" width="{{ $video['media']['width'] }}" height="{{ $video['media']['height'] }}"/>
-            <media:player url="{{ $video['url'] }}"/>
-        </media:group>
+        <media:content url="{{ $video['media']['src_url'] }}" type="video/mp4" medium="video" duration="{{ $video['media']['duration'] }}" width="{{ $video['media']['width'] }}" height="{{ $video['media']['height'] }}"/>
+        <media:thumbnail url="{{ $video['media']['thumbnail'] }}" width="{{ $video['media']['width'] }}" height="{{ $video['media']['height'] }}"/>
+        <media:player url="{{ $video['url'] }}"/>
     </entry>@endforeach
 
 </feed>
