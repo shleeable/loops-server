@@ -20,6 +20,7 @@ use App\Models\Page;
 use App\Models\Profile;
 use App\Models\StarterKit;
 use App\Models\SystemMessage;
+use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoBookmark;
 use App\Models\VideoHashtag;
@@ -593,6 +594,17 @@ class WebPublicController extends Controller
         abort_unless(app(ConfigService::class)->starterKits(), 404);
 
         return $this->data(['top_creators' => app(StarterKitService::class)->getTopCreatorsWeekly()]);
+    }
+
+    public function userPermalinkRedirect(Request $request, $profileId)
+    {
+        $user = User::isActive()->where('profile_id', $profileId)->firstOrFail();
+
+        if ($request->wantsJson()) {
+            return redirect('/ap/users/'.$user->profile_id);
+        }
+
+        return redirect('/@'.$user->username);
     }
 
     private function defaultCollection($meta = [])

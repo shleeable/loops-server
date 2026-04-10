@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountDataController;
+use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\ActorController;
 use App\Http\Controllers\AdminCuratedApplicationController;
 use App\Http\Controllers\AdminCuratedSettingsController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Api\VideoController;
 use App\Http\Controllers\Api\VideoSoundController;
 use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\AppleAuthController;
+use App\Http\Controllers\AtomFeedController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CuratedOnboardingController;
 use App\Http\Controllers\EmailChangeController;
@@ -50,6 +52,9 @@ use Illuminate\Support\Facades\Route;
 // Health check endpoints
 Route::get('/ping', [HealthController::class, 'ping'])->name('health.ping');
 Route::get('/health', [HealthController::class, 'health'])->name('health.check');
+
+// Atom
+Route::get('/feeds/{profileId}.atom', [AtomFeedController::class, 'show'])->name('user.atom');
 
 // NodeInfo endpoints
 Route::group(['prefix' => 'nodeinfo'], function () {
@@ -241,6 +246,8 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/account/data/export/selective', [AccountDataController::class, 'requestSelectiveExport'])->name('export.selective')->middleware(['auth:web,api']);
     Route::get('/v1/account/data/export/history', [AccountDataController::class, 'getExportHistory'])->name('export.history')->middleware(['auth:web,api']);
     Route::get('/v1/account/data/export/{id}/download', [AccountDataController::class, 'downloadExport'])->name('export.download')->middleware(['auth:web,api']);
+    Route::get('/v1/account/sharing/settings', [AccountSettingsController::class, 'getSharingSettings'])->middleware(['auth:web,api']);
+    Route::post('/v1/account/sharing/settings', [AccountSettingsController::class, 'updateSharingSettings'])->middleware(['auth:web,api']);
 
     // Account Feeds
     Route::get('/v1/feed/account/self', [FeedController::class, 'selfAccountFeed'])->middleware('auth:web,api');

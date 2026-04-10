@@ -333,7 +333,7 @@
 
                 <div v-if="activeTab === 'feeds'" class="space-y-8">
                     <div>
-                        <div class="space-y-4">
+                        <div class="space-y-8">
                             <div class="flex items-center justify-between">
                                 <div class="flex flex-col">
                                     <label
@@ -440,6 +440,42 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <div class="flex flex-col">
+                                    <label
+                                        class="text-sm font-medium text-gray-900 dark:text-white"
+                                    >
+                                        Atom Feeds
+                                    </label>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        Allow users to opt-in to public atom feeds of the most
+                                        recent 20 public videos.
+                                    </p>
+                                </div>
+
+                                <button
+                                    @click="
+                                        settings.general.userAtomFeeds =
+                                            !settings.general.userAtomFeeds
+                                    "
+                                    :class="[
+                                        'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                                        settings.general.userAtomFeeds
+                                            ? 'bg-blue-600'
+                                            : 'bg-gray-200 dark:bg-gray-600 cursor-not-allowed opacity-60'
+                                    ]"
+                                >
+                                    <span
+                                        :class="[
+                                            'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                                            settings.general.userAtomFeeds
+                                                ? 'translate-x-5'
+                                                : 'translate-x-0'
+                                        ]"
+                                    ></span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1936,7 +1972,8 @@ const settings = reactive({
         defaultContentStatus: 'published',
         autoModerateNSFW: true,
         pushNotifications: false,
-        registration_mode: 'open'
+        registration_mode: 'open',
+        userAtomFeeds: true
     },
     branding: {
         logo: null,

@@ -59,6 +59,7 @@ class AdminSettingsController extends Controller
             'general.supportEmail' => 'sometimes|nullable|email:rfc,dns,spoof,strict',
             'general.supportForum' => 'sometimes|nullable|active_url',
             'general.supportFediverseAccount' => 'sometimes|nullable|active_url',
+            'general.userAtomFeeds' => 'required|boolean',
             'fyf.enabled' => 'required|boolean',
             'general.openRegistration' => 'required|boolean',
             'general.userSpamDetection' => 'required|boolean',
@@ -163,6 +164,7 @@ class AdminSettingsController extends Controller
             'federation.federationMode',
             'starterKits.enabled',
             'general.registration_mode',
+            'general.userAtomFeeds',
         ];
 
         return in_array($key, $publicSettings);

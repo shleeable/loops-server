@@ -55,6 +55,16 @@ class UserAuditLogService
         return $this->log($user, 'password_changed');
     }
 
+    public function logAtomFeedEnabled(User|int $user): UserAuditLog
+    {
+        return $this->log($user, 'atom_enabled');
+    }
+
+    public function logAtomFeedDisabled(User|int $user): UserAuditLog
+    {
+        return $this->log($user, 'atom_disabled');
+    }
+
     public function logEmailChanged(
         User|int $user,
         string $oldEmail,

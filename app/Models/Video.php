@@ -203,6 +203,15 @@ class Video extends Model
         return $query->where('status', 2);
     }
 
+    /**
+     * @param  Builder<Video>  $query
+     * @return Builder<Video>
+     */
+    protected function scopePublishedAndSafe(Builder $query): Builder
+    {
+        return $query->where('status', 2)->where('is_sensitive', false);
+    }
+
     #[Scope]
     protected function canComment(Builder $query): void
     {

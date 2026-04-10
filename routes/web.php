@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\ObjectController;
 use App\Http\Controllers\ProfileLinkRedirectController;
 use App\Http\Middleware\AdminOnlyAccess;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/u/{profileId}', [WebPublicController::class, 'userPermalinkRedirect']);
 Route::get('/r/pl/{pid}/{lid}', [ProfileLinkRedirectController::class, 'redirect']);
 
 Route::get('/admin/curated-onboarding-settings/mail/preview/notify-admin', [AdminDashboardController::class, 'curatedNotifyAdminEmailPreview'])->middleware(['auth:web,api', AdminOnlyAccess::class])->name('admin.email-preview.curated-notify-admin');

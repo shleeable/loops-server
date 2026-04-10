@@ -39,7 +39,8 @@ import {
     EyeSlashIcon,
     UserIcon,
     MoonIcon,
-    LockClosedIcon
+    LockClosedIcon,
+    ShareIcon
 } from '@heroicons/vue/24/outline'
 
 const { t } = useI18n()
@@ -65,6 +66,11 @@ const menuItems = ref([
         name: t('settings.safety'),
         icon: LockClosedIcon,
         path: '/dashboard/safety'
+    },
+    {
+        name: 'Sharing',
+        icon: ShareIcon,
+        path: '/dashboard/sharing'
     }
 ])
 
