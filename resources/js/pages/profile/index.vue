@@ -28,7 +28,7 @@
             </div>
 
             <div
-                v-else-if="displayPosts && displayPosts.length > 0 && !profileStore.hasMorePosts"
+                v-else-if="displayPosts && displayPosts.length > 16 && !profileStore.hasMorePosts"
                 class="flex justify-center py-8"
             >
                 <p class="text-gray-500 dark:text-gray-400 text-sm">

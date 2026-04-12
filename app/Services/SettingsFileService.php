@@ -10,6 +10,7 @@ class SettingsFileService
 {
     public function flush()
     {
+        $this->syncDefaultSettings();
         app(ConfigService::class)->forYouFeed(true);
         app(ConfigService::class)->federation(true);
         app(ConfigService::class)->federationMode(true);
@@ -19,9 +20,9 @@ class SettingsFileService
         app(ConfigService::class)->federationAuthorizedFetch(true);
         app(ConfigService::class)->starterKits(true);
         app(ConfigService::class)->registrationMode(true);
+        app(ConfigService::class)->atomFeeds(true);
         app(StarterKitService::class)->getConfig(true);
         app(AdminDashboardService::class)->getConfigData(true);
-        $this->syncDefaultSettings();
         $this->generatePublicConfig();
         $this->generateAdminConfig();
     }
@@ -55,6 +56,7 @@ class SettingsFileService
             'federation' => $settings['federation.enableFederation'] ?? false,
             'pushNotifications' => $settings['general.pushNotifications'] ?? false,
             'starterKits' => $settings['starterKits.enabled'] ?? false,
+            'atomFeeds' => $settings['general.userAtomFeeds'] ?? false,
         ];
 
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -428,6 +430,15 @@ class SettingsFileService
                 'type' => 'string',
                 'is_public' => true,
                 'description' => 'Registration mode: open, curated, closed',
+            ],
+
+            // Feeds
+            [
+                'key' => 'general.userAtomFeeds',
+                'value' => true,
+                'type' => 'boolean',
+                'is_public' => true,
+                'description' => 'Allow users to enable atom feeds of the most recent 20 public videos',
             ],
         ];
     }

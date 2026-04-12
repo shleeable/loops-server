@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Observers\UserObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -171,6 +172,7 @@ class User extends Authenticatable implements OAuthenticatable
         'apple_refresh_token',
         'apple_id',
         'register_source',
+        'has_atom',
     ];
 
     protected $hidden = [
@@ -218,6 +220,7 @@ class User extends Authenticatable implements OAuthenticatable
             'last_active_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'has_atom' => 'boolean',
             'device' => 'json',
             'push_token_verified_at' => 'datetime',
             'birth_date' => 'date',
@@ -226,6 +229,15 @@ class User extends Authenticatable implements OAuthenticatable
             'can_use_starter_kits' => 'boolean',
             'can_report' => 'boolean',
         ];
+    }
+
+    /**
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    protected function scopeIsActive(Builder $query): Builder
+    {
+        return $query->whereNotNull('email_verified_at')->where('status', 1);
     }
 
     public function active(): bool
@@ -241,6 +253,16 @@ class User extends Authenticatable implements OAuthenticatable
     public function url()
     {
         return url('/@'.$this->username);
+    }
+
+    public function atomUrl()
+    {
+        return route('user.atom', $this->profile_id);
+    }
+
+    public function permalink()
+    {
+        return url('/u/'.$this->profile_id);
     }
 
     /**

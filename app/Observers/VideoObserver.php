@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Profile;
 use App\Models\Video;
+use App\Services\AtomFeedService;
 
 class VideoObserver
 {
@@ -13,6 +14,7 @@ class VideoObserver
     public function created(Video $video): void
     {
         $this->updateProfileVideoCount($video->profile_id);
+        AtomFeedService::invalidate($video->profile_id);
     }
 
     /**
@@ -21,6 +23,7 @@ class VideoObserver
     public function updated(Video $video): void
     {
         $this->updateProfileVideoCount($video->profile_id);
+        AtomFeedService::invalidate($video->profile_id);
     }
 
     /**
@@ -29,6 +32,7 @@ class VideoObserver
     public function deleted(Video $video): void
     {
         $this->updateProfileVideoCount($video->profile_id);
+        AtomFeedService::invalidate($video->profile_id);
     }
 
     /**
@@ -37,6 +41,7 @@ class VideoObserver
     public function restored(Video $video): void
     {
         $this->updateProfileVideoCount($video->profile_id);
+        AtomFeedService::invalidate($video->profile_id);
     }
 
     /**
@@ -45,6 +50,7 @@ class VideoObserver
     public function forceDeleted(Video $video): void
     {
         $this->updateProfileVideoCount($video->profile_id);
+        AtomFeedService::invalidate($video->profile_id);
     }
 
     /**

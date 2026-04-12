@@ -44,7 +44,10 @@
                                 <UrlCopyInput :url="url" />
                             </div>
 
-                            <div class="mt-6 grid grid-cols-4 gap-x-4 gap-y-6">
+                            <div
+                                v-if="type !== 'atom'"
+                                class="mt-6 grid grid-cols-4 gap-x-4 gap-y-6"
+                            >
                                 <div
                                     v-for="provider in shareProviders"
                                     :key="provider.id"
@@ -133,6 +136,8 @@ const title = computed(() => {
         return t('common.shareThisLoop')
     } else if (props.type === 'profile') {
         return t('common.shareThisAccount')
+    } else if (props.type === 'atom') {
+        return 'Atom Feed'
     }
     return 'Share this content'
 })

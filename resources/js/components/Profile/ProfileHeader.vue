@@ -79,10 +79,10 @@
                         </div>
                     </div>
 
-                    <template v-if="authStore.authenticated">
-                        <div
-                            class="flex items-center justify-center lg:justify-start gap-2 sm:gap-3 mt-3 flex-wrap"
-                        >
+                    <div
+                        class="flex items-center justify-center lg:justify-start gap-2 sm:gap-3 mt-3 flex-wrap"
+                    >
+                        <template v-if="authStore.authenticated">
                             <button
                                 v-if="profile.id == authStore.getUser.id"
                                 @click="openEditProfile"
@@ -122,64 +122,89 @@
                                     {{ t('common.unfollow') }}
                                 </button>
                             </template>
+                        </template>
 
-                            <ShareModal
-                                type="profile"
-                                :url="profile.url"
-                                :username="profile.username"
-                                class="flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 hover:bg-gray-100 dark:border-slate-500 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                        <button
+                            v-if="!authStore.authenticated"
+                            @click="showRemoteFollowModal = true"
+                            class="flex item-center rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-white bg-red-500 hover:bg-red-400 font-semibold border dark:border-slate-950 cursor-pointer"
+                        >
+                            {{ t('common.follow') }}
+                        </button>
+
+                        <ShareModal
+                            type="profile"
+                            :url="profile.local ? profile.url : profile.remote_url"
+                            :username="profile.username"
+                            class="flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 hover:bg-gray-100 dark:border-slate-500 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                        >
+                            <ShareIcon class="w-4 h-4 text-gray-600 dark:text-slate-400" />
+                        </ShareModal>
+
+                        <ShareModal
+                            v-if="profile.hasAtom"
+                            type="atom"
+                            :url="profile.hasAtomUrl"
+                            :username="profile.username"
+                            class="flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 hover:bg-gray-100 dark:border-slate-500 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                        >
+                            <RssIcon class="w-4 h-4 text-gray-600 dark:text-slate-400" />
+                        </ShareModal>
+
+                        <div
+                            v-if="
+                                (!authStore.authenticated &&
+                                    !profile.local &&
+                                    profile.remote_url) ||
+                                (authStore.authenticated && profile.id !== authStore.getUser.id)
+                            "
+                            class="relative"
+                            ref="menuRef"
+                        >
+                            <button
+                                @click="toggleMenu"
+                                type="button"
+                                aria-haspopup="menu"
+                                :aria-expanded="showMenu"
+                                class="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800/80 border border-gray-200/70 dark:border-gray-800/70 bg-white/70 dark:bg-gray-950/40 backdrop-blur transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-950"
                             >
-                                <ShareIcon class="w-4 h-4 text-gray-600 dark:text-slate-400" />
-                            </ShareModal>
+                                <EllipsisHorizontalIcon
+                                    class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                                />
+                            </button>
 
-                            <div
-                                v-if="profile.id !== authStore.getUser.id"
-                                class="relative"
-                                ref="menuRef"
+                            <Transition
+                                enter-active-class="transition ease-out duration-120"
+                                enter-from-class="opacity-0 translate-y-1 scale-95"
+                                enter-to-class="opacity-100 translate-y-0 scale-100"
+                                leave-active-class="transition ease-in duration-90"
+                                leave-from-class="opacity-100 translate-y-0 scale-100"
+                                leave-to-class="opacity-0 translate-y-1 scale-95"
                             >
-                                <button
-                                    @click="toggleMenu"
-                                    type="button"
-                                    aria-haspopup="menu"
-                                    :aria-expanded="showMenu"
-                                    class="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800/80 border border-gray-200/70 dark:border-gray-800/70 bg-white/70 dark:bg-gray-950/40 backdrop-blur transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-950"
-                                >
-                                    <EllipsisHorizontalIcon
-                                        class="w-5 h-5 text-gray-500 dark:text-gray-400"
-                                    />
-                                </button>
-
-                                <Transition
-                                    enter-active-class="transition ease-out duration-120"
-                                    enter-from-class="opacity-0 translate-y-1 scale-95"
-                                    enter-to-class="opacity-100 translate-y-0 scale-100"
-                                    leave-active-class="transition ease-in duration-90"
-                                    leave-from-class="opacity-100 translate-y-0 scale-100"
-                                    leave-to-class="opacity-0 translate-y-1 scale-95"
+                                <div
+                                    v-if="showMenu"
+                                    role="menu"
+                                    class="absolute right-0 mt-2 w-56 origin-top-right z-50"
+                                    @click.stop
                                 >
                                     <div
-                                        v-if="showMenu"
-                                        role="menu"
-                                        class="absolute right-0 mt-2 w-56 origin-top-right z-50"
-                                        @click.stop
+                                        class="rounded-xl bg-white/95 dark:bg-gray-900/95 backdrop-blur shadow-xl shadow-black/5 dark:shadow-black/30 ring-1 ring-black/5 dark:ring-white/10 border border-gray-200/70 dark:border-gray-800/70 p-1"
                                     >
-                                        <div
-                                            class="rounded-xl bg-white/95 dark:bg-gray-900/95 backdrop-blur shadow-xl shadow-black/5 dark:shadow-black/30 ring-1 ring-black/5 dark:ring-white/10 border border-gray-200/70 dark:border-gray-800/70 p-1"
+                                        <a
+                                            v-if="!profile.local && profile.remote_url"
+                                            :href="profile.remote_url"
+                                            target="_blank"
+                                            rel="noopener nofollow noreferrer"
+                                            role="menuitem"
+                                            class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100/80 dark:hover:bg-gray-800/70"
                                         >
-                                            <a
-                                                v-if="!profile.local && profile.remote_url"
-                                                :href="profile.remote_url"
-                                                target="_blank"
-                                                rel="noopener nofollow noreferrer"
-                                                role="menuitem"
-                                                class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100/80 dark:hover:bg-gray-800/70"
-                                            >
-                                                <ArrowTopRightOnSquareIcon
-                                                    class="w-4 h-4 text-gray-500 dark:text-gray-400"
-                                                />
-                                                <span class="flex-1">View full profile</span>
-                                            </a>
+                                            <ArrowTopRightOnSquareIcon
+                                                class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                            />
+                                            <span class="flex-1">View full profile</span>
+                                        </a>
 
+                                        <template v-if="authStore.authenticated">
                                             <div
                                                 v-if="!profile.local && profile.remote_url"
                                                 class="my-1 h-px bg-gray-100 dark:bg-gray-800"
@@ -228,12 +253,12 @@
                                                 />
                                                 <span class="flex-1">{{ t('profile.block') }}</span>
                                             </button>
-                                        </div>
+                                        </template>
                                     </div>
-                                </Transition>
-                            </div>
+                                </div>
+                            </Transition>
                         </div>
-                    </template>
+                    </div>
 
                     <div
                         class="pt-4 text-gray-500 dark:text-slate-400 font-light text-sm sm:text-[15px] max-w-full lg:max-w-[500px] text-center lg:text-left"
@@ -278,6 +303,12 @@
         :tab="followersTab"
     />
 
+    <RemoteFollowModal
+        v-model="showRemoteFollowModal"
+        :username="profile.username"
+        :url="profile.url"
+    />
+
     <Teleport to="body">
         <EditModal
             v-if="showEditModal"
@@ -311,8 +342,10 @@ import {
     NoSymbolIcon,
     LinkIcon,
     CheckBadgeIcon,
-    ArrowTopRightOnSquareIcon
+    ArrowTopRightOnSquareIcon,
+    RssIcon
 } from '@heroicons/vue/24/outline'
+import RemoteFollowModal from './RemoteFollowModal.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -326,6 +359,7 @@ const authStore = useAuthStore()
 const showFollowersModal = ref(false)
 const showEditModal = ref(false)
 const showMenu = ref(false)
+const showRemoteFollowModal = ref(false)
 const menuRef = ref(null)
 const followersTab = ref('followers')
 const isFollowing = computed(() => profile.isFollowing)

@@ -405,6 +405,12 @@ const router = createRouter({
             component: () => import('~/pages/dashboard/privacy.vue'),
             meta: { requiresAuth: true }
         },
+        {
+            path: '/dashboard/sharing',
+            name: 'dashboardSharing',
+            component: () => import('~/pages/dashboard/sharing.vue'),
+            meta: { requiresAuth: true }
+        },
         // {
         //   path: '/dashboard/federation',
         //   name: 'dashboardFederation',

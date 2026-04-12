@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class VideoService
 {
-    const CACHE_KEY = 'api:s:video:';
+    const CACHE_KEY = 'api:s:video:v1:';
 
     public static function totalUserCount($pid, $onlyPublished = true, $refresh = false)
     {
@@ -71,15 +71,17 @@ class VideoService
                 'account' => AccountService::compact($video->profile_id),
                 'caption' => $video->caption,
                 'captionText' => $captionText,
+                'captionLinked' => $video->caption ? AutoLinkerService::link($video->caption) : null,
                 'url' => $video->shareUrl(),
                 'likes' => $video->likes,
                 'comments' => $video->comments,
                 'is_sensitive' => $video->is_sensitive,
                 'created_at' => $video->created_at->format('c'),
+                'updated_at' => $video->updated_at->format('c'),
                 'media' => [
                     'duration' => $video->duration,
-                    'width' => 1280,
-                    'height' => 720,
+                    'width' => $video->width ?? 720,
+                    'height' => $video->height ?? 1280,
                     'thumbnail' => $thumb,
                     'src_url' => $mediaUrl,
                 ],

@@ -23,6 +23,8 @@ export const useProfileStore = defineStore('profile', {
         followingCount: 0,
         followers: [],
         following: [],
+        hasAtom: false,
+        hasAtomUrl: null,
         links: [],
         followersNextCursor: null,
         followingNextCursor: null,
@@ -71,6 +73,8 @@ export const useProfileStore = defineStore('profile', {
                 this.followingCount = res.data.data.following_count
                 this.allLikes = res.data.data.likes_count
                 this.isSelf = res.data.data.is_owner
+                this.hasAtom = res.data.data?.has_atom
+                this.hasAtomUrl = res.data.data?.has_atom_url
                 this.posts = []
             } catch (error) {
                 console.error('Error fetching profile:', error)
@@ -183,6 +187,8 @@ export const useProfileStore = defineStore('profile', {
                 this.followingCount = res.data.data.following_count
                 this.allLikes = res.data.data.likes_count
                 this.isSelf = res.data.data.is_owner
+                this.hasAtom = res.data.data?.has_atom
+                this.hasAtomUrl = res.data.data?.has_atom_url
             } catch (error) {
                 console.error('Error fetching profile:', error)
                 throw error
@@ -469,6 +475,8 @@ export const useProfileStore = defineStore('profile', {
             this.followersNextCursor = []
             this.followingNextCursor = []
             this.isSelf = null
+            this.hasAtom = false
+            this.hasAtomUrl = null
             this.isFollowingRequestPending = null
             this.relationship = {
                 blocking: false

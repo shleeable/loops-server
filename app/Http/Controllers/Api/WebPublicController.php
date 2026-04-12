@@ -20,6 +20,7 @@ use App\Models\Page;
 use App\Models\Profile;
 use App\Models\StarterKit;
 use App\Models\SystemMessage;
+use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoBookmark;
 use App\Models\VideoHashtag;
@@ -211,6 +212,10 @@ class WebPublicController extends Controller
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_owner'] = $request->user()?->profile_id == $profile->id;
         $res['likes_count'] = AccountService::getAccountLikesCount($profile->id);
+        if ($profile->user_id && $profile->user->has_atom) {
+            $res['has_atom'] = true;
+            $res['has_atom_url'] = route('user.atom', $profile->id);
+        }
 
         return response()->json(['data' => $res], 200, [], JSON_UNESCAPED_SLASHES);
     }
@@ -593,6 +598,17 @@ class WebPublicController extends Controller
         abort_unless(app(ConfigService::class)->starterKits(), 404);
 
         return $this->data(['top_creators' => app(StarterKitService::class)->getTopCreatorsWeekly()]);
+    }
+
+    public function userPermalinkRedirect(Request $request, $profileId)
+    {
+        $user = User::isActive()->where('profile_id', $profileId)->firstOrFail();
+
+        if ($request->wantsJson()) {
+            return redirect('/ap/users/'.$user->profile_id);
+        }
+
+        return redirect('/@'.$user->username);
     }
 
     private function defaultCollection($meta = [])

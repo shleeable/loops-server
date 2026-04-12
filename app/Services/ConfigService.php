@@ -198,4 +198,24 @@ class ConfigService
             return $config->value;
         });
     }
+
+    public function atomFeeds($flush = false)
+    {
+        $key = self::CACHE_KEY.'general.userAtomFeeds';
+
+        if ($flush) {
+            Cache::forget($key);
+        }
+
+        return Cache::rememberForever($key, function () {
+            $config = AdminSetting::where('key', 'general.userAtomFeeds')->first();
+            if (! $config) {
+                app(SettingsFileService::class)->generatePublicConfig();
+
+                return false;
+            }
+
+            return $config->value;
+        });
+    }
 }
