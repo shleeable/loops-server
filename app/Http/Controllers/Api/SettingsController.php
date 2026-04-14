@@ -15,6 +15,7 @@ use App\Models\UserFilter;
 use App\Services\AccountService;
 use App\Services\AccountSuggestionService;
 use App\Services\AvatarService;
+use App\Services\PushTokenCacheService;
 use App\Services\StarterKitService;
 use App\Services\TwoFactorService;
 use App\Services\UserActivityService;
@@ -326,9 +327,14 @@ class SettingsController extends Controller
         $user = $request->user();
 
         DB::transaction(function () use ($user) {
+            app(PushTokenCacheService::class)->remove((string) $user->profile_id);
+
             $user->forceFill([
                 'status' => 7,
                 'remember_token' => Str::random(60),
+                'push_token' => null,
+                'push_token_platform' => null,
+                'push_token_verified_at' => null,
             ])->save();
             $user->profile?->update(['status' => 7]);
             $user->videos()->whereIn('status', [2])->update(['status' => 7]);
@@ -369,10 +375,15 @@ class SettingsController extends Controller
         $user = $request->user();
 
         DB::transaction(function () use ($user) {
+            app(PushTokenCacheService::class)->remove((string) $user->profile_id);
+
             $user->forceFill([
                 'status' => 8,
                 'delete_after' => now()->addMonth(),
                 'remember_token' => Str::random(60),
+                'push_token' => null,
+                'push_token_platform' => null,
+                'push_token_verified_at' => null,
             ])->save();
 
             $user->profile?->update(['status' => 8]);
