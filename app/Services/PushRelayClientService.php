@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class PushRelayClientService
 {
@@ -12,12 +13,11 @@ class PushRelayClientService
 
     protected $secret;
 
-    protected $secretPath;
+    protected const SECRET_FILE = 'push_relay_secret.json';
 
     public function __construct()
     {
         $this->domain = parse_url(config('app.url'), PHP_URL_HOST);
-        $this->secretPath = storage_path('app/push_relay_secret.json');
     }
 
     public function ensureAttested(): bool
@@ -51,12 +51,12 @@ class PushRelayClientService
 
     protected function readSecretFromDisk(): ?string
     {
-        if (! file_exists($this->secretPath)) {
+        if (! Storage::exists(self::SECRET_FILE)) {
             return null;
         }
 
         try {
-            $data = json_decode(file_get_contents($this->secretPath), true);
+            $data = json_decode(Storage::get(self::SECRET_FILE), true);
 
             return $data['secret'] ?? null;
         } catch (\Exception $e) {
@@ -71,19 +71,11 @@ class PushRelayClientService
     protected function persistSecretToDisk(string $secret): void
     {
         try {
-            $dir = dirname($this->secretPath);
-
-            if (! is_dir($dir)) {
-                mkdir($dir, 0755, true);
-            }
-
-            file_put_contents($this->secretPath, json_encode([
+            Storage::put(self::SECRET_FILE, json_encode([
                 'secret' => $secret,
                 'domain' => $this->domain,
                 'attested_at' => now()->toIso8601String(),
-            ], JSON_PRETTY_PRINT), LOCK_EX);
-
-            chmod($this->secretPath, 0600);
+            ], JSON_PRETTY_PRINT));
         } catch (\Exception $e) {
             Log::warning('Failed to persist push relay secret to disk', [
                 'error' => $e->getMessage(),
@@ -93,8 +85,10 @@ class PushRelayClientService
 
     protected function clearSecretFromDisk(): void
     {
-        if (file_exists($this->secretPath)) {
-            @unlink($this->secretPath);
+        try {
+            Storage::delete(self::SECRET_FILE);
+        } catch (\Exception $e) {
+            // Silently ignore if file doesn't exist
         }
     }
 
