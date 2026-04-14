@@ -92,7 +92,7 @@ Route::post('/auth/start', [WebPublicController::class, 'authStartFallback']);
 
 Route::prefix('api')->group(function () {
     Route::post('/v1/apps', [AuthController::class, 'registerApp']);
-    Route::get('/v1/config', [WebPublicController::class, 'appConfiguration']);
+    Route::get('/v1/config', [WebPublicController::class, 'appConfiguration'])->middleware([OptionalAuth::class, 'throttle:api']);
 
     Route::get('/v1/web/report-rules', [WebPublicController::class, 'reportTypes']);
 
