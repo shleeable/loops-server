@@ -30,6 +30,7 @@ use App\Services\ConfigService;
 use App\Services\FollowerService;
 use App\Services\LinkLimitService;
 use App\Services\NotificationService;
+use App\Services\PushTokenCacheService;
 use App\Services\SystemMessageService;
 use App\Services\UserActivityService;
 use App\Services\UserFilterService;
@@ -903,6 +904,8 @@ class AccountController extends Controller
             'push_token_platform' => $validated['platform'],
         ]);
 
+        app(PushTokenCacheService::class)->add((string) $user->profile_id, $validated['token']);
+
         return $this->success();
     }
 
@@ -921,6 +924,8 @@ class AccountController extends Controller
         }
 
         $user->update(['push_token' => null, 'push_token_verified_at' => null, 'push_token_platform' => null]);
+
+        app(PushTokenCacheService::class)->remove((string) $user->profile_id);
 
         return $this->success();
     }
