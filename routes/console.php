@@ -12,7 +12,6 @@ Schedule::command('app:system-message-seeder')->daily()->onOneServer();
 Schedule::command('app:system-message-garbage-collector')->daily()->onOneServer();
 Schedule::command('passport:purge --revoked')->daily()->onOneServer();
 Schedule::command('version:check --force')->twiceDaily(9, 17)->withoutOverlapping()->runInBackground()->onOneServer();
-Schedule::command('videos:retry-failed')->everyThirtyMinutes()->onOneServer();
 Schedule::command('app:instance-stats-collector-command')->hourlyAt(20)->onOneServer();
 Schedule::command('logs:clean-admin-security --days=14')->dailyAt('03:00')->onOneServer();
 Schedule::command('curated:expire-stale')->hourly()->onOneServer();
