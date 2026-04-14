@@ -21,7 +21,7 @@ class PushService
         $actor = $this->resolveUsername($actorId);
 
         return $this->send($profileId, "{$actor} liked your video", [
-            'url' => '/private/video/'.$videoId,
+            'url' => '/private/profile/feed/'.$videoId.'?profileId='.$profileId,
         ]);
     }
 
@@ -30,7 +30,7 @@ class PushService
         $actor = $this->resolveUsername($actorId);
 
         return $this->send($profileId, "{$actor} commented on your video", [
-            'url' => '/private/video/'.$videoId,
+            'url' => '/private/profile/feed/'.$videoId.'?profileId='.$profileId,
         ]);
     }
 
@@ -39,7 +39,7 @@ class PushService
         $actor = $this->resolveUsername($actorId);
 
         return $this->send($profileId, "{$actor} replied to your comment", [
-            'url' => '/private/video/'.$videoId,
+            'url' => '/private/profile/feed/'.$videoId.'?profileId='.$profileId,
         ]);
     }
 
@@ -66,7 +66,7 @@ class PushService
         $actor = $this->resolveUsername($actorId);
 
         return $this->send($profileId, "{$actor} mentioned you in a video", [
-            'url' => '/private/video/'.$videoId,
+            'url' => '/private/profile/feed/'.$videoId.'?profileId='.$profileId,
         ]);
     }
 
@@ -75,7 +75,7 @@ class PushService
         $actor = $this->resolveUsername($actorId);
 
         return $this->send($profileId, "{$actor} mentioned you in a comment", [
-            'url' => '/private/video/'.$videoId,
+            'url' => '/private/profile/feed/'.$videoId.'?profileId='.$profileId,
         ]);
     }
 
@@ -109,7 +109,7 @@ class PushService
     public function videoProcessed(int $profileId, int $videoId): bool
     {
         return $this->send($profileId, 'Your video has been published!', [
-            'url' => '/private/video/'.$videoId,
+            'url' => '/private/profile/feed/'.$videoId.'?profileId='.$profileId,
         ]);
     }
 
