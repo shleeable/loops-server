@@ -28,6 +28,7 @@ use App\Jobs\Federation\DeliverUndoCommentLikeActivity;
 use App\Jobs\Federation\DeliverUndoCommentReplyLikeActivity;
 use App\Jobs\Federation\DeliverUndoVideoLikeActivity;
 use App\Jobs\Federation\DeliverVideoLikeActivity;
+use App\Jobs\PushNotifications\SendPushNotificationJob;
 use App\Jobs\Video\VideoCustomThumbnailJob;
 use App\Jobs\Video\VideoOptimizeJob;
 use App\Jobs\Video\VideoProcessingCompleteJob;
@@ -441,6 +442,16 @@ class VideoController extends Controller
 
             app(LikeService::class)->addVideoLike((string) $video->id, (string) $pid);
 
+            if (app(ConfigService::class)->pushNotifications()) {
+                if ($pid != $video->profile_id) {
+                    SendPushNotificationJob::dispatch_newVideoLike(
+                        profileId: $video->profile_id,
+                        videoId: $video->id,
+                        actorId: $pid,
+                    );
+                }
+            }
+
             if ($video->uri) {
                 $config = app(ConfigService::class);
                 if ($config->federation()) {
@@ -597,6 +608,17 @@ class VideoController extends Controller
             if ($config->federation()) {
                 app(FederationDispatcher::class)->dispatchCommentReplyCreation($comment);
             }
+
+            if ($config->pushNotifications()) {
+                if ($pid != $parent->profile_id && $pid != $video->profile_id) {
+                    SendPushNotificationJob::dispatch_newVideoCommentReply(
+                        profileId: $parent->profile_id,
+                        videoId: $video->id,
+                        actorId: $pid,
+                        commentId: $comment->id,
+                    );
+                }
+            }
         } else {
             $comment = new Comment;
             $comment->video_id = $vid;
@@ -611,6 +633,17 @@ class VideoController extends Controller
             $config = app(ConfigService::class);
             if ($config->federation()) {
                 app(FederationDispatcher::class)->dispatchCommentCreation($comment);
+            }
+
+            if ($config->pushNotifications()) {
+                if ($pid != $video->profile_id) {
+                    SendPushNotificationJob::dispatch_newVideoComment(
+                        profileId: $video->profile_id,
+                        videoId: $video->id,
+                        actorId: $pid,
+                        commentId: $comment->id,
+                    );
+                }
             }
         }
 
