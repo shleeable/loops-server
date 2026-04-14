@@ -151,7 +151,7 @@ class AccountController extends Controller
     public function markAllNotificationsAsRead(Request $request)
     {
         $validated = $request->validate([
-            'type' => 'sometimes|in:all,activity,system,followers,videoLike,videoShare,comments,commentLike,commentShare',
+            'type' => 'sometimes|in:all,activity,system,followers,videoLike,videoShare,comments,commentLike,commentShare,starterKits',
         ]);
         $pid = $request->user()->profile_id;
         $type = data_get($validated, 'type', 'all');
@@ -166,6 +166,7 @@ class AccountController extends Controller
             'comments' => Notification::whereUserId($pid)->whereIn('type', Notification::commentsTypes())->update(['read_at' => now()]),
             'commentLike' => Notification::whereUserId($pid)->whereIn('type', Notification::commentLikeTypes())->update(['read_at' => now()]),
             'commentShare' => Notification::whereUserId($pid)->whereIn('type', Notification::commentShareTypes())->update(['read_at' => now()]),
+            'starterKits' => Notification::whereUserId($pid)->whereIn('type', Notification::starterKitTypes())->update(['read_at' => now()]),
             default => Notification::whereUserId($pid)->update(['read_at' => now()]),
         };
         NotificationService::clearUnreadCount($pid);
