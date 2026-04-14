@@ -919,7 +919,7 @@ class AccountController extends Controller
             return $this->error('You do not have permission for this.', 422);
         }
 
-        $user->update(['push_token' => null, 'push_token_verified_at' => null]);
+        $user->update(['push_token' => null, 'push_token_verified_at' => null, 'push_token_platform' => null]);
 
         return $this->success();
     }
