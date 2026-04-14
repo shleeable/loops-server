@@ -12,9 +12,12 @@ class PushRelayClientService
 
     protected $secret;
 
+    protected $secretPath;
+
     public function __construct()
     {
         $this->domain = parse_url(config('app.url'), PHP_URL_HOST);
+        $this->secretPath = storage_path('app/push_relay_secret.json');
     }
 
     public function ensureAttested(): bool
@@ -29,7 +32,70 @@ class PushRelayClientService
             return true;
         }
 
+        $this->secret = $this->readSecretFromDisk();
+
+        if ($this->secret) {
+            Cache::put('push_relay_secret', $this->secret, 60 * 60 * 24 * 365);
+
+            if (config('logging.dev_log')) {
+                Log::info('Rewarmed push relay secret from disk', [
+                    'domain' => $this->domain,
+                ]);
+            }
+
+            return true;
+        }
+
         return $this->attest();
+    }
+
+    protected function readSecretFromDisk(): ?string
+    {
+        if (! file_exists($this->secretPath)) {
+            return null;
+        }
+
+        try {
+            $data = json_decode(file_get_contents($this->secretPath), true);
+
+            return $data['secret'] ?? null;
+        } catch (\Exception $e) {
+            Log::warning('Failed to read push relay secret from disk', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    protected function persistSecretToDisk(string $secret): void
+    {
+        try {
+            $dir = dirname($this->secretPath);
+
+            if (! is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+
+            file_put_contents($this->secretPath, json_encode([
+                'secret' => $secret,
+                'domain' => $this->domain,
+                'attested_at' => now()->toIso8601String(),
+            ], JSON_PRETTY_PRINT), LOCK_EX);
+
+            chmod($this->secretPath, 0600);
+        } catch (\Exception $e) {
+            Log::warning('Failed to persist push relay secret to disk', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    protected function clearSecretFromDisk(): void
+    {
+        if (file_exists($this->secretPath)) {
+            @unlink($this->secretPath);
+        }
     }
 
     protected function attest(): bool
@@ -75,6 +141,7 @@ class PushRelayClientService
                 $this->secret = $data['secret'];
 
                 Cache::put('push_relay_secret', $this->secret, 60 * 60 * 24 * 365);
+                $this->persistSecretToDisk($this->secret);
 
                 if (config('logging.dev_log')) {
                     Log::info('Successfully attested with push relay', [
@@ -129,8 +196,9 @@ class PushRelayClientService
             }
 
             if ($response->status() === 401) {
-                Log::warning('Push relay returned 401, invalidating cached secret and re-attesting');
+                Log::warning('Push relay returned 401, invalidating secret and re-attesting');
                 Cache::forget('push_relay_secret');
+                $this->clearSecretFromDisk();
                 $this->secret = null;
 
                 if ($this->ensureAttested()) {
@@ -182,6 +250,7 @@ class PushRelayClientService
             if ($response->status() === 401) {
                 Log::warning('Push relay returned 401 for batch, re-attesting');
                 Cache::forget('push_relay_secret');
+                $this->clearSecretFromDisk();
                 $this->secret = null;
 
                 if ($this->ensureAttested()) {
@@ -219,6 +288,7 @@ class PushRelayClientService
     public function forceAttest(): bool
     {
         Cache::forget('push_relay_secret');
+        $this->clearSecretFromDisk();
         $this->secret = null;
 
         return $this->attest();
