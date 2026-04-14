@@ -40,6 +40,7 @@ use App\Services\ExploreService;
 use App\Services\InstanceService;
 use App\Services\NodeinfoCrawlerService;
 use App\Services\PrivateMediaTokenService;
+use App\Services\PushTokenCacheService;
 use App\Services\SanitizeService;
 use App\Services\StarterKitPendingChangeService;
 use App\Services\StarterKitService;
@@ -421,10 +422,11 @@ class AdminController extends Controller
         AccountService::del($profile->id);
 
         if ($profile->local) {
+            app(PushTokenCacheService::class)->remove((string) $profile->id);
             DB::table('oauth_access_tokens')->where('user_id', $profile->user_id)->delete();
             DB::table('oauth_auth_codes')->where('user_id', $profile->user_id)->delete();
             DB::table('sessions')->where('user_id', $profile->user_id)->delete();
-            $profile->user->update(['status' => 6]);
+            $profile->user->update(['status' => 6, 'push_token' => null, 'push_token_platform' => null, 'push_token_verified_at' => null]);
             $profile->user->videos()->whereIn('status', [2])->update(['status' => 6]);
             $profile->user->comments()->where('status', 'active')->update(['status' => 'account_pending_deletion']);
             $profile->user->commentReplies()->where('status', 'active')->update(['status' => 'account_pending_deletion']);
