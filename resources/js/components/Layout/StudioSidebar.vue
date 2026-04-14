@@ -93,7 +93,7 @@ const isMobile = computed(() => windowWidth.value < 1024)
 
 const sections = computed(() => {
     const manageLinks = [
-        { name: t('nav.home'), path: '/studio/', icon: 'bx bx-home' },
+        { name: 'Analytics', path: '/studio/', icon: 'bx bx-bar-chart' },
         { name: t('studio.posts'), path: '/studio/posts', icon: 'bx bx-video' }
     ]
 

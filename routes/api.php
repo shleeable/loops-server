@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StarterKitController;
+use App\Http\Controllers\Api\StudioAnalyticsController;
 use App\Http\Controllers\Api\StudioController;
 use App\Http\Controllers\Api\UserPreferencesController;
 use App\Http\Controllers\Api\VideoController;
@@ -129,6 +130,9 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/studio/playlists/{playlist}/videos', [PlaylistController::class, 'addVideo'])->middleware('auth:web,api');
     Route::delete('/v1/studio/playlists/{playlist}/videos/{video}', [PlaylistController::class, 'removeVideo'])->middleware('auth:web,api');
     Route::put('/v1/studio/playlists/{playlist}/reorder', [PlaylistController::class, 'reorder'])->middleware('auth:web,api');
+    Route::get('/v1/studio/analytics/views', [StudioAnalyticsController::class, 'videoViews'])->middleware('auth:web,api');
+    Route::get('/v1/studio/analytics/followers', [StudioAnalyticsController::class, 'newFollowers'])->middleware('auth:web,api');
+    Route::get('/v1/studio/analytics/links', [StudioAnalyticsController::class, 'profileLinks'])->middleware('auth:web,api');
 
     // Search
     Route::get('/v1/search', [SearchController::class, 'search'])->middleware(['auth:web,api', 'throttle:searchV1']);
