@@ -11,6 +11,7 @@ use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\Api\AppController;
 use App\Http\Controllers\Api\DuetController;
 use App\Http\Controllers\Api\ExploreController;
 use App\Http\Controllers\Api\FeedController;
@@ -205,6 +206,9 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/account/settings/push-notifications/status', [AccountController::class, 'getPushNotificationStatus'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/push-notifications/enable', [AccountController::class, 'enablePushNotifications'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/push-notifications/disable', [AccountController::class, 'disablePushNotifications'])->middleware(['auth:web,api']);
+
+    // App
+    Route::post('/v1/app/logout', [AppController::class, 'handleLogout'])->middleware(['auth:web,api']);
 
     Route::get('/v1/account/settings/starter-kits/status', [AccountController::class, 'getStarterKitsStatus'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/starter-kits/update', [AccountController::class, 'updateStarterKitsStatus'])->middleware(['auth:web,api']);
