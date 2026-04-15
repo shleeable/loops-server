@@ -448,8 +448,10 @@ class WebPublicController extends Controller
         return $this->data(app(IntlService::class)->get());
     }
 
-    public function appConfiguration()
+    public function appConfiguration(Request $request)
     {
+        abort_if($request->user() && $request->user()->cannot('viewAny', [Video::class]), 403, 'You cannot access this resource.');
+
         $config = FrontendService::getCache();
         $config['app']['software'] = 'loops';
         $config['app']['version'] = app('app_version');

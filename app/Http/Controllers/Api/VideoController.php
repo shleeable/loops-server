@@ -28,6 +28,7 @@ use App\Jobs\Federation\DeliverUndoCommentLikeActivity;
 use App\Jobs\Federation\DeliverUndoCommentReplyLikeActivity;
 use App\Jobs\Federation\DeliverUndoVideoLikeActivity;
 use App\Jobs\Federation\DeliverVideoLikeActivity;
+use App\Jobs\PushNotifications\SendPushNotificationJob;
 use App\Jobs\Video\VideoCustomThumbnailJob;
 use App\Jobs\Video\VideoOptimizeJob;
 use App\Jobs\Video\VideoProcessingCompleteJob;
@@ -39,6 +40,7 @@ use App\Models\CommentReply;
 use App\Models\CommentReplyCaptionEdit;
 use App\Models\CommentReplyLike;
 use App\Models\Hashtag;
+use App\Models\Notification;
 use App\Models\Profile;
 use App\Models\Video;
 use App\Models\VideoBookmark;
@@ -50,6 +52,7 @@ use App\Services\ActivityPubCacheService;
 use App\Services\ConfigService;
 use App\Services\FederationDispatcher;
 use App\Services\LikeService;
+use App\Services\NotificationService;
 use App\Services\SanitizeService;
 use App\Services\UserActivityService;
 use App\Services\VideoService;
@@ -407,6 +410,8 @@ class VideoController extends Controller
             app(FederationDispatcher::class)->dispatchVideoDeleteToAllKnownInboxes($actor, $videoId, $videoObjectUrl);
         }
 
+        Notification::where('video_id', $video->id)->delete();
+        NotificationService::clearUnreadCount($pid);
         $video->forceDelete();
         VideoService::deleteMediaData($videoId);
         AccountService::del($pid);
@@ -436,6 +441,16 @@ class VideoController extends Controller
             $video->saveQuietly();
 
             app(LikeService::class)->addVideoLike((string) $video->id, (string) $pid);
+
+            if (app(ConfigService::class)->pushNotifications()) {
+                if ($pid != $video->profile_id) {
+                    SendPushNotificationJob::dispatch_newVideoLike(
+                        profileId: $video->profile_id,
+                        videoId: $video->id,
+                        actorId: $pid,
+                    );
+                }
+            }
 
             if ($video->uri) {
                 $config = app(ConfigService::class);
@@ -593,6 +608,17 @@ class VideoController extends Controller
             if ($config->federation()) {
                 app(FederationDispatcher::class)->dispatchCommentReplyCreation($comment);
             }
+
+            if ($config->pushNotifications()) {
+                if ($pid != $parent->profile_id && $pid != $video->profile_id) {
+                    SendPushNotificationJob::dispatch_newVideoCommentReply(
+                        profileId: $parent->profile_id,
+                        videoId: $video->id,
+                        actorId: $pid,
+                        commentId: $comment->id,
+                    );
+                }
+            }
         } else {
             $comment = new Comment;
             $comment->video_id = $vid;
@@ -607,6 +633,17 @@ class VideoController extends Controller
             $config = app(ConfigService::class);
             if ($config->federation()) {
                 app(FederationDispatcher::class)->dispatchCommentCreation($comment);
+            }
+
+            if ($config->pushNotifications()) {
+                if ($pid != $video->profile_id) {
+                    SendPushNotificationJob::dispatch_newVideoComment(
+                        profileId: $video->profile_id,
+                        videoId: $video->id,
+                        actorId: $pid,
+                        commentId: $comment->id,
+                    );
+                }
             }
         }
 

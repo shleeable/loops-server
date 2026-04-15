@@ -30,6 +30,7 @@ use App\Services\ConfigService;
 use App\Services\FollowerService;
 use App\Services\LinkLimitService;
 use App\Services\NotificationService;
+use App\Services\PushTokenCacheService;
 use App\Services\SystemMessageService;
 use App\Services\UserActivityService;
 use App\Services\UserFilterService;
@@ -151,7 +152,7 @@ class AccountController extends Controller
     public function markAllNotificationsAsRead(Request $request)
     {
         $validated = $request->validate([
-            'type' => 'sometimes|in:all,activity,system,followers,videoLike,videoShare,comments,commentLike,commentShare',
+            'type' => 'sometimes|in:all,activity,system,followers,videoLike,videoShare,comments,commentLike,commentShare,starterKits',
         ]);
         $pid = $request->user()->profile_id;
         $type = data_get($validated, 'type', 'all');
@@ -166,6 +167,7 @@ class AccountController extends Controller
             'comments' => Notification::whereUserId($pid)->whereIn('type', Notification::commentsTypes())->update(['read_at' => now()]),
             'commentLike' => Notification::whereUserId($pid)->whereIn('type', Notification::commentLikeTypes())->update(['read_at' => now()]),
             'commentShare' => Notification::whereUserId($pid)->whereIn('type', Notification::commentShareTypes())->update(['read_at' => now()]),
+            'starterKits' => Notification::whereUserId($pid)->whereIn('type', Notification::starterKitTypes())->update(['read_at' => now()]),
             default => Notification::whereUserId($pid)->update(['read_at' => now()]),
         };
         NotificationService::clearUnreadCount($pid);
@@ -902,6 +904,8 @@ class AccountController extends Controller
             'push_token_platform' => $validated['platform'],
         ]);
 
+        app(PushTokenCacheService::class)->add((string) $user->profile_id, $validated['token']);
+
         return $this->success();
     }
 
@@ -919,7 +923,9 @@ class AccountController extends Controller
             return $this->error('You do not have permission for this.', 422);
         }
 
-        $user->update(['push_token' => null, 'push_token_verified_at' => null]);
+        $user->update(['push_token' => null, 'push_token_verified_at' => null, 'push_token_platform' => null]);
+
+        app(PushTokenCacheService::class)->remove((string) $user->profile_id);
 
         return $this->success();
     }

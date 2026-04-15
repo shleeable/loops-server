@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Services\AccountService;
 use App\Services\AppleAuthService;
-use App\Services\SnowflakeService;
 use App\Services\StarterKitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -49,7 +48,9 @@ class AppleAuthController extends Controller
             $this->onboardDeactivatedAccount($user);
         }
 
-        $username = 'appleuser'.app(SnowflakeService::class)->next();
+        do {
+            $username = 'appleuser'.strtolower(Str::random(12));
+        } while (User::where('username', $username)->exists());
 
         if (! $user) {
             $user = User::create([

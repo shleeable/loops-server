@@ -7,6 +7,7 @@ use App\Http\Middleware\AdminOnlyAccess;
 use App\Jobs\Federation\DiscoverInstance;
 use App\Models\AdminSetting;
 use App\Services\PushRelayClientService;
+use App\Services\PushTokenCacheService;
 use App\Services\RedisService;
 use App\Services\SanitizeService;
 use App\Services\SettingsFileService;
@@ -95,6 +96,11 @@ class AdminSettingsController extends Controller
                 }
                 if ($section == 'general' && $key == 'pushNotifications' && $value) {
                     $attest = app(PushRelayClientService::class)->ensureAttested();
+
+                    if ($attest) {
+                        // Ensure the PushTokenCache is warmed
+                        app(PushTokenCacheService::class)->all();
+                    }
 
                     if (! $attest) {
                         $value = false;

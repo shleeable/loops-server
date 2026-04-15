@@ -44,7 +44,7 @@ class StudioController extends Controller
             ->when($search, function ($query, $search) {
                 $query->where('caption', 'like', "%{$search}%");
             })
-            ->orderBy($sortBy, $sortDir)
+            ->orderBy('created_at', $sortDir)
             ->cursorPaginate($limit)
             ->withQueryString();
 

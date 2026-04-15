@@ -266,7 +266,7 @@
                         </template>
                     </div>
 
-                    <div class="mt-3 sm:mt-3 leading-relaxed break-words">
+                    <div class="mt-3 sm:mt-3 leading-relaxed break-words dark:text-gray-300">
                         <AutolinkedText
                             :caption="currentVideo?.caption"
                             :mentions="currentVideo?.mentions"

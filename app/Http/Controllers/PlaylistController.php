@@ -36,7 +36,7 @@ class PlaylistController extends Controller
 
         $sortField = $request->input('sort_field', 'created_at');
         $sortDirection = $request->input('sort_direction', 'desc');
-        $query->orderBy($sortField, $sortDirection);
+        $query->orderBy('created_at', $sortDirection);
 
         $perPage = $request->input('limit', 10);
         $playlists = $query->cursorPaginate($perPage);

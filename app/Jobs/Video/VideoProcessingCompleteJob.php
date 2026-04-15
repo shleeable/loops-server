@@ -2,6 +2,7 @@
 
 namespace App\Jobs\Video;
 
+use App\Jobs\PushNotifications\SendPushNotificationJob;
 use App\Services\ConfigService;
 use App\Services\FederationDispatcher;
 use Illuminate\Bus\Queueable;
@@ -49,6 +50,13 @@ class VideoProcessingCompleteJob implements ShouldQueue
 
                 $video->federated_at = now();
                 $video->save();
+            }
+
+            if ($config->pushNotifications()) {
+                SendPushNotificationJob::dispatch_videoProcessed(
+                    profileId: $video->profile_id,
+                    videoId: $video->id,
+                );
             }
         } catch (\Exception $e) {
             Log::error('Video completion processing failed', [
