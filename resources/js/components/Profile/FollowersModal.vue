@@ -38,7 +38,9 @@
 
                     <div ref="containerRef" class="max-h-[60vh] overflow-y-auto">
                         <div class="min-h-[350px] transition-all duration-300 ease-in-out">
-                            <Transition
+                            <TransitionGroup
+                                name="list"
+                                tag="div"
                                 enter-active-class="transition-all duration-200 ease-out"
                                 enter-from-class="opacity-0 scale-95"
                                 enter-to-class="opacity-100 scale-100"
@@ -47,7 +49,29 @@
                                 leave-to-class="opacity-0 scale-95"
                             >
                                 <div
-                                    v-if="isInitialLoading"
+                                    v-if="isGated && !isInitialLoading"
+                                    class="flex flex-col items-center justify-center text-center px-6 h-[350px]"
+                                >
+                                    <div
+                                        class="mb-5 flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-slate-800"
+                                    >
+                                        <LockClosedIcon
+                                            class="w-7 h-7 text-gray-500 dark:text-slate-400"
+                                        />
+                                    </div>
+                                    <h3
+                                        class="text-lg font-semibold text-gray-900 dark:text-slate-200 mb-2"
+                                    >
+                                        {{ gatedTitle }}
+                                    </h3>
+                                    <p
+                                        class="text-sm text-gray-500 dark:text-slate-400 leading-relaxed max-w-xs"
+                                    >
+                                        {{ gatedMessage }}
+                                    </p>
+                                </div>
+                                <div
+                                    v-if="isInitialLoading && !isGated"
                                     class="flex flex-col items-center justify-center py-12 h-[350px]"
                                 >
                                     <div
@@ -58,10 +82,10 @@
                                         {{ activeTab }}...
                                     </p>
                                 </div>
-                            </Transition>
+                            </TransitionGroup>
 
                             <div
-                                v-if="!isInitialLoading"
+                                v-if="!isInitialLoading && !isGated"
                                 class="transition-all duration-300 ease-in-out"
                             >
                                 <TransitionGroup
@@ -185,6 +209,7 @@ import { useInfiniteScroll } from '@vueuse/core'
 import { useProfileStore } from '@/stores/profile'
 import Avatar from './Avatar.vue'
 import ProfileListCard from './ProfileListCard.vue'
+import { LockClosedIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 const props = defineProps({
     show: {
@@ -223,6 +248,20 @@ const hasLoadedInitially = ref({
     following: false
 })
 
+const isGated = computed(() => {
+    return (
+        profileStore.manuallyApprovesFollowers === true &&
+        !profileStore.relationship?.following &&
+        profileStore.isSelf === false
+    )
+})
+
+const gatedTitle = computed(() => t('profile.followersOnlyTitle'))
+
+const gatedMessage = computed(() =>
+    t('profile.followersOnlyMessage', { username: '@' + profileStore.username })
+)
+
 const currentList = computed(() => {
     return activeTab.value === 'followers' ? followers.value : following.value
 })
@@ -258,6 +297,10 @@ const emptyStateMessage = computed(() => {
 })
 
 const loadMore = async () => {
+    if (isGated.value) {
+        return
+    }
+
     if (isInitialLoading.value || isPaginationLoading.value || !hasMore.value[activeTab.value])
         return
 
@@ -303,13 +346,16 @@ const loadMore = async () => {
 watch(
     () => props.tab,
     (newTab) => {
-        containerRef.value?.scrollTo({ top: 0 })
         activeTab.value = newTab
-        if (props.show && !hasLoadedInitially.value[newTab]) {
-            loadMore()
-        }
     }
 )
+
+watch(activeTab, (newTab) => {
+    containerRef.value?.scrollTo({ top: 0 })
+    if (props.show && !hasLoadedInitially.value[newTab]) {
+        loadMore()
+    }
+})
 
 watch(
     () => props.show,
