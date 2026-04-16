@@ -672,7 +672,7 @@
         "noMorePostsToLoad": "Nincs több betölthető poszt",
         "noVideosYet": "Még nincsenek videók",
         "notFollowingAnyone": "Még nem követsz senkit",
-        "profile404ErrorMessage": "&commat;<b>{userId}<\/b> felhasználónévvel nem található fiók. Kérlek ellenőrizd a felhasználónevet és próbálkozz újra.",
+        "profile404ErrorMessage": "&commat;<b>{userid}<\/b> felhasználónévvel nem található fiók. Kérlek ellenőrizd a felhasználónevet és próbálkozz újra.",
         "profile500ErrorMessage": "Szervereink problémába ütköztek. Kérlek próbálkozz újra néhány pillanat múlva.",
         "profileNotFound": "Profil nem található",
         "profileOfflineErrorMessage": "Kérlek ellenőrizd az internetkapcsolatot és próbálkozz újra.",

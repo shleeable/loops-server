@@ -672,7 +672,7 @@
         "noMorePostsToLoad": "Plus rien à charger",
         "noVideosYet": "Pas encore de vidéos",
         "notFollowingAnyone": "Ne suit personne",
-        "profile404ErrorMessage": "Impossible de trouver un profil avec le pseudo &commat;<b>{userId}<\/b>. Vérifiez le pseudo et réessayez.",
+        "profile404ErrorMessage": "Impossible de trouver un profil avec le pseudo &commat;<b>{userid}<\/b>. Vérifiez le pseudo et réessayez.",
         "profile500ErrorMessage": "Nos serveurs ont un souci en ce moment. Réessayez dans quelques instants.",
         "profileNotFound": "Profil introuvable",
         "profileOfflineErrorMessage": "Vérifiez votre connexion internet et réessayez.",

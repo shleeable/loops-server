@@ -672,7 +672,7 @@
         "noMorePostsToLoad": "Geen berichten meer te laden",
         "noVideosYet": "Nog geen video's",
         "notFollowingAnyone": "Niemand aan het volgen",
-        "profile404ErrorMessage": "We konden geen profiel met de gebruikersnaam &commat;<b>{userId}<\/b>. Controleer de gebruikersnaam en probeer het opnieuw.",
+        "profile404ErrorMessage": "We konden geen profiel met de gebruikersnaam &commat;<b>{userid}<\/b>. Controleer de gebruikersnaam en probeer het opnieuw.",
         "profile500ErrorMessage": "Onze servers ondervinden momenteel problemen. Probeer het over zometeen opnieuw.",
         "profileNotFound": "Profiel niet gevonden",
         "profileOfflineErrorMessage": "Controleer je internetverbinding en probeer het opnieuw.",
