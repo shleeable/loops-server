@@ -444,17 +444,22 @@ class AccountController extends Controller
 
     public function accountFollowers(SearchFollowersRequest $request, $id)
     {
-        $profile = Profile::active()->findOrFail($id);
+        $authProfileId = $request->user()?->profile_id;
 
         if ($request->user() && $request->user()->cannot('viewAny', [Profile::class])) {
             return $this->error('Unavailable', 403);
         }
 
-        if ($profile->manuallyApprovesFollowers && $id != $request->user()->profile_id) {
-            return $this->error('You do not have permission to view this.', 403);
+        $profile = Profile::active()->findOrFail($id);
+
+        if ($profile->manuallyApprovesFollowers) {
+            if ($id != $authProfileId) {
+                if (! $authProfileId || ! app(FollowerService::class)->follows($authProfileId, $id)) {
+                    return $this->data([]);
+                }
+            }
         }
 
-        $authProfileId = $request->user()?->profile_id;
         $isOwner = $authProfileId && ((int) $authProfileId === (int) $profile->id || $request->user()->is_admin);
         $hasSearch = $request->filled('search');
 
@@ -501,17 +506,22 @@ class AccountController extends Controller
 
     public function accountFollowing(SearchFollowersRequest $request, $id)
     {
-        $profile = Profile::active()->findOrFail($id);
+        $authProfileId = $request->user()?->profile_id;
 
         if ($request->user() && $request->user()->cannot('viewAny', [Profile::class])) {
             return $this->error('Unavailable', 403);
         }
 
-        if ($profile->manuallyApprovesFollowers && $id != $request->user()->profile_id) {
-            return $this->error('You do not have permission to view this.', 403);
+        $profile = Profile::active()->findOrFail($id);
+
+        if ($profile->manuallyApprovesFollowers) {
+            if ($id != $authProfileId) {
+                if (! $authProfileId || ! app(FollowerService::class)->follows($authProfileId, $id)) {
+                    return $this->data([]);
+                }
+            }
         }
 
-        $authProfileId = $request->user()?->profile_id;
         $isOwner = $authProfileId && ((int) $authProfileId === (int) $profile->id || $request->user()->is_admin);
         $hasSearch = $request->filled('search');
 
@@ -565,11 +575,11 @@ class AccountController extends Controller
         $authProfileId = $request->user()->profile_id;
 
         if ($authProfileId == $id) {
-            return $this->error('Cannot get mutual following with yourself', 400);
+            return $this->error('Cannot get mutual following with yourself', 200);
         }
 
         if (! $request->user()->can_follow || $request->user()->cannot('viewAny', [Profile::class])) {
-            return $this->error('Unavailable', 403);
+            return $this->data([]);
         }
 
         if ($profile->manuallyApprovesFollowers && $id != $authProfileId) {
@@ -578,7 +588,7 @@ class AccountController extends Controller
                 ->exists();
 
             if (! $isFollowing) {
-                return $this->error('You do not have permission to view this.', 403);
+                return $this->data([]);
             }
         }
 
@@ -606,7 +616,7 @@ class AccountController extends Controller
         $authProfileId = $request->user()->profile_id;
 
         if ($authProfileId == $id) {
-            return $this->error('Cannot get suggestions for own profile', 400);
+            return $this->data([]);
         }
 
         $limit = 15;

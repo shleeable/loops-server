@@ -672,7 +672,7 @@
         "noMorePostsToLoad": "No hi ha més publicacions per carregar",
         "noVideosYet": "Encara no hi ha vídeos",
         "notFollowingAnyone": "No segueix ningú",
-        "profile404ErrorMessage": "No hem trobat cap perfil amb el nom d'usuari &commat;<b>{userId}<\/b>. Si us plau, comprova el nom i torna-ho a provar.",
+        "profile404ErrorMessage": "No hem trobat cap perfil amb el nom d'usuari &commat;<b>{userid}<\/b>. Si us plau, comprova el nom i torna-ho a provar.",
         "profile500ErrorMessage": "Els nostres servidors tenen problemes ara mateix. Torna-ho a provar d'aquí a uns instants.",
         "profileNotFound": "Perfil no trobat",
         "profileOfflineErrorMessage": "Comprova la teva connexió a internet i torna-ho a provar.",

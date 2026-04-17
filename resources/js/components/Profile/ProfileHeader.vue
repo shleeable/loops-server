@@ -7,6 +7,8 @@
                         class="w-24 h-24 sm:w-32 sm:h-32 lg:max-w-[200px] lg:w-[200px] lg:h-[200px] rounded-full object-cover border border-gray-200 dark:border-gray-800"
                         :src="profile.avatar"
                         @error="$event.target.src = '/storage/avatars/default.jpg'"
+                        fetchpriority="high"
+                        :alt="`${profile.username}'s avatar`"
                     />
                 </div>
 
@@ -112,7 +114,11 @@
                                     @click="handleToggleFollow"
                                     class="flex item-center rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-white bg-red-500 hover:bg-red-400 font-semibold border dark:border-slate-950 cursor-pointer"
                                 >
-                                    {{ t('common.follow') }}
+                                    {{
+                                        profile.manuallyApprovesFollowers
+                                            ? t('common.requestToFollow')
+                                            : t('common.follow')
+                                    }}
                                 </button>
                                 <button
                                     v-else
@@ -261,9 +267,36 @@
                     </div>
 
                     <div
-                        class="pt-4 text-gray-500 dark:text-slate-400 font-light text-sm sm:text-[15px] max-w-full lg:max-w-[500px] text-center lg:text-left"
+                        v-if="profile.bio"
+                        class="pt-4 max-w-full lg:max-w-[500px] mx-auto lg:mx-0 text-center lg:text-left"
                     >
-                        {{ profile.bio }}
+                        <div
+                            ref="bioWrapperRef"
+                            class="overflow-hidden transition-[max-height] duration-300 ease-out"
+                            :style="{
+                                maxHeight: bioExpanded
+                                    ? `${bioFullHeight}px`
+                                    : `${bioCollapsedHeight}px`,
+                                transitionTimingFunction: bioExpanded
+                                    ? 'cubic-bezier(0.22, 1, 0.36, 1)'
+                                    : 'cubic-bezier(0.4, 0, 0.2, 1)'
+                            }"
+                        >
+                            <p
+                                ref="bioRef"
+                                class="text-gray-500 dark:text-slate-400 font-light text-sm sm:text-[15px] whitespace-pre-wrap break-words"
+                            >
+                                {{ profile.bio }}
+                            </p>
+                        </div>
+                        <button
+                            v-if="bioOverflowing"
+                            @click="bioExpanded = !bioExpanded"
+                            type="button"
+                            class="mt-1 text-xs font-semibold text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100 transition-colors cursor-pointer"
+                        >
+                            {{ bioExpanded ? t('common.showLess') : t('common.showMore') }}
+                        </button>
                     </div>
 
                     <div
@@ -364,6 +397,15 @@ const menuRef = ref(null)
 const followersTab = ref('followers')
 const isFollowing = computed(() => profile.isFollowing)
 const isFollowingRequestPending = computed(() => profile.isFollowingRequestPending)
+const BIO_MAX_LINES = 3
+const bioRef = ref(null)
+const bioWrapperRef = ref(null)
+const bioExpanded = ref(false)
+const bioOverflowing = ref(false)
+const bioCollapsedHeight = ref(0)
+const bioFullHeight = ref(0)
+
+let resizeObserver = null
 
 const handleToggleFollow = async () => {
     const state = isFollowing.value
@@ -377,6 +419,23 @@ const handleToggleFollow = async () => {
     if (result) {
         await toggleFollow()
     }
+}
+
+const measureBio = async () => {
+    await nextTick()
+    if (!bioRef.value) return
+
+    const el = bioRef.value
+    const style = window.getComputedStyle(el)
+    let lineHeight = parseFloat(style.lineHeight)
+
+    if (Number.isNaN(lineHeight)) {
+        lineHeight = parseFloat(style.fontSize) * 1.4
+    }
+
+    bioFullHeight.value = el.scrollHeight
+    bioCollapsedHeight.value = Math.ceil(lineHeight * BIO_MAX_LINES)
+    bioOverflowing.value = bioFullHeight.value > bioCollapsedHeight.value + 1
 }
 
 const handleFollowersModal = () => {
@@ -464,9 +523,26 @@ const handleClickOutside = (event) => {
 
 onMounted(() => {
     document.addEventListener('click', handleClickOutside)
+    measureBio()
+
+    if (bioRef.value && 'ResizeObserver' in window) {
+        resizeObserver = new ResizeObserver(() => measureBio())
+        resizeObserver.observe(bioRef.value)
+    }
+    window.addEventListener('resize', measureBio)
 })
 
 onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside)
+    window.removeEventListener('resize', measureBio)
+    resizeObserver?.disconnect()
 })
+
+watch(
+    () => profile.bio,
+    () => {
+        bioExpanded.value = false
+        measureBio()
+    }
+)
 </script>

@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Cache;
 
 class AccountService
 {
-    const CACHE_KEY = 'api:s:account:v1:';
+    const CACHE_KEY = 'api:s:account:v2:';
 
     const ACCOUNT_LIKES_CACHE_KEY = 'api:s:account:likes_count:';
 

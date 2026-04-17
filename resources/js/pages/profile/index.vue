@@ -306,7 +306,7 @@ const loadProfileData = async (userId) => {
             error.value = {
                 type: 'not-found',
                 message: t('profile.profile404ErrorMessage', {
-                    userId: userId
+                    userid: userId
                 })
             }
         } else if ([500, 502, 503].includes(err.response?.status)) {

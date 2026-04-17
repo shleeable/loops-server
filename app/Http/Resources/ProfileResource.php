@@ -50,6 +50,7 @@ class ProfileResource extends JsonResource
             'url' => url('/@'.$this->username),
             'remote_url' => $remoteUrl,
             'is_blocking' => null,
+            'manually_approves_followers' => $this->manuallyApprovesFollowers,
             'links' => $this->links ?? [],
             'created_at' => $this->created_at->format('c'),
         ];

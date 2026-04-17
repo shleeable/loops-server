@@ -30,6 +30,7 @@ export const useProfileStore = defineStore('profile', {
         followingNextCursor: null,
         isFollowing: null,
         isFollowingRequestPending: null,
+        manuallyApprovesFollowers: null,
         isSelf: null,
         isBlocking: null,
         relationship: {
@@ -75,6 +76,7 @@ export const useProfileStore = defineStore('profile', {
                 this.isSelf = res.data.data.is_owner
                 this.hasAtom = res.data.data?.has_atom
                 this.hasAtomUrl = res.data.data?.has_atom_url
+                this.manuallyApprovesFollowers = res.data.data?.manually_approves_followers
                 this.posts = []
             } catch (error) {
                 console.error('Error fetching profile:', error)
@@ -189,6 +191,7 @@ export const useProfileStore = defineStore('profile', {
                 this.isSelf = res.data.data.is_owner
                 this.hasAtom = res.data.data?.has_atom
                 this.hasAtomUrl = res.data.data?.has_atom_url
+                this.manuallyApprovesFollowers = res.data.data?.manually_approves_followers
             } catch (error) {
                 console.error('Error fetching profile:', error)
                 throw error
@@ -490,6 +493,7 @@ export const useProfileStore = defineStore('profile', {
             this.bookmarkedPosts = []
             this.bookmarkedPostsCursor = null
             this.hasMoreBookmarkedPosts = false
+            this.manuallyApprovesFollowers = null
         }
     },
     persist: true

@@ -672,7 +672,7 @@
         "noMorePostsToLoad": "Keine weiteren Beiträge zu laden",
         "noVideosYet": "Noch keine Videos",
         "notFollowingAnyone": "Sie folgen niemandem",
-        "profile404ErrorMessage": "Wir konnten kein Profil mit dem Benutzernamen &commat;<b>{userId}<\/b> finden. Bitte überprüfen Sie den Benutzernamen und versuchen Sie es erneut.",
+        "profile404ErrorMessage": "Wir konnten kein Profil mit dem Benutzernamen &commat;<b>{userid}<\/b> finden. Bitte überprüfen Sie den Benutzernamen und versuchen Sie es erneut.",
         "profile500ErrorMessage": "Unsere Server haben momentan Probleme. Bitte versuchen Sie es in wenigen Augenblicken erneut.",
         "profileNotFound": "Profil nicht gefunden",
         "profileOfflineErrorMessage": "Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",

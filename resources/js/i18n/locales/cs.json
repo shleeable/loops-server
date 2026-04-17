@@ -672,7 +672,7 @@
         "noMorePostsToLoad": "Žádné další příspěvky k načtení",
         "noVideosYet": "Zatím nemáte žádná videa",
         "notFollowingAnyone": "Nikoho nesledujete",
-        "profile404ErrorMessage": "Nepodařilo se nám najít profil s uživatelským jménem &commat;<b>{userId}<\/b>. Zkontrolujte prosím uživatelské jméno a zkuste to znovu.",
+        "profile404ErrorMessage": "Nepodařilo se nám najít profil s uživatelským jménem &commat;<b>{userid}<\/b>. Zkontrolujte prosím uživatelské jméno a zkuste to znovu.",
         "profile500ErrorMessage": "Naše servery mají nyní potíže. Zkuste to prosím znovu za pár okamžiků.",
         "profileNotFound": "Profil nenalezen",
         "profileOfflineErrorMessage": "Zkontrolujte prosím připojení k internetu a zkuste to znovu.",

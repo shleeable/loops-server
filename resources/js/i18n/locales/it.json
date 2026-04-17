@@ -672,7 +672,7 @@
         "noMorePostsToLoad": "Nessun altro post da caricare",
         "noVideosYet": "Ancora nessun video",
         "notFollowingAnyone": "Non stai seguendo nessuno",
-        "profile404ErrorMessage": "Non siamo riusciti a trovare un profilo con il nome utente &commat;<b>{userId}<\/b>. Controlla il nome utente e riprova.",
+        "profile404ErrorMessage": "Non siamo riusciti a trovare un profilo con il nome utente &commat;<b>{userid}<\/b>. Controlla il nome utente e riprova.",
         "profile500ErrorMessage": "I nostri server stanno avendo problemi in questo momento. Riprova tra qualche istante.",
         "profileNotFound": "Profilo non trovato",
         "profileOfflineErrorMessage": "Per favore verifica la tua connessione internet e riprova.",
