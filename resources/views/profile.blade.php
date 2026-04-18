@@ -26,15 +26,22 @@ $profileDesc = !empty($descParts) ? implode(' | ', $descParts) : $appDesc;
 
 $profileUrl = $profile ? url('/@' . $profile->username) : url('/');
 $profileAvatar = $profile && $profile->avatar ? $profile->avatar : url('/storage/avatars/default.jpg');
+$profileMime = str_ends_with($profileAvatar, '.jpg') ? 'image/jpeg' : 'image/webp';
 @endphp
 <!DOCTYPE html>
-<html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{ $profileTitle }}</title>
-    <link rel="shortcut icon" type="image/png" href="{{ url('/favicon.png') }}"/>
+    <link rel="icon" href="{{ url('/favicon.ico') }}" sizes="32x32">
+    <link rel="icon" href="{{ url('/favicon.svg') }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ url('/apple-touch-icon.png') }}">
+    @preloadFont('boxicons')
 
+    @if($profile)<meta property="profile:username" content="{{ $profile->username }}" />@endif
+
+    <link rel="preload" fetchpriority="high" as="image" href="{{$profileAvatar}}" type="{{$profileMime}}">
     <meta name="description" content="{{ $profileDesc }}">
     <meta property="og:title" content="{{ $profileTitle }}" />
     <meta property="og:description" content="{{ $profileDesc }}" />
@@ -43,8 +50,6 @@ $profileAvatar = $profile && $profile->avatar ? $profile->avatar : url('/storage
     <meta property="og:logo" content="{{ url('/nav-logo.png') }}" />
     <meta property="og:url" content="{{ $profileUrl }}" />
     <meta property="og:image" content="{{ $profileAvatar }}" />
-    @if($profile)<meta property="profile:username" content="{{ $profile->username }}" />@endif
-
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="{{ $profileTitle }}" />
     <meta name="twitter:description" content="{{ $profileDesc }}" />

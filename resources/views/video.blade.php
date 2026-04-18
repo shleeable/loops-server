@@ -17,7 +17,7 @@ if ($isNsfw) {
     $videoTitle = $videoData
         ? ($videoData['caption'] ? Str::limit($videoData['caption'], 26) . " - @" . $authorUsername . " | {$appName}" : "@{$authorUsername} | {$appName}")
         : $appName;
-    
+
     $videoDesc = $appDesc;
     if ($videoData) {
         if (!empty($videoData['captionText'])) {
@@ -29,7 +29,7 @@ if ($isNsfw) {
             $videoDesc = "{$videoData['caption']} • {$stats}";
         }
     }
-    
+
     $videoUrl = data_get($videoData, 'url', url('/'));
     $videoThumbnail = data_get($videoData, 'media.thumbnail', url('/storage/avatars/default.jpg'));
     $videoCdnUrl = data_get($videoData, 'media.src_url', null);
@@ -40,35 +40,36 @@ if ($isNsfw) {
 }
 @endphp
 <!DOCTYPE html>
-<html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{ $videoTitle }}</title>
-    <link rel="shortcut icon" type="image/png" href="{{ url('/favicon.png') }}"/>
+    <link rel="icon" href="{{ url('/favicon.ico') }}" sizes="32x32">
+    <link rel="icon" href="{{ url('/favicon.svg') }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ url('/apple-touch-icon.png') }}">
+    @preloadFont('boxicons')
 
     <meta name="author" content="{{ $authorName }} ({{ '@' . $authorUsername }})">
     <meta property="article:author" content="{{ url('/@' . $authorUsername) }}" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:logo" content="{{ url('/nav-logo.png') }}" />
-    
-    @unless($isNsfw)
-        <meta name="description" content="{{ $videoDesc }}">
-        <meta property="og:title" content="{{ $videoTitle }}" />
-        <meta property="og:description" content="{{ $videoDesc }}" />
-        <meta property="og:type" content="video" />
-        <meta property="og:url" content="{{ $videoUrl }}" />
-        <meta property="og:image" content="{{ $videoThumbnail }}" />
-        <meta property="og:video" content="{{ $videoCdnUrl }}" />
-        <meta property="og:video:width" content="{{ $videoWidth }}">
-        <meta property="og:video:height" content="{{ $videoHeight }}">
-        <meta property="og:video:duration" content="{{ $videoDuration }}">
-        <meta property="og:video:type" content="{{ $videoType }}" />
-        <meta property="video:release_date" content="{{ $videoData['created_at'] ?? '' }}" />
-        <meta name="twitter:card" content="summary" />
-        <meta name="twitter:title" content="{{ $videoTitle }}" />
-        <meta name="twitter:description" content="{{ $videoDesc }}" />
-        <meta name="twitter:image" content="{{ $videoThumbnail }}" />
+    @unless($isNsfw)<meta name="description" content="{{ $videoDesc }}">
+    <meta property="og:title" content="{{ $videoTitle }}" />
+    <meta property="og:description" content="{{ $videoDesc }}" />
+    <meta property="og:type" content="video" />
+    <meta property="og:url" content="{{ $videoUrl }}" />
+    <meta property="og:image" content="{{ $videoThumbnail }}" />
+    <meta property="og:video" content="{{ $videoCdnUrl }}" />
+    <meta property="og:video:width" content="{{ $videoWidth }}">
+    <meta property="og:video:height" content="{{ $videoHeight }}">
+    <meta property="og:video:duration" content="{{ $videoDuration }}">
+    <meta property="og:video:type" content="{{ $videoType }}" />
+    <meta property="video:release_date" content="{{ $videoData['created_at'] ?? '' }}" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="{{ $videoTitle }}" />
+    <meta name="twitter:description" content="{{ $videoDesc }}" />
+    <meta name="twitter:image" content="{{ $videoThumbnail }}" />
     @endunless
 
     @vite(['resources/js/app.js'])

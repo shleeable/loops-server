@@ -7,5 +7,4 @@
 
 <script setup>
 import { ref } from 'vue'
-import Header from '~/components/Layout/Header.vue'
 </script>

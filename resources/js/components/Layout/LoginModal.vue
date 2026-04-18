@@ -8,7 +8,7 @@
                     @click="appStore.toggleLoginForm()"
                     class="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-700 cursor-pointer dark:text-white"
                 >
-                    <i class="mdi mdi-close" style="font-size: 26px"></i>
+                    <i class="bx bx-close" style="font-size: 26px"></i>
                 </button>
             </div>
 

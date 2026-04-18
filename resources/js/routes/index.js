@@ -637,4 +637,13 @@ router.beforeEach(async (to, from, next) => {
     authMiddleware(to, from, next)
 })
 
+router.onError((error) => {
+    if (
+        /loading chunk/i.test(error.message) ||
+        /failed to fetch dynamically imported/i.test(error.message)
+    ) {
+        window.location.reload()
+    }
+})
+
 export default router

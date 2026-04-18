@@ -25,140 +25,9 @@
                 </router-link>
             </div>
 
-            <!-- <div
-                v-if="authStore.isAuthenticated"
-                class="hidden md:flex items-center bg-[#F1F1F2] dark:bg-slate-900 p-1 rounded-lg max-w-[380px] w-full relative search-container"
-            >
-                <div
-                    class="px-3 py-1 flex items-center border-r border-r-gray-300 dark:border-r-slate-800"
-                >
-                    <i class="ri-search-line text-[#A1A2A7] text-[22px]"></i>
-                </div>
-                <input
-                    type="text"
-                    v-model="searchQuery"
-                    @input="handleSearch"
-                    @focus="handleFocus"
-                    class="w-full pl-3 my-2 bg-transparent dark:text-white placeholder-[#838383] text-[15px] focus:outline-none"
-                    :placeholder="t('nav.search')"
-                />
-
-                <div
-                    v-if="searchStore.isLoading"
-                    class="absolute right-3 top-1/2 transform -translate-y-1/2"
-                >
-                    <div
-                        class="w-4 h-4 border-2 border-gray-300 border-t-[#F02C56] rounded-full animate-spin"
-                    ></div>
-                </div>
-
-                <div
-                    v-if="showDropdown"
-                    class="absolute top-full left-0 w-full mt-1 bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-100 dark:border-slate-800 max-h-[400px] overflow-y-auto z-50"
-                >
-                    <div
-                        v-if="searchStore.recentSearches.length && !searchQuery"
-                        class="border-b border-gray-200 dark:border-b-gray-800"
-                    >
-                        <div
-                            class="flex items-center justify-between px-4 py-2 border-b border-gray-100 dark:border-b-gray-800"
-                        >
-                            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-400">
-                                {{ t('nav.recentSearches') }}
-                            </h3>
-                            <button
-                                @click="searchStore.clearRecentSearches"
-                                class="text-xs text-[#F02C56] hover:underline"
-                            >
-                                {{ t('nav.clearAll') }}
-                            </button>
-                        </div>
-                        <div
-                            v-for="query in searchStore.recentSearches"
-                            :key="query"
-                            @click="handleRecentSearchClick(query)"
-                            class="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer"
-                        >
-                            <i class="ri-history-line mr-2 text-gray-400"></i>
-                            <span class="text-sm dark:text-slate-200">{{ query }}</span>
-                        </div>
-                    </div>
-
-                    <div
-                        v-if="searchStore.searchResults.length"
-                        class="divide-y divide-gray-200 dark:divide-gray-700"
-                    >
-                        <div
-                            v-for="result in searchStore.searchResults"
-                            :key="result.id"
-                            @click="handleResultClick(result)"
-                            class="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer"
-                        >
-                            <img
-                                v-if="result.avatar"
-                                :src="result.avatar"
-                                class="w-12 h-12 rounded-full mr-3"
-                                :alt="result.title"
-                                @error="$event.target.src = '/storage/avatars/default.jpg'"
-                            />
-                            <div class="flex flex-col space-y-0.5">
-                                <div class="font-bold text-[15px] text-black dark:text-slate-300">
-                                    @{{ result.username }}
-                                </div>
-                                <div class="flex items-center space-x-1">
-                                    <div
-                                        class="text-xs text-gray-500 dark:text-slate-500 truncate max-w-[40%]"
-                                    >
-                                        {{ result.name }}
-                                    </div>
-                                    <div
-                                        class="font-medium text-xs text-gray-400 dark:text-slate-600"
-                                    >
-                                        ·
-                                    </div>
-                                    <div
-                                        class="font-medium text-xs text-gray-400 dark:text-slate-600"
-                                    >
-                                        {{ formatCount(result.post_count) }}
-                                        {{ t('common.videos') }}
-                                    </div>
-                                    <div
-                                        class="font-medium text-xs text-gray-400 dark:text-slate-600"
-                                    >
-                                        ·
-                                    </div>
-                                    <div
-                                        class="font-medium text-xs text-gray-400 dark:text-slate-600"
-                                    >
-                                        {{ formatCount(result.follower_count) }}
-                                        {{ t('common.followers') }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div
-                        v-if="
-                            searchQuery &&
-                            !searchStore.searchResults.length &&
-                            !searchStore.isLoading
-                        "
-                        class="px-4 py-3 text-sm text-gray-500 text-center"
-                    >
-                        {{ t('nav.noResultsFound') }}
-                    </div>
-                </div>
-            </div> -->
-
             <div
                 class="flex items-center justify-end gap-2 lg:gap-3 lg:min-w-[275px] lg:max-w-[320px] w-auto"
             >
-                <!-- <button @click="toggleMobileSearch"
-                    class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800">
-                    <i class="ri-search-line text-xl dark:text-slate-400"></i>
-                </button> -->
-
                 <button
                     v-if="authStore.isAuthenticated"
                     @click="isLoggedIn"
@@ -255,82 +124,6 @@
                 </button>
             </div>
         </div>
-
-        <!-- <div v-if="showMobileSearch"
-            class="md:hidden absolute top-full left-0 w-full bg-white dark:bg-slate-950 border-b border-gray-100 dark:border-slate-800 p-4 z-50">
-            <div class="flex items-center bg-[#F1F1F2] dark:bg-slate-900 p-1 rounded-lg relative">
-                <div class="px-3 py-1 flex items-center border-r border-r-gray-300 dark:border-r-slate-800">
-                    <i class="ri-search-line text-[#A1A2A7] text-[22px]"></i>
-                </div>
-                <input ref="mobileSearchInput" type="text" v-model="searchQuery" @input="handleSearch"
-                    @focus="handleFocus"
-                    class="w-full pl-3 my-2 bg-transparent dark:text-white placeholder-[#838383] text-[15px] focus:outline-none"
-                    placeholder="Search" />
-                <button @click="closeMobileSearch"
-                    class="px-3 py-1 text-gray-500 hover:text-gray-700 dark:text-slate-400">
-                    <i class="bx bx-x text-xl"></i>
-                </button>
-            </div>
-
-            <div v-if="
-                showDropdown &&
-                (searchStore.recentSearches.length || searchStore.searchResults.length)
-            "
-                class="mt-2 bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-800 max-h-[300px] overflow-y-auto">
-                <div v-if="searchStore.recentSearches.length && !searchQuery"
-                    class="border-b border-gray-200 dark:border-gray-700">
-                    <div
-                        class="flex items-center justify-between px-4 py-2 border-b border-gray-100 dark:border-b-gray-800">
-                        <h3 class="text-sm font-medium text-gray-700">
-                            {{ t('nav.recentSearches') }}
-                        </h3>
-                        <button @mousedown="searchStore.clearRecentSearches"
-                            class="text-xs text-[#F02C56] hover:underline cursor-pointer">
-                            {{ t('nav.clearAll') }}
-                        </button>
-                    </div>
-                    <div v-for="query in searchStore.recentSearches" :key="query"
-                        @mousedown="handleRecentSearchClick(query)"
-                        class="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer">
-                        <i class="ri-history-line mr-2 text-gray-400"></i>
-                        <span class="text-sm dark:text-slate-200">{{ query }}</span>
-                    </div>
-                </div>
-
-                <div v-if="searchStore.searchResults.length" class="divide-y divide-gray-200 dark:divide-gray-700">
-                    <div v-for="result in searchStore.searchResults" :key="result.id"
-                        @mousedown="handleResultClick(result)"
-                        class="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer">
-                        <img v-if="result.avatar" :src="result.avatar" class="w-12 h-12 rounded-full mr-3"
-                            :alt="result.title" @error="$event.target.src = '/storage/avatars/default.jpg'" />
-                        <div class="flex flex-col space-y-0.5">
-                            <div class="font-bold text-[15px] text-black dark:text-slate-300">
-                                @{{ result.username }}
-                            </div>
-                            <div class="flex items-center space-x-1">
-                                <div class="text-xs text-gray-500 dark:text-slate-500 truncate max-w-[40%]">
-                                    {{ result.name }}
-                                </div>
-                                <div class="font-medium text-xs text-gray-400 dark:text-slate-600">
-                                    ·
-                                </div>
-                                <div class="font-medium text-xs text-gray-400 dark:text-slate-600">
-                                    {{ formatCount(result.post_count) }}
-                                    {{ t('common.videos') }}
-                                </div>
-                                <div class="font-medium text-xs text-gray-400 dark:text-slate-600">
-                                    ·
-                                </div>
-                                <div class="font-medium text-xs text-gray-400 dark:text-slate-600">
-                                    {{ formatCount(result.follower_count) }}
-                                    {{ t('common.followers') }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> -->
     </div>
 </template>
 
@@ -339,7 +132,6 @@ import { ref, onMounted, inject, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSearchStore } from '@/stores/search'
 import { useAuthStore } from '@/stores/auth'
-import { debounce } from 'lodash'
 import { useNotificationStore } from '~/stores/notifications'
 import { useUtils } from '@/composables/useUtils'
 import { useI18n } from 'vue-i18n'
@@ -405,7 +197,7 @@ onMounted(() => {
     })
 })
 
-const handleSearch = debounce(() => {
+const handleSearch = useDebounceFn(() => {
     searchStore.searchQuery(searchQuery.value)
 }, 300)
 
