@@ -135,4 +135,22 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Frontend Asset CDN
+    |--------------------------------------------------------------------------
+    |
+    | These configuration options allow you to serve static assets on
+    | a custom S3 filesystem disk, it can be the same as your main S3
+    | disk or you can use a separate S3 setup.
+    |
+    */
+
+    'asset_url' => env('ASSET_URL'),
+
+    'asset_cdn_enabled' => (bool) env('ASSET_CDN_ENABLED', false),
+
+    'asset_cdn_url' => env('ASSET_CDN_URL'),
+
 ];
