@@ -84,6 +84,18 @@ return [
             ],
         ],
 
+        'assetCDN' => [
+            'driver' => 's3',
+            'key' => env('ASSETCDN_AWS_ACCESS_KEY_ID'),
+            'secret' => env('ASSETCDN_AWS_SECRET_ACCESS_KEY'),
+            'region' => env('ASSETCDN_AWS_DEFAULT_REGION'),
+            'bucket' => env('ASSETCDN_AWS_BUCKET'),
+            'endpoint' => env('ASSETCDN_AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('ASSETCDN_AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'public',
+            'throw' => false,
+        ],
+
         'backupLocal' => [
             'driver' => 'local',
             'root' => storage_path('app/backups'),

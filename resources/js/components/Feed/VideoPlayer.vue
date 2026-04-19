@@ -24,6 +24,7 @@
                             class="video-js vjs-default-skin h-full w-full object-contain"
                             playsinline
                             :muted="isMuted"
+                            fetchpriority="high"
                         >
                             <source :src="videoUrl" type="video/mp4" />
                         </video>

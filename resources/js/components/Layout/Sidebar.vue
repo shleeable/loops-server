@@ -18,9 +18,14 @@
             <div v-if="!isMobile" class="p-2">
                 <router-link to="/" class="flex items-center gap-2">
                     <img
-                        :src="appLogoUrl()"
-                        alt="Loops Logo"
+                        :src="appLogoUrl"
+                        :srcset="appLogoSrcSet"
+                        width="80"
+                        height="80"
                         class="rounded-full size-8 md:size-10"
+                        :alt="`${appConfig.app.name} logo`"
+                        fetchpriority="high"
+                        decoding="async"
                     />
                     <span
                         class="flex tracking-tight text-lg md:text-2xl font-bold text-black dark:text-white"
@@ -34,7 +39,14 @@
                 class="flex items-center justify-between px-4 pb-2 border-b border-gray-100 dark:border-slate-800 lg:hidden"
             >
                 <div class="flex items-center gap-2">
-                    <img width="32" :src="appLogoUrl()" alt="Logo" class="rounded-full" />
+                    <img
+                        width="32"
+                        height="32"
+                        :src="appLogoUrl"
+                        :alt="`${appConfig.app.name} logo`"
+                        class="rounded-full"
+                    />
+
                     <span class="text-lg font-bold text-black dark:text-white">Menu</span>
                 </div>
                 <button
@@ -258,8 +270,9 @@
 
                 <div>
                     <button
-                        class="pt-1 pr-4 font-medium flex cursor-pointer"
+                        class="p-1.5 font-medium flex cursor-pointer"
                         @click="openLanguagePicker"
+                        aria-label="Change language"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -286,12 +299,12 @@
 
             <div class="flex justify-between flex-col gap-3 px-3 mt-5">
                 <div class="flex flex-col">
-                    <div class="text-[10.5px] text-gray-400 font-light dbi">
+                    <div class="text-[10.5px] text-gray-500 dark:text-gray-300 font-light dbi">
                         {{ getCopyright() }}
                     </div>
                     <div>
                         <a
-                            class="text-[10.5px] text-gray-400 hover:text-red-400 dbi"
+                            class="text-[10.5px] text-gray-500 dark:text-gray-300 hover:text-red-400 dbi"
                             href="https://joinloops.org"
                             target="_blank"
                             :title="'v' + appVersion()"
@@ -346,6 +359,7 @@ const isLargeScreen = computed(() => windowWidth.value >= 1024)
 
 const isDark = ref(document.documentElement.classList.contains('dark'))
 const unreadCount = computed(() => notificationStore.unreadCount)
+const hasCustomLogo = computed(() => Boolean(appConfig.branding?.logo))
 
 const handleToggleDarkMode = () => {
     isDark.value = !isDark.value
@@ -370,9 +384,13 @@ const displayCount = (count) => {
     return count > 99 ? '99+' : count.toString()
 }
 
-const appLogoUrl = () => {
-    return appConfig.branding.logo || `/nav-logo.png`
-}
+const appLogoUrl = computed(() =>
+    hasCustomLogo.value ? appConfig.branding.logo : '/nav-logo-80.webp'
+)
+
+const appLogoSrcSet = computed(() =>
+    hasCustomLogo.value ? null : '/nav-logo-80.webp 1x, /nav-logo-160.webp 2x'
+)
 
 const appVersion = () => {
     return appConfig.app_version
@@ -658,7 +676,6 @@ const handleClickOutside = (event) => {
     }
 }
 
-// Lifecycle
 onMounted(() => {
     window.addEventListener('resize', handleResize)
     document.addEventListener('click', handleClickOutside)

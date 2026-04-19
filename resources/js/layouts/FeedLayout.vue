@@ -22,11 +22,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, inject } from 'vue'
 import { storeToRefs } from 'pinia'
-import Header from '~/components/Layout/Header.vue'
-import Sidebar from '~/components/Layout/Sidebar.vue'
-import LoginModal from '~/components/Layout/LoginModal.vue'
-import MobileNav from '@/components/Layout/MobileNav.vue'
-import MobileHeader from '@/components/Layout/MobileHeader.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()

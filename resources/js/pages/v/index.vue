@@ -428,7 +428,7 @@
 
         <ReportModal />
 
-        <EditModal
+        <StatusEditModal
             :is-open="showEditModal"
             :video="currentVideo"
             @close="showEditModal = false"

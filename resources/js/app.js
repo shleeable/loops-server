@@ -1,12 +1,5 @@
-/**
- * First we will load all of this project's JavaScript dependencies which
- * includes Vue and other libraries. It is a great starting point when
- * building robust, powerful web applications using Vue and Laravel.
- */
-
 import './bootstrap'
 import { createApp } from 'vue'
-import { createMemoryHistory, createRouter } from 'vue-router'
 import { createPinia } from 'pinia'
 import { createHead } from '@unhead/vue/client'
 import axiosPlugin from './plugins/axios'
@@ -15,33 +8,35 @@ import AlertModalPlugin from '@/composables/useAlertModal.js'
 import storePlugin from './plugins/stores'
 import App from './App.vue'
 import router from './routes/index'
-import '@mdi/font/css/materialdesignicons.min.css'
-import 'boxicons/css/boxicons.min.css'
-import 'remixicon/fonts/remixicon.css'
-import '../css/fonts.css'
-import '../sass/next.css'
 import i18n from './i18n/locales'
 
-const app = createApp(App)
-const head = createHead()
-const pinia = createPinia()
+import AdminLayout from '@/layouts/AdminLayout.vue'
+import BlankLayout from '@/layouts/BlankLayout.vue'
+import FeedLayout from '@/layouts/FeedLayout.vue'
+import FullLayout from '@/layouts/FullLayout.vue'
+import MainLayout from '@/layouts/MainLayout.vue'
+import SettingsLayout from '@/layouts/SettingsLayout.vue'
+import StudioLayout from '@/layouts/StudioLayout.vue'
 
-Object.entries(import.meta.glob('./**/*.vue', { eager: true })).forEach(([path, definition]) => {
-    app.component(
-        path
-            .split('/')
-            .pop()
-            .replace(/\.\w+$/, ''),
-        definition.default
-    )
-})
+import '../css/fonts.css'
+import '../sass/next.css'
+
+const app = createApp(App)
+
+app.component('AdminLayout', AdminLayout)
+app.component('BlankLayout', BlankLayout)
+app.component('FeedLayout', FeedLayout)
+app.component('FullLayout', FullLayout)
+app.component('MainLayout', MainLayout)
+app.component('SettingsLayout', SettingsLayout)
+app.component('StudioLayout', StudioLayout)
 
 app.config.globalProperties.$appConfig = window.appConfig
 app.provide('appConfig', window.appConfig)
 app.provide('appCaptcha', window.appCaptcha)
 
-app.use(pinia)
-    .use(head)
+app.use(createPinia())
+    .use(createHead())
     .use(axiosPlugin)
     .use(router)
     .use(storePlugin)

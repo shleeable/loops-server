@@ -6,6 +6,7 @@ use App\Services\UserActivityService;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
@@ -134,6 +135,16 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         $this->configureSecureUrls();
+
+        Blade::directive('preloadFont', function ($expression) {
+            return "<?php echo \App\Support\ViteAssets::preloadFont($expression); ?>";
+        });
+
+        if (config('app.asset_cdn_enabled') && config('app.asset_cdn_url')) {
+            config([
+                'app.asset_url' => rtrim(config('app.asset_cdn_url'), '/'),
+            ]);
+        }
 
     }
 

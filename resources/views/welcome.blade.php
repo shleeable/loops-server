@@ -1,12 +1,18 @@
 @php($title = \App\Services\FrontendService::getAppName())
 @php($desc = \App\Services\FrontendService::getAppDescription())
 <!DOCTYPE html>
-<html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{ $title }}</title>
-    <link rel="shortcut icon" type="image/png" href="{{ url('/favicon.png') }}"/>
+    <link rel="icon" href="{{ url('/favicon.ico') }}" sizes="32x32">
+    <link rel="icon shortcut" href="{{ url('/favicon.svg') }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ url('/apple-touch-icon.png') }}">
+    @preloadFont('boxicons')
+
+    <link rel="preload" href="{{ url('/fonts/dm-sans-300-normal-latin-b9df6239.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ url('/fonts/syne-400-normal-latin-c37e2fa5.woff2') }}" as="font" type="font/woff2" crossorigin>
     <meta name="description" content="{{ $desc }}">
     <meta property="og:title" content="{{ $title }}" />
     <meta property="og:description" content="{{ $desc }}" />

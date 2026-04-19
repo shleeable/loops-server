@@ -76,7 +76,6 @@
 import { ref, onMounted, inject, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSearchStore } from '@/stores/search'
-import { debounce } from 'lodash'
 import { useNotificationStore } from '~/stores/notifications'
 import { useUtils } from '@/composables/useUtils'
 
@@ -139,7 +138,7 @@ onMounted(() => {
 })
 
 // Debounced search function
-const handleSearch = debounce(() => {
+const handleSearch = useDebounceFn(() => {
     searchStore.searchQuery(searchQuery.value)
 }, 300)
 

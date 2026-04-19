@@ -126,6 +126,54 @@ class UserAuditLogService
         ]);
     }
 
+    public function logAccountEnablePushNotifications(
+        User|int $user,
+        string $platform,
+    ): UserAuditLog {
+        return $this->log($user, 'push_notifications_enabled', [
+            'platform' => $platform,
+        ]);
+    }
+
+    public function logAccountDisabledPushNotifications(
+        User|int $user,
+        string $platform,
+    ): UserAuditLog {
+        return $this->log($user, 'push_notifications_disabled', [
+            'platform' => $platform,
+        ]);
+    }
+
+    public function logAccountStarterKitSettings(
+        User|int $user,
+        array $changedFields = [],
+    ): UserAuditLog {
+        return $this->log($user, 'starter_kit_state', [
+            'old' => $changedFields['old'],
+            'new' => $changedFields['new'],
+        ]);
+    }
+
+    public function logAccountAddProfileLink(
+        User|int $user,
+        array $changedFields = [],
+    ): UserAuditLog {
+        return $this->log($user, 'profile_links_add', [
+            'old' => $changedFields['old'],
+            'new' => $changedFields['new'],
+        ]);
+    }
+
+    public function logAccountDeleteProfileLink(
+        User|int $user,
+        array $changedFields = [],
+    ): UserAuditLog {
+        return $this->log($user, 'profile_links_delete', [
+            'old' => $changedFields['old'],
+            'new' => $changedFields['new'],
+        ]);
+    }
+
     public function logAccountDataSelectiveExport(
         User|int $user,
         $activity = null

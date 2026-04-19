@@ -13,8 +13,6 @@
 
 <script setup>
 import Header from '@/components/Layout/Header.vue'
-import SettingsSidebar from '@/components/Settings/Sidebar.vue'
-import Sidebar from '@/components/Layout/Sidebar.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 const isMobileDrawerOpen = ref(false)
 const showLoginModal = ref(false)
