@@ -108,6 +108,9 @@ export const useAuthStore = defineStore('auth', {
                     this.needsTwoFactor = true
                     return response
                 }
+                if (response.data.must_change_password) {
+                    return response
+                }
                 const userData = await axiosInstance.get('/api/v1/account/info/self')
                 this.user = userData.data.data
                 this.authenticated = true

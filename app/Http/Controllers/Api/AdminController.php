@@ -4,13 +4,17 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AdminResetProfilePasswordRequest;
+use App\Http\Requests\AdminSendProfileEmailRequest;
 use App\Http\Requests\StoreAdminInviteRequest;
+use App\Http\Resources\AdminAuditLogResource;
 use App\Http\Resources\AdminHashtagResource;
 use App\Http\Resources\AdminInstanceResource;
 use App\Http\Resources\AdminInviteResource;
 use App\Http\Resources\AdminProfileResource;
 use App\Http\Resources\AdminStarterKitHistoryResource;
 use App\Http\Resources\AdminStarterKitResource;
+use App\Http\Resources\AdminUserAuditLogResource;
 use App\Http\Resources\CommentReplyResource;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\ProfileResource;
@@ -19,6 +23,8 @@ use App\Http\Resources\StarterKitPendingChangeResource;
 use App\Http\Resources\VideoResource;
 use App\Jobs\Admin\AdminApproveStarterKitJob;
 use App\Jobs\Federation\FetchInstanceNodeinfo;
+use App\Mail\AdminMessageMail;
+use App\Mail\AdminPasswordResetMail;
 use App\Models\AdminAuditLog;
 use App\Models\AdminInvite;
 use App\Models\Comment;
@@ -29,13 +35,16 @@ use App\Models\Instance;
 use App\Models\Profile;
 use App\Models\Report;
 use App\Models\StarterKit;
+use App\Models\StarterKitAccount;
 use App\Models\StarterKitPendingChange;
 use App\Models\User;
+use App\Models\UserAuditLog;
 use App\Models\Video;
 use App\Services\AccountService;
 use App\Services\AccountSuggestionService;
 use App\Services\AdminAuditLogService;
 use App\Services\AdminDashboardService;
+use App\Services\AvatarService;
 use App\Services\ExploreService;
 use App\Services\InstanceService;
 use App\Services\NodeinfoCrawlerService;
@@ -49,6 +58,8 @@ use App\Services\VideoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -344,10 +355,21 @@ class AdminController extends Controller
             $res['email_verified'] = (bool) $user->email_verified_at;
             $res['delete_after'] = $user->delete_after;
             $res['user_id'] = $user->id;
+            $res['has_atom'] = (bool) $user->has_atom;
+            $res['atom_url'] = $user->atomUrl();
+            $res['has_push'] = (bool) $user->push_token;
+            $res['has_2fa'] = (bool) $user->has_2fa && $user->two_factor_secret;
+            $res['last_ip'] = $user->is_admin ? null : $user->last_ip;
+            $res['push_platform'] = $user->push_token_platform;
             if ($user->last_active_at) {
                 $res['last_active_at'] = $user->last_active_at->format('c');
             }
+            $res['domain'] = parse_url(config('app.url'), PHP_URL_HOST);
+        } else {
+            $res['domain'] = parse_url($profile->uri, PHP_URL_HOST);
         }
+        $res['starter_kits_created_count'] = StarterKit::whereProfileId($profile->id)->count();
+        $res['starter_kits_included_in_count'] = StarterKitAccount::whereProfileId($profile->id)->approved()->count();
         $res['comments_count'] = Comment::whereProfileId($profile->id)->count();
         $res['comment_replies_count'] = CommentReply::whereProfileId($profile->id)->count();
         $res['reports_created_count'] = Report::whereReporterProfileId($profile->id)->count();
@@ -359,9 +381,11 @@ class AdminController extends Controller
         $res['can_comment'] = (bool) $profile->can_comment;
         $res['can_follow'] = (bool) $profile->can_follow;
         $res['can_like'] = (bool) $profile->can_like;
+        $res['can_report'] = (bool) $profile->can_report;
         $res['can_create_starter_kits'] = (bool) $profile->can_create_starter_kits;
         $res['can_use_starter_kits'] = (bool) $profile->can_use_starter_kits;
         $res['can_report'] = (bool) $profile->can_report;
+        $res['updated_at'] = $profile->updated_at;
 
         return $this->data($res);
     }
@@ -374,6 +398,7 @@ class AdminController extends Controller
             'can_comment' => 'sometimes|boolean',
             'can_like' => 'sometimes|boolean',
             'can_share' => 'sometimes|boolean',
+            'can_report' => 'sometimes|boolean',
             'can_create_starter_kits' => 'sometimes|boolean',
             'can_use_starter_kits' => 'sometimes|boolean',
         ]);
@@ -383,6 +408,7 @@ class AdminController extends Controller
             'can_follow' => 'sometimes|boolean',
             'can_comment' => 'sometimes|boolean',
             'can_like' => 'sometimes|boolean',
+            'can_report' => 'sometimes|boolean',
             'can_create_starter_kits' => 'sometimes|boolean',
             'can_use_starter_kits' => 'sometimes|boolean',
         ]);
@@ -393,7 +419,7 @@ class AdminController extends Controller
             return $this->error('Ooops!');
         }
 
-        $oldValues = $profile->only(['can_upload', 'can_follow', 'can_comment', 'can_like', 'can_share', 'can_create_starter_kits', 'can_use_starter_kits']);
+        $oldValues = $profile->only(['can_upload', 'can_follow', 'can_comment', 'can_like', 'can_share', 'can_report', 'can_create_starter_kits', 'can_use_starter_kits']);
 
         $profile->update($validated);
         if ($profile->local) {
@@ -407,6 +433,24 @@ class AdminController extends Controller
         app(AdminAuditLogService::class)->logProfileAdminPermissionUpdate($request->user(), $profile, ['old' => $oldValues, 'new' => $validated]);
 
         return $this->success();
+    }
+
+    public function profileAuditLog(Request $request, $id)
+    {
+        $profile = Profile::findOrFail($id);
+
+        $auditLogs = AdminAuditLog::whereActivityType('App\Models\Profile')->whereActivityId($profile->id)->orderByDesc('id')->cursorPaginate(5);
+
+        return AdminAuditLogResource::collection($auditLogs);
+    }
+
+    public function profileUserAuditLog(Request $request, $id)
+    {
+        $user = User::whereProfileId($id)->firstOrFail();
+
+        $auditLogs = UserAuditLog::whereUserId($user->id)->orderByDesc('id')->cursorPaginate(5);
+
+        return AdminUserAuditLogResource::collection($auditLogs);
     }
 
     public function profileSuspend(Request $request, $id)
@@ -465,10 +509,61 @@ class AdminController extends Controller
         return $this->success();
     }
 
+    public function profileToggleEmailVerify(Request $request, $id)
+    {
+        $profile = Profile::whereNotNull('user_id')->find($id);
+
+        if (! $profile) {
+            return $this->error('Ooops!');
+        }
+
+        $user = $profile->user;
+
+        if ($user->email_verified_at) {
+            $profile->user->update(['email_verified_at' => null]);
+            app(AdminAuditLogService::class)->logProfileUnverifyEmail($request->user(), $profile);
+        } else {
+            $profile->user->update(['email_verified_at' => now()]);
+            app(AdminAuditLogService::class)->logProfileVerifyEmail($request->user(), $profile);
+        }
+
+        AccountService::del($profile->id);
+
+        return $this->success();
+    }
+
+    public function profileDeleteAvatar(Request $request, $id)
+    {
+        $profile = Profile::find($id);
+
+        AvatarService::deleteAvatar($profile);
+
+        app(AdminAuditLogService::class)->logProfileDeleteAvatar($request->user(), $profile);
+
+        return $this->success();
+    }
+
+    public function profileDisableTwoFactorAuth(Request $request, $id)
+    {
+        $profile = Profile::whereNotNull('user_id')->find($id);
+
+        $user = User::findOrFail($profile->user_id);
+
+        if ($user->has_2fa) {
+            $user->has_2fa = 0;
+            $user->two_factor_secret = null;
+            $user->two_factor_backups = null;
+            $user->save();
+            app(AdminAuditLogService::class)->logProfileDisableTwoFactorAuth($request->user(), $profile);
+        }
+
+        return $this->success();
+    }
+
     public function profileAdminNoteUpdate(Request $request, $id)
     {
         $validated = $request->validate([
-            'admin_note' => 'sometimes|nullable|string',
+            'admin_notes' => 'sometimes|nullable|string',
         ]);
 
         $profile = Profile::find($id);
@@ -479,12 +574,132 @@ class AdminController extends Controller
 
         $oldValues = $profile->only(['admin_notes']);
 
-        app(AdminAuditLogService::class)->logProfileAdminNoteUpdate($request->user(), $profile, ['old' => $oldValues, 'new' => $validated]);
-
-        $profile->admin_notes = $request->input('admin_note');
+        $profile->admin_notes = $request->input('admin_notes');
         $profile->save();
 
+        app(AdminAuditLogService::class)->logProfileAdminNoteUpdate($request->user(), $profile, ['old' => $oldValues, 'new' => $validated]);
+
         return $this->success();
+    }
+
+    public function profileAdminSendEmail(AdminSendProfileEmailRequest $request, $id)
+    {
+        $profile = Profile::with('user')->findOrFail($id);
+
+        abort_if(! $profile->local || ! $profile->user, 404, 'Remote profile cannot be emailed');
+        abort_if(! $profile->user->email, 422, 'User has no email address on file');
+        abort_if(! $profile->user->email_verified_at, 422, 'User email is not verified');
+
+        $data = $request->validated();
+        $ccAdmin = (bool) ($data['cc_admin'] ?? false);
+        $logAsAudit = (bool) ($data['log_as_audit'] ?? true);
+
+        $mailer = Mail::to($profile->user->email);
+
+        if ($ccAdmin && $adminList = config('loops.admin_mails.to')) {
+            $adminList = explode(',', $adminList);
+            $mailer->bcc($adminList);
+        }
+
+        $mailer->queue(new AdminMessageMail(
+            recipient: $profile->user,
+            subjectLine: $data['subject'],
+            body: $data['message'],
+            templateId: $data['template_id'] ?? null,
+            sentByAdminId: $request->user()->id,
+        ));
+
+        if ($logAsAudit) {
+            app(AdminAuditLogService::class)->logProfileAdminSendEmail($request->user(), $profile, [
+                'subject' => $data['subject'],
+                'template_id' => $data['template_id'] ?? null,
+                'cc_admin' => $ccAdmin,
+                'message_body' => $data['message'],
+                'message_length' => mb_strlen($data['message']),
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Email queued for delivery',
+            'recipient' => $profile->user->email,
+        ]);
+    }
+
+    public function profileAdminResetPassword(AdminResetProfilePasswordRequest $request, $id)
+    {
+        $profile = Profile::with('user')->findOrFail($id);
+
+        abort_if(! $profile->local || ! $profile->user, 404, 'Only local profiles can be reset');
+        abort_if($profile->user->is_admin, 403, 'Admin passwords cannot be reset through this endpoint');
+        abort_if($profile->status !== 1, 422, 'Cannot reset a non-active profile');
+
+        $data = $request->validated();
+        $sendEmail = (bool) ($data['send_email'] ?? false);
+        $forceChange = (bool) ($data['force_change'] ?? false);
+        $revokeSessions = (bool) ($data['revoke_sessions'] ?? false);
+
+        $canEmail = $profile->user->email && $profile->user->email_verified_at;
+        $shouldEmail = $sendEmail && $canEmail;
+
+        DB::transaction(function () use ($profile, $data, $forceChange, $revokeSessions, $request) {
+            $profile->user->forceFill([
+                'password' => Hash::make($data['password']),
+                'must_change_password' => $forceChange,
+                'remember_token' => null,
+            ])->save();
+
+            if ($revokeSessions) {
+                $this->revokeAllSessions($profile->user);
+            }
+
+            app(AdminAuditLogService::class)->logProfileForcePasswordReset($request->user(), $profile);
+        });
+
+        if ($shouldEmail) {
+            Mail::to($profile->user->email)->queue(new AdminPasswordResetMail(
+                recipient: $profile->user,
+                password: $data['password'],
+                forceChange: $forceChange,
+                sentByAdminId: $request->user()->id,
+            ));
+        }
+
+        return response()->json([
+            'message' => 'Password reset successfully',
+            'email_sent' => $shouldEmail,
+            'email_skipped_reason' => ! $sendEmail
+                ? null
+                : ($canEmail ? null : 'unverified_email'),
+        ]);
+    }
+
+    protected function revokeAllSessions($user): void
+    {
+        if (config('session.driver') === 'database') {
+            DB::table(config('session.table', 'sessions'))
+                ->where('user_id', $user->id)
+                ->delete();
+        }
+
+        if (method_exists($user, 'tokens')) {
+            $tokenIds = $user->tokens()->pluck('id');
+
+            $user->tokens()->update(['revoked' => true]);
+
+            if ($tokenIds->isNotEmpty() && class_exists(\Laravel\Passport\RefreshToken::class)) {
+                \Laravel\Passport\RefreshToken::query()
+                    ->whereIn('access_token_id', $tokenIds)
+                    ->update(['revoked' => true]);
+            }
+        }
+
+        if ($user->push_token) {
+            $user->update([
+                'push_token' => null,
+                'push_token_verified_at' => null,
+                'push_token_platform' => null,
+            ]);
+        }
     }
 
     public function reportCount(Request $request)

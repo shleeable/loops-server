@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Laravel\Passport\Passport;
 use PragmaRX\Google2FA\Google2FA;
@@ -41,6 +43,22 @@ class AuthController extends Controller
             session()->forget('2fa:user:attempts');
 
             $intendedUrl = session('url.intended');
+
+            if ($user->must_change_password) {
+                Session::put(ForcePasswordChangeController::SESSION_USER_ID, $user->id);
+                Session::put(ForcePasswordChangeController::SESSION_VERIFIED_AT, now()->timestamp);
+                Session::put(ForcePasswordChangeController::SESSION_ATTEMPTS, 0);
+
+                if ($intendedUrl = session('url.intended')) {
+                    Session::put(ForcePasswordChangeController::SESSION_INTENDED_URL, $intendedUrl);
+                }
+
+                Auth::logout();
+
+                return response()->json([
+                    'must_change_password' => true,
+                ]);
+            }
 
             if ($intendedUrl && str_contains($intendedUrl, '/oauth/authorize')) {
                 session()->forget('url.intended');

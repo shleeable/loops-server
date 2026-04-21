@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\VideoSoundController;
 use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\AppleAuthController;
 use App\Http\Controllers\AtomFeedController;
+use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CuratedOnboardingController;
 use App\Http\Controllers\EmailChangeController;
@@ -90,6 +91,18 @@ Route::group(['prefix' => '.well-known'], function () {
 });
 
 Route::post('/auth/start', [WebPublicController::class, 'authStartFallback']);
+
+Route::prefix('api/v1/auth')
+    ->middleware(['web'])
+    ->group(function () {
+        Route::post('force-password-change', [ForcePasswordChangeController::class, 'change'])
+            ->middleware('throttle:10,1')
+            ->name('auth.force-password.change');
+
+        Route::post('force-password-change/cancel', [ForcePasswordChangeController::class, 'cancel'])
+            ->middleware('throttle:20,1')
+            ->name('auth.force-password.cancel');
+    });
 
 Route::prefix('api')->group(function () {
     Route::post('/v1/apps', [AuthController::class, 'registerApp']);
@@ -423,6 +436,13 @@ Route::prefix('api')->group(function () {
         Route::post('/profiles/{id}/admin_note', [AdminController::class, 'profileAdminNoteUpdate'])->middleware('auth:web,api');
         Route::post('/profiles/{id}/suspend', [AdminController::class, 'profileSuspend'])->middleware('auth:web,api');
         Route::post('/profiles/{id}/unsuspend', [AdminController::class, 'profileUnsuspend'])->middleware('auth:web,api');
+        Route::get('/profiles/{id}/admin-auditlog', [AdminController::class, 'profileAuditLog'])->middleware('auth:web,api');
+        Route::get('/profiles/{id}/user-auditlog', [AdminController::class, 'profileUserAuditLog'])->middleware('auth:web,api');
+        Route::post('/profiles/{id}/toggle-email-verify', [AdminController::class, 'profileToggleEmailVerify'])->middleware('auth:web,api');
+        Route::post('/profiles/{id}/avatar-delete', [AdminController::class, 'profileDeleteAvatar'])->middleware('auth:web,api');
+        Route::post('/profiles/{id}/2fa-disable', [AdminController::class, 'profileDisableTwoFactorAuth'])->middleware('auth:web,api');
+        Route::post('/profiles/{id}/send-email', [AdminController::class, 'profileAdminSendEmail'])->middleware(['auth:web,api', 'throttle:30,1']);
+        Route::post('/profiles/{id}/reset-password', [AdminController::class, 'profileAdminResetPassword'])->middleware(['auth:web,api', 'throttle:10,1']);
         Route::get('/settings', [AdminSettingsController::class, 'index'])->middleware('auth:web,api');
         Route::put('/settings', [AdminSettingsController::class, 'update'])->middleware('auth:web,api');
         Route::post('/settings/update-logo', [AdminSettingsController::class, 'updateLogo'])->middleware('auth:web,api');

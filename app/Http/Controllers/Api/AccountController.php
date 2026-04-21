@@ -33,6 +33,7 @@ use App\Services\NotificationService;
 use App\Services\PushTokenCacheService;
 use App\Services\SystemMessageService;
 use App\Services\UserActivityService;
+use App\Services\UserAuditLogService;
 use App\Services\UserFilterService;
 use App\Support\CursorToken;
 use Illuminate\Http\Request;
@@ -853,8 +854,10 @@ class AccountController extends Controller
 
     public function removeProfileLink(Request $request, $id)
     {
-        $profile = $request->user()->profile;
+        $user = $request->user();
+        $profile = $user->profile;
         $link = ProfileLink::whereProfileId($profile->id)->findOrFail($id);
+        $oldLinks = $profile->links;
 
         $link->delete();
 
@@ -869,10 +872,19 @@ class AccountController extends Controller
         }
 
         $profile->syncLinksJson();
+        $profile->refresh();
+        $links = $profile->profileLinks()->orderBy('position')->get();
+
+        app(UserAuditLogService::class)->logAccountDeleteProfileLink($user, ['old' => $oldLinks, 'new' => $profile->links]);
 
         return $this->data([
             'id' => (string) $profile->id,
             'message' => 'Successfully deleted',
+            'min_threshold' => (int) LinkLimitService::getMinThreshold(),
+            'total_allowed' => (int) LinkLimitService::getMaxLinks($profile),
+            'available_slots' => (int) LinkLimitService::getRemainingSlots($profile),
+            'can_add' => (bool) LinkLimitService::canAddLink($profile),
+            'links' => $links,
         ]);
     }
 
@@ -916,6 +928,8 @@ class AccountController extends Controller
 
         app(PushTokenCacheService::class)->add((string) $user->profile_id, $validated['token']);
 
+        app(UserAuditLogService::class)->logAccountEnablePushNotifications($user, $validated['platform']);
+
         return $this->success();
     }
 
@@ -933,19 +947,26 @@ class AccountController extends Controller
             return $this->error('You do not have permission for this.', 422);
         }
 
-        $user->update(['push_token' => null, 'push_token_verified_at' => null, 'push_token_platform' => null]);
+        if ($user->push_token) {
+            app(UserAuditLogService::class)->logAccountDisabledPushNotifications($user, $user->push_token_platform);
 
-        app(PushTokenCacheService::class)->remove((string) $user->profile_id);
+            $user->update(['push_token' => null, 'push_token_verified_at' => null, 'push_token_platform' => null]);
+
+            app(PushTokenCacheService::class)->remove((string) $user->profile_id);
+        }
 
         return $this->success();
     }
 
     public function profileLinkStore(Request $request)
     {
-        $profile = $request->user()->profile;
+        $user = $request->user();
+        $profile = $user->profile;
+
         if (! LinkLimitService::canAddLink($profile)) {
             return $this->error('You have reached your maximum link limit', 422);
         }
+
         $validator = Validator::make($request->all(), [
             'url' => 'required|active_url:https|max:120',
         ]);
@@ -967,6 +988,8 @@ class AccountController extends Controller
             return $this->error('You have already added this link to your profile', 422);
         }
 
+        $oldLinks = $profile->links;
+
         $maxPosition = $profile->profileLinks()->max('position') ?? -1;
 
         $profile->profileLinks()->create([
@@ -975,8 +998,11 @@ class AccountController extends Controller
         ]);
 
         $profile->syncLinksJson();
+        $profile->refresh();
 
         $links = $profile->profileLinks()->orderBy('position')->get();
+
+        app(UserAuditLogService::class)->logAccountAddProfileLink($user, ['old' => $oldLinks, 'new' => $profile->links]);
 
         $res = [
             'id' => (string) $profile->id,
@@ -1015,7 +1041,10 @@ class AccountController extends Controller
         ]);
 
         $state = $request->input('state');
-        $profile = $request->user()->profile;
+        $user = $request->user();
+        $profile = $user->profile;
+
+        app(UserAuditLogService::class)->logAccountStarterKitSettings($user, ['old' => $profile->starter_kit_state, 'new' => $validated['state']]);
 
         $profile->update(['starter_kit_state' => $validated['state']]);
 

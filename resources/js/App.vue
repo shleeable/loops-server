@@ -1,5 +1,5 @@
 <template>
-    <div class="min-h-screen bg-white dark:bg-neutral-950">
+    <div class="min-h-screen bg-white dark:bg-slate-950">
         <router-view v-slot="{ Component }">
             <Suspense>
                 <template #default>

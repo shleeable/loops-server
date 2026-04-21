@@ -838,6 +838,150 @@
                                 </button>
                             </form>
 
+                            <form
+                                v-if="currentMode === 'change-password'"
+                                @submit.prevent="handleForcePasswordChange"
+                                class="space-y-6"
+                            >
+                                <div
+                                    class="flex items-start gap-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4"
+                                >
+                                    <svg
+                                        class="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                        />
+                                    </svg>
+                                    <p class="text-sm text-amber-800 dark:text-amber-300">
+                                        Choose a new password you haven't used before. It must be at
+                                        least 12 characters and include uppercase, lowercase, a
+                                        number, and a symbol.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                    >
+                                        New password
+                                    </label>
+                                    <div class="relative">
+                                        <input
+                                            v-model="pwChangeForm.password"
+                                            :type="showNewPassword ? 'text' : 'password'"
+                                            required
+                                            minlength="12"
+                                            maxlength="64"
+                                            autocomplete="new-password"
+                                            class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
+                                            :placeholder="t('common.createAStrongPassword')"
+                                        />
+                                        <button
+                                            type="button"
+                                            @click="showNewPassword = !showNewPassword"
+                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                                        >
+                                            <EyeIcon v-if="showNewPassword" class="h-5 w-5" />
+                                            <EyeSlashIcon v-else class="h-5 w-5" />
+                                        </button>
+                                    </div>
+
+                                    <div v-if="pwChangeForm.password" class="mt-2">
+                                        <div class="flex items-center justify-between text-sm mb-1">
+                                            <span class="text-gray-600 dark:text-gray-400">{{
+                                                t('common.passwordStrength')
+                                            }}</span>
+                                            <span
+                                                :class="`text-${pwChangePasswordStrength.color}-600 dark:text-${pwChangePasswordStrength.color}-400 font-medium`"
+                                            >
+                                                {{ pwChangePasswordStrength.text }}
+                                            </span>
+                                        </div>
+                                        <div
+                                            class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1"
+                                        >
+                                            <div
+                                                class="h-1 rounded-full transition-all duration-300"
+                                                :class="`bg-${pwChangePasswordStrength.color}-500`"
+                                                :style="{
+                                                    width: `${(pwChangePasswordStrength.score / 5) * 100}%`
+                                                }"
+                                            ></div>
+                                        </div>
+                                    </div>
+
+                                    <p
+                                        v-if="pwChangeErrors.password"
+                                        class="mt-2 text-sm text-red-600 dark:text-red-400"
+                                    >
+                                        {{ pwChangeErrors.password[0] }}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                    >
+                                        {{ t('common.confirmPassword') }}
+                                    </label>
+                                    <div class="relative">
+                                        <input
+                                            v-model="pwChangeForm.password_confirmation"
+                                            :type="showConfirmPassword ? 'text' : 'password'"
+                                            required
+                                            autocomplete="new-password"
+                                            class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-colors"
+                                            :placeholder="t('settings.confirmYourPassword')"
+                                        />
+                                        <button
+                                            type="button"
+                                            @click="showConfirmPassword = !showConfirmPassword"
+                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                                        >
+                                            <EyeIcon v-if="showConfirmPassword" class="h-5 w-5" />
+                                            <EyeSlashIcon v-else class="h-5 w-5" />
+                                        </button>
+                                    </div>
+
+                                    <p
+                                        v-if="
+                                            pwChangeForm.password_confirmation &&
+                                            pwChangeForm.password !==
+                                                pwChangeForm.password_confirmation
+                                        "
+                                        class="mt-2 text-sm text-red-600 dark:text-red-400"
+                                    >
+                                        {{ t('common.passwordsDoNotMatch') }}
+                                    </p>
+                                </div>
+
+                                <AnimatedButton
+                                    type="submit"
+                                    :loading="loading"
+                                    :disabled="!pwChangeCanSubmit"
+                                    class="w-full"
+                                    variant="primary"
+                                >
+                                    {{ t('common.updatePassword') || 'Update password' }}
+                                </AnimatedButton>
+
+                                <button
+                                    type="button"
+                                    @click="handleCancelPasswordChange"
+                                    :disabled="loading"
+                                    class="mt-5 w-full text-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors cursor-pointer disabled:opacity-50"
+                                >
+                                    {{ t('common.cancelAndSignOut') || 'Cancel and sign out' }}
+                                </button>
+                            </form>
+
                             <div
                                 v-if="
                                     (openRegistration && currentMode === 'login') ||
@@ -882,12 +1026,14 @@ const props = defineProps({
     mode: {
         type: String,
         default: 'login',
-        validator: (value) => ['login', 'register', 'password-reset', 'two-factor'].includes(value)
+        validator: (value) =>
+            ['login', 'register', 'password-reset', 'two-factor', 'change-password'].includes(value)
     }
 })
 
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 
+const apiClient = useApiClient()
 const authStore = useAuthStore()
 const axios = inject('axios')
 const appConfig = inject('appConfig')
@@ -918,6 +1064,13 @@ const turnstileRef = ref(null)
 const hcaptchaRef = ref(null)
 const birth = ref({ day: '', month: '', year: '' })
 const registrationBirthdate = ref('')
+const pwChangeForm = ref({
+    password: '',
+    password_confirmation: ''
+})
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
+const pwChangeErrors = ref({})
 
 const months = [
     { value: 1, label: t('common.months.jan') || 'January' },
@@ -1016,6 +1169,8 @@ const getTitle = () => {
             return t('common.verifyTwoFactor')
         case 'two-factor-backup':
             return t('common.verifyAnotherWay')
+        case 'change-password':
+            return 'Update your password'
         default:
             return t('common.welcome')
     }
@@ -1046,6 +1201,8 @@ const getSubtitle = () => {
             return ''
         case 'two-factor-backup':
             return ''
+        case 'change-password':
+            return 'Your administrator has required a password change before you can continue.'
         default:
             return ''
     }
@@ -1108,6 +1265,32 @@ const passwordStrength = computed(() => {
     return { score, text: 'Strong', color: 'green' }
 })
 
+const pwChangePasswordStrength = computed(() => {
+    const password = pwChangeForm.value.password
+    if (!password) return { score: 0, text: '', color: '' }
+
+    let score = 0
+    const checks = {
+        length12: password.length >= 12,
+        lowercase: /[a-z]/.test(password),
+        uppercase: /[A-Z]/.test(password),
+        numbers: /\d/.test(password),
+        special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    }
+    score = Object.values(checks).filter(Boolean).length
+
+    if (score <= 2) return { score, text: 'Weak', color: 'red' }
+    if (score <= 3) return { score, text: 'Fair', color: 'yellow' }
+    if (score <= 4) return { score, text: 'Good', color: 'blue' }
+    return { score, text: 'Strong', color: 'green' }
+})
+
+const pwChangeCanSubmit = computed(() => {
+    const p = pwChangeForm.value.password
+    const c = pwChangeForm.value.password_confirmation
+    return p.length >= 12 && p === c && pwChangePasswordStrength.value.score >= 4
+})
+
 async function verifyAgeApi(ymd) {
     try {
         const res = await axios.post('/api/v1/auth/register/verify-age', {
@@ -1148,6 +1331,8 @@ const clearForm = () => {
         selectedAvatarUrl: '',
         birthdate: ''
     }
+    pwChangeForm.value = { password: '', password_confirmation: '' }
+    pwChangeErrors.value = {}
     birth.value = { day: '', month: '', year: '' }
     registrationBirthdate.value = ''
 }
@@ -1221,7 +1406,6 @@ const handleVerifyCode = async () => {
     clearMessages()
     loading.value = true
 
-    // Strip spaces and non-numeric characters from the code
     const cleanCode = form.value.verificationCode?.replace(/[^0-9]/g, '') || ''
     form.value.verificationCode = cleanCode
 
@@ -1429,6 +1613,11 @@ const handleLogin = async () => {
         if (res.data.has_2fa) {
             currentMode.value = 'two-factor'
             setSuccess(t('common.pleaseEnterYour2FACode'))
+        } else if (res.data.must_change_password) {
+            currentMode.value = 'change-password'
+            pwChangeForm.value = { password: '', password_confirmation: '' }
+            pwChangeErrors.value = {}
+            clearMessages()
         } else if (authStore.authRedirect) {
             window.location.href = authStore.authRedirect
         } else if (res.data.redirect) {
@@ -1509,6 +1698,11 @@ const handleTwoFactor = async () => {
                     window.location.reload()
                 }, 500)
             }
+        } else if (res.data.must_change_password) {
+            currentMode.value = 'change-password'
+            pwChangeForm.value = { password: '', password_confirmation: '' }
+            pwChangeErrors.value = {}
+            clearMessages()
         } else if (res.data.force_relogin) {
             setError(t('common.tooManyFailedAttemptsPleaseTryAgainLater'))
             clearForm()
@@ -1527,6 +1721,69 @@ const handleTwoFactor = async () => {
     } finally {
         loading.value = false
     }
+}
+
+const handleForcePasswordChange = async () => {
+    clearMessages()
+    pwChangeErrors.value = {}
+
+    if (!pwChangeCanSubmit.value) {
+        setError(t('common.pleaseChooseAStrongerPassword'))
+        return
+    }
+
+    loading.value = true
+
+    try {
+        const res = await apiClient.post('/api/v1/auth/force-password-change', {
+            password: pwChangeForm.value.password,
+            password_confirmation: pwChangeForm.value.password_confirmation
+        })
+
+        if (res.data.success) {
+            setSuccess(t('common.passwordUpdatedSuccessfully') || 'Password updated!')
+            setTimeout(() => {
+                window.location.href = res.data.redirect || '/'
+            }, 600)
+        }
+    } catch (err) {
+        const status = err.response?.status
+
+        if (status === 401 || err.response?.data?.requires_relogin) {
+            setError(
+                err.response?.data?.message ||
+                    t('common.sessionExpiredPleaseSignInAgain') ||
+                    'Session expired. Please sign in again.'
+            )
+            setTimeout(() => {
+                pwChangeForm.value = { password: '', password_confirmation: '' }
+                currentMode.value = 'login'
+                clearMessages()
+            }, 2000)
+            return
+        }
+
+        if (status === 422 && err.response?.data?.errors) {
+            pwChangeErrors.value = err.response.data.errors
+            setError(err.response.data.message || t('common.pleaseCheckTheFormAndTryAgain'))
+            return
+        }
+
+        setError(err.response?.data?.message || t('common.somethingWentWrongPleaseTryAgain'))
+    } finally {
+        loading.value = false
+    }
+}
+
+const handleCancelPasswordChange = async () => {
+    try {
+        await apiClient.post('/api/v1/auth/force-password-change/cancel')
+    } catch (e) {
+        // hmmmm
+    }
+    pwChangeForm.value = { password: '', password_confirmation: '' }
+    clearMessages()
+    currentMode.value = 'login'
 }
 
 const handleCodeComplete = (code) => {

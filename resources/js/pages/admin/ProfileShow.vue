@@ -1,645 +1,1900 @@
 <template>
     <LoadingSpinner v-if="isLoading" />
 
-    <div v-else-if="!isLoading && notFound" class="max-w-2xl mx-auto p-6">
-        <div class="text-center space-y-6">
-            <div class="flex justify-center">
-                <div
-                    class="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center"
-                >
-                    <UserIcon class="w-10 h-10 text-gray-400" />
-                </div>
+    <div v-else-if="notFound" class="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+        <div
+            class="rounded-3xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-gray-800 dark:bg-gray-900"
+        >
+            <div
+                class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800"
+            >
+                <UserIcon class="h-10 w-10 text-gray-400" />
             </div>
-
-            <div class="space-y-2">
-                <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-200">
-                    Profile Not Found
-                </h1>
-                <p class="text-gray-600 dark:text-gray-500 max-w-md mx-auto">
-                    The profile you're looking for doesn't exist or may have been removed. Please
-                    check the URL or search for a different profile.
-                </p>
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                <button
-                    @click="goBack"
-                    class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 hover:dark:bg-gray-950 transition-colors duration-200 cursor-pointer"
-                >
-                    <ArrowLeftIcon class="w-4 h-4 mr-2" />
-                    Go Back
-                </button>
-            </div>
+            <h1 class="mt-6 text-2xl font-semibold tracking-tight text-gray-950 dark:text-white">
+                Profile Not Found
+            </h1>
+            <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-600 dark:text-gray-400">
+                The profile you are looking for does not exist, or it may have already been removed.
+            </p>
+            <button
+                @click="goBack"
+                class="mt-6 inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+            >
+                <ArrowLeftIcon class="h-4 w-4" />
+                Go Back
+            </button>
         </div>
     </div>
 
-    <div v-else class="max-w-8xl mx-auto p-6 space-y-6">
-        <div
-            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
-        >
-            <div class="bg-gradient-to-r from-blue-500 to-sky-400 h-32"></div>
-            <div class="relative px-6 pb-6">
-                <div class="flex flex-col sm:flex-row sm:items-end sm:space-x-6">
-                    <div class="relative -mt-18 mb-4 sm:mb-0">
-                        <img
-                            :src="profile.avatar"
-                            :alt="profile.username"
-                            class="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 bg-white shadow-lg"
-                            @error="$event.target.src = '/storage/avatars/default.jpg'"
-                        />
-                    </div>
+    <div v-else-if="profile" class="mx-auto max-w-8xl px-4 py-4 sm:px-6 lg:px-4 lg:py-6">
+        <div class="space-y-6 lg:space-y-8">
+            <div class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+                <section
+                    :class="[
+                        'relative overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900',
+                        isDeleted ? 'xl:col-span-12' : 'xl:col-span-7'
+                    ]"
+                >
+                    <div
+                        class="absolute inset-x-0 top-0 h-25 bg-gradient-to-r from-[#F02C56]/10 via-transparent to-[#F02C56]/5 dark:from-[#F02C56]/15 dark:via-transparent dark:to-[#F02C56]/10"
+                    />
 
-                    <div class="flex-1">
-                        <div
-                            class="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-2"
-                        >
-                            <div>
-                                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                                    {{ profile.name || profile.username }}
-                                </h1>
+                    <div class="flex flex-col h-full relative px-4 py-5 sm:px-6 sm:py-6 lg:px-7">
+                        <div class="flex items-center justify-between gap-3 lg:gap-5">
+                            <AnimatedButton size="sm" variant="outline" pill @click="goBack">
+                                <div class="flex items-center gap-4">
+                                    <ArrowLeftIcon class="h-4 w-4" />
+                                    <span class="hidden sm:inline">Back to Profiles</span>
+                                </div>
+                            </AnimatedButton>
+
+                            <h2
+                                class="text-lg font-semibold tracking-tight text-gray-950 dark:text-white"
+                            >
+                                Profile
+                            </h2>
+
+                            <p
+                                class="text-xs max-w-[60px] lg:max-w-[300px] lg:text-sm truncate font-semibold tracking-tight text-gray-400 dark:text-gray-500"
+                            >
+                                #{{ route.params.id }}
+                            </p>
+                        </div>
+
+                        <div class="mt-5 flex flex-col gap-5 lg:flex-row lg:items-center">
+                            <div class="mx-auto shrink-0 lg:mx-0">
+                                <img
+                                    :src="profile.avatar"
+                                    :alt="profile.username"
+                                    class="h-24 w-24 rounded-full border-4 border-white bg-white object-cover shadow-sm dark:border-gray-900 sm:h-28 sm:w-28"
+                                    @error="handleAvatarError"
+                                />
+                            </div>
+
+                            <div class="min-w-0 flex-1 text-center lg:text-left">
+                                <div
+                                    class="flex flex-wrap items-center justify-center gap-2 lg:justify-start"
+                                >
+                                    <h1
+                                        class="break-words text-2xl font-semibold tracking-tight text-gray-950 dark:text-white lg:text-3xl"
+                                    >
+                                        {{ profile.name || profile.username }}
+                                    </h1>
+                                    <ShieldCheckIcon
+                                        v-if="profile.is_admin"
+                                        class="h-5 w-5 shrink-0 text-red-500"
+                                    />
+                                </div>
+
                                 <router-link
                                     :to="`/@${profile.username}`"
-                                    class="text-gray-600 dark:text-gray-400 font-light hover:text-gray-900 hover:dark:text-gray-500"
+                                    class="mt-1 inline-flex text-sm text-gray-500 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
                                 >
                                     @{{ profile.username }}
                                 </router-link>
-                                <div class="flex items-center mt-2 space-x-4">
+
+                                <div
+                                    class="mt-3 flex flex-wrap items-center justify-center gap-2 lg:justify-start"
+                                >
+                                    <span
+                                        :class="[
+                                            'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize',
+                                            statusBadge
+                                        ]"
+                                    >
+                                        {{ profile.status || 'unknown' }}
+                                    </span>
                                     <span
                                         v-if="profile.is_admin"
-                                        class="text-sm text-red-600 dark:text-red-400 font-bold"
+                                        class="inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300"
                                     >
                                         Admin
                                     </span>
                                     <span
-                                        :class="[
-                                            'px-3 py-2 text-xs font-bold rounded-full uppercase',
-                                            statusBadgeStyle[profile?.status]
-                                        ]"
+                                        v-if="!profile.local"
+                                        class="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
                                     >
-                                        {{ profile?.status }}
+                                        Remote
+                                    </span>
+                                    <span
+                                        v-if="profile.local && profile.email_verified"
+                                        class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                                    >
+                                        Verified email
+                                    </span>
+                                    <span
+                                        v-if="profile.local && profile.has_2fa"
+                                        class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                                    >
+                                        2FA
                                     </span>
                                 </div>
                             </div>
 
-                            <div class="flex items-center space-x-3 mt-4 sm:mt-0">
-                                <button
-                                    v-if="profile.local && profile.status != 'deleted'"
-                                    @click="toggleVerification"
-                                    :class="[
-                                        'px-6 py-3 text-sm font-medium rounded-lg transition-colors',
-                                        profile.verified
-                                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-                                            : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800'
-                                    ]"
+                            <div
+                                v-if="!isDeleted && !profile.is_admin"
+                                class="flex flex-wrap items-center justify-center gap-2 lg:w-full lg:max-w-[240px] lg:shrink-0 lg:justify-end"
+                            >
+                                <Dropdown align="right">
+                                    <template #trigger>
+                                        <AnimatedButton variant="primaryGradient" pill>
+                                            <div class="flex items-center gap-3">
+                                                Actions
+                                                <ChevronDownIcon class="h-5 w-5" />
+                                            </div>
+                                        </AnimatedButton>
+                                    </template>
+
+                                    <template v-if="!profile.is_admin && profile.local">
+                                        <DropdownItem @click="showSendEmailModal = true">
+                                            <EnvelopeIcon class="h-4 w-4 mr-1.5" />
+                                            Send Email
+                                        </DropdownItem>
+
+                                        <DropdownDivider class="my-1" />
+                                    </template>
+
+                                    <template v-if="!profile.is_admin && profile.local">
+                                        <DropdownItem @click="showResetPasswordModal = true">
+                                            <LockClosedIcon class="h-4 w-4 mr-1.5" />
+                                            Reset password
+                                        </DropdownItem>
+
+                                        <DropdownItem
+                                            v-if="profile?.has_2fa"
+                                            @click="handleDisable2fa"
+                                        >
+                                            <KeyIcon class="h-4 w-4 mr-1.5" />
+                                            Disable Two Factor
+                                        </DropdownItem>
+
+                                        <DropdownItem>
+                                            <KeyIcon class="h-4 w-4 mr-1.5" />
+                                            Revoke all sessions
+                                        </DropdownItem>
+
+                                        <DropdownDivider class="my-1" />
+                                    </template>
+
+                                    <DropdownItem
+                                        v-if="!profile.is_admin && profile.local"
+                                        @click="toggleVerification"
+                                    >
+                                        <CheckBadgeIcon class="h-4 w-4 mr-1.5" />
+                                        {{
+                                            profile.email_verified
+                                                ? 'Unverify email'
+                                                : 'Verify email'
+                                        }}
+                                    </DropdownItem>
+
+                                    <DropdownItem destructive @click="handleDeleteAvatar">
+                                        <UserCircleIcon class="h-4 w-4 mr-1.5" />
+                                        Delete Avatar
+                                    </DropdownItem>
+
+                                    <DropdownDivider class="my-1" v-if="!profile.is_admin" />
+
+                                    <DropdownItem
+                                        v-if="!profile.is_admin && profile.status === 'active'"
+                                        destructive
+                                        @click="handleSuspend"
+                                    >
+                                        <NoSymbolIcon class="mr-1.5 inline h-4 w-4" />
+                                        Suspend
+                                    </DropdownItem>
+
+                                    <DropdownItem
+                                        v-else-if="profile.status === 'suspended'"
+                                        @click="handleUnsuspend"
+                                    >
+                                        <CheckIcon class="mr-1.5 inline h-4 w-4" />
+                                        Unsuspend
+                                    </DropdownItem>
+
+                                    <DropdownItem
+                                        v-if="!profile.is_admin && profile.status === 'active'"
+                                        destructive
+                                        @click="showDeleteConfirmation = true"
+                                    >
+                                        <TrashIcon class="h-4 w-4 mr-1.5" />
+                                        Delete Account
+                                    </DropdownItem>
+                                </Dropdown>
+                            </div>
+                        </div>
+
+                        <div v-if="profile.bio" class="mt-4 min-w-0 max-w-none text-left flex-grow">
+                            <div
+                                ref="bioRef"
+                                :class="[
+                                    'text-sm leading-6 text-gray-600 dark:text-gray-400',
+                                    !bioExpanded && bioNeedsClamp ? 'line-clamp-3' : ''
+                                ]"
+                            >
+                                {{ profile.bio }}
+                            </div>
+
+                            <button
+                                v-if="bioNeedsClamp"
+                                type="button"
+                                :aria-expanded="bioExpanded"
+                                class="mt-2 inline-flex text-sm font-medium text-[#F02C56] transition hover:opacity-80"
+                                @click="bioExpanded = !bioExpanded"
+                            >
+                                {{ bioExpanded ? 'Show less' : 'Read more' }}
+                            </button>
+                        </div>
+
+                        <div
+                            class="flex-shrink mt-6 border-t border-gray-100 pt-4 dark:border-gray-800"
+                        >
+                            <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                                <QuickInfoCard
+                                    label="Joined"
+                                    :value="formatDate(profile.created_at)"
+                                />
+                                <QuickInfoCard
+                                    :label="profile.local ? 'Last active' : 'Updated'"
+                                    :value="relativeActivity"
+                                />
+                                <QuickInfoCard
+                                    v-if="profile.local"
+                                    label="User ID"
+                                    :value="profile.user_id || '—'"
+                                    mono
+                                />
+                                <QuickInfoCard v-else label="Server" :value="profile.domain" />
+                                <QuickInfoCard
+                                    label="Account"
+                                    :value="profile.local ? 'Local' : 'Remote'"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section v-if="!isDeleted" class="xl:col-span-5">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-2">
+                        <component
+                            :is="stat.to ? 'router-link' : 'div'"
+                            v-for="stat in statCards"
+                            :key="stat.label"
+                            :to="stat.to"
+                            class="block h-full"
+                        >
+                            <MetricCard :icon="stat.icon" :label="stat.label" :value="stat.value" />
+                        </component>
+                    </div>
+                </section>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+                <section v-if="profile.local" class="xl:col-span-5">
+                    <PanelCard>
+                        <template #header>
+                            <PanelHeader
+                                title="Account Information"
+                                description="Primary profile and account metadata"
+                                :icon="IdentificationIcon"
+                            />
+                        </template>
+
+                        <dl class="divide-y divide-gray-100 dark:divide-gray-800">
+                            <DetailRow
+                                v-if="profile.email"
+                                label="Email"
+                                :value="profile.email"
+                                :icon="EnvelopeIcon"
+                            />
+                            <DetailRow
+                                label="Joined"
+                                :value="formatDate(profile.created_at)"
+                                :icon="CalendarIcon"
+                            />
+                            <DetailRow
+                                label="Bio"
+                                :value="profile.bio || 'No bio set'"
+                                :icon="DocumentTextIcon"
+                            />
+                            <DetailRow
+                                v-if="profile.user_id"
+                                label="User ID"
+                                :value="profile.user_id"
+                                :icon="HashtagIcon"
+                                mono
+                            />
+                            <DetailRow
+                                v-if="profile.last_ip"
+                                label="Last IP"
+                                :value="profile.last_ip"
+                                :icon="MapPinIcon"
+                                mono
+                            />
+                            <DetailRow
+                                v-if="profile.last_active_at"
+                                label="Last Active"
+                                :value="formatTimeAgo(profile.last_active_at)"
+                                :icon="ClockIcon"
+                            />
+                            <DetailRow
+                                v-if="profile.has_push"
+                                label="Push Notifications"
+                                :value="profile.push_platform || 'Unknown'"
+                                :icon="BellIcon"
+                            />
+
+                            <div
+                                v-if="profile.has_atom"
+                                class="flex items-start gap-3 px-5 py-4 sm:px-6"
+                            >
+                                <RssIcon class="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+                                <div class="min-w-0 flex-1">
+                                    <dt
+                                        class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400"
+                                    >
+                                        Atom Feed
+                                    </dt>
+                                    <dd class="mt-1">
+                                        <a
+                                            :href="profile.atom_url"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="block truncate text-sm text-blue-600 hover:underline dark:text-blue-400"
+                                        >
+                                            {{ profile.atom_url }}
+                                        </a>
+                                    </dd>
+                                </div>
+                            </div>
+                        </dl>
+                    </PanelCard>
+                </section>
+
+                <section :class="profile.local ? 'xl:col-span-7' : 'xl:col-span-12'">
+                    <PanelCard>
+                        <template #header>
+                            <PanelHeader
+                                title="Permissions & Controls"
+                                description="Operational permissions and internal moderation notes"
+                                :icon="LockClosedIcon"
+                            />
+                        </template>
+
+                        <div
+                            v-if="!isDeleted"
+                            :class="[
+                                'grid grid-cols-1 gap-3 p-4 sm:p-6',
+                                profile.local ? 'lg:grid-cols-2' : 'lg:grid-cols-2 xl:grid-cols-3'
+                            ]"
+                        >
+                            <PermissionTile
+                                v-for="perm in permissionConfig"
+                                :key="perm.key"
+                                :icon="perm.icon"
+                                :label="perm.label"
+                                :description="perm.description"
+                                :enabled="!!profile[perm.key]"
+                                :disabled="profile.is_admin || isPermissionSaving(perm.key)"
+                                @toggle="togglePermission(perm.key)"
+                            />
+                        </div>
+
+                        <div
+                            class="border-t border-gray-200 px-4 py-4 dark:border-gray-800 sm:px-6"
+                        >
+                            <label
+                                for="admin-notes"
+                                class="mb-2 flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white"
+                            >
+                                <PencilSquareIcon class="h-4 w-4 text-gray-400" />
+                                Admin Notes
+                                <span
+                                    v-if="adminNotesSaving"
+                                    class="ml-auto inline-flex items-center gap-1 text-xs font-normal text-gray-400"
                                 >
-                                    {{
-                                        profile?.email_verified
-                                            ? 'Remove Email Verification'
-                                            : 'Verify Email'
-                                    }}
-                                </button>
-                                <AnimatedButton
-                                    v-if="profile.status === 'active'"
-                                    @click="handleSuspend"
+                                    <ArrowPathIcon class="h-3 w-3 animate-spin" />
+                                    Saving…
+                                </span>
+                                <span
+                                    v-else-if="adminNotesSavedRecently"
+                                    class="ml-auto inline-flex items-center gap-1 text-xs font-normal text-emerald-500"
                                 >
-                                    Suspend User
-                                </AnimatedButton>
-                                <AnimatedButton
-                                    v-else-if="profile.status === 'suspended'"
-                                    variant="primaryOutline"
-                                    @click="handleUnsuspend"
-                                >
-                                    Unsuspend User
-                                </AnimatedButton>
+                                    <CheckIcon class="h-3 w-3" />
+                                    Saved
+                                </span>
+                            </label>
+                            <textarea
+                                id="admin-notes"
+                                v-model="adminNotes"
+                                rows="4"
+                                placeholder="Add internal notes about this profile..."
+                                class="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-transparent focus:ring-2 focus:ring-[#F02C56]/60 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+                                @blur="saveAdminNotes"
+                            />
+                        </div>
+                    </PanelCard>
+                </section>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6" :class="profile.local ? '2xl:grid-cols-2' : ''">
+                <section>
+                    <PanelCard>
+                        <template #header>
+                            <PanelHeader
+                                title="Audit Log"
+                                description="Administrative actions taken on this profile"
+                                :icon="ClockIcon"
+                            />
+                        </template>
+
+                        <div class="p-4 sm:p-6">
+                            <TimelineEmpty
+                                v-if="!auditLogs.length && !isLoadingAudits"
+                                title="No audit entries yet"
+                                description="Admin actions on this profile will show up here."
+                            />
+
+                            <div v-else class="relative">
+                                <div
+                                    class="absolute bottom-2 left-5 top-2 w-px bg-gray-200 dark:bg-gray-800"
+                                />
+
+                                <ul class="space-y-6">
+                                    <li
+                                        v-for="entry in auditLogs"
+                                        :key="entry.id"
+                                        class="relative flex gap-4"
+                                    >
+                                        <img
+                                            :src="entry.auditor.avatar"
+                                            :alt="entry.auditor.username"
+                                            class="relative z-10 h-10 w-10 shrink-0 rounded-full border-2 border-white bg-gray-100 object-cover dark:border-gray-900"
+                                            @error="handleAvatarError"
+                                        />
+
+                                        <div
+                                            class="min-w-0 flex-1 rounded-2xl border border-gray-200 bg-gray-50/70 p-4 dark:border-gray-800 dark:bg-gray-800/40"
+                                        >
+                                            <div class="flex flex-wrap items-center gap-2 text-sm">
+                                                <span
+                                                    class="font-semibold text-gray-900 dark:text-white"
+                                                >
+                                                    {{
+                                                        entry.auditor.name || entry.auditor.username
+                                                    }}
+                                                </span>
+                                                <span class="text-gray-500 dark:text-gray-400">
+                                                    @{{ entry.auditor.username }}
+                                                </span>
+                                                <span class="text-gray-300 dark:text-gray-700"
+                                                    >·</span
+                                                >
+                                                <span
+                                                    v-if="entry.created_at"
+                                                    class="text-xs text-gray-500 dark:text-gray-400"
+                                                >
+                                                    {{ formatTimeAgo(entry.created_at) }}
+                                                </span>
+                                            </div>
+
+                                            <div class="mt-2">
+                                                <span
+                                                    :class="[
+                                                        'inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium',
+                                                        auditTypeStyle(entry.type)
+                                                    ]"
+                                                >
+                                                    <component
+                                                        :is="auditTypeIcon(entry.type)"
+                                                        class="h-3.5 w-3.5"
+                                                    />
+                                                    {{ formatAuditType(entry.type) }}
+                                                </span>
+                                            </div>
+
+                                            <div
+                                                v-if="
+                                                    entry.type === 'profile:send_email' &&
+                                                    entry.value
+                                                "
+                                                class="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900/60"
+                                            >
+                                                <div class="space-y-2.5 px-3.5 py-3">
+                                                    <div class="flex items-start gap-2">
+                                                        <span
+                                                            class="mt-0.5 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+                                                        >
+                                                            Subject
+                                                        </span>
+                                                        <span
+                                                            class="break-words text-sm font-medium text-gray-900 dark:text-white"
+                                                        >
+                                                            {{ entry.value.subject }}
+                                                        </span>
+                                                    </div>
+
+                                                    <p
+                                                        class="line-clamp-2 break-words text-xs leading-5 text-gray-600 dark:text-gray-400"
+                                                    >
+                                                        {{
+                                                            messageSnippet(entry.value.message_body)
+                                                        }}
+                                                    </p>
+
+                                                    <div
+                                                        class="flex flex-wrap items-center gap-1.5 pt-0.5"
+                                                    >
+                                                        <span
+                                                            v-if="entry.value.template_id"
+                                                            class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                                        >
+                                                            <DocumentTextIcon class="h-3 w-3" />
+                                                            {{ entry.value.template_id }}
+                                                        </span>
+                                                        <span
+                                                            v-if="entry.value.cc_admin"
+                                                            class="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                                                        >
+                                                            BCC Admin
+                                                        </span>
+                                                        <span
+                                                            v-if="entry.value.message_length"
+                                                            class="text-[11px] text-gray-400 dark:text-gray-500"
+                                                        >
+                                                            {{
+                                                                formatNumber(
+                                                                    entry.value.message_length
+                                                                )
+                                                            }}
+                                                            chars
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    @click="openEmailModal(entry)"
+                                                    class="flex w-full items-center justify-center gap-1.5 border-t border-gray-100 bg-gray-50/50 py-2 text-xs font-medium text-[#F02C56] transition hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-800/30 dark:hover:bg-gray-800/60"
+                                                >
+                                                    <EyeIcon class="h-3.5 w-3.5" />
+                                                    View full message
+                                                </button>
+                                            </div>
+
+                                            <div
+                                                v-if="getAuditDiff(entry).length"
+                                                class="mt-4 rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900/60"
+                                            >
+                                                <div
+                                                    v-for="change in getAuditDiff(entry)"
+                                                    :key="change.key"
+                                                    class="flex flex-wrap items-center gap-2 py-1 text-xs"
+                                                >
+                                                    <span
+                                                        class="font-mono text-gray-500 dark:text-gray-400"
+                                                    >
+                                                        {{ change.key }}:
+                                                    </span>
+                                                    <span :class="valueBadge(change.old)">
+                                                        {{ formatValue(change.old) }}
+                                                    </span>
+                                                    <ArrowRightIcon class="h-3 w-3 text-gray-400" />
+                                                    <span :class="valueBadge(change.new)">
+                                                        {{ formatValue(change.new) }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+
+                                <LoadMoreButton
+                                    v-if="hasMoreAudits"
+                                    :loading="isLoadingMoreAudits"
+                                    @click="loadMoreAudits"
+                                />
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </PanelCard>
+                </section>
+
+                <section v-if="profile.local">
+                    <PanelCard>
+                        <template #header>
+                            <PanelHeader
+                                title="User Audit Log"
+                                description="User-originated account changes and activity"
+                                :icon="ClockIcon"
+                            />
+                        </template>
+
+                        <div class="p-4 sm:p-6">
+                            <TimelineEmpty
+                                v-if="!userAuditLogs.length && !isLoadingUserAudits"
+                                title="No user audit entries yet"
+                                description="User changes will appear here when available."
+                            />
+
+                            <div v-else class="relative">
+                                <div
+                                    class="absolute bottom-2 left-5 top-2 w-px bg-gray-200 dark:bg-gray-800"
+                                />
+
+                                <ul class="space-y-6">
+                                    <li
+                                        v-for="entry in userAuditLogs"
+                                        :key="entry.id"
+                                        class="relative flex gap-4"
+                                    >
+                                        <img
+                                            :src="profile.avatar"
+                                            :alt="profile.username"
+                                            class="relative z-10 h-10 w-10 shrink-0 rounded-full border-2 border-white bg-gray-100 object-cover dark:border-gray-900"
+                                            @error="handleAvatarError"
+                                        />
+
+                                        <div
+                                            class="min-w-0 flex-1 rounded-2xl border border-gray-200 bg-gray-50/70 p-4 dark:border-gray-800 dark:bg-gray-800/40"
+                                        >
+                                            <div class="flex flex-wrap items-center gap-2 text-sm">
+                                                <span
+                                                    class="font-semibold text-gray-900 dark:text-white"
+                                                >
+                                                    {{ profile.name || profile.username }}
+                                                </span>
+                                                <span class="text-gray-500 dark:text-gray-400">
+                                                    @{{ profile.username }}
+                                                </span>
+                                                <span class="text-gray-300 dark:text-gray-700"
+                                                    >·</span
+                                                >
+                                                <span
+                                                    v-if="entry.created_at"
+                                                    class="text-xs text-gray-500 dark:text-gray-400"
+                                                >
+                                                    {{ formatTimeAgo(entry.created_at) }}
+                                                </span>
+                                            </div>
+
+                                            <div class="mt-2">
+                                                <span
+                                                    :class="[
+                                                        'inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium',
+                                                        userAuditTypeStyle(entry.type)
+                                                    ]"
+                                                >
+                                                    <component
+                                                        :is="userAuditTypeIcon(entry.type)"
+                                                        class="h-3.5 w-3.5"
+                                                    />
+                                                    {{ formatUserAuditType(entry.type) }}
+                                                </span>
+                                            </div>
+
+                                            <UserAuditDiff :entry="entry" />
+                                        </div>
+                                    </li>
+                                </ul>
+
+                                <LoadMoreButton
+                                    v-if="hasMoreUserAudits"
+                                    :loading="isLoadingMoreUserAudits"
+                                    @click="loadMoreUserAudits"
+                                />
+                            </div>
+                        </div>
+                    </PanelCard>
+                </section>
             </div>
         </div>
 
-        <div v-if="profile?.status != 'deleted'" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <router-link :to="`/admin/videos?q=${profile.username}`" class="cursor-pointer">
-                <div class="card-info">
-                    <div class="card-info-value">
-                        {{ formatNumber(profile.post_count) }}
-                    </div>
-                    <div class="card-info-label">Videos</div>
-                </div>
-            </router-link>
-            <div class="card-info">
-                <div class="card-info-value">
-                    {{ formatNumber(profile.follower_count) }}
-                </div>
-                <div class="card-info-label">Followers</div>
-            </div>
-            <div class="card-info">
-                <div class="card-info-value">
-                    {{ formatNumber(profile.following_count) }}
-                </div>
-                <div class="card-info-label">Following</div>
-            </div>
-            <div class="card-info">
-                <div class="card-info-value">
-                    {{ formatNumber(profile.likes_count) }}
-                </div>
-                <div class="card-info-label">Total Likes</div>
-            </div>
-            <router-link :to="`/admin/comments?q=user:${profile.username}`" class="cursor-pointer">
-                <div class="card-info">
-                    <div class="card-info-value">
-                        {{ formatNumber(profile.comments_count) }}
-                    </div>
-                    <div class="card-info-label">Comments</div>
-                </div>
-            </router-link>
-            <div class="card-info">
-                <div class="card-info-value">
-                    {{ formatNumber(profile.comment_replies_count) }}
-                </div>
-                <div class="card-info-label">Comment Replies</div>
-            </div>
-            <router-link :to="`/admin/reports?q=reported_by:${profile.id}`" class="cursor-pointer">
-                <div class="card-info">
-                    <div class="card-info-value">
-                        {{ formatNumber(profile.reports_created_count) }}
-                    </div>
-                    <div class="card-info-label">Reports Created</div>
-                </div>
-            </router-link>
-            <router-link
-                :to="`/admin/reports?q=reported_profile_id:${profile.id}`"
-                class="cursor-pointer"
-            >
-                <div class="card-info">
-                    <div class="card-info-value">
-                        {{ formatNumber(profile.reported_count) }}
-                    </div>
-                    <div class="card-info-label">Total Reported</div>
-                </div>
-            </router-link>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Teleport to="body">
             <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+                v-if="showDeleteConfirmation"
+                class="fixed inset-0 z-50 overflow-y-auto"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="delete-modal-title"
             >
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Account Information
-                </h3>
-                <div class="space-y-4">
-                    <div v-if="profile?.email">
-                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400"
-                            >Email</label
-                        >
-                        <div class="mt-1 text-sm text-gray-900 dark:text-white">
-                            {{ profile.email }}
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400"
-                            >Joined</label
-                        >
-                        <div class="mt-1 text-sm text-gray-900 dark:text-white">
-                            {{ formatDate(profile.created_at) }}
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400"
-                            >Bio</label
-                        >
-                        <div class="mt-1 text-sm text-gray-900 dark:text-white">
-                            {{ profile.bio || 'No bio set' }}
-                        </div>
-                    </div>
-                    <div v-if="profile?.user_id">
-                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400"
-                            >User ID</label
-                        >
-                        <div class="mt-1 text-sm text-gray-900 dark:text-white">
-                            {{ profile.user_id }}
-                        </div>
-                    </div>
-                    <div v-if="profile?.last_active_at">
-                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400"
-                            >Last Active At</label
-                        >
-                        <div class="mt-1 text-sm text-gray-900 dark:text-white">
-                            {{ formatTimeAgo(profile.last_active_at) }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
-            >
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Permissions & Restrictions
-                </h3>
-                <div class="space-y-6">
-                    <div v-if="profile.status != 'deleted'" class="space-y-6">
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <h4 class="text-sm font-medium text-gray-900 dark:text-white">
-                                    Comment Permissions
-                                </h4>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">
-                                    Control user's ability to comment on videos
-                                </p>
-                            </div>
-                            <button
-                                @click="toggleCommentPermission"
-                                :disabled="profile.is_admin"
-                                :class="[
-                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
-                                    profile.can_comment
-                                        ? 'bg-blue-600'
-                                        : 'bg-gray-200 dark:bg-gray-600'
-                                ]"
-                            >
-                                <span
-                                    :class="[
-                                        'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                                        profile.can_comment ? 'translate-x-5' : 'translate-x-0'
-                                    ]"
-                                ></span>
-                            </button>
-                        </div>
-                        <div
-                            v-if="!profile.can_comment"
-                            class="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded"
-                        >
-                            Comments are restricted for this user
-                        </div>
-
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <h4 class="text-sm font-medium text-gray-900 dark:text-white">
-                                    Video Upload Permissions
-                                </h4>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">
-                                    Control user's ability to upload videos
-                                </p>
-                            </div>
-                            <button
-                                @click="toggleVideoPermission"
-                                :disabled="profile.is_admin"
-                                :class="[
-                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
-                                    profile.can_upload
-                                        ? 'bg-blue-600'
-                                        : 'bg-gray-200 dark:bg-gray-600'
-                                ]"
-                            >
-                                <span
-                                    :class="[
-                                        'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                                        profile.can_upload ? 'translate-x-5' : 'translate-x-0'
-                                    ]"
-                                ></span>
-                            </button>
-                        </div>
-                        <div
-                            v-if="!profile.can_upload"
-                            class="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded"
-                        >
-                            Video uploads are restricted for this user
-                        </div>
-
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <h4 class="text-sm font-medium text-gray-900 dark:text-white">
-                                    Follow Permissions
-                                </h4>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">
-                                    Control user's ability to follow accounts
-                                </p>
-                            </div>
-                            <button
-                                @click="toggleFollowPermission"
-                                :disabled="profile.is_admin"
-                                :class="[
-                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
-                                    profile.can_follow
-                                        ? 'bg-blue-600'
-                                        : 'bg-gray-200 dark:bg-gray-600'
-                                ]"
-                            >
-                                <span
-                                    :class="[
-                                        'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                                        profile.can_follow ? 'translate-x-5' : 'translate-x-0'
-                                    ]"
-                                ></span>
-                            </button>
-                        </div>
-                        <div
-                            v-if="!profile.can_follow"
-                            class="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded"
-                        >
-                            Following is restricted for this user
-                        </div>
-
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <h4 class="text-sm font-medium text-gray-900 dark:text-white">
-                                    Like Permissions
-                                </h4>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">
-                                    Control user's ability to like content
-                                </p>
-                            </div>
-                            <button
-                                @click="toggleLikePermission"
-                                :disabled="profile.is_admin"
-                                :class="[
-                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
-                                    profile.can_like
-                                        ? 'bg-blue-600'
-                                        : 'bg-gray-200 dark:bg-gray-600'
-                                ]"
-                            >
-                                <span
-                                    :class="[
-                                        'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                                        profile.can_like ? 'translate-x-5' : 'translate-x-0'
-                                    ]"
-                                ></span>
-                            </button>
-                        </div>
-                        <div
-                            v-if="!profile.can_like"
-                            class="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded"
-                        >
-                            Likes are restricted for this user
-                        </div>
-
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <h4 class="text-sm font-medium text-gray-900 dark:text-white">
-                                    Starter Kit Permissions
-                                </h4>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">
-                                    Control user's ability to create Starter Kits
-                                </p>
-                            </div>
-                            <button
-                                @click="toggleStarterKitPermission"
-                                :disabled="profile.is_admin"
-                                :class="[
-                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
-                                    profile.can_create_starter_kits
-                                        ? 'bg-blue-600'
-                                        : 'bg-gray-200 dark:bg-gray-600'
-                                ]"
-                            >
-                                <span
-                                    :class="[
-                                        'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                                        profile.can_create_starter_kits
-                                            ? 'translate-x-5'
-                                            : 'translate-x-0'
-                                    ]"
-                                ></span>
-                            </button>
-                        </div>
-                        <div
-                            v-if="!profile.can_create_starter_kits"
-                            class="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded"
-                        >
-                            Creating Starter Kits are restricted for this user
-                        </div>
-
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <h4 class="text-sm font-medium text-gray-900 dark:text-white">
-                                    Starter Kit Use Permissions
-                                </h4>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">
-                                    Control user's ability to use Starter Kits
-                                </p>
-                            </div>
-                            <button
-                                @click="toggleStarterKitUsePermission"
-                                :disabled="profile.is_admin"
-                                :class="[
-                                    'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-30',
-                                    profile.can_use_starter_kits
-                                        ? 'bg-blue-600'
-                                        : 'bg-gray-200 dark:bg-gray-600'
-                                ]"
-                            >
-                                <span
-                                    :class="[
-                                        'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                                        profile.can_use_starter_kits
-                                            ? 'translate-x-5'
-                                            : 'translate-x-0'
-                                    ]"
-                                ></span>
-                            </button>
-                        </div>
-                        <div
-                            v-if="!profile.can_use_starter_kits"
-                            class="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded"
-                        >
-                            Using Starter Kits are restricted for this user
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2"
-                            >Admin Notes</label
-                        >
-                        <textarea
-                            v-model="adminNotes"
-                            @blur="saveAdminNotes"
-                            rows="3"
-                            placeholder="Add notes about this user..."
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                        ></textarea>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div
-            v-if="profile.status != 'deleted'"
-            class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6"
-        >
-            <h3 class="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">
-                {{ $t('common.dangerZone') }}
-            </h3>
-            <p class="text-sm text-red-700 dark:text-red-300 mb-4">
-                Once you delete this account, there is no going back. This will permanently delete
-                all user data, videos, and associated content.
-            </p>
-            <button
-                @click="showDeleteConfirmation = true"
-                class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
-            >
-                Delete Account
-            </button>
-        </div>
-
-        <div v-if="showDeleteConfirmation" class="fixed inset-0 overflow-y-auto">
-            <div
-                class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0"
-            >
-                <div
-                    class="-z-1 fixed inset-0 transition-opacity bg-gray-500/40"
-                    @click="showDeleteConfirmation = false"
-                ></div>
-
-                <div
-                    class="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-lg"
-                >
+                <div class="flex min-h-screen items-center justify-center px-4 py-8 text-center">
                     <div
-                        class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 dark:bg-red-900/20 rounded-full"
+                        class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm dark:bg-black/70"
+                        @click="closeDeleteModal"
+                    />
+
+                    <div
+                        class="relative w-full max-w-md rounded-3xl border border-gray-200 bg-white p-6 text-left shadow-2xl dark:border-gray-800 dark:bg-gray-900"
                     >
-                        <svg
-                            class="w-6 h-6 text-red-600 dark:text-red-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                        <div
+                            class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30"
                         >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-                            ></path>
-                        </svg>
-                    </div>
+                            <ExclamationTriangleIcon
+                                class="h-6 w-6 text-red-600 dark:text-red-400"
+                            />
+                        </div>
 
-                    <h3
-                        class="text-lg font-semibold text-gray-900 dark:text-white text-center mb-2"
-                    >
-                        Delete Account
-                    </h3>
+                        <h3
+                            id="delete-modal-title"
+                            class="text-center text-lg font-semibold text-gray-900 dark:text-white"
+                        >
+                            Delete Account
+                        </h3>
+                        <p
+                            class="mt-2 text-center text-sm leading-6 text-gray-600 dark:text-gray-400"
+                        >
+                            Permanently delete <strong>@{{ profile.username }}</strong
+                            >? This action cannot be undone and will remove all associated data.
+                        </p>
 
-                    <p class="text-sm text-gray-600 dark:text-gray-400 text-center mb-6">
-                        Are you sure you want to delete
-                        <strong>@{{ profile.username }}</strong
-                        >? This action cannot be undone and will permanently remove all associated
-                        data.
-                    </p>
-
-                    <div class="mb-4">
                         <label
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                            for="delete-confirm"
+                            class="mt-6 block text-sm font-medium text-gray-700 dark:text-gray-300"
                         >
                             Type "DELETE" to confirm:
                         </label>
                         <input
+                            id="delete-confirm"
+                            ref="deleteInputRef"
                             v-model="deleteConfirmationText"
                             type="text"
                             placeholder="DELETE"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                            autocomplete="off"
+                            class="mt-2 w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-transparent focus:ring-2 focus:ring-red-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                            @keydown.enter="deleteAccount"
                         />
-                    </div>
 
-                    <div class="flex space-x-3">
-                        <button
-                            @click="showDeleteConfirmation = false"
-                            class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            @click="deleteAccount"
-                            :disabled="deleteConfirmationText !== 'DELETE' || isDeleting"
-                            :class="[
-                                'flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors',
-                                deleteConfirmationText === 'DELETE' && !isDeleting
-                                    ? 'bg-red-600 hover:bg-red-700'
-                                    : 'bg-gray-400 cursor-not-allowed'
-                            ]"
-                        >
-                            {{ isDeleting ? 'Deleting...' : 'Delete Account' }}
-                        </button>
+                        <div class="mt-5 flex gap-3">
+                            <button
+                                type="button"
+                                class="flex-1 rounded-xl bg-gray-100 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                @click="closeDeleteModal"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                :disabled="!canDelete"
+                                :class="[
+                                    'inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-white transition',
+                                    canDelete
+                                        ? 'bg-red-600 hover:bg-red-700'
+                                        : 'cursor-not-allowed bg-gray-300 dark:bg-gray-700'
+                                ]"
+                                @click="deleteAccount"
+                            >
+                                <TrashIcon v-if="!isDeleting" class="h-4 w-4" />
+                                <ArrowPathIcon v-else class="h-4 w-4 animate-spin" />
+                                {{ isDeleting ? 'Deleting...' : 'Delete' }}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </Teleport>
+
+        <Teleport to="body">
+            <div
+                v-if="showEmailModal && selectedEmailEntry"
+                class="fixed inset-0 z-50 overflow-y-auto"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="email-modal-title"
+            >
+                <div class="flex min-h-screen items-center justify-center px-4 py-8">
+                    <div
+                        class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm dark:bg-black/70"
+                        @click="closeEmailModal"
+                    />
+
+                    <div
+                        class="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-900"
+                    >
+                        <div
+                            class="flex items-start justify-between gap-4 border-b border-gray-200 px-6 py-5 dark:border-gray-800"
+                        >
+                            <div class="flex min-w-0 items-start gap-3">
+                                <div
+                                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-900/30"
+                                >
+                                    <EnvelopeIcon
+                                        class="h-5 w-5 text-blue-600 dark:text-blue-400"
+                                    />
+                                </div>
+                                <div class="min-w-0">
+                                    <h3
+                                        id="email-modal-title"
+                                        class="text-base font-semibold text-gray-900 dark:text-white"
+                                    >
+                                        Email Sent
+                                    </h3>
+                                    <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                        Sent by @{{ selectedEmailEntry.auditor.username }}
+                                        <span class="mx-1 text-gray-300 dark:text-gray-700">·</span>
+                                        {{ formatTimeAgo(selectedEmailEntry.created_at) }}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                @click="closeEmailModal"
+                                class="shrink-0 rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                            >
+                                <XMarkIcon class="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <div class="space-y-4 px-6 py-5">
+                            <div
+                                v-if="selectedEmailEntry.resource"
+                                class="flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50/70 p-3 dark:border-gray-800 dark:bg-gray-800/40"
+                            >
+                                <img
+                                    :src="selectedEmailEntry.resource.avatar"
+                                    :alt="selectedEmailEntry.resource.username"
+                                    class="h-10 w-10 shrink-0 rounded-full bg-gray-100 object-cover"
+                                    @error="handleAvatarError"
+                                />
+                                <div class="min-w-0 flex-1">
+                                    <div
+                                        class="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+                                    >
+                                        To
+                                    </div>
+                                    <div
+                                        class="truncate text-sm font-medium text-gray-900 dark:text-white"
+                                    >
+                                        {{
+                                            selectedEmailEntry.resource.name ||
+                                            selectedEmailEntry.resource.username
+                                        }}
+                                    </div>
+                                    <div class="truncate text-xs text-gray-500 dark:text-gray-400">
+                                        @{{ selectedEmailEntry.resource.username }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <span
+                                    v-if="selectedEmailEntry.value.template_id"
+                                    class="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                >
+                                    <DocumentTextIcon class="h-3.5 w-3.5" />
+                                    {{ selectedEmailEntry.value.template_id }}
+                                </span>
+                                <span
+                                    v-if="selectedEmailEntry.value.cc_admin"
+                                    class="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                                >
+                                    <CheckIcon class="h-3.5 w-3.5" />
+                                    BCC'd Admins
+                                </span>
+                                <span
+                                    v-if="selectedEmailEntry.value.message_length"
+                                    class="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                >
+                                    {{ formatNumber(selectedEmailEntry.value.message_length) }}
+                                    characters
+                                </span>
+                            </div>
+
+                            <div>
+                                <div
+                                    class="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+                                >
+                                    Subject
+                                </div>
+                                <div
+                                    class="mt-1 break-words text-sm font-medium text-gray-900 dark:text-white"
+                                >
+                                    {{ selectedEmailEntry.value.subject }}
+                                </div>
+                            </div>
+
+                            <div>
+                                <div
+                                    class="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+                                >
+                                    Message
+                                </div>
+                                <div
+                                    class="mt-2 max-h-[50vh] overflow-y-auto rounded-2xl border border-gray-200 bg-gray-50/70 p-4 dark:border-gray-800 dark:bg-gray-800/40"
+                                >
+                                    <pre
+                                        class="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-gray-800 dark:text-gray-200"
+                                    >
+                                {{ selectedEmailEntry.value.message_body }}</pre
+                                    >
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="flex justify-end gap-2 border-t border-gray-200 px-6 py-4 dark:border-gray-800"
+                        >
+                            <button
+                                type="button"
+                                @click="copyMessageBody"
+                                class="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                            >
+                                <component
+                                    :is="copiedMessage ? CheckIcon : ClipboardIcon"
+                                    class="h-4 w-4"
+                                />
+                                {{ copiedMessage ? 'Copied' : 'Copy' }}
+                            </button>
+                            <button
+                                type="button"
+                                @click="closeEmailModal"
+                                class="rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
+
+        <AdminSendEmailModal
+            :show="showSendEmailModal"
+            :profile="profile"
+            @close="showSendEmailModal = false"
+            @send="handleSendEmail"
+        />
+
+        <AdminResetPasswordModal
+            :show="showResetPasswordModal"
+            :profile="profile"
+            @close="showResetPasswordModal = false"
+            @reset="handleResetPassword"
+        />
     </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { computed, h, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { profilesApi } from '@/services/adminApi'
 import { useUtils } from '@/composables/useUtils'
-import { UserIcon, ArrowLeftIcon } from '@heroicons/vue/24/outline'
 import { useAlertModal } from '@/composables/useAlertModal.js'
+import Dropdown from '@/components/Dropdown.vue'
+import DropdownItem from '@/components/DropdownItem.vue'
+import AnimatedButton from '@/components/AnimatedButton.vue'
+import {
+    ArchiveBoxIcon,
+    ArrowLeftIcon,
+    ArrowPathIcon,
+    ArrowRightIcon,
+    BellAlertIcon,
+    BellIcon,
+    BellSlashIcon,
+    CalendarIcon,
+    ChatBubbleLeftIcon,
+    ChatBubbleLeftRightIcon,
+    CheckBadgeIcon,
+    CheckCircleIcon,
+    CheckIcon,
+    ChevronDownIcon,
+    ClockIcon,
+    ClipboardIcon,
+    EyeIcon,
+    XMarkIcon,
+    DocumentTextIcon,
+    EnvelopeIcon,
+    EnvelopeOpenIcon,
+    ExclamationTriangleIcon,
+    FlagIcon,
+    HashtagIcon,
+    HeartIcon,
+    IdentificationIcon,
+    KeyIcon,
+    LinkIcon,
+    LockClosedIcon,
+    LockOpenIcon,
+    MagnifyingGlassCircleIcon,
+    MagnifyingGlassIcon,
+    MapPinIcon,
+    NoSymbolIcon,
+    PencilSquareIcon,
+    RocketLaunchIcon,
+    RssIcon,
+    ShieldCheckIcon,
+    SparklesIcon,
+    TrashIcon,
+    UserCircleIcon,
+    UserIcon,
+    UserPlusIcon,
+    UsersIcon,
+    VideoCameraIcon
+} from '@heroicons/vue/24/outline'
+import DropdownDivider from '@/components/DropdownDivider.vue'
+import AdminSendEmailModal from '@/components/Admin/AdminSendEmailModal.vue'
+import AdminResetPasswordModal from '@/components/Admin/AdminResetPasswordModal.vue'
 
-const { formatNumber, formatDate, formatTimeAgo } = useUtils()
-const { alertModal, confirmModal } = useAlertModal()
-
-const router = useRouter()
+const { formatDate, formatNumber, formatTimeAgo } = useUtils()
+const { confirmModal } = useAlertModal()
 const route = useRoute()
-const profile = ref(false)
-const adminNotes = ref()
-const isLoading = ref(false)
-const notFound = ref(false)
+const router = useRouter()
 
-const fetchProfile = async (id) => {
-    isLoading.value = true
-    try {
-        const response = await profilesApi.getProfile(id)
-        profile.value = response.data
-        adminNotes.value = response.data?.admin_notes
-    } catch (error) {
-        notFound.value = true
-        console.error('Error fetching profiles:', error)
-    } finally {
-        isLoading.value = false
-    }
-}
+const DEFAULT_AVATAR = '/storage/avatars/default.jpg'
+const BIO_CLAMP_LINES = 3
+
+const profile = ref(null)
+const adminNotes = ref('')
+const adminNotesSaving = ref(false)
+const adminNotesSavedRecently = ref(false)
+const isLoading = ref(true)
+const notFound = ref(false)
 const showDeleteConfirmation = ref(false)
 const deleteConfirmationText = ref('')
 const isDeleting = ref(false)
+const deleteInputRef = ref(null)
+const showSendEmailModal = ref(false)
+const showResetPasswordModal = ref(false)
 
-const goBack = () => {
-    router.replace('/admin/profiles')
+const auditLogs = ref([])
+const auditCursor = ref(null)
+const hasMoreAudits = ref(false)
+const isLoadingAudits = ref(false)
+const isLoadingMoreAudits = ref(false)
+
+const userAuditLogs = ref([])
+const userAuditCursor = ref(null)
+const hasMoreUserAudits = ref(false)
+const isLoadingUserAudits = ref(false)
+const isLoadingMoreUserAudits = ref(false)
+
+const showEmailModal = ref(false)
+const selectedEmailEntry = ref(null)
+const copiedMessage = ref(false)
+let copiedTimer = null
+
+const bioRef = ref(null)
+const bioExpanded = ref(false)
+const bioNeedsClamp = ref(false)
+
+const savingPermissions = ref(new Set())
+let fetchToken = 0
+let bioResizeObserver = null
+let savedNotesTimer = null
+
+const statusBadgeStyles = {
+    active: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    disabled: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+    deleted: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+    suspended: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+}
+const defaultBadge = 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+
+const permissionConfig = [
+    { key: 'can_comment', label: 'Comments', description: 'Can comment', icon: ChatBubbleLeftIcon },
+    {
+        key: 'can_upload',
+        label: 'Video Uploads',
+        description: 'Can upload videos',
+        icon: VideoCameraIcon
+    },
+    { key: 'can_follow', label: 'Follow', description: 'Can follow', icon: UserPlusIcon },
+    { key: 'can_like', label: 'Likes', description: 'Can like', icon: HeartIcon },
+    { key: 'can_report', label: 'Reports', description: 'Can create reports', icon: FlagIcon },
+    {
+        key: 'can_create_starter_kits',
+        label: 'Starter Kits',
+        description: 'Create Starter Kits',
+        icon: SparklesIcon
+    },
+    {
+        key: 'can_use_starter_kits',
+        label: 'Use Starter Kits',
+        description: 'Use Starter Kits',
+        icon: RocketLaunchIcon
+    }
+]
+
+const auditTypeLabels = {
+    'profile:update_notes': 'Admin notes updated',
+    'profile:permissions': 'Permissions Updated',
+    'profile:suspend': 'Suspended',
+    'profile:unsuspend': 'Unsuspended',
+    'profile:delete': 'Deleted',
+    'profile:notes': 'Notes Updated',
+    'profile:verify': 'Email Verified',
+    'profile:unverify': 'Email Unverified',
+    'profile:email_verify': 'Email Verified by admin',
+    'profile:email_unverify': 'Email Unverified by admin',
+    'profile:2fa_disable': 'Two factor auth disabled by admin',
+    'profile:send_email': 'Email sent',
+    'profile:password_reset': 'Password reset'
 }
 
-const statusBadgeStyle = {
-    active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-    disabled: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
-    deleted: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
-    suspended: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+const auditTypeStyles = {
+    'profile:permissions': 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    'profile:suspend': 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    'profile:unsuspend': 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    'profile:delete': 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    'profile:notes': 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    'profile:verify': 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    'profile:update_notes':
+        'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    'profile:unverify': 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+    'profile:email_verify':
+        'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    'profile:email_unverify': 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    'profile:2fa_disable': 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    'profile:send_email': 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    'profile:password_reset': 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
 }
+
+const auditTypeIcons = {
+    'profile:update_notes': PencilSquareIcon,
+    'profile:permissions': LockClosedIcon,
+    'profile:suspend': NoSymbolIcon,
+    'profile:unsuspend': CheckIcon,
+    'profile:delete': TrashIcon,
+    'profile:notes': PencilSquareIcon,
+    'profile:verify': CheckBadgeIcon,
+    'profile:email_verify': CheckBadgeIcon,
+    'profile:email_unverify': NoSymbolIcon,
+    'profile:2fa_disable': NoSymbolIcon,
+    'profile:unverify': CheckBadgeIcon,
+    'profile:send_email': EnvelopeIcon,
+    'profile:password_reset': KeyIcon
+}
+
+const userAuditTypeLabels = {
+    atom_enabled: 'Atom enabled',
+    atom_disabled: 'Atom disabled',
+    avatar_updated: 'Avatar updated',
+    avatar_deleted: 'Avatar deleted',
+    password_changed: 'Password changed',
+    two_factor_enabled: 'MFA enabled',
+    two_factor_disabled: 'MFA disabled',
+    email_changed: 'Email updated',
+    account_data_settings_updated: 'Data settings changed',
+    email_verified: 'Email verified',
+    profile_updated: 'Profile updated',
+    starter_kit_state: 'Starter Kit Permissions',
+    profile_links_add: 'New Profile Link',
+    profile_links_delete: 'Profile Link Deleted',
+    push_notifications_enabled: 'Push Notifications enabled',
+    push_notifications_disabled: 'Push Notifications disabled'
+}
+
+const userAuditTypeIcons = {
+    atom_enabled: RssIcon,
+    atom_disabled: RssIcon,
+    avatar_updated: UserCircleIcon,
+    avatar_deleted: UserCircleIcon,
+    password_changed: LockClosedIcon,
+    two_factor_enabled: ShieldCheckIcon,
+    two_factor_disabled: LockOpenIcon,
+    email_changed: EnvelopeOpenIcon,
+    account_data_settings_updated: ArchiveBoxIcon,
+    email_verified: CheckCircleIcon,
+    profile_updated: UserPlusIcon,
+    starter_kit_state: UserPlusIcon,
+    profile_links_add: LinkIcon,
+    profile_links_delete: LinkIcon,
+    push_notifications_enabled: BellAlertIcon,
+    push_notifications_disabled: BellSlashIcon
+}
+
+const userAuditTypeStyles = {
+    atom_enabled: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    atom_disabled: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    avatar_updated: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    avatar_deleted: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    profile_links_delete: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    password_changed: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    two_factor_enabled: 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    two_factor_disabled: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    email_changed: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    push_notifications_disabled:
+        'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    account_data_settings_updated:
+        'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    starter_kit_state: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    email_verified: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    push_notifications_enabled:
+        'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    profile_links_add:
+        'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    profile_updated: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+}
+
+const starterKitTypes = {
+    0: 'Disabled',
+    1: 'Accounts they follow only',
+    2: 'Accounts they follow with approval',
+    3: 'Local accounts only',
+    4: 'Local accounts with approval only',
+    5: 'Permission required',
+    6: 'Auto-allow everyone'
+}
+
+const messageSnippet = (body) => {
+    if (!body) return ''
+    return body.replace(/\s+/g, ' ').trim()
+}
+
+const openEmailModal = (entry) => {
+    selectedEmailEntry.value = entry
+    showEmailModal.value = true
+}
+
+const closeEmailModal = () => {
+    if (copiedTimer) clearTimeout(copiedTimer)
+    showEmailModal.value = false
+    selectedEmailEntry.value = null
+    copiedMessage.value = false
+}
+
+const copyMessageBody = async () => {
+    const body = selectedEmailEntry.value?.value?.message_body
+    if (!body) return
+    try {
+        await navigator.clipboard.writeText(body)
+        copiedMessage.value = true
+        if (copiedTimer) clearTimeout(copiedTimer)
+        copiedTimer = setTimeout(() => {
+            copiedMessage.value = false
+        }, 2000)
+    } catch (error) {
+        console.error('Failed to copy message body:', error)
+    }
+}
+
+const isDeleted = computed(() => profile.value?.status === 'deleted')
+
+const statusBadge = computed(() => statusBadgeStyles[profile.value?.status] || defaultBadge)
+
+const canDelete = computed(() => deleteConfirmationText.value === 'DELETE' && !isDeleting.value)
+
+const relativeActivity = computed(() => {
+    if (!profile.value) return '—'
+    const ts = profile.value.local ? profile.value.last_active_at : profile.value.updated_at
+    return ts ? formatTimeAgo(ts) : '—'
+})
+
+const statCards = computed(() => {
+    if (!profile.value) return []
+    const p = profile.value
+    return [
+        {
+            icon: VideoCameraIcon,
+            label: 'Videos',
+            value: formatNumber(p.post_count || 0),
+            to: `/admin/videos?q=${p.username}`
+        },
+        { icon: UsersIcon, label: 'Followers', value: formatNumber(p.follower_count || 0) },
+        { icon: UserPlusIcon, label: 'Following', value: formatNumber(p.following_count || 0) },
+        { icon: HeartIcon, label: 'Total Likes', value: formatNumber(p.likes_count || 0) },
+        {
+            icon: ChatBubbleLeftIcon,
+            label: 'Comments',
+            value: formatNumber(p.comments_count || 0),
+            to: `/admin/comments?q=user:${p.username}`
+        },
+        {
+            icon: ChatBubbleLeftRightIcon,
+            label: 'Replies',
+            value: formatNumber(p.comment_replies_count || 0)
+        },
+        {
+            icon: FlagIcon,
+            label: 'Reports Created',
+            value: formatNumber(p.reports_created_count || 0),
+            to: `/admin/reports?q=reported_by:${p.id}`
+        },
+        {
+            icon: ExclamationTriangleIcon,
+            label: 'Times Reported',
+            value: formatNumber(p.reported_count || 0),
+            to: `/admin/reports?q=reported_profile_id:${p.id}`
+        },
+        {
+            icon: SparklesIcon,
+            label: 'In Starter Kit(s)',
+            value: formatNumber(p.starter_kits_included_in_count || 0),
+            to: `/admin/reports?q=reported_profile_id:${p.id}`
+        },
+        {
+            icon: RocketLaunchIcon,
+            label: 'Starter Kit(s) Made',
+            value: formatNumber(p.starter_kits_created_count || 0),
+            to: `/admin/reports?q=reported_profile_id:${p.id}`
+        }
+    ]
+})
+
+const PanelCard = {
+    setup(_, { slots }) {
+        return () =>
+            h(
+                'div',
+                {
+                    class: 'overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900'
+                },
+                [slots.header?.(), slots.default?.()]
+            )
+    }
+}
+
+const PanelHeader = {
+    props: ['title', 'description', 'icon'],
+    setup(props) {
+        return () =>
+            h('div', { class: 'border-b border-gray-200 px-4 py-4 dark:border-gray-800 sm:px-6' }, [
+                h('div', { class: 'flex items-start gap-3' }, [
+                    h(
+                        'div',
+                        {
+                            class: 'mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800'
+                        },
+                        [h(props.icon, { class: 'h-5 w-5 text-gray-500 dark:text-gray-400' })]
+                    ),
+                    h('div', { class: 'min-w-0' }, [
+                        h(
+                            'h3',
+                            {
+                                class: 'text-base font-semibold tracking-tight text-gray-950 dark:text-white'
+                            },
+                            props.title
+                        ),
+                        props.description
+                            ? h(
+                                  'p',
+                                  { class: 'mt-1 text-sm text-gray-500 dark:text-gray-400' },
+                                  props.description
+                              )
+                            : null
+                    ])
+                ])
+            ])
+    }
+}
+
+const MetricCard = {
+    props: ['icon', 'label', 'value'],
+    setup(props) {
+        return () =>
+            h(
+                'div',
+                {
+                    class: 'flex h-full min-h-[88px] items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm transition hover:border-gray-300 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700'
+                },
+                [
+                    h(
+                        'div',
+                        {
+                            class: 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800'
+                        },
+                        [h(props.icon, { class: 'h-4.5 w-4.5 text-gray-500 dark:text-gray-400' })]
+                    ),
+                    h('div', { class: 'min-w-0 flex-1' }, [
+                        h(
+                            'div',
+                            {
+                                class: 'text-[11px] font-semibold uppercase leading-4 text-gray-500 dark:text-gray-400'
+                            },
+                            props.label
+                        ),
+                        h(
+                            'div',
+                            {
+                                class: 'mt-1 truncate text-xl font-semibold tracking-tight text-gray-950 dark:text-white'
+                            },
+                            props.value
+                        )
+                    ])
+                ]
+            )
+    }
+}
+
+const QuickInfoCard = {
+    props: ['label', 'value', 'mono'],
+    setup(props) {
+        return () =>
+            h(
+                'div',
+                {
+                    class: 'rounded-2xl border border-gray-200 bg-gray-50/80 px-4 py-3 dark:border-gray-800 dark:bg-gray-800/50'
+                },
+                [
+                    h(
+                        'div',
+                        {
+                            class: 'text-[11px] font-semibold uppercase text-gray-500 dark:text-gray-400'
+                        },
+                        props.label
+                    ),
+                    h(
+                        'div',
+                        {
+                            class: [
+                                'mt-1 truncate text-sm font-medium text-gray-900 dark:text-white',
+                                props.mono ? 'font-mono' : ''
+                            ]
+                        },
+                        props.value
+                    )
+                ]
+            )
+    }
+}
+
+const DetailRow = {
+    props: ['icon', 'label', 'value', 'mono'],
+    setup(props) {
+        return () =>
+            h('div', { class: 'flex items-start gap-3 px-5 py-4 sm:px-6' }, [
+                h(props.icon, { class: 'mt-0.5 h-4 w-4 shrink-0 text-gray-400' }),
+                h('div', { class: 'min-w-0 flex-1' }, [
+                    h(
+                        'dt',
+                        {
+                            class: 'text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400'
+                        },
+                        props.label
+                    ),
+                    h(
+                        'dd',
+                        {
+                            class: [
+                                'mt-1 break-words text-sm text-gray-900 dark:text-white',
+                                props.mono ? 'font-mono' : ''
+                            ]
+                        },
+                        props.value
+                    )
+                ])
+            ])
+    }
+}
+
+const PermissionTile = {
+    emits: ['toggle'],
+    props: ['icon', 'label', 'description', 'enabled', 'disabled'],
+    setup(props, { emit }) {
+        return () =>
+            h(
+                'div',
+                {
+                    class: 'rounded-2xl border border-gray-200 bg-gray-50/80 p-4 dark:border-gray-800 dark:bg-gray-800/40'
+                },
+                [
+                    h('div', { class: 'flex items-start justify-between gap-4' }, [
+                        h('div', { class: 'flex min-w-0 gap-3' }, [
+                            h(
+                                'div',
+                                {
+                                    class: 'mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white dark:bg-gray-900'
+                                },
+                                [
+                                    h(props.icon, {
+                                        class: 'h-4 w-4 text-gray-500 dark:text-gray-400'
+                                    })
+                                ]
+                            ),
+                            h('div', { class: 'min-w-0' }, [
+                                h(
+                                    'h4',
+                                    {
+                                        class: 'text-sm font-semibold text-gray-900 dark:text-white'
+                                    },
+                                    props.label
+                                ),
+                                h(
+                                    'p',
+                                    {
+                                        class: 'mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400'
+                                    },
+                                    props.description
+                                )
+                            ])
+                        ]),
+                        h(
+                            'button',
+                            {
+                                type: 'button',
+                                role: 'switch',
+                                'aria-checked': props.enabled,
+                                'aria-label': `${props.enabled ? 'Disable' : 'Enable'} ${props.label}`,
+                                onClick: () => emit('toggle'),
+                                disabled: props.disabled,
+                                class: [
+                                    'relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#F02C56]/60 focus:ring-offset-2 dark:focus:ring-offset-gray-900 disabled:cursor-not-allowed disabled:opacity-40',
+                                    props.enabled ? 'bg-[#F02C56]' : 'bg-gray-300 dark:bg-gray-700'
+                                ]
+                            },
+                            [
+                                h('span', {
+                                    'aria-hidden': 'true',
+                                    class: [
+                                        'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out',
+                                        props.enabled ? 'translate-x-5' : 'translate-x-0'
+                                    ]
+                                })
+                            ]
+                        )
+                    ])
+                ]
+            )
+    }
+}
+
+const TimelineEmpty = {
+    props: ['title', 'description'],
+    setup(props) {
+        return () =>
+            h(
+                'div',
+                {
+                    class: 'rounded-2xl border border-dashed border-gray-300 px-6 py-12 text-center dark:border-gray-700'
+                },
+                [
+                    h(ClockIcon, { class: 'mx-auto h-12 w-12 text-gray-300 dark:text-gray-700' }),
+                    h(
+                        'p',
+                        { class: 'mt-3 text-sm font-medium text-gray-700 dark:text-gray-300' },
+                        props.title
+                    ),
+                    props.description
+                        ? h(
+                              'p',
+                              { class: 'mt-1 text-sm text-gray-500 dark:text-gray-400' },
+                              props.description
+                          )
+                        : null
+                ]
+            )
+    }
+}
+
+const LoadMoreButton = {
+    emits: ['click'],
+    props: ['loading'],
+    setup(props, { emit }) {
+        return () =>
+            h('div', { class: 'mt-6 text-center' }, [
+                h(
+                    'button',
+                    {
+                        type: 'button',
+                        disabled: props.loading,
+                        onClick: () => emit('click'),
+                        class: 'inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                    },
+                    [
+                        props.loading
+                            ? h(ArrowPathIcon, { class: 'h-4 w-4 animate-spin' })
+                            : h(ChevronDownIcon, { class: 'h-4 w-4' }),
+                        props.loading ? 'Loading...' : 'Load more'
+                    ]
+                )
+            ])
+    }
+}
+
+const diffRowClass =
+    'mt-4 rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900/60'
+
+const UserAuditDiff = {
+    props: ['entry'],
+    setup(props) {
+        const entry = () => props.entry
+        const rowWrap = (children) => h('div', { class: diffRowClass }, [children])
+        const inlineRow = (children) =>
+            h('div', { class: 'flex flex-wrap items-center gap-2 text-xs' }, children)
+        const monoLabel = (txt) =>
+            h('span', { class: 'font-mono text-gray-500 dark:text-gray-400' }, txt)
+        const arrow = () => h(ArrowRightIcon, { class: 'h-3 w-3 text-gray-400' })
+        const badge = (val, text) => h('span', { class: valueBadge(val) }, text)
+
+        return () => {
+            const e = entry()
+            if (!e?.value) return null
+
+            if (e.type === 'profile_updated') {
+                return rowWrap(
+                    h('div', { class: 'flex flex-wrap items-center gap-2 text-xs' }, [
+                        h('span', { class: 'text-gray-600 dark:text-gray-400' }, 'Changed:'),
+                        ...(e.value.changed_fields || []).map((field) =>
+                            h('span', { key: `${e.id}-${field}`, class: valueBadge(true) }, field)
+                        )
+                    ])
+                )
+            }
+
+            if (e.type === 'account_data_settings_updated') {
+                return h(
+                    'div',
+                    { class: diffRowClass },
+                    (e.value.changed_fields || []).map((change, index) =>
+                        h(
+                            'div',
+                            {
+                                key: `${e.id}-${index}`,
+                                class: 'flex flex-wrap items-center gap-2 py-1 text-xs'
+                            },
+                            [
+                                monoLabel('Changed:'),
+                                h('span', null, Object.keys(change)[0]),
+                                arrow(),
+                                badge(Object.values(change)[0], Object.values(change)[0])
+                            ]
+                        )
+                    )
+                )
+            }
+
+            if (e.type === 'email_verified') {
+                return rowWrap(inlineRow([badge(true, e.value.email)]))
+            }
+
+            if (e.type === 'email_changed') {
+                return rowWrap(
+                    inlineRow([
+                        monoLabel('Email:'),
+                        badge(false, e.value.old_email),
+                        arrow(),
+                        badge(true, e.value.new_email)
+                    ])
+                )
+            }
+
+            if (e.type === 'starter_kit_state') {
+                return rowWrap(
+                    inlineRow([
+                        badge(false, starterKitTypes[e.value.old]),
+                        arrow(),
+                        badge(true, starterKitTypes[e.value.new])
+                    ])
+                )
+            }
+
+            if (e.type === 'profile_links_add' || e.type === 'profile_links_delete') {
+                const oldLinks = Array.isArray(e.value.old) ? e.value.old : []
+                const newLinks = Array.isArray(e.value.new) ? e.value.new : []
+                const children = []
+                if (oldLinks.length) {
+                    oldLinks.forEach((old, i) => {
+                        children.push(
+                            h(
+                                'span',
+                                { key: `old-${e.id}-${i}`, class: valueBadge(false) },
+                                old.url
+                            )
+                        )
+                    })
+                } else {
+                    children.push(badge(false, '—'))
+                }
+                children.push(arrow())
+                newLinks.forEach((link, i) => {
+                    children.push(
+                        h('span', { key: `new-${e.id}-${i}`, class: valueBadge(true) }, link.url)
+                    )
+                })
+                return rowWrap(inlineRow(children))
+            }
+
+            if (
+                e.type === 'push_notifications_enabled' ||
+                e.type === 'push_notifications_disabled'
+            ) {
+                return rowWrap(
+                    inlineRow([monoLabel('Platform:'), arrow(), badge(true, e.value.platform)])
+                )
+            }
+
+            return null
+        }
+    }
+}
+
+const handleAvatarError = (event) => {
+    const img = event.target
+    if (img.dataset.fallbackApplied) return
+    img.dataset.fallbackApplied = '1'
+    img.src = DEFAULT_AVATAR
+}
+
+const getBioThreshold = (el) => {
+    const styles = getComputedStyle(el)
+    const parsed = parseFloat(styles.lineHeight)
+    if (Number.isFinite(parsed) && parsed > 0) return parsed * BIO_CLAMP_LINES
+    const fontSize = parseFloat(styles.fontSize) || 14
+    return fontSize * 1.5 * BIO_CLAMP_LINES
+}
+
+const checkBioOverflow = () => {
+    const el = bioRef.value
+    if (!el) {
+        bioNeedsClamp.value = false
+        return
+    }
+    bioNeedsClamp.value = el.scrollHeight > getBioThreshold(el) + 1
+}
+
+const observeBio = () => {
+    bioResizeObserver?.disconnect()
+    if (!bioRef.value || typeof ResizeObserver === 'undefined') return
+    bioResizeObserver = new ResizeObserver(() => checkBioOverflow())
+    bioResizeObserver.observe(bioRef.value)
+    checkBioOverflow()
+}
+
+watch(bioRef, async () => {
+    await nextTick()
+    observeBio()
+})
+
+const fetchProfile = async (id) => {
+    const token = ++fetchToken
+    isLoading.value = true
+    notFound.value = false
+
+    try {
+        const response = await profilesApi.getProfile(id)
+        if (token !== fetchToken) return
+
+        profile.value = response.data
+        adminNotes.value = response.data?.admin_notes || ''
+        bioExpanded.value = false
+
+        if (response.data?.local) {
+            await fetchUserAuditLog(id)
+        } else {
+            userAuditLogs.value = []
+            userAuditCursor.value = null
+            hasMoreUserAudits.value = false
+        }
+
+        await nextTick()
+        checkBioOverflow()
+    } catch (error) {
+        if (token !== fetchToken) return
+        notFound.value = true
+        console.error('Error fetching profile:', error)
+    } finally {
+        if (token === fetchToken) isLoading.value = false
+    }
+}
+
+const fetchAuditLog = async (id, cursor = null) => {
+    try {
+        if (!cursor) isLoadingAudits.value = true
+        const res = await profilesApi.getProfileAdminAuditLogs(id, cursor)
+        const data = res.data || []
+        auditLogs.value = cursor ? [...auditLogs.value, ...data] : data
+        auditCursor.value = res.meta?.next_cursor || null
+        hasMoreAudits.value = !!res.meta?.next_cursor
+    } catch (error) {
+        console.error('Error fetching audit logs:', error)
+    } finally {
+        isLoadingAudits.value = false
+    }
+}
+
+const fetchUserAuditLog = async (id, cursor = null) => {
+    try {
+        if (!cursor) isLoadingUserAudits.value = true
+        const res = await profilesApi.getProfileUserAuditLogs(id, cursor)
+        const data = res.data || []
+        userAuditLogs.value = cursor ? [...userAuditLogs.value, ...data] : data
+        userAuditCursor.value = res.meta?.next_cursor || null
+        hasMoreUserAudits.value = !!res.meta?.next_cursor
+    } catch (error) {
+        console.error('Error fetching user audit logs:', error)
+    } finally {
+        isLoadingUserAudits.value = false
+    }
+}
+
+const loadMoreAudits = async () => {
+    if (!hasMoreAudits.value || isLoadingMoreAudits.value) return
+    isLoadingMoreAudits.value = true
+    try {
+        await fetchAuditLog(profile.value.id, auditCursor.value)
+    } finally {
+        isLoadingMoreAudits.value = false
+    }
+}
+
+const loadMoreUserAudits = async () => {
+    if (!hasMoreUserAudits.value || isLoadingMoreUserAudits.value) return
+    isLoadingMoreUserAudits.value = true
+    try {
+        await fetchUserAuditLog(profile.value.id, userAuditCursor.value)
+    } finally {
+        isLoadingMoreUserAudits.value = false
+    }
+}
+
+const formatAuditType = (type) => auditTypeLabels[type] || type
+const auditTypeStyle = (type) => auditTypeStyles[type] || defaultBadge
+const auditTypeIcon = (type) => auditTypeIcons[type] || ClockIcon
+
+const formatUserAuditType = (type) => userAuditTypeLabels[type] || type
+const userAuditTypeStyle = (type) => userAuditTypeStyles[type] || defaultBadge
+const userAuditTypeIcon = (type) => userAuditTypeIcons[type] || ClockIcon
+
+const getAuditDiff = (entry) => {
+    if (!entry.value || typeof entry.value !== 'object') return []
+    const newVals = entry.value.new || {}
+    const oldVals = entry.value.old || {}
+    return Object.keys(newVals).map((key) => ({
+        key: key.replace(/_/g, ' '),
+        old: oldVals[key],
+        new: newVals[key]
+    }))
+}
+
+const formatValue = (val) => {
+    if (val === true) return 'Enabled'
+    if (val === false) return 'Disabled'
+    if (val === null || val === undefined || val === '') return '—'
+    return String(val)
+}
+
+function valueBadge(val) {
+    if (val === true)
+        return 'rounded-lg bg-green-100 px-2 py-1 font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300'
+    if (val === false)
+        return 'rounded-lg bg-red-100 px-2 py-1 font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300'
+    return 'rounded-lg bg-gray-100 px-2 py-1 font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+}
+
+const goBack = () => router.replace('/admin/profiles')
 
 const handleSuspend = async () => {
     const userState = profile.value.local
         ? `This will not delete this account, or existing connections and associated profile data. This will prevent <strong>${profile.value.username}</strong> from logging in and hide all activity, interactions, profile and videos. You can safely unsuspend to restore their account.`
         : `This will not delete this account, or existing connections and associated profile data. This will hide all activity, interactions, profile and videos from <strong>${profile.value.username}</strong>. You can safely unsuspend to restore their account.`
+
     const message = `<div class="space-y-4">
-            <p class="text-gray-800 dark:text-gray-300">Are you sure you want to suspend <span class="font-semibold text-gray-900 dark:text-gray-400">${profile.value.username}</span>?</p>
+        <p class="text-gray-800 dark:text-gray-300">Are you sure you want to suspend <span class="font-semibold">${profile.value.username}</span>?</p>
+        <div class="rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <p class="text-sm text-amber-800">${userState}</p>
+        </div>
+        <div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
+            <p class="text-sm text-blue-800"><span class="font-medium">Note:</span> To permanently delete, use Delete Account in the overflow menu.</p>
+        </div>
+    </div>`
 
-            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <div class="flex items-start space-x-2">
-                    <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                    </svg>
-                    <p class="text-sm text-amber-800">${userState}</p>
-                </div>
-            </div>
-
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p class="text-sm text-blue-800">
-                    <span class="font-medium">Note:</span> If you want to delete this account permanently, you need to use the Delete Account button in the Danger Zone at the bottom of the page.
-                </p>
-            </div>
-        </div>`
     const result = await confirmModal('Confirm Suspend', message)
+    if (!result) return
 
-    if (result) {
+    try {
         await profilesApi.updateProfileSuspend(profile.value.id)
-        await nextTick()
         await fetchProfile(profile.value.id)
+        await fetchAuditLog(profile.value.id)
+    } catch (error) {
+        console.error('Error suspending profile:', error)
     }
 }
 
@@ -648,114 +1903,164 @@ const handleUnsuspend = async () => {
         'Confirm Unsuspend',
         `Are you sure you want to unsuspend <strong>${profile.value.username}</strong>?`
     )
+    if (!result) return
 
-    if (result) {
+    try {
         await profilesApi.updateProfileUnsuspend(profile.value.id)
-        await nextTick()
         await fetchProfile(profile.value.id)
+        await fetchAuditLog(profile.value.id)
+    } catch (error) {
+        console.error('Error unsuspending profile:', error)
+    }
+}
+
+const handleDisable2fa = async () => {
+    const result = await confirmModal(
+        'Confirm Disable Two Factor Auth',
+        `Are you sure you want to disable two factor auth for <strong>${profile.value.username}</strong>'s account?`
+    )
+    if (!result) return
+
+    try {
+        await profilesApi.updateProfileDisableTwoFactorAuth(profile.value.id)
+        await fetchProfile(profile.value.id)
+        await fetchAuditLog(profile.value.id)
+    } catch (error) {
+        console.error('Error unsuspending profile:', error)
+    }
+}
+
+const handleDeleteAvatar = async () => {
+    const result = await confirmModal(
+        'Confirm Avatar Delete',
+        `Are you sure you want to delete <strong>${profile.value.username}</strong>'s avatar?`
+    )
+    if (!result) return
+
+    try {
+        await profilesApi.updateProfileDeleteAvatar(profile.value.id)
+        await fetchProfile(profile.value.id)
+        await fetchAuditLog(profile.value.id)
+    } catch (error) {
+        console.error('Error unsuspending profile:', error)
     }
 }
 
 const toggleVerification = async () => {
+    const dir = profile.value.email_verified
+    const ver = dir ? 'unverify' : 'verify'
+    const result = await confirmModal(
+        dir ? 'Confirm Unverify Email' : 'Confirm Verify Email',
+        `Are you sure you want to ${ver} <strong>${profile.value.username}</strong>'s email address?`
+    )
+    if (!result) return
+
     try {
-        profile.value.email_verified = !profile.value.email_verified
-        console.log(
-            `Verification ${profile.value.email_verified ? 'added' : 'removed'} for user ${profile.value.username}`
-        )
+        await profilesApi.updateProfileToggleEmailVerify(profile.value.id)
+        await fetchProfile(profile.value.id)
+        await fetchAuditLog(profile.value.id)
     } catch (error) {
         console.error('Error updating verification:', error)
     }
 }
 
-const toggleCommentPermission = async () => {
+const handleSendEmail = async (payload) => {
     try {
-        await profilesApi.updateProfilePermissions(profile.value.id, {
-            can_comment: !profile.value.can_comment
+        await profilesApi.sendProfileEmail(profile.value.id, {
+            subject: payload.subject,
+            message: payload.message,
+            cc_admin: payload.ccAdmin,
+            log_as_audit: payload.logAsAudit,
+            template_id: payload.templateId
         })
-        profile.value.can_comment = !profile.value.can_comment
+        showSendEmailModal.value = false
+        if (payload.logAsAudit) {
+            await fetchAuditLog(profile.value.id)
+        }
     } catch (error) {
-        console.error('Error updating permission:', error)
+        console.error('Error sending email:', error)
+    } finally {
+        payload.done()
     }
 }
 
-const toggleVideoPermission = async () => {
+const handleResetPassword = async (payload) => {
     try {
-        await profilesApi.updateProfilePermissions(profile.value.id, {
-            can_upload: !profile.value.can_upload
+        await profilesApi.updateProfileResetPassword(profile.value.id, {
+            password: payload.password,
+            send_email: payload.sendEmail,
+            force_change: payload.forceChange,
+            revoke_sessions: payload.revokeSessions
         })
-        profile.value.can_upload = !profile.value.can_upload
+        showResetPasswordModal.value = false
+        await fetchAuditLog(profile.value.id)
+        // Optionally refresh profile to pick up 2FA / session flag changes
+        // await fetchProfile(profile.value.id)
     } catch (error) {
-        console.error('Error updating permission:', error)
+        console.error('Error resetting password:', error)
+    } finally {
+        payload.done()
     }
 }
 
-const toggleFollowPermission = async () => {
-    try {
-        await profilesApi.updateProfilePermissions(profile.value.id, {
-            can_follow: !profile.value.can_follow
-        })
-        profile.value.can_follow = !profile.value.can_follow
-    } catch (error) {
-        console.error('Error updating permission:', error)
-    }
-}
+const isPermissionSaving = (key) => savingPermissions.value.has(key)
 
-const toggleLikePermission = async () => {
-    try {
-        await profilesApi.updateProfilePermissions(profile.value.id, {
-            can_like: !profile.value.can_like
-        })
-        profile.value.can_like = !profile.value.can_like
-    } catch (error) {
-        console.error('Error updating permission:', error)
-    }
-}
+const togglePermission = async (key) => {
+    if (isPermissionSaving(key)) return
+    const previous = !!profile.value[key]
+    const next = !previous
 
-const toggleStarterKitPermission = async () => {
-    try {
-        await profilesApi.updateProfilePermissions(profile.value.id, {
-            can_create_starter_kits: !profile.value.can_create_starter_kits
-        })
-        profile.value.can_create_starter_kits = !profile.value.can_create_starter_kits
-    } catch (error) {
-        console.error('Error updating permission:', error)
-    }
-}
+    profile.value[key] = next
+    savingPermissions.value = new Set([...savingPermissions.value, key])
 
-const toggleStarterKitUsePermission = async () => {
     try {
-        await profilesApi.updateProfilePermissions(profile.value.id, {
-            can_use_starter_kits: !profile.value.can_use_starter_kits
-        })
-        profile.value.can_use_starter_kits = !profile.value.can_use_starter_kits
+        await profilesApi.updateProfilePermissions(profile.value.id, { [key]: next })
+        await fetchAuditLog(profile.value.id)
     } catch (error) {
+        profile.value[key] = previous
         console.error('Error updating permission:', error)
+    } finally {
+        const updated = new Set(savingPermissions.value)
+        updated.delete(key)
+        savingPermissions.value = updated
     }
 }
 
 const saveAdminNotes = async () => {
+    if (adminNotes.value === (profile.value?.admin_notes || '')) return
+    adminNotesSaving.value = true
+    adminNotesSavedRecently.value = false
+
     try {
-        await profilesApi.updateProfileNotes(profile.value.id, {
-            admin_note: adminNotes.value
-        })
-        profile.value.admin_note = adminNotes.value
-        console.log('Admin notes saved for', profile.value.username)
+        await profilesApi.updateProfileNotes(profile.value.id, { admin_notes: adminNotes.value })
+        profile.value.admin_notes = adminNotes.value
+        adminNotesSavedRecently.value = true
+        if (savedNotesTimer) clearTimeout(savedNotesTimer)
+        savedNotesTimer = setTimeout(() => {
+            adminNotesSavedRecently.value = false
+        }, 2500)
+        await fetchAuditLog(profile.value.id)
     } catch (error) {
         console.error('Error saving admin notes:', error)
+    } finally {
+        adminNotesSaving.value = false
     }
 }
 
-const deleteAccount = async () => {
-    if (deleteConfirmationText.value !== 'DELETE' || isDeleting.value) return
+const closeDeleteModal = () => {
+    if (isDeleting.value) return
+    showDeleteConfirmation.value = false
+    deleteConfirmationText.value = ''
+}
 
+const deleteAccount = async () => {
+    if (!canDelete.value) return
     isDeleting.value = true
 
     try {
-        // API call would go here
-        await new Promise((resolve) => setTimeout(resolve, 2000)) // Simulate API delay
-
-        console.log(`Account ${profile.value.username} deleted successfully`)
+        await new Promise((resolve) => setTimeout(resolve, 2000))
         showDeleteConfirmation.value = false
+        router.replace('/admin/profiles')
     } catch (error) {
         console.error('Error deleting account:', error)
     } finally {
@@ -764,32 +2069,69 @@ const deleteAccount = async () => {
     }
 }
 
+const handleKeydown = (event) => {
+    if (event.key !== 'Escape') return
+    if (showDeleteConfirmation.value) closeDeleteModal()
+    else if (showEmailModal.value) closeEmailModal()
+}
+
+watch(showDeleteConfirmation, async (open) => {
+    if (open) {
+        document.body.style.overflow = 'hidden'
+        await nextTick()
+        deleteInputRef.value?.focus()
+    } else {
+        document.body.style.overflow = ''
+    }
+})
+
 onMounted(async () => {
+    window.addEventListener('keydown', handleKeydown)
     await fetchProfile(route.params.id)
+    await fetchAuditLog(route.params.id)
+})
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeydown)
+    bioResizeObserver?.disconnect()
+    if (savedNotesTimer) clearTimeout(savedNotesTimer)
+    if (copiedTimer) clearTimeout(copiedTimer)
+    document.body.style.overflow = ''
 })
 
 watch(
     () => route.params.id,
-    (newId) => {
-        if (newId) {
-            fetchProfile(newId)
-        }
+    (newId, oldId) => {
+        if (!newId || newId === oldId) return
+
+        auditLogs.value = []
+        auditCursor.value = null
+        hasMoreAudits.value = false
+        userAuditLogs.value = []
+        userAuditCursor.value = null
+        hasMoreUserAudits.value = false
+        bioNeedsClamp.value = false
+        bioExpanded.value = false
+
+        fetchProfile(newId)
+        fetchAuditLog(newId)
     }
 )
+
+watch(
+    () => profile.value?.bio,
+    async () => {
+        bioExpanded.value = false
+        await nextTick()
+        checkBioOverflow()
+    }
+)
+
+watch(showEmailModal, (open) => {
+    if (open) {
+        document.body.style.overflow = 'hidden'
+    } else if (!showDeleteConfirmation.value) {
+        document.body.style.overflow = ''
+    }
+})
 </script>
-
-<style scoped>
-@reference "../../../sass/next.css";
-
-.card-info {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6;
-}
-
-.card-info-value {
-    @apply text-2xl font-bold text-gray-900 dark:text-white;
-}
-
-.card-info-label {
-    @apply text-sm text-gray-600 dark:text-gray-400;
-}
-</style>

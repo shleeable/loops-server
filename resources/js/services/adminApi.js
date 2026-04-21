@@ -298,6 +298,22 @@ export const profilesApi = {
         return await apiClient.get('/api/v1/admin/profiles/' + id)
     },
 
+    async getProfileAdminAuditLogs(id, cursor = null) {
+        const params = {
+            cursor: cursor
+        }
+
+        return await apiClient.get(`/api/v1/admin/profiles/${id}/admin-auditlog`, params)
+    },
+
+    async getProfileUserAuditLogs(id, cursor = null) {
+        const params = {
+            cursor: cursor
+        }
+
+        return await apiClient.get(`/api/v1/admin/profiles/${id}/user-auditlog`, params)
+    },
+
     async updateProfile(id, data) {
         return { success: true, data: { id, ...data } }
     },
@@ -314,8 +330,28 @@ export const profilesApi = {
         return await apiClient.post(`/api/v1/admin/profiles/${id}/suspend`)
     },
 
+    async updateProfileDeleteAvatar(id) {
+        return await apiClient.post(`/api/v1/admin/profiles/${id}/avatar-delete`)
+    },
+
+    async updateProfileDisableTwoFactorAuth(id) {
+        return await apiClient.post(`/api/v1/admin/profiles/${id}/2fa-disable`)
+    },
+
     async updateProfileUnsuspend(id) {
         return await apiClient.post(`/api/v1/admin/profiles/${id}/unsuspend`)
+    },
+
+    async updateProfileToggleEmailVerify(id) {
+        return await apiClient.post(`/api/v1/admin/profiles/${id}/toggle-email-verify`)
+    },
+
+    async sendProfileEmail(id, payload) {
+        return await apiClient.post(`/api/v1/admin/profiles/${id}/send-email`, payload)
+    },
+
+    async updateProfileResetPassword(id, payload) {
+        return await apiClient.post(`/api/v1/admin/profiles/${id}/reset-password`, payload)
     },
 
     async deleteProfile(id) {

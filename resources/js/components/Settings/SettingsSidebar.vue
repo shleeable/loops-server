@@ -1,5 +1,5 @@
 <template>
-    <aside class="w-64 bg-white dark:bg-gray-950">
+    <aside class="w-64 bg-white dark:bg-slate-950">
         <nav class="flex flex-col h-full px-3">
             <div class="p-4">
                 <router-link
@@ -40,7 +40,8 @@ import {
     UserIcon,
     MoonIcon,
     LockClosedIcon,
-    ShareIcon
+    ShareIcon,
+    CheckBadgeIcon
 } from '@heroicons/vue/24/outline'
 
 const { t } = useI18n()
@@ -64,8 +65,13 @@ const menuItems = ref([
     },
     {
         name: t('settings.safety'),
-        icon: LockClosedIcon,
+        icon: CheckBadgeIcon,
         path: '/dashboard/safety'
+    },
+    {
+        name: t('settings.security'),
+        icon: LockClosedIcon,
+        path: '/dashboard/account/security'
     },
     {
         name: 'Sharing',

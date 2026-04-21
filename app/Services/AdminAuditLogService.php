@@ -132,9 +132,39 @@ class AdminAuditLogService
         return $this->log($user, 'profile:update_notes', $changes, $report, null, 1);
     }
 
+    public function logProfileUnverifyEmail(User|int $user, $profile)
+    {
+        return $this->log($user, 'profile:email_unverify', null, $profile, null, 1);
+    }
+
+    public function logProfileVerifyEmail(User|int $user, $profile)
+    {
+        return $this->log($user, 'profile:email_verify', null, $profile, null, 1);
+    }
+
+    public function logProfileDeleteAvatar(User|int $user, $profile)
+    {
+        return $this->log($user, 'profile:avatar_delete', null, $profile, null, 1);
+    }
+
+    public function logProfileDisableTwoFactorAuth(User|int $user, $profile)
+    {
+        return $this->log($user, 'profile:2fa_disable', null, $profile, null, 1);
+    }
+
+    public function logProfileForcePasswordReset(User|int $user, $profile)
+    {
+        return $this->log($user, 'profile:password_reset', null, $profile, null, 1);
+    }
+
     public function logProfileAdminPermissionUpdate(User|int $user, $profile, $changes)
     {
         return $this->log($user, 'profile:permissions', $changes, $profile, null, 1);
+    }
+
+    public function logProfileAdminSendEmail(User|int $user, $profile, $changes)
+    {
+        return $this->log($user, 'profile:send_email', $changes, $profile, null, 1);
     }
 
     public function logProfileAdminSuspend(User|int $user, $profile)

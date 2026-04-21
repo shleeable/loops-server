@@ -237,26 +237,30 @@ class WebfingerService
         $actorUrl = $actor->getActorId();
         $actorPublicUrl = $actor->getPublicUrl();
 
+        $links = [
+            [
+                'rel' => 'http://webfinger.net/rel/profile-page',
+                'type' => 'text/html',
+                'href' => $actor->getPublicUrl(),
+            ],
+
+            [
+                'rel' => 'self',
+                'type' => 'application/activity+json',
+                'href' => $actorUrl,
+            ],
+        ];
+
+        array_push($links, $this->getAvatarLink($actor));
+        array_push($links, $this->getIntents());
+
         return [
             'subject' => $resource,
             'aliases' => [
                 $actorPublicUrl,
                 $actorUrl,
             ],
-            'links' => array_filter([
-                [
-                    'rel' => 'http://webfinger.net/rel/profile-page',
-                    'type' => 'text/html',
-                    'href' => $actor->getPublicUrl(),
-                ],
-                [
-                    'rel' => 'self',
-                    'type' => 'application/activity+json',
-                    'href' => $actorUrl,
-                ],
-                $this->getAvatarLink($actor),
-                $this->getIntents(),
-            ]),
+            'links' => $links,
         ];
     }
 

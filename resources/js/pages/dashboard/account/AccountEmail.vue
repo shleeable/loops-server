@@ -90,15 +90,17 @@
 
                 <div
                     v-if="pendingEmail"
-                    class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6"
+                    class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-900 rounded-lg p-4 mb-6"
                 >
                     <div class="flex items-start gap-3">
-                        <i class="bx bx-time text-orange-500 text-[20px] mt-0.5"></i>
+                        <i
+                            class="bx bx-time text-orange-500 dark:text-orange-300 text-[20px] mt-0.5"
+                        ></i>
                         <div class="flex-1">
-                            <h3 class="font-medium text-orange-800 mb-1">
+                            <h3 class="font-medium text-orange-800 dark:text-orange-300 mb-1">
                                 {{ $t('settings.emailChangePending') }}
                             </h3>
-                            <p class="text-sm text-orange-700 mb-3">
+                            <p class="text-sm text-orange-700 dark:text-orange-200 mb-3">
                                 {{ $t('settings.weveSentAnEmail') }}
                                 <strong>{{ pendingEmail }}</strong
                                 >. {{ $t('settings.clickTheLinkInThatEmail') }}

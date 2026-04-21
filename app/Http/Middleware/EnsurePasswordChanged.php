@@ -28,8 +28,7 @@ class EnsurePasswordChanged
                     ], 403);
                 }
 
-                return redirect()->route('password.change')
-                    ->with('warning', 'Please set a new password to continue.');
+                return redirect()->route('password.change')->with('warning', 'Please set a new password to continue.');
             }
         }
 

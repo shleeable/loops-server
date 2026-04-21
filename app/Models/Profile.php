@@ -209,6 +209,7 @@ class Profile extends Model
         'can_use_starter_kits' => 'boolean',
         'can_report' => 'boolean',
         'discoverable' => 'boolean',
+        'updated_at' => 'datetime',
         'manuallyApprovesFollowers' => 'boolean',
     ];
 
