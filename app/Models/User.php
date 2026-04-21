@@ -216,6 +216,7 @@ class User extends Authenticatable implements OAuthenticatable
     protected function casts(): array
     {
         return [
+            'has_2fa' => 'boolean',
             'email_verified_at' => 'datetime',
             'last_active_at' => 'datetime',
             'password' => 'hashed',
