@@ -15,6 +15,10 @@ return [
         ],
     ],
 
+    'emails' => [
+        'support' => env('LOOPS_EMAILS_SUPPORT'),
+    ],
+
     'feed' => [
         'fyp' => [
             'max_page' => [
