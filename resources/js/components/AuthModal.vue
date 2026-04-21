@@ -1116,9 +1116,9 @@ const onCaptchaExpired = () => {
 }
 
 const form = ref({
-    email: 'support+sgreen4923@pixelfed.org',
+    email: '',
     emailCode: '',
-    password: 'h~G$]_3>(wTa6|i~jh:ZMhfT',
+    password: '',
     confirmPassword: '',
     username: '',
     firstName: '',

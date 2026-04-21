@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Mail\AdminReport;
+use App\Policies\ReportPolicy;
 use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -58,6 +60,7 @@ use Illuminate\Support\Facades\Mail;
  *
  * @mixin \Eloquent
  */
+#[UsePolicy(ReportPolicy::class)]
 class Report extends Model
 {
     use HasFactory;
