@@ -164,7 +164,7 @@ class SettingsController extends Controller
     public function confirmTwoFactor(Request $request)
     {
         $request->validate([
-            'code' => ['required', 'integer', 'digits:6'],
+            'code' => ['required', 'string', 'digits:6'],
         ]);
 
         $user = $request->user();
