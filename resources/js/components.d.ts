@@ -12,6 +12,8 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AccountCard: typeof import('./components/AccountCard.vue')['default']
+    AdminResetPasswordModal: typeof import('./components/Admin/AdminResetPasswordModal.vue')['default']
+    AdminSendEmailModal: typeof import('./components/Admin/AdminSendEmailModal.vue')['default']
     AlertModal: typeof import('./components/AlertModal.vue')['default']
     AlertTriangleIcon: typeof import('./components/Layout/AlertTriangleIcon.vue')['default']
     AnimatedButton: typeof import('./components/AnimatedButton.vue')['default']
