@@ -27,6 +27,11 @@ class ReportController extends Controller
     public function store(StoreReportRequest $request)
     {
         $user = $request->user();
+
+        if ($request->user()->cannot('create', Report::class)) {
+            return $this->success();
+        }
+
         $pid = $user->profile_id;
 
         app(UserActivityService::class)->markActive($user);

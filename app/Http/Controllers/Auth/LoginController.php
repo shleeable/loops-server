@@ -179,6 +179,24 @@ class LoginController extends Controller
             return response()->json(['has_2fa' => true]);
         }
 
+        if ($user->must_change_password) {
+            if ($intendedUrl = session('url.intended')) {
+                Session::put(ForcePasswordChangeController::SESSION_INTENDED_URL, $intendedUrl);
+            }
+
+            Session::put(ForcePasswordChangeController::SESSION_USER_ID, $user->id);
+            Session::put(ForcePasswordChangeController::SESSION_VERIFIED_AT, now()->timestamp);
+            Session::put(ForcePasswordChangeController::SESSION_ATTEMPTS, 0);
+            Session::put(
+                ForcePasswordChangeController::SESSION_REMEMBER,
+                (bool) $request->boolean('remember')
+            );
+
+            $this->guard()->logout();
+
+            return response()->json(['must_change_password' => true]);
+        }
+
         return $this->authenticated($request, $user)
                 ?: redirect()->intended($this->redirectPath());
     }
