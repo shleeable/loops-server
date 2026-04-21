@@ -1030,8 +1030,8 @@ import {
     VideoCameraIcon
 } from '@heroicons/vue/24/outline'
 import DropdownDivider from '@/components/DropdownDivider.vue'
-import AdminSendEmailModal from '@/components/admin/AdminSendEmailModal.vue'
-import AdminResetPasswordModal from '@/components/admin/AdminResetPasswordModal.vue'
+import AdminSendEmailModal from '@/components/Admin/AdminSendEmailModal.vue'
+import AdminResetPasswordModal from '@/components/Admin/AdminResetPasswordModal.vue'
 
 const { formatDate, formatNumber, formatTimeAgo } = useUtils()
 const { confirmModal } = useAlertModal()
