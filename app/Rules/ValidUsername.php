@@ -26,12 +26,6 @@ class ValidUsername implements ValidationRule
             return;
         }
 
-        if (str_starts_with($value, '_')) {
-            $fail('The :attribute cannot start with an underscore.');
-
-            return;
-        }
-
         if (str_starts_with($value, '-')) {
             $fail('The :attribute cannot start with a hyphen.');
 
