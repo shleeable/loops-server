@@ -41,7 +41,8 @@ import {
     MoonIcon,
     LockClosedIcon,
     ShareIcon,
-    CheckBadgeIcon
+    CheckBadgeIcon,
+    VideoCameraIcon
 } from '@heroicons/vue/24/outline'
 
 const { t } = useI18n()
@@ -57,6 +58,11 @@ const menuItems = ref([
         name: t('nav.appearance'),
         icon: MoonIcon,
         path: '/dashboard/appearance'
+    },
+    {
+        name: 'Content',
+        icon: VideoCameraIcon,
+        path: '/dashboard/content'
     },
     {
         name: t('settings.privacy'),

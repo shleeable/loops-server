@@ -58,6 +58,8 @@ use Illuminate\Support\Facades\DB;
  * @property int $can_create_starter_kits
  * @property int $can_use_starter_kits
  * @property int $can_report
+ * @property int $hide_ai
+ * @property int $hide_sensitive
  * @property int $manuallyApprovesFollowers
  * @property-read \App\Models\User|null $user
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Video> $videos
@@ -190,11 +192,15 @@ class Profile extends Model
         'can_create_starter_kits',
         'can_use_starter_kits',
         'can_report',
+        'hide_ai',
+        'hide_sensitive',
     ];
 
     protected $guarded = [];
 
     protected $casts = [
+        'hide_ai' => 'boolean',
+        'hide_sensitive' => 'boolean',
         'status' => 'integer',
         'links' => 'array',
         'local' => 'boolean',

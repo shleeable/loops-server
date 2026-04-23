@@ -144,6 +144,16 @@ class UserAuditLogService
         ]);
     }
 
+    public function logAccountContentSettingsUpdate(
+        User|int $user,
+        array $changedFields = [],
+    ): UserAuditLog {
+        return $this->log($user, 'content_settings', [
+            'old' => $changedFields['old'],
+            'new' => $changedFields['new'],
+        ]);
+    }
+
     public function logAccountStarterKitSettings(
         User|int $user,
         array $changedFields = [],

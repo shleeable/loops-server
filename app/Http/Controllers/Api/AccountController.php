@@ -958,6 +958,41 @@ class AccountController extends Controller
         return $this->success();
     }
 
+    public function getContentSettings(Request $request)
+    {
+        $user = $request->user();
+
+        $res = [
+            'hide_ai' => $user->hide_ai,
+            'hide_sensitive' => $user->hide_sensitive,
+        ];
+
+        return $this->data($res);
+    }
+
+    public function updateContentSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'hide_ai' => 'sometimes|boolean',
+            'hide_sensitive' => 'sometimes|boolean',
+        ]);
+
+        $user = $request->user();
+
+        $changes = [
+            'old' => $user->only(['hide_ai', 'hide_sensitive']),
+            'new' => $validated,
+        ];
+
+        app(UserAuditLogService::class)->logAccountContentSettingsUpdate($user, $changes);
+
+        $user->update($validated);
+        $user->profile->update($validated);
+
+        return $this->success();
+
+    }
+
     public function profileLinkStore(Request $request)
     {
         $user = $request->user();
