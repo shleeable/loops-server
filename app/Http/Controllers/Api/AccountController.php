@@ -972,7 +972,7 @@ class AccountController extends Controller
     public function updateContentSettings(Request $request)
     {
         $validated = $request->validate([
-            'hide_ai' => 'sometimes|boolean',
+            'hide_ai' => 'required|boolean',
         ]);
 
         $user = $request->user();
@@ -987,7 +987,11 @@ class AccountController extends Controller
         $user->update($validated);
         $user->profile->update($validated);
 
-        return $this->success();
+        $res = [
+            'hide_ai' => (bool) $validated['hide_ai'],
+        ];
+
+        return $this->data($res);
 
     }
 
