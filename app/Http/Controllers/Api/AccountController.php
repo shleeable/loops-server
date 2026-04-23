@@ -964,7 +964,6 @@ class AccountController extends Controller
 
         $res = [
             'hide_ai' => $user->hide_ai,
-            'hide_sensitive' => $user->hide_sensitive,
         ];
 
         return $this->data($res);
@@ -974,13 +973,12 @@ class AccountController extends Controller
     {
         $validated = $request->validate([
             'hide_ai' => 'sometimes|boolean',
-            'hide_sensitive' => 'sometimes|boolean',
         ]);
 
         $user = $request->user();
 
         $changes = [
-            'old' => $user->only(['hide_ai', 'hide_sensitive']),
+            'old' => $user->only(['hide_ai']),
             'new' => $validated,
         ];
 

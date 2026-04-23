@@ -47,7 +47,7 @@ class FeedService
         return VideoResource::collection($feed);
     }
 
-    public static function getVideoFeed($profileId, $limit = 10)
+    public static function getVideoFeed($profileId, $limit = 10, $hideAi = false)
     {
         $blockedSubquery = UserFilterService::getFilters($profileId);
 
@@ -56,10 +56,12 @@ class FeedService
                 $join->on('videos.profile_id', '=', 'blocked.account_id');
             })
             ->whereNull('blocked.account_id')
+            ->when($hideAi, function ($query, $hideAi) {
+                $query->where('contains_ai', false);
+            })
             ->orderBy('videos.id', 'desc')
             ->where('videos.status', 2)
             ->where('is_local', true)
-            ->whereNotNull('videos.vid_optimized')
             ->select('videos.*')
             ->cursorPaginate($limit)
             ->withQueryString();
