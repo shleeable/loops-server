@@ -976,23 +976,28 @@ class AccountController extends Controller
         ]);
 
         $user = $request->user();
+        $newValue = $request->boolean('hide_ai');
+        $oldValue = (bool) $user->hide_ai;
+
+        if ($oldValue === $newValue) {
+            return $this->data([
+                'hide_ai' => $newValue,
+            ]);
+        }
 
         $changes = [
-            'old' => $user->only(['hide_ai']),
-            'new' => $validated,
+            'old' => ['hide_ai' => $oldValue],
+            'new' => ['hide_ai' => $newValue],
         ];
 
         app(UserAuditLogService::class)->logAccountContentSettingsUpdate($user, $changes);
 
-        $user->update($validated);
-        $user->profile->update($validated);
+        $user->update(['hide_ai' => $newValue]);
+        $user->profile->update(['hide_ai' => $newValue]);
 
-        $res = [
-            'hide_ai' => (bool) $validated['hide_ai'],
-        ];
-
-        return $this->data($res);
-
+        return $this->data([
+            'hide_ai' => $newValue,
+        ]);
     }
 
     public function profileLinkStore(Request $request)
