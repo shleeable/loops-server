@@ -117,6 +117,13 @@ class ForYouFeedService
         })->whereNull('user_filters.id');
     }
 
+    private function applyContentPreferences($query, Profile $profile)
+    {
+        return $query->when($profile->hide_ai, function ($q) {
+            $q->where('videos.contains_ai', false);
+        });
+    }
+
     private function getPersonalizedVideos(
         Profile $profile,
         Collection $interests,
@@ -150,6 +157,7 @@ class ForYouFeedService
 
             // Apply user filters via join
             $query = $this->applyUserFilters($query, $profile->id);
+            $query = $this->applyContentPreferences($query, $profile);
 
             if ($lastId !== null) {
                 $query->where('videos.id', '<', $lastId);
@@ -192,10 +200,10 @@ class ForYouFeedService
             ->select([
                 'videos.*',
                 DB::raw('(
-                    (videos.likes * 2) + 
-                    (videos.comments * 3) + 
-                    (videos.shares * 4) + 
-                    (videos.bookmarks * 3) + 
+                    (videos.likes * 2) +
+                    (videos.comments * 3) +
+                    (videos.shares * 4) +
+                    (videos.bookmarks * 3) +
                     (videos.views * 0.1)
                 ) / (TIMESTAMPDIFF(HOUR, videos.created_at, NOW()) + 1) as feed_score'),
             ])
@@ -210,6 +218,7 @@ class ForYouFeedService
 
         // Apply user filters via join
         $query = $this->applyUserFilters($query, $profile->id);
+        $query = $this->applyContentPreferences($query, $profile);
 
         if ($cursorId) {
             $query->where('videos.id', '<', $cursorId);
@@ -247,6 +256,7 @@ class ForYouFeedService
 
         // Apply user filters via join
         $query = $this->applyUserFilters($query, $profile->id);
+        $query = $this->applyContentPreferences($query, $profile);
 
         $videos = $query
             ->inRandomOrder()
