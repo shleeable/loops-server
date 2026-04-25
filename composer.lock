@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fa56055b37ea7480b41729feb3b78793",
+    "content-hash": "746e3201f6d4382ef8d5ba3181ab702f",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -343,16 +343,16 @@
         },
         {
             "name": "dansup/klipy-php",
-            "version": "v1.0.0",
+            "version": "v1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dansup/klipy-php.git",
-                "reference": "f5118360af10524a8625f6147bdeb3ea3428e326"
+                "reference": "4b283f4d46ca2f80459fa98f416d85c7c677be5d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dansup/klipy-php/zipball/f5118360af10524a8625f6147bdeb3ea3428e326",
-                "reference": "f5118360af10524a8625f6147bdeb3ea3428e326",
+                "url": "https://api.github.com/repos/dansup/klipy-php/zipball/4b283f4d46ca2f80459fa98f416d85c7c677be5d",
+                "reference": "4b283f4d46ca2f80459fa98f416d85c7c677be5d",
                 "shasum": ""
             },
             "require": {
@@ -396,9 +396,9 @@
             ],
             "support": {
                 "issues": "https://github.com/dansup/klipy-php/issues",
-                "source": "https://github.com/dansup/klipy-php/tree/v1.0.0"
+                "source": "https://github.com/dansup/klipy-php/tree/v1.1.0"
             },
-            "time": "2026-04-25T06:00:03+00:00"
+            "time": "2026-04-25T06:32:03+00:00"
         },
         {
             "name": "dasprid/enum",

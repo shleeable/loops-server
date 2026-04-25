@@ -29,7 +29,7 @@
         "php": "^8.3|^8.4|^8.5",
         "aws/aws-sdk-php": "3.379.6",
         "bacon/bacon-qr-code": "^3.0",
-        "dansup/klipy-php": "1.0.0",
+        "dansup/klipy-php": "1.1.0",
         "firebase/php-jwt": "^7.0",
         "intervention/image-laravel": "^1.5",
         "laravel/framework": "^12.0",
