@@ -446,6 +446,12 @@
             :initial-tab="InteractionModalTab"
             @close="closeInteractionModal"
         />
+
+        <ShareVideoModal
+            v-model="showShareModal"
+            :url="currentVideo?.url"
+            :share-text="`Check out ${currentVideo?.account?.username}'s loop`"
+        />
     </div>
 </template>
 
@@ -485,6 +491,8 @@ import ReportModal from '@/components/ReportModal.vue'
 import EditHistoryModal from '@/components/Status/EditHistoryModal.vue'
 import InteractionModal from '@/components/Status/InteractionModal.vue'
 import { useReportModal } from '@/composables/useReportModal'
+import ShareVideoModal from '@/components/Status/ShareVideoModal.vue'
+
 const { openVideoHistory } = useEditHistory()
 
 const router = useRouter()
@@ -512,6 +520,7 @@ const showPlayButton = ref(true)
 const isPlaying = ref(false)
 const showControls = ref(false)
 const controlsTimeout = ref(null)
+const showShareModal = ref(false)
 
 const currentVideo = computed(() => videoStore.video)
 const userId = computed(() => authStore.id)
@@ -690,23 +699,7 @@ const handleGuestFollow = async () => {
 }
 
 const handleShare = () => {
-    const shareData = {
-        title: 'Loops',
-        text: `View ${currentVideo.value.account.username}'s video on Loops`,
-        url: currentVideo.value.url
-    }
-
-    if (!navigator.canShare) {
-        // todo: handle error + fallback
-        return
-    }
-
-    if (!navigator.canShare(shareData)) {
-        // todo: handle error + fallback
-        return
-    }
-
-    navigator.share(shareData)
+    showShareModal.value = true
 }
 
 const loadPost = async () => {
