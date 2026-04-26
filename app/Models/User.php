@@ -34,6 +34,8 @@ use Laravel\Passport\HasApiTokens;
  * @property int $can_create_starter_kits
  * @property int $can_use_starter_kits
  * @property int $can_report
+ * @property int $hide_ai
+ * @property int $hide_sensitive
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -173,6 +175,8 @@ class User extends Authenticatable implements OAuthenticatable
         'apple_id',
         'register_source',
         'has_atom',
+        'hide_ai',
+        'hide_sensitive',
     ];
 
     protected $hidden = [
@@ -217,6 +221,8 @@ class User extends Authenticatable implements OAuthenticatable
     {
         return [
             'has_2fa' => 'boolean',
+            'hide_ai' => 'boolean',
+            'hide_sensitive' => 'boolean',
             'email_verified_at' => 'datetime',
             'last_active_at' => 'datetime',
             'password' => 'hashed',

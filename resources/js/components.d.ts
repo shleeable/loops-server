@@ -105,6 +105,7 @@ declare module 'vue' {
     SettingsSidebar: typeof import('./components/Settings/SettingsSidebar.vue')['default']
     SettingsSidebarItem: typeof import('./components/Settings/SettingsSidebarItem.vue')['default']
     ShareModal: typeof import('./components/Feed/ShareModal.vue')['default']
+    ShareVideoModal: typeof import('./components/Status/ShareVideoModal.vue')['default']
     Sidebar: typeof import('./components/Layout/Sidebar.vue')['default']
     SidebarNavItem: typeof import('./components/Layout/SidebarNavItem.vue')['default']
     SnapScrollFeed: typeof import('./components/Feed/SnapScrollFeed.vue')['default']

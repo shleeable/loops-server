@@ -1027,7 +1027,8 @@ import {
     UserIcon,
     UserPlusIcon,
     UsersIcon,
-    VideoCameraIcon
+    VideoCameraIcon,
+    Cog6ToothIcon
 } from '@heroicons/vue/24/outline'
 import DropdownDivider from '@/components/DropdownDivider.vue'
 import AdminSendEmailModal from '@/components/Admin/AdminSendEmailModal.vue'
@@ -1179,7 +1180,8 @@ const userAuditTypeLabels = {
     profile_links_add: 'New Profile Link',
     profile_links_delete: 'Profile Link Deleted',
     push_notifications_enabled: 'Push Notifications enabled',
-    push_notifications_disabled: 'Push Notifications disabled'
+    push_notifications_disabled: 'Push Notifications disabled',
+    content_settings: 'Content settings updated'
 }
 
 const userAuditTypeIcons = {
@@ -1198,13 +1200,15 @@ const userAuditTypeIcons = {
     profile_links_add: LinkIcon,
     profile_links_delete: LinkIcon,
     push_notifications_enabled: BellAlertIcon,
-    push_notifications_disabled: BellSlashIcon
+    push_notifications_disabled: BellSlashIcon,
+    content_settings: Cog6ToothIcon
 }
 
 const userAuditTypeStyles = {
     atom_enabled: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
     atom_disabled: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
     avatar_updated: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    content_settings: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
     avatar_deleted: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
     profile_links_delete: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
     password_changed: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
@@ -1662,6 +1666,30 @@ const UserAuditDiff = {
                         badge(false, e.value.old_email),
                         arrow(),
                         badge(true, e.value.new_email)
+                    ])
+                )
+            }
+
+            if (e.type === 'content_settings') {
+                const contentSettingsType = Object.hasOwn(e.value.new, 'hide_sensitive')
+                    ? 'nsfw'
+                    : 'ai'
+                if (contentSettingsType === 'nsfw') {
+                    return rowWrap(
+                        inlineRow([
+                            monoLabel('Hide Sensitive:'),
+                            badge(false, e.value.old.hide_sensitive),
+                            arrow(),
+                            badge(true, e.value.new.hide_sensitive)
+                        ])
+                    )
+                }
+                return rowWrap(
+                    inlineRow([
+                        monoLabel('Hide AI:'),
+                        badge(false, e.value.old.hide_ai),
+                        arrow(),
+                        badge(true, e.value.new.hide_ai)
                     ])
                 )
             }

@@ -40,27 +40,31 @@ class FeedController extends Controller
 
     public function getForYouFeed(Request $request)
     {
-        if ($request->user()->cannot('viewAny', [Video::class])) {
+        $user = $request->user();
+        if ($user->cannot('viewAny', [Video::class])) {
             return $this->error('Please finish setting up your account', 403);
         }
-        app(UserActivityService::class)->markActive($request->user());
+        app(UserActivityService::class)->markActive($user);
         FeedService::enforcePaginationLimit($request);
-        $feed = FeedService::getVideoFeed($request->user()->profile_id, 5);
+        $hideAi = $user->hide_ai;
+        $feed = FeedService::getVideoFeed($user->profile_id, 5, $hideAi);
 
         return VideoResource::collection($feed);
     }
 
     public function getFollowingFeed(Request $request)
     {
-        if ($request->user()->cannot('viewAny', [Video::class])) {
+        $user = $request->user();
+        if ($user->cannot('viewAny', [Video::class])) {
             return $this->error('Please finish setting up your account', 403);
         }
 
-        app(UserActivityService::class)->markActive($request->user());
+        app(UserActivityService::class)->markActive($user);
 
         FeedService::enforceFollowingPaginationLimit($request);
 
-        $me = $request->user()->profile_id;
+        $me = $user->profile_id;
+        $hideAi = $user->hide_ai;
 
         $feed = Video::query()
             ->published()
@@ -72,6 +76,9 @@ class FeedController extends Controller
                             ->whereColumn('followers.following_id', 'videos.profile_id')
                             ->where('followers.profile_id', $me);
                     });
+            })
+            ->when($hideAi, function ($query, $hideAi) {
+                $query->where('contains_ai', false);
             })
             ->orderBy('videos.id', 'desc')
             ->cursorPaginate(5)
