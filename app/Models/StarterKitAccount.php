@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Profile $profile
+ * @property-read \App\Models\Profile|null $profile
  * @property-read \App\Models\StarterKit $starterKit
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StarterKitAccount approved()
@@ -140,10 +140,10 @@ class StarterKitAccount extends Model
 
     }
 
-    public function getAttestationUrl()
+    public function getAttestationUrl($suffix = '')
     {
         if ($this->kit_account_local) {
-            return url('/ap/kit/'.$this->starter_kit_id.'/attestation/'.$this->id);
+            return url('/ap/kit/'.$this->starter_kit_id.'/attestation/'.$this->id.$suffix);
         }
 
         return $this->attestation_url;

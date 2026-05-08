@@ -4,8 +4,13 @@ namespace App\Services;
 
 use App\Http\Resources\StarterKitAccountResource;
 use App\Http\Resources\StarterKitResource;
+use App\Jobs\Federation\BroadcastStarterKitMembershipChange;
+use App\Jobs\Federation\DeliverFeatureRequestAccept;
+use App\Jobs\Federation\DeliverFeatureRequestReject;
+use App\Jobs\Federation\DeliverFeatureRequestRevoke;
 use App\Models\AdminSetting;
 use App\Models\Hashtag;
+use App\Models\Profile;
 use App\Models\StarterKit;
 use App\Models\StarterKitAccount;
 use App\Models\StarterKitPendingChange;
@@ -99,21 +104,6 @@ class StarterKitService
 
             return StarterKitAccountResource::collection($kit);
         });
-    }
-
-    public function handleAccept(StarterKit $starterKit, StarterKitAccount $account)
-    {
-        NotificationService::starterKitAccountApproved($starterKit->profile_id, $account->profile_id, $starterKit->id);
-        NotificationService::starterKitAddAccountDelete($account->profile_id, $starterKit->profile_id, $starterKit->id);
-        self::getAccountStats($starterKit->profile_id, true);
-        self::forget($starterKit->id);
-    }
-
-    public function handleReject(StarterKit $starterKit, StarterKitAccount $account)
-    {
-        NotificationService::starterKitAccountRejected($starterKit->profile_id, $account->profile_id, $starterKit->id);
-        NotificationService::starterKitAddAccountDelete($account->profile_id, $starterKit->profile_id, $starterKit->id);
-        self::forget($starterKit->id);
     }
 
     public function getConfig($flush = false)
@@ -368,7 +358,7 @@ class StarterKitService
             ])
                 ->timeout(15)
                 ->retry(3, sleepMilliseconds: 1000, when: fn ($e) => ! $e instanceof \Illuminate\Http\Client\RequestException)
-                ->delete(app('observatory').'/api/v1/starter-kits', [
+                ->delete(app('observatory').'/api/starter-kits', [
                     'url' => $permalink,
                 ]);
 
@@ -421,7 +411,7 @@ class StarterKitService
             ])
                 ->timeout(15)
                 ->retry(3, sleepMilliseconds: 1000, when: fn ($e) => ! $e instanceof \Illuminate\Http\Client\RequestException)
-                ->patch(app('observatory').'/api/v1/starter-kits', [
+                ->patch(app('observatory').'/api/starter-kits', [
                     'url' => $starterKit->getPermalink(),
                 ]);
 
@@ -466,6 +456,120 @@ class StarterKitService
         if (Storage::disk('s3')->exists($kit->icon_path)) {
             Storage::disk('s3')->delete($kit->icon_path);
         }
+    }
+
+    public function handleAccept(StarterKit $starterKit, StarterKitAccount $account): void
+    {
+        if ($starterKit->is_local) {
+            NotificationService::starterKitAccountApproved($starterKit->profile_id, $account->profile_id, $starterKit->id);
+            self::getAccountStats($starterKit->profile_id, true);
+
+            BroadcastStarterKitMembershipChange::dispatch($starterKit, $account, 'Add')
+                ->onQueue('activitypub-out')
+                ->delay(now()->addSeconds(3));
+        } else {
+            $this->dispatchFeatureRequestResponse($account, 'accept');
+        }
+
+        NotificationService::starterKitAddAccountDelete($account->profile_id, $starterKit->profile_id, $starterKit->id);
+        self::forget($starterKit->id);
+    }
+
+    public function handleReject(StarterKit $starterKit, StarterKitAccount $account): void
+    {
+        if ($starterKit->is_local) {
+            NotificationService::starterKitAccountRejected($starterKit->profile_id, $account->profile_id, $starterKit->id);
+        } else {
+            $this->dispatchFeatureRequestResponse($account, 'reject');
+        }
+
+        NotificationService::starterKitAddAccountDelete($account->profile_id, $starterKit->profile_id, $starterKit->id);
+        self::forget($starterKit->id);
+    }
+
+    private function dispatchFeatureRequestResponse(StarterKitAccount $account, string $type): void
+    {
+        $featureRequestId = $account->remote_object_id;
+
+        if (! $featureRequestId) {
+            Log::warning("Cannot federate FeatureRequest {$type} — missing remote_object_id", [
+                'account_id' => $account->id,
+            ]);
+
+            return;
+        }
+
+        $actor = $account->profile;
+
+        if (! $actor instanceof Profile) {
+            Log::warning("Cannot federate FeatureRequest {$type} — missing actor profile", [
+                'account_id' => $account->id,
+            ]);
+
+            return;
+        }
+
+        if ($type === 'accept') {
+            DeliverFeatureRequestAccept::dispatch($actor, $account, $featureRequestId)
+                ->onQueue('activitypub-out');
+        } else {
+            DeliverFeatureRequestReject::dispatch($actor, $account, $featureRequestId)
+                ->onQueue('activitypub-out');
+        }
+    }
+
+    public function handleRevoke(StarterKit $starterKit, StarterKitAccount $account): void
+    {
+        if ($starterKit->is_local) {
+            NotificationService::starterKitAccountRejected($starterKit->profile_id, $account->profile_id, $starterKit->id);
+            self::getAccountStats($starterKit->profile_id, true);
+            BroadcastStarterKitMembershipChange::dispatch($starterKit, $account, 'Remove')
+                ->onQueue('activitypub-out')
+                ->delay(now()->addSeconds(3));
+        } else {
+            $this->dispatchFeatureRequestRevoke($account, $starterKit);
+        }
+
+        NotificationService::starterKitAddAccountDelete($account->profile_id, $starterKit->profile_id, $starterKit->id);
+        self::forget($starterKit->id);
+    }
+
+    private function dispatchFeatureRequestRevoke(StarterKitAccount $account, StarterKit $kit): void
+    {
+        $actor = $account->profile;
+        $recipient = $kit->profile;
+        $attestationUrl = $account->getAttestationUrl();
+        $kitUrl = $kit->getPermalink();
+
+        if (! $actor instanceof Profile) {
+            Log::warning('Cannot federate Revoke — missing actor profile', ['account_id' => $account->id]);
+
+            return;
+        }
+
+        if (! $recipient instanceof Profile) {
+            Log::warning('Cannot federate Revoke — missing recipient profile', ['account_id' => $account->id]);
+
+            return;
+        }
+
+        if (! $attestationUrl || ! $kitUrl) {
+            Log::warning('Cannot federate Revoke — missing attestation or kit URL', [
+                'account_id' => $account->id,
+                'has_attestation' => (bool) $attestationUrl,
+                'has_kit_url' => (bool) $kitUrl,
+            ]);
+
+            return;
+        }
+
+        DeliverFeatureRequestRevoke::dispatch(
+            $actor,
+            $recipient,
+            $attestationUrl,
+            $kitUrl,
+            (string) $account->id,
+        )->onQueue('activitypub-out');
     }
 
     public function applyBundledPendingChanges(StarterKit $starterKit): void

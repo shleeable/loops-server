@@ -5,7 +5,9 @@ namespace App\Federation\Handlers;
 use App\Models\Comment;
 use App\Models\CommentReply;
 use App\Models\Profile;
+use App\Models\StarterKitAccount;
 use App\Models\Video;
+use App\Services\StarterKitService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -23,6 +25,7 @@ class DeleteHandler extends BaseHandler
                 $result = match (data_get($activity, 'object.type')) {
                     'Person' => $this->handleProfileDelete($activity, $actor, $objectUrl),
                     'Tombstone' => $this->handleTombstoneDelete($activity, $actor, $objectUrl),
+                    'FeatureAuthorization' => $this->handleFeatureAuthorizationDelete($activity, $actor, $objectUrl),
                     default => $this->handleGenericDelete($activity, $actor, $objectUrl)
                 };
             } else {
@@ -182,6 +185,68 @@ class DeleteHandler extends BaseHandler
 
         if (config('logging.dev_log')) {
             Log::info('Delete received for unknown object', ['object_url' => $objectUrl]);
+        }
+
+        return true;
+    }
+
+    private function handleFeatureAuthorizationDelete(array $activity, ?Profile $actor, $objectUrl)
+    {
+        if (! $actor) {
+            if (config('logging.dev_log')) {
+                Log::warning('Rejecting FeatureAuthorization delete — no resolved actor');
+            }
+
+            return true;
+        }
+
+        $account = StarterKitAccount::where('attestation_url', $objectUrl)->first();
+
+        if (! $account) {
+            if (config('logging.dev_log')) {
+                Log::info('Delete FeatureAuthorization received for unknown stamp', [
+                    'object_url' => $objectUrl,
+                ]);
+            }
+
+            return true;
+        }
+
+        if ((string) $account->profile_id !== (string) $actor->id) {
+            if (config('logging.dev_log')) {
+                Log::warning('Rejecting FeatureAuthorization delete by non-owner', [
+                    'actor' => $actor->id,
+                    'account_profile' => $account->profile_id,
+                ]);
+            }
+
+            return true;
+        }
+
+        $kit = $account->starterKit;
+
+        $interactingObject = data_get($activity, 'object.interactingObject');
+        if ($kit->getPermalink() !== $interactingObject) {
+            if (config('logging.dev_log')) {
+                Log::warning('FeatureAuthorization delete interactingObject mismatch', [
+                    'expected' => $kit->getPermalink(),
+                    'received' => $interactingObject,
+                ]);
+            }
+
+            return true;
+        }
+
+        $account->delete();
+
+        $kit->syncAccountCount();
+        app(StarterKitService::class)->forget($kit->id);
+
+        if (config('logging.dev_log')) {
+            Log::info('Successfully handled Delete FeatureAuthorization activity', [
+                'object_url' => $objectUrl,
+                'activity_id' => $activity['id'] ?? 'unknown',
+            ]);
         }
 
         return true;

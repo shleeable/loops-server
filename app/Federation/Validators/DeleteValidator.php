@@ -26,9 +26,24 @@ class DeleteValidator extends BaseValidator
         }
 
         if (is_array($activity['object']) && isset($activity['object']['type'])) {
-            $allowedTypes = ['Person', 'Tombstone'];
+            $allowedTypes = ['Person', 'Tombstone', 'FeatureAuthorization'];
             if (! in_array($activity['object']['type'], $allowedTypes)) {
                 throw new \Exception("Delete activity 'object' has an invalid embedded type: '{$activity['object']['type']}'.");
+            }
+
+            if ($activity['object']['type'] === 'FeatureAuthorization') {
+                $required = ['id', 'interactingObject', 'interactionTarget'];
+                foreach ($required as $field) {
+                    if (! isset($activity['object'][$field]) || ! is_string($activity['object'][$field])) {
+                        throw new \Exception("Delete FeatureAuthorization missing or invalid field: '{$field}'.");
+                    }
+                }
+
+                $sanitize = app(SanitizeService::class);
+                if (! $sanitize->url($activity['object']['interactingObject'], true)
+                    || ! $sanitize->url($activity['object']['interactionTarget'], true)) {
+                    throw new \Exception('Delete FeatureAuthorization has invalid URI references.');
+                }
             }
         }
 

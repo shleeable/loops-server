@@ -19,13 +19,15 @@ class ActivityService
         $mapping = $this->getMapType($type);
 
         if (! $mapping) {
-            if (config('logging.dev_log')) {
+            if (config('logging.dev_ap_log')) {
                 Log::warning("Unknown activity type: {$type}", [
                     'actor' => $actor->uri,
                     'activity' => $activityData['id'] ?? null,
                 ]);
+                throw new \Exception("Unknown activity type: {$type}");
+            } else {
+                return;
             }
-            throw new \Exception("Unknown activity type: {$type}");
         }
 
         $activity = $this->storeActivity($activityData, $actor, $target);
@@ -37,7 +39,7 @@ class ActivityService
             } catch (\Exception $e) {
                 $activity->markAsProcessed();
 
-                if (config('logging.dev_log')) {
+                if (config('logging.dev_ap_log')) {
                     Log::warning("Activity validation failed: {$e->getMessage()}", [
                         'actor' => $actor->uri,
                         'activity_id' => $activityData['id'] ?? null,
@@ -59,7 +61,7 @@ class ActivityService
 
             return $result;
         } catch (\Exception $e) {
-            if (config('logging.dev_log')) {
+            if (config('logging.dev_ap_log')) {
                 Log::error('Failed to process activity', [
                     'type' => $type,
                     'actor' => $actor->uri,
@@ -112,6 +114,10 @@ class ActivityService
             'QuoteRequest' => [
                 'handler' => \App\Federation\Handlers\QuoteRequestHandler::class,
                 'validator' => \App\Federation\Validators\QuoteRequestValidator::class,
+            ],
+            'FeatureRequest' => [
+                'handler' => \App\Federation\Handlers\FeatureRequestHandler::class,
+                'validator' => \App\Federation\Validators\FeatureRequestValidator::class,
             ],
         ];
     }
@@ -215,6 +221,35 @@ class ActivityService
         } catch (\Exception $e) {
             if (config('logging.dev_log')) {
                 Log::error('Exception fetching remote actor', [
+                    'url' => $url,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Fetch a remote actor
+     */
+    public function fetchRemoteActivity(string $url): ?array
+    {
+        try {
+            $response = app(ActivityPubService::class)->get($url);
+
+            if ($response) {
+                return $response;
+            }
+
+            if (config('logging.dev_log')) {
+                Log::warning('Failed to fetch remote activity', [
+                    'url' => $url,
+                ]);
+            }
+        } catch (\Exception $e) {
+            if (config('logging.dev_log')) {
+                Log::error('Exception fetching remote activity', [
                     'url' => $url,
                     'error' => $e->getMessage(),
                 ]);

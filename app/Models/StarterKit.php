@@ -3,21 +3,24 @@
 namespace App\Models;
 
 use App\Concerns\HasSnowflakePrimary;
+use App\Jobs\StarterKit\SyncStarterKitItemsJob;
 use App\Observers\StarterKitObserver;
 use App\Policies\StarterKitPolicy;
+use App\Services\ActivityService;
 use App\Services\HashidService;
+use App\Services\SanitizeService;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
-#[ObservedBy([StarterKitObserver::class])]
-#[UsePolicy(StarterKitPolicy::class)]
 /**
  * @property int $id
  * @property string|null $title
@@ -100,6 +103,9 @@ use Illuminate\Support\Facades\Storage;
  *
  * @mixin \Eloquent
  */
+#[ObservedBy([StarterKitObserver::class])]
+#[UsePolicy(StarterKitPolicy::class)]
+
 class StarterKit extends Model
 {
     use HasSnowflakePrimary;
@@ -190,7 +196,7 @@ class StarterKit extends Model
     /**
      * Get the profile that created this starter kit.
      */
-    public function profile()
+    public function profile(): BelongsTo
     {
         return $this->belongsTo(Profile::class);
     }
@@ -449,5 +455,164 @@ class StarterKit extends Model
         if (Storage::disk('s3')->exists('starterkit/'.$this->id)) {
             Storage::disk('s3')->deleteDirectory('starterkit/'.$this->id);
         }
+    }
+
+    protected function extractRemoteMediaUrl($media): ?string
+    {
+        if (! is_array($media)) {
+            return null;
+        }
+
+        $url = $media['url'] ?? null;
+
+        if (is_string($url)) {
+            return $url;
+        }
+
+        if (is_array($url) && is_string($url['href'] ?? null)) {
+            return $url['href'];
+        }
+
+        if (is_string($media['href'] ?? null)) {
+            return $media['href'];
+        }
+
+        return null;
+    }
+
+    public function findOrCreateFromUrl(string $url, ?array $kitData = null, bool $forceRefresh = false): ?self
+    {
+        $sanitize = app(SanitizeService::class);
+
+        if ($sanitize->isLocalObject($url)) {
+            $match = $sanitize->matchUrlTemplate(
+                url: $url,
+                templates: ['/ap/kit/{id}'],
+                useAppHost: true,
+                constraints: ['id' => '[0-9]+'],
+            );
+
+            if (! $match || ! isset($match['id'])) {
+                return null;
+            }
+
+            return static::where('id', $match['id'])->where('is_local', true)->first();
+        }
+
+        if (! $sanitize->url($url, true)) {
+            return null;
+        }
+
+        $kit = static::where('is_local', false)
+            ->where(function (Builder $query) use ($url) {
+                $query->where('remote_url', $url)
+                    ->orWhere('remote_object_url', $url);
+            })
+            ->first();
+
+        if ($kit && ! $forceRefresh) {
+            return $kit;
+        }
+
+        $kitData = $kitData ?? app(ActivityService::class)->fetchRemoteActivity($url);
+
+        if (! $kitData || ! isset($kitData['id'], $kitData['type'], $kitData['attributedTo'])) {
+            return $kit;
+        }
+
+        if ($kitData['type'] !== 'FeaturedCollection') {
+            return $kit;
+        }
+
+        $attributedTo = is_array($kitData['attributedTo'])
+            ? data_get($kitData['attributedTo'], 'id')
+            : $kitData['attributedTo'];
+
+        if (! is_string($attributedTo) || ! $sanitize->url($attributedTo, true)) {
+            return $kit;
+        }
+
+        $ownerProfile = app(Profile::class)->findOrCreateFromUrl($attributedTo);
+        if (! $ownerProfile) {
+            return $kit;
+        }
+
+        $remotePublicUrl = is_string(data_get($kitData, 'url')) ? data_get($kitData, 'url') : null;
+        $iconUrl = $this->extractRemoteMediaUrl(data_get($kitData, 'icon'));
+        $headerUrl = $this->extractRemoteMediaUrl(data_get($kitData, 'image'));
+        $topicTag = data_get($kitData, 'topic.name');
+        $hashtags = isset($kitData['hashtags']) && is_array($kitData['hashtags']) ? data_get($kitData, 'hashtags') : false;
+        $topicTagName = $topicTag ? ltrim($topicTag, '#') : false;
+        $title = $sanitize->cleanPlainText(data_get($kitData, 'name'));
+        $slug = Str::slug($title, '-', 'en');
+
+        if (! $kit) {
+            /** @phpstan-ignore-next-line new.static */
+            $kit = new static(['is_local' => false]);
+        }
+
+        $kit->forceFill([
+            'title' => $title,
+            'slug' => $slug,
+            'description' => $sanitize->cleanHtmlWithSpacing(data_get($kitData, 'summary')),
+            'remote_url' => $remotePublicUrl,
+            'remote_object_url' => $kitData['id'],
+            'profile_id' => $ownerProfile->id,
+            'remote_icon_url' => $iconUrl,
+            'remote_header_url' => $headerUrl,
+            'is_sensitive' => (bool) data_get($kitData, 'sensitive', false),
+            'is_discoverable' => (bool) data_get($kitData, 'discoverable', false),
+            'is_local' => false,
+            'is_loops_only' => false,
+            'can_federate' => true,
+            'visibility' => self::VISIBILITY_PUBLIC,
+            'status' => 10,
+            'uses' => 0,
+            'total_accounts' => (int) data_get($kitData, 'totalItems', 0),
+        ])->save();
+
+        if ($topicTagName) {
+            $hashtag = Hashtag::firstOrCreate(
+                ['name_normalized' => strtolower($topicTagName), 'name' => $topicTagName],
+                ['can_autolink' => true]
+            );
+
+            StarterKitTag::create([
+                'starter_kit_id' => $kit->id,
+                'hashtag_id' => $hashtag->id,
+                'status' => StarterKitTag::STATUS_APPROVED,
+                'order' => 0,
+            ]);
+        }
+
+        if ($hashtags) {
+            $tagNames = collect($hashtags)
+                ->map(fn ($tag) => ltrim($tag, '#'))
+                ->filter()
+                ->unique()
+                ->values();
+
+            foreach ($tagNames as $index => $name) {
+                if ($name === $topicTagName) {
+                    continue;
+                }
+
+                $hashtag = Hashtag::firstOrCreate(
+                    ['name_normalized' => strtolower($name), 'name' => $name],
+                    ['can_autolink' => true]
+                );
+
+                StarterKitTag::create([
+                    'starter_kit_id' => $kit->id,
+                    'hashtag_id' => $hashtag->id,
+                    'status' => StarterKitTag::STATUS_APPROVED,
+                    'order' => $index,
+                ]);
+            }
+        }
+
+        SyncStarterKitItemsJob::dispatch($kit->id)->onQueue('activitypub-in');
+
+        return $kit->fresh();
     }
 }
