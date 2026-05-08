@@ -1875,6 +1875,7 @@ class AdminController extends Controller
             }
             (new AdminAuditLogService)->logStarterKitApproved($request->user()->profile_id, $starterKit->fresh(), null);
             app(StarterKitService::class)->applyBundledPendingChanges($starterKit->fresh());
+            app(StarterKitService::class)->submitToObservatory($starterKit->fresh());
         } elseif ($action === 'suspend') {
             $starterKit->status = 5;
             $starterKit->admin_approved_at = null;
@@ -1888,6 +1889,7 @@ class AdminController extends Controller
         } elseif ($action === 'delete') {
             (new AdminAuditLogService)->logStarterKitDelete($request->user()->profile_id, $starterKit, ['title' => $starterKit->title, 'profile_id' => $starterKit->profile_id]);
             app(StarterKitService::class)->forget($starterKit->id);
+            app(StarterKitService::class)->submitDeletionToObservatory($starterKit);
             $starterKit->delete();
             app(AdminDashboardService::class)->getReportsCount(true);
 
