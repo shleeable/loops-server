@@ -136,6 +136,7 @@ declare module 'vue' {
     ThemeToggleButton: typeof import('./components/Layout/ThemeToggleButton.vue')['default']
     TiptapEditor: typeof import('./components/Admin/TiptapEditor.vue')['default']
     ToggleSwitch: typeof import('./components/Form/ToggleSwitch.vue')['default']
+    Tooltip: typeof import('./components/Tooltip.vue')['default']
     TwoFactorInput: typeof import('./components/Auth/TwoFactorInput.vue')['default']
     UrlCopyInput: typeof import('./components/Form/UrlCopyInput.vue')['default']
     UsersList: typeof import('./components/Search/UsersList.vue')['default']
