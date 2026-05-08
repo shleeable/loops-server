@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -523,6 +524,26 @@ class StarterKit extends Model
             return $kit;
         }
 
+        if (! $kit) {
+            $resolvedUrls = array_filter([
+                $kitData['id'],
+                is_string($kitData['url'] ?? null) ? $kitData['url'] : null,
+            ]);
+
+            if (! empty($resolvedUrls)) {
+                $kit = static::where('is_local', false)
+                    ->where(function (Builder $query) use ($resolvedUrls) {
+                        $query->whereIn('remote_url', $resolvedUrls)
+                            ->orWhereIn('remote_object_url', $resolvedUrls);
+                    })
+                    ->first();
+            }
+
+            if ($kit && ! $forceRefresh) {
+                return $kit;
+            }
+        }
+
         $attributedTo = is_array($kitData['attributedTo'])
             ? data_get($kitData['attributedTo'], 'id')
             : $kitData['attributedTo'];
@@ -550,25 +571,40 @@ class StarterKit extends Model
             $kit = new static(['is_local' => false]);
         }
 
-        $kit->forceFill([
-            'title' => $title,
-            'slug' => $slug,
-            'description' => $sanitize->cleanHtmlWithSpacing(data_get($kitData, 'summary')),
-            'remote_url' => $remotePublicUrl,
-            'remote_object_url' => $kitData['id'],
-            'profile_id' => $ownerProfile->id,
-            'remote_icon_url' => $iconUrl,
-            'remote_header_url' => $headerUrl,
-            'is_sensitive' => (bool) data_get($kitData, 'sensitive', false),
-            'is_discoverable' => (bool) data_get($kitData, 'discoverable', false),
-            'is_local' => false,
-            'is_loops_only' => false,
-            'can_federate' => true,
-            'visibility' => self::VISIBILITY_PUBLIC,
-            'status' => 10,
-            'uses' => 0,
-            'total_accounts' => (int) data_get($kitData, 'totalItems', 0),
-        ])->save();
+        try {
+            $kit->forceFill([
+                'title' => $title,
+                'slug' => $slug,
+                'description' => $sanitize->cleanHtmlWithSpacing(data_get($kitData, 'summary')),
+                'remote_url' => $remotePublicUrl,
+                'remote_object_url' => $kitData['id'],
+                'profile_id' => $ownerProfile->id,
+                'remote_icon_url' => $iconUrl,
+                'remote_header_url' => $headerUrl,
+                'is_sensitive' => (bool) data_get($kitData, 'sensitive', false),
+                'is_discoverable' => (bool) data_get($kitData, 'discoverable', false),
+                'is_local' => false,
+                'is_loops_only' => false,
+                'can_federate' => true,
+                'visibility' => self::VISIBILITY_PUBLIC,
+                'status' => 10,
+                'uses' => 0,
+                'total_accounts' => (int) data_get($kitData, 'totalItems', 0),
+            ])->save();
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            Log::info('StarterKit::findOrCreateFromUrl race resolved by retry', [
+                'url' => $url,
+                'remote_url' => $remotePublicUrl,
+                'remote_object_url' => $kitData['id'],
+            ]);
+
+            return static::where('is_local', false)
+                ->where(function (Builder $query) use ($remotePublicUrl, $kitData) {
+                    $query->where('remote_url', $remotePublicUrl)
+                        ->orWhere('remote_object_url', $kitData['id']);
+                })
+                ->first();
+        }
 
         if ($topicTagName) {
             $hashtag = Hashtag::firstOrCreate(
