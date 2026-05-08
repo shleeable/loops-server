@@ -65,7 +65,6 @@ use Illuminate\Support\Str;
  * @property-read int|null $starter_kit_tags_count
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StarterKit enabled()
- * @method static \Database\Factories\StarterKitFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StarterKit federated()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StarterKit local()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|StarterKit newModelQuery()
