@@ -464,6 +464,8 @@ class AccountController extends Controller
             }
         }
 
+        abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($authProfileId, $profile->id), 404, 'Resource not available');
+
         $isOwner = $authProfileId && ((int) $authProfileId === (int) $profile->id || $request->user()->is_admin);
         $hasSearch = $request->filled('search');
 
@@ -525,6 +527,8 @@ class AccountController extends Controller
                 }
             }
         }
+
+        abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($authProfileId, $profile->id), 404, 'Resource not available');
 
         $isOwner = $authProfileId && ((int) $authProfileId === (int) $profile->id || $request->user()->is_admin);
         $hasSearch = $request->filled('search');
