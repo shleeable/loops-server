@@ -58,6 +58,7 @@ use App\Services\LikeService;
 use App\Services\NotificationService;
 use App\Services\SanitizeService;
 use App\Services\UserActivityService;
+use App\Services\UserFilterService;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -434,6 +435,10 @@ class VideoController extends Controller
             return $this->error('Video not found or is unavailable', 404);
         }
 
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($pid, $video->profile_id), 404, 'Resource not available');
+        }
+
         $like = VideoLike::firstOrCreate([
             'profile_id' => $pid,
             'video_id' => $video->id,
@@ -527,6 +532,10 @@ class VideoController extends Controller
             return $this->error('Video not found or is unavailable or has comments disabled', 404);
         }
 
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($pid, $video->profile_id), 404, 'Resource not available');
+        }
+
         $comments = Comment::with('mediaAttachments')->withTrashed()
             ->whereVideoId($video->id)
             ->where('is_hidden', false)
@@ -543,6 +552,10 @@ class VideoController extends Controller
 
         if (! $video || $request->user()->cannot('view', [Video::class, $video])) {
             return $this->error('Video not found or is unavailable or has comments disabled', 404);
+        }
+
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($pid, $video->profile_id), 404, 'Resource not available');
         }
 
         $comments = Comment::with('mediaAttachments')
@@ -569,6 +582,10 @@ class VideoController extends Controller
 
         if (! $video || $request->user()->cannot('view', [Video::class, $video])) {
             return $this->error('Video not found or is unavailable or has comments disabled', 404);
+        }
+
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($pid, $video->profile_id), 404, 'Resource not available');
         }
 
         $comments = CommentReply::withTrashed()
@@ -700,6 +717,8 @@ class VideoController extends Controller
         ]);
 
         $comment->recalculateMedia();
+
+        $comment->refresh();
 
         $config = app(ConfigService::class);
         if ($config->federation()) {

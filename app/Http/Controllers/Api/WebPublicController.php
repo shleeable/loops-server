@@ -32,6 +32,7 @@ use App\Services\IntlService;
 use App\Services\ReportService;
 use App\Services\StarterKitService;
 use App\Services\SystemMessageService;
+use App\Services\UserFilterService;
 use App\Support\CursorToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -82,6 +83,7 @@ class WebPublicController extends Controller
         }
 
         if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($request->user()->profile_id, $video->profile_id), 404, 'Resource not available');
             // @phpstan-ignore-next-line
             $video->is_bookmarked = VideoBookmark::whereProfileId($request->user()->profile_id)->whereVideoId($video->id)->exists();
         }
@@ -101,6 +103,10 @@ class WebPublicController extends Controller
 
         if (($request->user() && $request->user()->cannot('view', [Video::class, $video]))) {
             return $this->error('Video not found or is unavailable or has comments disabled', 404);
+        }
+
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($request->user()->profile_id, $video->profile_id), 404, 'Resource not available');
         }
 
         $comments = Comment::with('mediaAttachments')
@@ -125,6 +131,10 @@ class WebPublicController extends Controller
 
         abort_if($video->profile->status != 1, 400, 'Resource not available');
 
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($request->user()->profile_id, $video->profile_id), 404, 'Resource not available');
+        }
+
         $comment = Comment::with('mediaAttachments')
             ->withTrashed()
             ->whereVideoId($video->id)
@@ -145,6 +155,10 @@ class WebPublicController extends Controller
         }
 
         abort_if($video->profile->status != 1, 400, 'Resource not available');
+
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($request->user()->profile_id, $video->profile_id), 404, 'Resource not available');
+        }
 
         $reply = CommentReply::withTrashed()
             ->with(['profile', 'parent'])
@@ -186,6 +200,10 @@ class WebPublicController extends Controller
 
         if (($request->user() && $request->user()->cannot('view', [Video::class, $video]))) {
             return $this->error('Video not found or is unavailable or has comments disabled', 404);
+        }
+
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($request->user()->profile_id, $video->profile_id), 404, 'Resource not available');
         }
 
         $comments = CommentReply::withTrashed()
