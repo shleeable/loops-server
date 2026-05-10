@@ -17,8 +17,15 @@ class UserFilterService
             ->where('profile_id', $profileId);
     }
 
-    public static function isBlocking(int $pid, int $targetId)
+    public static function isBlocking($pid, $targetId)
     {
+        $pid = intval($pid);
+        $targetId = intval($targetId);
+
+        if ($pid === $targetId) {
+            return false;
+        }
+
         return in_array($targetId, self::getAll($pid))
             || in_array($pid, self::getAll($targetId));
     }
