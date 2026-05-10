@@ -212,6 +212,7 @@ class AccountController extends Controller
             FollowerService::refreshAndSync($pid, $profile->id);
             AccountSuggestionService::removeForUser($pid, $profile->id);
             AccountSuggestionService::invalidate($pid);
+            UserFilterService::getAll($pid, true);
 
             $res = (new ProfileResource($profile))->toArray($request);
             $res['is_blocking'] = true;
@@ -236,6 +237,7 @@ class AccountController extends Controller
 
             AccountSuggestionService::invalidate($pid);
             FollowerService::refreshAndSync($pid, $profile->id);
+            UserFilterService::getAll($pid, true);
 
             $res = (new ProfileResource($profile))->toArray($request);
             $res['is_blocking'] = false;
