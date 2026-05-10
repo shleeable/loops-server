@@ -622,6 +622,29 @@ class SearchController extends Controller
             $videos = [];
             $users = [];
 
+            if (! isset($res['type']) || empty($res['type'])) {
+                return response()->json([
+                    'data' => [
+                        'hashtags' => [],
+                        'users' => [],
+                        'videos' => [],
+                        'starter_kits' => [],
+                    ],
+                    'links' => [
+                        'first' => null,
+                        'last' => null,
+                        'prev' => null,
+                        'next' => null,
+                    ],
+                    'meta' => [
+                        'path' => $request->url(),
+                        'per_page' => 10,
+                        'next_cursor' => null,
+                        'prev_cursor' => null,
+                    ],
+                ]);
+            }
+
             if ($res['type'] === 'video') {
                 $videos = [new VideoResource($res['data'])];
             }
@@ -819,6 +842,7 @@ class SearchController extends Controller
         $match = $sanitize->matchUrlTemplate(
             url: $url,
             templates: [
+                '/{username}',
                 '/@{username}',
                 '/ap/users/{id}',
             ],
