@@ -17,7 +17,7 @@ class UserFilterService
             ->where('profile_id', $profileId);
     }
 
-    public static function isBlocking($pid, $targetId)
+    public static function isBlocking(int $pid, int $targetId)
     {
         return in_array($targetId, self::getAll($pid))
             || in_array($pid, self::getAll($targetId));
@@ -25,10 +25,7 @@ class UserFilterService
 
     public static function isBlockedBy($pid, $targetId)
     {
-        return DB::table('user_filters')
-            ->where('profile_id', $pid)
-            ->where('account_id', $targetId)
-            ->exists();
+        return in_array($targetId, self::getAll($pid));
     }
 
     public static function getAll($profileId, $refresh = false)

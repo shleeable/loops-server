@@ -234,6 +234,10 @@ class WebPublicController extends Controller
             return $this->error('This resource is not available', 403);
         }
 
+        if ($user = $request->user()) {
+            abort_if(! $user->is_admin && UserFilterService::isBlocking($user->profile_id, $id), 404, 'Resource not available');
+        }
+
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_owner'] = $request->user()?->profile_id == $profile->id;
         $res['likes_count'] = AccountService::getAccountLikesCount($profile->id);
@@ -257,6 +261,10 @@ class WebPublicController extends Controller
             return $this->error('Unavailable', 403);
         }
 
+        if ($user = $request->user()) {
+            abort_if(! $user->is_admin && UserFilterService::isBlocking($user->profile_id, $id), 404, 'Resource not available');
+        }
+
         $followers = Follower::whereFollowingId($id)->whereHas('profile', fn ($q) => $q->where('status', 1))->orderBy('id')->limit(15)->get();
 
         return FollowerResource::collection($followers);
@@ -272,6 +280,10 @@ class WebPublicController extends Controller
 
         if ($request->user() && $request->user()->cannot('viewAny', [Profile::class])) {
             return $this->error('Unavailable', 403);
+        }
+
+        if ($user = $request->user()) {
+            abort_if(! $user->is_admin && UserFilterService::isBlocking($user->profile_id, $id), 404, 'Resource not available');
         }
 
         $followers = Follower::whereProfileId($id)->whereHas('following', fn ($q) => $q->where('status', 1))->orderBy('id')->limit(15)->get();
@@ -291,6 +303,10 @@ class WebPublicController extends Controller
 
         $sort = $request->input('sort', 'Latest');
         $showPinned = $sort === 'Latest';
+
+        if ($user = $request->user()) {
+            abort_if(! $user->is_admin && UserFilterService::isBlocking($user->profile_id, $id), 404, 'Resource not available');
+        }
 
         $profile = Profile::findOrFail($id);
 
