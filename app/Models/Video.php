@@ -7,6 +7,7 @@ use App\Concerns\HasSyncHashtagsFromCaption;
 use App\Concerns\HasSyncMentionsFromCaption;
 use App\Observers\VideoObserver;
 use App\Services\HashidService;
+use App\Services\VideoService;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -301,7 +302,9 @@ class Video extends Model
             ) as total_count
         ", [$this->id, $this->id])->total_count;
 
-        $this->update(['comments' => $actualCount]);
+        $this->updateQuietly(['comments' => $actualCount]);
+
+        VideoService::getMediaData($this->id, true);
 
         return $actualCount;
     }

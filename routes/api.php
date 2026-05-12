@@ -421,11 +421,13 @@ Route::prefix('api')->group(function () {
         Route::get('/reports-count', [AdminController::class, 'reportCount'])->middleware('auth:web,api');
         Route::get('/videos', [AdminController::class, 'videos'])->middleware('auth:web,api');
         Route::get('/comments', [AdminController::class, 'comments'])->middleware('auth:web,api');
+        Route::get('/comment/{id}/replies', [AdminController::class, 'getCommentReplies'])->middleware('auth:web,api');
         Route::get('/comment/{id}', [AdminController::class, 'getComment'])->middleware('auth:web,api');
         Route::get('/replies', [AdminController::class, 'replies'])->middleware('auth:web,api');
         Route::post('/replies/{id}/delete', [AdminController::class, 'videoReplyDelete'])->middleware('auth:web,api');
         Route::post('/replies/{id}/hide', [AdminController::class, 'videoReplyHide'])->middleware('auth:web,api');
         Route::post('/replies/{id}/unhide', [AdminController::class, 'videoReplyUnhide'])->middleware('auth:web,api');
+        Route::get('/videos/{id}/admin-auditlog', [AdminController::class, 'videoAuditLog'])->middleware('auth:web,api');
         Route::get('/videos/{id}/comments', [AdminController::class, 'videoCommentsShow'])->middleware('auth:web,api');
         Route::post('/comments/{id}/delete', [AdminController::class, 'videoCommentsDelete'])->middleware('auth:web,api');
         Route::post('/comments/{id}/hide', [AdminController::class, 'videoCommentsHide'])->middleware('auth:web,api');
@@ -460,6 +462,7 @@ Route::prefix('api')->group(function () {
         Route::post('/profiles/{id}/2fa-disable', [AdminController::class, 'profileDisableTwoFactorAuth'])->middleware('auth:web,api');
         Route::post('/profiles/{id}/send-email', [AdminController::class, 'profileAdminSendEmail'])->middleware(['auth:web,api', 'throttle:30,1']);
         Route::post('/profiles/{id}/reset-password', [AdminController::class, 'profileAdminResetPassword'])->middleware(['auth:web,api', 'throttle:10,1']);
+        Route::post('/profiles/{id}/delete-all-comments', [AdminController::class, 'profileDeleteAllComments'])->middleware(['auth:web,api']);
         Route::get('/settings', [AdminSettingsController::class, 'index'])->middleware('auth:web,api');
         Route::put('/settings', [AdminSettingsController::class, 'update'])->middleware('auth:web,api');
         Route::post('/settings/update-logo', [AdminSettingsController::class, 'updateLogo'])->middleware('auth:web,api');

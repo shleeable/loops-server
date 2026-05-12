@@ -188,6 +188,15 @@
                                         }}
                                     </DropdownItem>
 
+                                    <DropdownItem
+                                        v-if="!profile.is_admin"
+                                        destructive
+                                        @click="handleDeleteAllComments"
+                                    >
+                                        <ChatBubbleBottomCenterIcon class="h-4 w-4 mr-1.5" />
+                                        Delete All Comments
+                                    </DropdownItem>
+
                                     <DropdownItem destructive @click="handleDeleteAvatar">
                                         <UserCircleIcon class="h-4 w-4 mr-1.5" />
                                         Delete Avatar
@@ -1028,7 +1037,8 @@ import {
     UserPlusIcon,
     UsersIcon,
     VideoCameraIcon,
-    Cog6ToothIcon
+    Cog6ToothIcon,
+    ChatBubbleBottomCenterIcon
 } from '@heroicons/vue/24/outline'
 import DropdownDivider from '@/components/DropdownDivider.vue'
 import AdminSendEmailModal from '@/components/Admin/AdminSendEmailModal.vue'
@@ -1127,7 +1137,8 @@ const auditTypeLabels = {
     'profile:email_unverify': 'Email Unverified by admin',
     'profile:2fa_disable': 'Two factor auth disabled by admin',
     'profile:send_email': 'Email sent',
-    'profile:password_reset': 'Password reset'
+    'profile:password_reset': 'Password reset',
+    'profile:delete_all_comments': 'Delete all comments/replies by this user'
 }
 
 const auditTypeStyles = {
@@ -1143,6 +1154,7 @@ const auditTypeStyles = {
     'profile:email_verify':
         'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
     'profile:email_unverify': 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    'profile:delete_all_comments': 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
     'profile:2fa_disable': 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
     'profile:send_email': 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
     'profile:password_reset': 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
@@ -1154,6 +1166,7 @@ const auditTypeIcons = {
     'profile:suspend': NoSymbolIcon,
     'profile:unsuspend': CheckIcon,
     'profile:delete': TrashIcon,
+    'profile:delete_all_comments': TrashIcon,
     'profile:notes': PencilSquareIcon,
     'profile:verify': CheckBadgeIcon,
     'profile:email_verify': CheckBadgeIcon,
@@ -1290,7 +1303,7 @@ const statCards = computed(() => {
             icon: VideoCameraIcon,
             label: 'Videos',
             value: formatNumber(p.post_count || 0),
-            to: `/admin/videos?q=${p.username}`
+            to: `/admin/videos?q=username:${p.username}`
         },
         { icon: UsersIcon, label: 'Followers', value: formatNumber(p.follower_count || 0) },
         { icon: UserPlusIcon, label: 'Following', value: formatNumber(p.following_count || 0) },
@@ -1955,6 +1968,22 @@ const handleDisable2fa = async () => {
         await fetchAuditLog(profile.value.id)
     } catch (error) {
         console.error('Error unsuspending profile:', error)
+    }
+}
+
+const handleDeleteAllComments = async () => {
+    const result = await confirmModal(
+        'Confirm Delete All Comments',
+        `Are you sure you want to delete all comments and replies authored by <strong>${profile.value.username}</strong>'s account?`
+    )
+    if (!result) return
+
+    try {
+        await profilesApi.deleteAllProfileComments(profile.value.id)
+        await fetchProfile(profile.value.id)
+        await fetchAuditLog(profile.value.id)
+    } catch (error) {
+        console.error('Error deleting all profile comments:', error)
     }
 }
 

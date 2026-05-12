@@ -13,9 +13,11 @@
             :has-previous="pagination.prev_cursor"
             :has-next="pagination.next_cursor"
             :has-actions="false"
+            :show-local-filter="true"
             :initial-sort="sortBy"
             :initial-search-query="searchQuery"
             :sort-options="sortOptions"
+            @local-change="handleLocalChange"
             @search="handleSearch"
             @sort="handleSort"
             @refresh="fetchVideos"
@@ -157,6 +159,7 @@ const columns = [
 ]
 
 const searchQuery = ref(route.query.q || '')
+const localOnly = ref(localStorage.getItem('loops_admin_videos_localOnly') || false)
 const sortBy = ref(route.query.sortBy || localStorage.getItem('loops_admin_videos_sortby') || '')
 const DEBOUNCE_DELAY = 300
 let searchTimeout = null
@@ -183,6 +186,10 @@ const fetchVideos = async (cursor = null, direction = 'next') => {
             params.sort = sortBy.value
         }
 
+        if (localOnly.value) {
+            params.local = true
+        }
+
         const response = await videosApi.getVideos(params)
         videos.value = response.data
         pagination.value = response.meta
@@ -197,7 +204,6 @@ const watchVideo = (video) => {
     router.push(`/admin/videos/${video.id}`)
 }
 
-// Watch for URL query parameter changes
 watch(
     () => route.query.q,
     (newQuery) => {
@@ -226,6 +232,22 @@ watch(searchQuery, (newQuery) => {
     }, DEBOUNCE_DELAY)
 })
 
+watch(localOnly, (newQuery) => {
+    if (searchTimeout) {
+        clearTimeout(searchTimeout)
+    }
+
+    if (newQuery) {
+        localStorage.setItem('loops_admin_videos_localOnly', newQuery)
+    } else {
+        localStorage.removeItem('loops_admin_videos_localOnly')
+    }
+
+    searchTimeout = setTimeout(() => {
+        fetchVideos()
+    }, DEBOUNCE_DELAY)
+})
+
 watch(sortBy, (newQuery) => {
     if (searchTimeout) {
         clearTimeout(searchTimeout)
@@ -248,6 +270,10 @@ const handleSort = (sortValue) => {
 
 const handleSearch = (query) => {
     searchQuery.value = query
+}
+
+const handleLocalChange = (value) => {
+    localOnly.value = value
 }
 
 const nextPage = () => {

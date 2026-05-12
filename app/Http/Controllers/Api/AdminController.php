@@ -16,6 +16,7 @@ use App\Http\Resources\AdminProfileResource;
 use App\Http\Resources\AdminStarterKitHistoryResource;
 use App\Http\Resources\AdminStarterKitResource;
 use App\Http\Resources\AdminUserAuditLogResource;
+use App\Http\Resources\AdminVideoResource;
 use App\Http\Resources\CommentReplyResource;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\ProfileResource;
@@ -59,6 +60,7 @@ use App\Services\StarterKitService;
 use App\Services\VersionCheckService;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -81,27 +83,35 @@ class AdminController extends Controller
     {
         $search = $request->query('q');
         $sort = $request->query('sort');
+        $local = $request->query('local');
 
         $query = Video::when($search, function ($query, $search) {
-            $query->join('profiles', 'videos.profile_id', '=', 'profiles.id')
-                ->where('profiles.username', 'like', '%'.$search.'%')
-                ->select('videos.*');
+            $isUsername = str_starts_with($search, 'username:');
+            if ($isUsername) {
+                $username = substr($search, 9);
+                $query->join('profiles', 'videos.profile_id', '=', 'profiles.id')
+                    ->where('profiles.username', $username)
+                    ->select('videos.*');
+            } else {
+                $query->where('caption', 'like', '%'.$search.'%');
+            }
         });
+
+        if ($local == true) {
+            $query->where('is_local', true);
+        }
 
         $query = $this->applySorting($query, $sort);
         $videos = $query->orderByDesc('id')->cursorPaginate(10)->withQueryString();
 
-        return VideoResource::collection($videos);
+        return AdminVideoResource::collection($videos);
     }
 
     public function videoShow(Request $request, $id)
     {
         $video = Video::findOrFail($id);
 
-        $res = (new VideoResource($video))->toArray($request);
-        $res['status'] = $video->statusLabel();
-        $res['media']['size'] = $video->size_kb;
-        $res['hid'] = $video->hashid();
+        $res = (new AdminVideoResource($video))->toArray($request);
         $res['reported_count'] = Report::whereReportedVideoId($id)->count();
 
         return $this->data($res);
@@ -109,11 +119,27 @@ class AdminController extends Controller
 
     public function videoCommentsShow(Request $request, $id)
     {
-        $video = Video::findOrFail($id);
+        $validated = $request->validate([
+            'limit' => 'sometimes|integer|min:1|max:50',
+            'sort' => 'sometimes|nullable|in:newest,oldest,most_liked,most_comments',
+        ]);
 
-        $comments = Comment::whereVideoId($video->id)
-            ->orderByDesc('id')
-            ->cursorPaginate(5);
+        $video = Video::findOrFail($id);
+        $limit = $validated['limit'];
+        $sort = $validated['sort'] ?? 'newest';
+        $sortBy = match ($sort) {
+            'newest' => ['column' => 'id', 'dir' => 'desc'],
+            'oldest' => ['column' => 'id', 'dir' => 'asc'],
+            'most_liked' => ['column' => 'likes', 'dir' => 'desc'],
+            'most_comments' => ['column' => 'replies', 'dir' => 'desc'],
+            default => ['column' => 'id', 'dir' => 'desc'],
+        };
+
+        $comments = Comment::withTrashed()
+            ->with('mediaAttachments')
+            ->whereVideoId($video->id)
+            ->orderBy($sortBy['column'], $sortBy['dir'])
+            ->cursorPaginate($limit);
 
         return CommentResource::collection($comments);
     }
@@ -121,13 +147,47 @@ class AdminController extends Controller
     public function videoModerate(Request $request, $id)
     {
         $request->validate([
-            'action' => 'required|in:unpublished,publish,delete',
+            'action' => 'required|in:unpublished,publish,delete,ai,ad,nsfw',
         ]);
 
         $action = $request->input('action');
 
+        $video = Video::findOrFail($id);
+
+        if ($action === 'ai') {
+            $oldState = $video->contains_ai;
+            $video->contains_ai = ! $video->contains_ai;
+            $video->saveQuietly();
+            VideoService::getMediaData($video->id, true);
+            $changes = ['old' => ['contains_ai' => $oldState], 'new' => ['contains_ai' => ! $oldState]];
+            app(AdminAuditLogService::class)->logVideoModerate($request->user(), $video, $changes);
+
+            return $this->data((new AdminVideoResource($video)));
+        }
+
+        if ($action === 'ad') {
+            $oldState = $video->contains_ad;
+            $video->contains_ad = ! $video->contains_ad;
+            $video->saveQuietly();
+            VideoService::getMediaData($video->id, true);
+            $changes = ['old' => ['contains_ad' => $oldState], 'new' => ['contains_ad' => ! $oldState]];
+            app(AdminAuditLogService::class)->logVideoModerate($request->user(), $video, $changes);
+
+            return $this->data((new AdminVideoResource($video)));
+        }
+
+        if ($action === 'nsfw') {
+            $oldState = $video->is_sensitive;
+            $video->is_sensitive = ! $video->is_sensitive;
+            $video->saveQuietly();
+            VideoService::getMediaData($video->id, true);
+            $changes = ['old' => ['is_sensitive' => $oldState], 'new' => ['is_sensitive' => ! $oldState]];
+            app(AdminAuditLogService::class)->logVideoModerate($request->user(), $video, $changes);
+
+            return $this->data((new AdminVideoResource($video)));
+        }
+
         if ($action === 'delete') {
-            $video = Video::findOrFail($id);
             $pid = $video->profile_id;
             VideoService::deleteMediaData($video->id);
 
@@ -154,7 +214,6 @@ class AdminController extends Controller
             return $this->success();
         }
 
-        $video = Video::findOrFail($id);
         $video->status = $action == 'unpublished' ? 6 : 2;
 
         if ($action == 'unpublished') {
@@ -165,7 +224,7 @@ class AdminController extends Controller
         $video->saveQuietly();
         VideoService::getMediaData($video->id, true);
 
-        $res = (new VideoResource($video))->toArray($request);
+        $res = (new AdminVideoResource($video))->toArray($request);
         $res['status'] = $video->statusLabel();
         $res['media']['size'] = $video->size_kb;
         $res['hid'] = $video->hashid();
@@ -275,13 +334,38 @@ class AdminController extends Controller
                 'comment_likes' => $comment->likes,
             ]
         );
+        $children = 1;
 
-        $parent = $comment->parent;
+        $parent = Comment::withTrashed()->find($comment->comment_id);
+        if ($parent) {
+            $children = CommentReply::where('comment_id', $comment->comment_id)->whereNotIn('id', [$comment->id])->count();
+            $parent->replies = $children;
+            $parent->saveQuietly();
+            $parent->refresh();
+        }
+
         $comment->forceDelete();
-        $parent->recalculateReplies();
-        $video->decrement('comments');
+
+        if ($parent && $parent->deleted_at && $parent->replies === 0) {
+            $parent->forceDelete();
+        }
+
+        $video->recalculateCommentsCount();
 
         return $this->success();
+    }
+
+    public function videoAuditLog(Request $request, $id)
+    {
+        $video = Video::findOrFail($id);
+
+        $auditLogs = AdminAuditLog::whereActivityType('App\Models\Video')
+            ->whereActivityId($video->id)
+            ->orderByDesc('id')
+            ->cursorPaginate(15)
+            ->withQueryString();
+
+        return AdminAuditLogResource::collection($auditLogs);
     }
 
     public function profiles(Request $request)
@@ -706,6 +790,54 @@ class AdminController extends Controller
         }
     }
 
+    public function profileDeleteAllComments(Request $request, $id)
+    {
+        $pid = $request->user()->profile_id;
+
+        $profile = Profile::findOrFail($id);
+
+        if ($profile->user_id) {
+            abort_if($profile->user->is_admin, 403, 'You cannot perform this action');
+        }
+
+        app(AdminAuditLogService::class)->logProfileDeleteAllComments($request->user(), $profile);
+
+        DB::transaction(function () use ($profile) {
+            CommentReply::withTrashed()->where('profile_id', $profile->id)
+                ->chunkById(200, function (Collection $comments) {
+                    foreach ($comments as $comment) {
+                        $video = $comment->video;
+                        $parentId = $comment->comment_id;
+                        $comment->forceDelete();
+                        $parent = Comment::withTrashed()->find($parentId);
+                        if ($parent) {
+                            $parent->recalculateReplies();
+                        }
+                        $video->recalculateCommentsCount();
+                    }
+                }, column: 'id');
+        });
+
+        DB::transaction(function () use ($profile) {
+            Comment::withTrashed()->where('profile_id', $profile->id)
+                ->chunkById(200, function (Collection $comments) {
+                    foreach ($comments as $comment) {
+                        $video = $comment->video;
+                        $replies = $comment->replies;
+                        if ($replies === 0) {
+                            $comment->forceDelete();
+                        } else {
+                            $comment->update(['caption' => null, 'status' => 'deleted_by_admin']);
+                            $comment->delete();
+                        }
+                        $video->recalculateCommentsCount();
+                    }
+                }, column: 'id');
+        });
+
+        return $this->success();
+    }
+
     public function reportCount(Request $request)
     {
         $res = app(AdminDashboardService::class)->getReportsCount();
@@ -972,6 +1104,19 @@ class AdminController extends Controller
             ->withQueryString();
 
         return CommentResource::collection($comments);
+    }
+
+    public function getCommentReplies(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'limit' => 'sometimes|integer|min:1|max:50',
+        ]);
+
+        $limit = $validated['limit'];
+
+        $comments = CommentReply::with('mediaAttachments')->whereCommentId($id)->cursorPaginate($limit)->withQueryString();
+
+        return CommentReplyResource::collection($comments);
     }
 
     public function getComment(Request $request, $id)
