@@ -352,4 +352,17 @@ class Video extends Model
     {
         return $this->morphMany(RemoteSearchImport::class, 'searchable');
     }
+
+    protected function afterSyncHashtagsFromCaption(array $normalizedTags): void
+    {
+        $containsAi = in_array('ai', $normalizedTags, true);
+        $containsAd = ! empty(array_intersect(['ad', 'sponsored'], $normalizedTags));
+
+        if ($this->contains_ai !== $containsAi || $this->contains_ad !== $containsAd) {
+            $this->updateQuietly([
+                'contains_ai' => $containsAi,
+                'contains_ad' => $containsAd,
+            ]);
+        }
+    }
 }
