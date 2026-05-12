@@ -24,7 +24,7 @@
         "allowJs": true,
         "checkJs": false,
         "paths": {
-            "@/*": ["resources/js/*"]
+            "@/*": ["./resources/js/*"]
         }
     },
     "include": [
