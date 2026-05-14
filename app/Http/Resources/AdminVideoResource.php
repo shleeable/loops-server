@@ -42,6 +42,7 @@ class AdminVideoResource extends JsonResource
             'account' => AccountService::compact($this->profile_id),
             'caption' => $this->caption,
             'hid' => data_get($media, 'hid'),
+            'shortcode' => data_get($media, 'hid'),
             'url' => $this->shareUrl(),
             'is_owner' => $pid && $this->profile_id == $pid,
             'is_sensitive' => (bool) $this->is_sensitive,
@@ -60,6 +61,7 @@ class AdminVideoResource extends JsonResource
             'comments' => $this->comment_state === 4 ? $this->comments : 0,
             'bookmarks' => $this->bookmarks,
             'has_liked' => $hasLiked,
+            'is_local' => (bool) $this->is_local,
             'has_bookmarked' => (bool) $hasBookmarked,
             'is_edited' => $this->is_edited,
             'lang' => $this->lang,
@@ -71,6 +73,7 @@ class AdminVideoResource extends JsonResource
                 'can_download' => (bool) $this->can_download,
                 'can_duet' => (bool) $this->can_duet,
                 'can_stitch' => (bool) $this->can_stitch,
+                'can_embed' => (bool) $this->can_embed && ! $this->is_sensitive,
             ],
             'audio' => [
                 'has_audio' => (bool) $this->has_audio,

@@ -42,6 +42,7 @@ class VideoResource extends JsonResource
             'account' => AccountService::compact($this->profile_id),
             'caption' => $this->caption,
             'url' => $this->shareUrl(),
+            'shortcode' => $this->hashid(),
             'is_owner' => $pid && $this->profile_id == $pid,
             'is_sensitive' => (bool) $this->is_sensitive,
             'media' => [
@@ -67,6 +68,7 @@ class VideoResource extends JsonResource
                 'can_download' => (bool) $this->can_download,
                 'can_duet' => (bool) $this->can_duet,
                 'can_stitch' => (bool) $this->can_stitch,
+                'can_embed' => (bool) $this->can_embed && ! $this->is_sensitive,
             ],
             'audio' => [
                 'has_audio' => (bool) $this->has_audio,
