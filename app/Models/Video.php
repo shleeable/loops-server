@@ -186,6 +186,7 @@ class Video extends Model
             'can_stitch' => 'boolean',
             'can_download' => 'boolean',
             'can_comment' => 'boolean',
+            'can_embed' => 'boolean',
             'bookmarks' => 'integer',
             'contains_ai' => 'boolean',
             'contains_ad' => 'boolean',
@@ -204,6 +205,33 @@ class Video extends Model
     protected function scopePublished(Builder $query): Builder
     {
         return $query->where('status', 2);
+    }
+
+    /**
+     * @param  Builder<Video>  $query
+     * @return Builder<Video>
+     */
+    protected function scopeEmbeddable(Builder $query): Builder
+    {
+        return $query->where('can_embed', true);
+    }
+
+    /**
+     * @param  Builder<Video>  $query
+     * @return Builder<Video>
+     */
+    protected function scopeLocal(Builder $query): Builder
+    {
+        return $query->where('is_local', true);
+    }
+
+    /**
+     * @param  Builder<Video>  $query
+     * @return Builder<Video>
+     */
+    protected function scopeSafeForWork(Builder $query): Builder
+    {
+        return $query->where('is_sensitive', false);
     }
 
     /**

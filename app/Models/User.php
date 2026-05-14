@@ -33,6 +33,7 @@ use Laravel\Passport\HasApiTokens;
  * @property int $can_follow
  * @property int $can_create_starter_kits
  * @property int $can_use_starter_kits
+ * @property int $can_embed
  * @property int $can_report
  * @property int $hide_ai
  * @property int $hide_sensitive
@@ -177,6 +178,7 @@ class User extends Authenticatable implements OAuthenticatable
         'has_atom',
         'hide_ai',
         'hide_sensitive',
+        'can_embed',
     ];
 
     protected $hidden = [
@@ -215,6 +217,7 @@ class User extends Authenticatable implements OAuthenticatable
         'apple_id',
         'register_source',
         'must_change_password',
+        'can_embed',
     ];
 
     protected function casts(): array
@@ -236,6 +239,7 @@ class User extends Authenticatable implements OAuthenticatable
             'can_use_starter_kits' => 'boolean',
             'can_report' => 'boolean',
             'can_comment' => 'boolean',
+            'can_embed' => 'boolean',
         ];
     }
 
