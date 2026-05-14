@@ -43,9 +43,11 @@ class AdminProfileResource extends JsonResource
         }
 
         $lastActiveAt = null;
+        $canEmbed = null;
 
         if ($this->local && $this->user_id) {
             $lastActiveAt = $this->user->last_active_at?->format('c');
+            $canEmbed = $this->user->can_embed;
         }
 
         return [
@@ -73,6 +75,7 @@ class AdminProfileResource extends JsonResource
             'can_follow' => $this->can_follow,
             'can_create_starter_kits' => $this->can_create_starter_kits,
             'can_report' => $this->can_report,
+            'can_embed' => $canEmbed,
             'delete_after' => $deleteAfter,
             'last_active_at' => $lastActiveAt,
             'created_at' => $this->created_at->format('c'),
