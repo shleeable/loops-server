@@ -22,6 +22,7 @@ use App\Models\Profile;
 use App\Models\ProfileLink;
 use App\Models\SystemMessage;
 use App\Models\UserFilter;
+use App\Models\Video;
 use App\Models\VideoLike;
 use App\Services\AccountService;
 use App\Services\AccountSuggestionService;
@@ -970,8 +971,14 @@ class AccountController extends Controller
     {
         $user = $request->user();
 
+        $totalVideos = Video::where('profile_id', $user->profile_id)->published()->count();
+        $totalEmbeds = Video::where('profile_id', $user->profile_id)->published()->embeddable()->count();
+
         $res = [
             'hide_ai' => $user->hide_ai,
+            'can_embed' => $user->can_embed,
+            'total_videos' => $totalVideos,
+            'total_embeds' => $totalEmbeds,
         ];
 
         return $this->data($res);
@@ -1006,6 +1013,37 @@ class AccountController extends Controller
         return $this->data([
             'hide_ai' => $newValue,
         ]);
+    }
+
+    public function updateEmbedSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'action' => 'required|string|in:disable_all,enable_all',
+        ]);
+
+        $user = $request->user();
+
+        abort_if(! $user->can_embed, 403, '<p class="font-bold text-red-500">You have been restricted from the embed feature.</p><br/>If you think this was a mistake, please contact the admins.');
+
+        $action = $validated['action'];
+
+        if ($action === 'disable_all') {
+            Video::where('profile_id', $user->profile_id)->published()->update(['can_embed' => false]);
+        } else {
+            Video::where('profile_id', $user->profile_id)->published()->update(['can_embed' => true]);
+        }
+
+        $totalVideos = Video::where('profile_id', $user->profile_id)->published()->count();
+        $totalEmbeds = Video::where('profile_id', $user->profile_id)->published()->embeddable()->count();
+
+        $res = [
+            'hide_ai' => $user->hide_ai,
+            'can_embed' => $user->can_embed,
+            'total_videos' => $totalVideos,
+            'total_embeds' => $totalEmbeds,
+        ];
+
+        return $this->data($res);
     }
 
     public function profileLinkStore(Request $request)

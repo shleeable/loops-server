@@ -32,6 +32,33 @@
         </div>
 
         <div
+            v-if="onlyEmbeds"
+            class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6 flex items-start justify-between gap-4"
+        >
+            <div class="flex items-start gap-3">
+                <ExclamationTriangleIcon
+                    class="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
+                />
+                <div>
+                    <h4 class="text-sm font-semibold text-amber-900 dark:text-amber-200">
+                        Showing only published videos with embeds enabled
+                    </h4>
+                    <p class="text-xs text-amber-800 dark:text-amber-300 mt-1">
+                        A filter is active. Other posts are hidden from this list.
+                    </p>
+                </div>
+            </div>
+            <button
+                type="button"
+                @click="clearOnlyEmbeds"
+                class="shrink-0 p-1 rounded-md text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition cursor-pointer"
+                aria-label="Clear filter"
+            >
+                <XMarkIcon class="w-5 h-5" />
+            </button>
+        </div>
+
+        <div
             class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
         >
             <div class="overflow-x-auto">
@@ -202,6 +229,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, watch, inject } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useUtils } from '@/composables/useUtils'
 import {
     EyeIcon,
@@ -211,7 +239,9 @@ import {
     MagnifyingGlassIcon,
     ArrowsUpDownIcon,
     MoonIcon,
-    SunIcon
+    SunIcon,
+    XMarkIcon,
+    ExclamationTriangleIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -221,6 +251,9 @@ const props = defineProps({
     }
 })
 
+const route = useRoute()
+const router = useRouter()
+
 const activeTab = ref('views')
 const isDarkMode = ref(false)
 const loading = ref(false)
@@ -228,6 +261,7 @@ const posts = ref([])
 const searchQuery = ref('')
 const sortField = ref('created_at')
 const sortDirection = ref('desc')
+const onlyEmbeds = ref(false)
 const axios = inject('axios')
 const authStore = inject('authStore')
 const videoStore = inject('videoStore')
@@ -286,7 +320,8 @@ const fetchPosts = async (cursor = null, limit = 10, searchFilters = {}) => {
             privacy: searchFilters.privacy,
             date_filter: searchFilters.date,
             sort_field: sortField.value,
-            sort_direction: sortDirection.value
+            sort_direction: sortDirection.value,
+            only_embeds: onlyEmbeds.value ? 1 : undefined
         }
     })
     return response.data
@@ -337,6 +372,14 @@ const clearFilters = () => {
     filters.date = ''
     filters.search = ''
     searchQuery.value = ''
+    resetPagination()
+    loadPosts()
+}
+
+const clearOnlyEmbeds = () => {
+    onlyEmbeds.value = false
+    const { only_embeds, ...rest } = route.query
+    router.replace({ query: rest })
     resetPagination()
     loadPosts()
 }
@@ -420,6 +463,18 @@ const handleDeleteVideo = async (data) => {
     loadPosts()
 }
 
+watch(
+    () => route.query.only_embeds,
+    (val) => {
+        const newVal = val === '1'
+        if (newVal !== onlyEmbeds.value) {
+            onlyEmbeds.value = newVal
+            resetPagination()
+            loadPosts()
+        }
+    }
+)
+
 onMounted(() => {
     if (
         localStorage.getItem('theme') === 'dark' ||
@@ -430,6 +485,7 @@ onMounted(() => {
         document.documentElement.classList.add('dark')
     }
 
+    onlyEmbeds.value = route.query.only_embeds === '1'
     loadPosts()
 })
 

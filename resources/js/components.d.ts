@@ -42,6 +42,7 @@ declare module 'vue' {
     DropdownItem: typeof import('./components/DropdownItem.vue')['default']
     EditHistoryModal: typeof import('./components/Status/EditHistoryModal.vue')['default']
     EditModal: typeof import('./components/Profile/EditModal.vue')['default']
+    EmbedShareModal: typeof import('./components/Status/EmbedShareModal.vue')['default']
     EmojiPicker: typeof import('./components/Form/EmojiPicker.vue')['default']
     ErrorDisplay: typeof import('./components/ErrorDisplay.vue')['default']
     ExploreHeader: typeof import('./components/Explore/ExploreHeader.vue')['default']

@@ -147,7 +147,7 @@ class AdminController extends Controller
     public function videoModerate(Request $request, $id)
     {
         $request->validate([
-            'action' => 'required|in:unpublished,publish,delete,ai,ad,nsfw',
+            'action' => 'required|in:unpublished,publish,delete,ai,ad,nsfw,embed',
         ]);
 
         $action = $request->input('action');
@@ -160,6 +160,18 @@ class AdminController extends Controller
             $video->saveQuietly();
             VideoService::getMediaData($video->id, true);
             $changes = ['old' => ['contains_ai' => $oldState], 'new' => ['contains_ai' => ! $oldState]];
+            app(AdminAuditLogService::class)->logVideoModerate($request->user(), $video, $changes);
+
+            return $this->data((new AdminVideoResource($video)));
+        }
+
+        if ($action === 'embed') {
+            abort_if(! $video->is_local, 422, 'Can only toggle embeds for local videos');
+            $oldState = $video->can_embed;
+            $video->can_embed = ! $video->can_embed;
+            $video->saveQuietly();
+            VideoService::getMediaData($video->id, true);
+            $changes = ['old' => ['can_embed' => $oldState], 'new' => ['can_embed' => ! $oldState]];
             app(AdminAuditLogService::class)->logVideoModerate($request->user(), $video, $changes);
 
             return $this->data((new AdminVideoResource($video)));
@@ -449,6 +461,7 @@ class AdminController extends Controller
             $res['has_2fa'] = (bool) $user->has_2fa && $user->two_factor_secret;
             $res['last_ip'] = $user->is_admin ? null : $user->last_ip;
             $res['push_platform'] = $user->push_token_platform;
+            $res['can_embed'] = (bool) $user->can_embed;
             if ($user->last_active_at) {
                 $res['last_active_at'] = $user->last_active_at->format('c');
             }
@@ -497,6 +510,7 @@ class AdminController extends Controller
             'can_comment' => 'sometimes|boolean',
             'can_like' => 'sometimes|boolean',
             'can_report' => 'sometimes|boolean',
+            'can_embed' => 'sometimes|boolean',
             'can_create_starter_kits' => 'sometimes|boolean',
             'can_use_starter_kits' => 'sometimes|boolean',
         ]);
@@ -513,6 +527,14 @@ class AdminController extends Controller
         if ($profile->local) {
             if ($profile->user && $profile->user->is_admin) {
                 return $this->success();
+            }
+            if (isset($userValidated['can_embed']) && ! $userValidated['can_embed']) {
+                $user = $profile->user;
+
+                if ($user->can_embed) {
+                    Video::published()->where('profile_id', $profile->id)->where('can_embed', true)->update(['can_embed' => false]);
+                }
+
             }
             $user = User::whereProfileId($id)->firstOrFail();
             $user->update($userValidated);

@@ -404,7 +404,11 @@
                                 :label="perm.label"
                                 :description="perm.description"
                                 :enabled="!!profile[perm.key]"
-                                :disabled="profile.is_admin || isPermissionSaving(perm.key)"
+                                :disabled="
+                                    (perm?.localOnly && !profile.local) ||
+                                    profile.is_admin ||
+                                    isPermissionSaving(perm.key)
+                                "
                                 @toggle="togglePermission(perm.key)"
                             />
                         </div>
@@ -1038,7 +1042,8 @@ import {
     UsersIcon,
     VideoCameraIcon,
     Cog6ToothIcon,
-    ChatBubbleBottomCenterIcon
+    ChatBubbleBottomCenterIcon,
+    CodeBracketIcon
 } from '@heroicons/vue/24/outline'
 import DropdownDivider from '@/components/DropdownDivider.vue'
 import AdminSendEmailModal from '@/components/Admin/AdminSendEmailModal.vue'
@@ -1121,6 +1126,13 @@ const permissionConfig = [
         label: 'Use Starter Kits',
         description: 'Use Starter Kits',
         icon: RocketLaunchIcon
+    },
+    {
+        key: 'can_embed',
+        label: 'Embeds',
+        localOnly: true,
+        description: 'Allow video embeds',
+        icon: CodeBracketIcon
     }
 ]
 

@@ -961,6 +961,24 @@
                                         }}
                                     </div>
                                 </DropdownItem>
+                                <DropdownDivider v-if="video.is_local" class="my-1" />
+                                <DropdownItem v-if="video.is_local" @click="handleToggleEmbed">
+                                    <div class="flex items-center gap-2.5">
+                                        <component
+                                            :is="
+                                                video.permissions.can_embed
+                                                    ? EyeSlashIcon
+                                                    : CodeBracketIcon
+                                            "
+                                            class="h-4 w-4 text-red-500"
+                                        />
+                                        {{
+                                            video.permissions.can_embed
+                                                ? 'Disallow Embeds'
+                                                : 'Allow Embeds'
+                                        }}
+                                    </div>
+                                </DropdownItem>
                             </Dropdown>
 
                             <div
@@ -1115,6 +1133,24 @@
                                     "
                                 >
                                     {{ video.permissions?.can_stitch ? 'Allowed' : 'Disabled' }}
+                                </dd>
+                            </div>
+                            <div class="flex items-center justify-between gap-3 px-5 py-3">
+                                <dt
+                                    class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
+                                >
+                                    <CodeBracketIcon class="h-4 w-4" />
+                                    Embeds
+                                </dt>
+                                <dd
+                                    class="text-sm font-medium"
+                                    :class="
+                                        video.permissions?.can_embed
+                                            ? 'text-emerald-600 dark:text-emerald-400'
+                                            : 'text-red-600 dark:text-red-400'
+                                    "
+                                >
+                                    {{ video.permissions?.can_embed ? 'Allowed' : 'Disabled' }}
                                 </dd>
                             </div>
                         </dl>
@@ -1273,7 +1309,8 @@ import {
     UserIcon,
     UsersIcon,
     ArrowsPointingOutIcon,
-    Cog8ToothIcon
+    Cog8ToothIcon,
+    CodeBracketIcon
 } from '@heroicons/vue/24/outline'
 import { useUtils } from '@/composables/useUtils'
 
@@ -1598,6 +1635,10 @@ const handleToggleMarkAsAd = async () => {
 
 const handleToggleMarkAsAi = async () => {
     await moderateVideo('ai')
+}
+
+const handleToggleEmbed = async () => {
+    await moderateVideo('embed')
 }
 
 const handleDeleteVideo = async () => {

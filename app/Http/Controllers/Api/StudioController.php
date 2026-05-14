@@ -27,6 +27,7 @@ class StudioController extends Controller
             'sort_field' => ['sometimes', 'string', Rule::in(['created_at'])],
             'sort_direction' => ['sometimes', 'string', Rule::in(['asc', 'desc'])],
             'filter' => ['sometimes', 'string', Rule::in(['all', 'pinned', 'processing'])],
+            'only_embeds' => ['sometimes', 'boolean'],
         ]);
 
         $pid = $request->user()->profile_id;
@@ -35,17 +36,23 @@ class StudioController extends Controller
         $sortBy = $validated['sort_field'] ?? 'created_at';
         $sortDir = $validated['sort_direction'] ?? 'desc';
         $filter = $validated['filter'] ?? 'all';
+        $onlyEmbeds = isset($validated['only_embeds']) ? $validated['only_embeds'] : false;
 
         if ($search !== null && $search !== '') {
             $search = $this->escapeLike($search);
         }
 
+        $status = $onlyEmbeds ? [2] : [1, 2];
+
         $total = VideoService::totalUserCount($pid, false);
 
         $videos = Video::whereProfileId($pid)
-            ->whereIn('status', [1, 2])
+            ->whereIn('status', $status)
             ->when($search, function ($query, $search) {
                 $query->where('caption', 'like', "%{$search}%");
+            })
+            ->when($onlyEmbeds, function ($query) {
+                $query->where('can_embed', true);
             })
             ->when($filter, function ($query, $filter) {
                 if ($filter === 'pinned') {

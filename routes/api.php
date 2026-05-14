@@ -235,6 +235,7 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/account/settings/push-notifications/status', [AccountController::class, 'getPushNotificationStatus'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/push-notifications/enable', [AccountController::class, 'enablePushNotifications'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/push-notifications/disable', [AccountController::class, 'disablePushNotifications'])->middleware(['auth:web,api']);
+    Route::post('/v1/account/settings/content/embeds', [AccountController::class, 'updateEmbedSettings'])->middleware(['auth:web,api']);
 
     // App
     Route::post('/v1/app/logout', [AppController::class, 'handleLogout'])->middleware(['auth:web,api']);
