@@ -17,7 +17,7 @@ class UpdateVideoRequest extends FormRequest
         if (! $this->user()) {
             return false;
         }
-        $video = Video::whereStatus(2)->find($this->route('id'));
+        $video = Video::published()->local()->find($this->route('id'));
 
         return $video && $this->user()->can('update', $video);
     }
@@ -35,6 +35,7 @@ class UpdateVideoRequest extends FormRequest
             'can_comment' => 'nullable|boolean',
             'can_duet' => 'nullable|boolean',
             'can_stitch' => 'nullable|boolean',
+            'can_embed' => 'nullable|boolean',
             'is_pinned' => 'nullable|boolean',
             'alt_text' => 'nullable|sometimes|string|max:2000',
             'is_sensitive' => 'nullable|boolean',
@@ -80,7 +81,7 @@ class UpdateVideoRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        $fields = ['can_download', 'can_comment', 'is_pinned', 'can_duet', 'can_stitch', 'is_sensitive', 'contains_ai', 'contains_ad'];
+        $fields = ['can_download', 'can_comment', 'is_pinned', 'can_duet', 'can_stitch', 'is_sensitive', 'contains_ai', 'contains_ad', 'can_embed'];
         foreach ($fields as $key) {
             if ($this->has($key)) {
                 $this->merge([
