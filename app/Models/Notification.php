@@ -114,6 +114,10 @@ class Notification extends Model
 
     public const KIT_YOU_IN_NEW_MEMBERS = 47;
 
+    public const KIT_ONLY_YOU_FOLLOW_ADDED_YOU = 51;
+
+    public const KIT_AUTO_APPROVE_ADDED_YOU = 56;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -181,6 +185,6 @@ class Notification extends Model
 
     public static function starterKitTypes()
     {
-        return [40, 43, 44, 45, 46, 47];
+        return [40, 43, 44, 45, 46, 47, 51, 56];
     }
 }

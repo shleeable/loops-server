@@ -8,7 +8,13 @@ import Components from 'unplugin-vue-components/vite'
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/js/app.js', 'resources/css/fonts.css', 'resources/sass/next.css'],
+            input: [
+                'resources/js/app.js',
+                'resources/css/fonts.css',
+                'resources/sass/next.css',
+                'resources/js/embed.js',
+                'resources/css/embed.css'
+            ],
             refresh: true
         }),
         vue({

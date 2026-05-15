@@ -51,7 +51,7 @@
                 >
                     {{
                         notification.actor.local
-                            ? notification.actor.name
+                            ? notification.actor.name || notification.actor.username
                             : notification.actor.username
                     }}
                 </span>
@@ -134,10 +134,32 @@
 
             <div
                 v-else-if="
-                    ['new_follower', 'starterKit.newMember'].includes(notification.type) &&
-                    notification.kit?.path
+                    [
+                        'new_follower',
+                        'starterKit.newMember',
+                        'starterKit.autoAdded',
+                        'starterKit.autoAddedYouFollow'
+                    ].includes(notification.type) && notification.kit?.path
                 "
+                class="flex flex-col md:flex-row items-center gap-2"
             >
+                <span class="flex align-middle">
+                    <Tooltip
+                        v-if="notification.type === 'starterKit.autoAddedYouFollow'"
+                        title="Why was I added to this kit?"
+                        body="You were automatically added to this kit because you follow the creator and have enabled this in your privacy settings."
+                    >
+                        <InformationCircleIcon class="w-5 h-5" />
+                    </Tooltip>
+
+                    <Tooltip
+                        v-if="notification.type === 'starterKit.autoAdded'"
+                        title="Why was I added to this kit?"
+                        body="You were automatically added to this kit because you auto allow everyone to add you without approval and have enabled this in your privacy settings."
+                    >
+                        <InformationCircleIcon class="w-5 h-5" />
+                    </Tooltip>
+                </span>
                 <AnimatedButton
                     size="xs"
                     :aria-label="`View Starter Kit: ${notification.kit?.title}`"
@@ -196,7 +218,7 @@ import { useI18n } from 'vue-i18n'
 import UserHoverCard from '@/components/ProfileHoverCard.vue'
 import StarterKitHoverCard from '@/components/Notification/NotificationStarterKitHoverCard.vue'
 import AnimatedButton from './../AnimatedButton.vue'
-import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { InformationCircleIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
     notification: {
@@ -233,7 +255,9 @@ const STARTER_KIT_TYPES = [
     'starterKit.accountApproved',
     'starterKit.accountRejected',
     'starterKit.removedFromKit',
-    'starterKit.newMember'
+    'starterKit.newMember',
+    'starterKit.autoAdded',
+    'starterKit.autoAddedYouFollow'
 ]
 
 const isStarterKitNotification = computed(() => STARTER_KIT_TYPES.includes(props.notification.type))
@@ -312,6 +336,18 @@ const notificationConfig = {
     },
     'starterKit.awaitingApproval': {
         message: 'wants to add you to the ',
+        icon: UserPlusIcon,
+        iconColor: 'text-white',
+        bgColor: 'bg-red-500'
+    },
+    'starterKit.autoAdded': {
+        message: 'added you to the ',
+        icon: UserPlusIcon,
+        iconColor: 'text-white',
+        bgColor: 'bg-red-500'
+    },
+    'starterKit.autoAddedYouFollow': {
+        message: 'added you to the ',
         icon: UserPlusIcon,
         iconColor: 'text-white',
         bgColor: 'bg-red-500'
@@ -509,6 +545,8 @@ const handleNotificationClick = () => {
             router.push(`${props.notification.kit.path}/review`)
         } else if (
             [
+                'starterKit.autoAdded',
+                'starterKit.autoAddedYouFollow',
                 'starterKit.newMember',
                 'starterKit.accountApproved',
                 'starterKit.accountRejected',

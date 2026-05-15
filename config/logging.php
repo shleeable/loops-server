@@ -22,6 +22,8 @@ return [
 
     'dev_log' => (bool) env('LOG_DEV_LEVEL', false),
 
+    'dev_ap_log' => (bool) env('LOG_DEV_AP_ACTIVE', false),
+
     /*
     |--------------------------------------------------------------------------
     | Deprecations Log Channel

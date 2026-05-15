@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\DuetController;
 use App\Http\Controllers\Api\ExploreController;
 use App\Http\Controllers\Api\FeedController;
 use App\Http\Controllers\Api\ForYouFeedController;
+use App\Http\Controllers\Api\KlipyController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\SettingsController;
@@ -104,6 +105,14 @@ Route::prefix('api/v1/auth')
             ->name('auth.force-password.cancel');
     });
 
+Route::middleware(['auth:web,api'])
+    ->prefix('api/v1/klipy')
+    ->whereIn('type', ['gifs', 'stickers', 'memes', 'clips'])
+    ->group(function () {
+        Route::get('{type}/trending', [KlipyController::class, 'trending'])->name('klipy.trending');
+        Route::get('{type}/search', [KlipyController::class, 'search'])->middleware('throttle:klipy')->name('klipy.search');
+    });
+
 Route::prefix('api')->group(function () {
     Route::post('/v1/apps', [AuthController::class, 'registerApp']);
     Route::get('/v1/config', [WebPublicController::class, 'appConfiguration'])->middleware([OptionalAuth::class, 'throttle:api']);
@@ -145,14 +154,19 @@ Route::prefix('api')->group(function () {
     Route::delete('/v1/studio/playlists/{playlist}/videos/{video}', [PlaylistController::class, 'removeVideo'])->middleware('auth:web,api');
     Route::put('/v1/studio/playlists/{playlist}/reorder', [PlaylistController::class, 'reorder'])->middleware('auth:web,api');
     Route::get('/v1/studio/analytics/views', [StudioAnalyticsController::class, 'videoViews'])->middleware('auth:web,api');
+    Route::get('/v1/studio/analytics/comments', [StudioAnalyticsController::class, 'comments'])->middleware('auth:web,api');
     Route::get('/v1/studio/analytics/followers', [StudioAnalyticsController::class, 'newFollowers'])->middleware('auth:web,api');
+    Route::get('/v1/studio/analytics/likes', [StudioAnalyticsController::class, 'likes'])->middleware('auth:web,api');
+    Route::get('/v1/studio/analytics/shares', [StudioAnalyticsController::class, 'shares'])->middleware('auth:web,api');
     Route::get('/v1/studio/analytics/links', [StudioAnalyticsController::class, 'profileLinks'])->middleware('auth:web,api');
+    Route::get('/v1/studio/analytics/summary', [StudioAnalyticsController::class, 'summary'])->middleware('auth:web,api');
 
     // Search
     Route::get('/v1/search', [SearchController::class, 'search'])->middleware(['auth:web,api', 'throttle:searchV1']);
-    Route::post('/v1/search/remote', [SearchController::class, 'remoteLookup'])->middleware(['auth:web,api', 'throttle:searchV1']);
+    Route::post('/v1/search/remote', [SearchController::class, 'remoteLookup'])->middleware(['auth:web,api', 'throttle:searchV1Remote']);
     Route::post('/v1/search/users', [SearchController::class, 'getUsers'])->middleware(['auth:web,api', 'throttle:autocomplete']);
     Route::post('/v1/intents/follow/account', [IntentsController::class, 'getFollowAccount'])->middleware(['auth:web,api', 'throttle:followIntents']);
+    Route::get('/v1/search/remote/status', [SearchController::class, 'remoteVideoStatus'])->middleware(['auth:web,api', 'throttle:searchV1Status']);
 
     // Feeds
     Route::get('/v0/user/self', [AccountController::class, 'selfAccountInfo'])->middleware('auth:web,api');
@@ -221,6 +235,7 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/account/settings/push-notifications/status', [AccountController::class, 'getPushNotificationStatus'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/push-notifications/enable', [AccountController::class, 'enablePushNotifications'])->middleware(['auth:web,api']);
     Route::post('/v1/account/settings/push-notifications/disable', [AccountController::class, 'disablePushNotifications'])->middleware(['auth:web,api']);
+    Route::post('/v1/account/settings/content/embeds', [AccountController::class, 'updateEmbedSettings'])->middleware(['auth:web,api']);
 
     // App
     Route::post('/v1/app/logout', [AppController::class, 'handleLogout'])->middleware(['auth:web,api']);
@@ -309,6 +324,7 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/video/comments/reply/edit/{id}', [VideoController::class, 'storeCommentReplyUpdate'])->middleware('auth:web,api');
     Route::post('/v1/video/comments/edit/{id}', [VideoController::class, 'storeCommentUpdate'])->middleware('auth:web,api');
     Route::post('/v1/video/comments/{id}', [VideoController::class, 'storeComment'])->middleware('auth:web,api');
+    Route::post('/v1/video/comments/{id}/media', [VideoController::class, 'storeCommentMedia'])->middleware('auth:web,api');
     Route::get('/v1/video/comments/{id}', [WebPublicController::class, 'comments'])->middleware('throttle:api');
     Route::get('/v1/video/comments/{vid}/hidden', [VideoController::class, 'showHiddenComments'])->middleware('auth:web,api');
     Route::get('/v1/video/comments/{vid}/replies', [WebPublicController::class, 'commentsThread'])->middleware('throttle:api');
@@ -406,11 +422,13 @@ Route::prefix('api')->group(function () {
         Route::get('/reports-count', [AdminController::class, 'reportCount'])->middleware('auth:web,api');
         Route::get('/videos', [AdminController::class, 'videos'])->middleware('auth:web,api');
         Route::get('/comments', [AdminController::class, 'comments'])->middleware('auth:web,api');
+        Route::get('/comment/{id}/replies', [AdminController::class, 'getCommentReplies'])->middleware('auth:web,api');
         Route::get('/comment/{id}', [AdminController::class, 'getComment'])->middleware('auth:web,api');
         Route::get('/replies', [AdminController::class, 'replies'])->middleware('auth:web,api');
         Route::post('/replies/{id}/delete', [AdminController::class, 'videoReplyDelete'])->middleware('auth:web,api');
         Route::post('/replies/{id}/hide', [AdminController::class, 'videoReplyHide'])->middleware('auth:web,api');
         Route::post('/replies/{id}/unhide', [AdminController::class, 'videoReplyUnhide'])->middleware('auth:web,api');
+        Route::get('/videos/{id}/admin-auditlog', [AdminController::class, 'videoAuditLog'])->middleware('auth:web,api');
         Route::get('/videos/{id}/comments', [AdminController::class, 'videoCommentsShow'])->middleware('auth:web,api');
         Route::post('/comments/{id}/delete', [AdminController::class, 'videoCommentsDelete'])->middleware('auth:web,api');
         Route::post('/comments/{id}/hide', [AdminController::class, 'videoCommentsHide'])->middleware('auth:web,api');
@@ -445,6 +463,7 @@ Route::prefix('api')->group(function () {
         Route::post('/profiles/{id}/2fa-disable', [AdminController::class, 'profileDisableTwoFactorAuth'])->middleware('auth:web,api');
         Route::post('/profiles/{id}/send-email', [AdminController::class, 'profileAdminSendEmail'])->middleware(['auth:web,api', 'throttle:30,1']);
         Route::post('/profiles/{id}/reset-password', [AdminController::class, 'profileAdminResetPassword'])->middleware(['auth:web,api', 'throttle:10,1']);
+        Route::post('/profiles/{id}/delete-all-comments', [AdminController::class, 'profileDeleteAllComments'])->middleware(['auth:web,api']);
         Route::get('/settings', [AdminSettingsController::class, 'index'])->middleware('auth:web,api');
         Route::put('/settings', [AdminSettingsController::class, 'update'])->middleware('auth:web,api');
         Route::post('/settings/update-logo', [AdminSettingsController::class, 'updateLogo'])->middleware('auth:web,api');
@@ -491,6 +510,16 @@ Route::prefix('api')->group(function () {
         Route::get('/starter-kits/pending-changes/{changeset}', [AdminController::class, 'starterKitsReviewShow'])->middleware('auth:web,api');
         Route::post('/starter-kits/pending-changes/{changeset}/fields/{field}/approve', [AdminController::class, 'starterKitsReviewApproveField'])->middleware('auth:web,api');
         Route::post('/starter-kits/pending-changes/{changeset}/fields/{field}/reject', [AdminController::class, 'starterKitsReviewRejectField'])->middleware('auth:web,api');
+        Route::get('/blocked-terms', [AdminController::class, 'blockedTerms']);
+        Route::get('/blocked-terms/counts', [AdminController::class, 'blockedTermsCounts']);
+        Route::get('/blocked-terms/export', [AdminController::class, 'blockedTermsExport']);
+        Route::post('/blocked-terms', [AdminController::class, 'blockedTermsStore']);
+        Route::put('/blocked-terms/{blockedTerm}', [AdminController::class, 'blockedTermsUpdate']);
+        Route::post('/blocked-terms/delete-all', [AdminController::class, 'blockedTermsDeleteAll']);
+        Route::delete('/blocked-terms/delete-term/{blockedTerm}', [AdminController::class, 'blockedTermsDestroy']);
+        Route::post('/blocked-terms/bulk-import', [AdminController::class, 'blockedTermsBulkImport']);
+        Route::post('/blocked-terms/test', [AdminController::class, 'blockedTermsTest']);
+        Route::post('/blocked-terms/flush-cache', [AdminController::class, 'blockedTermsBulkFlushCache']);
     });
 
     Route::any('{any}', function () {

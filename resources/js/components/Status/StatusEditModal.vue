@@ -128,6 +128,18 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Embeds
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                Allow anyone to embed this video on websites.
+                            </p>
+                        </div>
+                        <ToggleSwitch v-model="formData.embedsEnabled" />
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 {{ $t('studio.duet') }}
                             </label>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -311,6 +323,7 @@ const formData = ref({
     pinToProfile: false,
     commentsEnabled: true,
     downloadsEnabled: true,
+    embedsEnabled: false,
     allowDuets: true,
     allowStitches: true,
     isNsfw: false,
@@ -332,6 +345,7 @@ watch(
                 pinToProfile: video.pinned || false,
                 lang: video.lang || '',
                 downloadsEnabled: video.permissions.can_download || false,
+                embedsEnabled: video.permissions.can_embed || false,
                 commentsEnabled: video.permissions.can_comment !== false,
                 allowDuets: video.permissions.can_duet !== false,
                 allowStitches: video.permissions.can_stitch !== false,
@@ -363,6 +377,7 @@ const saveChanges = async () => {
             lang: formData.value.lang,
             can_comment: formData.value.commentsEnabled,
             can_download: formData.value.downloadsEnabled,
+            can_embed: formData.value.embedsEnabled,
             can_duet: formData.value.allowDuets,
             can_stitch: formData.value.allowStitches,
             is_sensitive: formData.value.isNsfw,

@@ -4,7 +4,9 @@ namespace App\Observers;
 
 use App\Models\Profile;
 use App\Models\Video;
+use App\Services\AccountService;
 use App\Services\AtomFeedService;
+use App\Services\StudioService;
 
 class VideoObserver
 {
@@ -56,9 +58,14 @@ class VideoObserver
     /**
      * Update the video count for a profile based on actual Video table count
      */
-    protected function updateProfileVideoCount(int $profileId): void
+    protected function updateProfileVideoCount($profileId): void
     {
-        $count = Video::where('profile_id', $profileId)->count();
+        if (! $profileId) {
+            return;
+        }
+        $count = Video::published()->where('profile_id', $profileId)->count();
         Profile::where('id', $profileId)->update(['video_count' => $count]);
+        AccountService::del($profileId);
+        app(StudioService::class)->forgetSummary($profileId);
     }
 }

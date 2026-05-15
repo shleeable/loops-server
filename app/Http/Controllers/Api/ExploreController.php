@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\VideoHashtagResource;
 use App\Models\VideoHashtag;
 use App\Services\ExploreService;
+use App\Services\UserFilterService;
 use App\Support\CursorToken;
 use Illuminate\Http\Request;
 
@@ -69,6 +70,8 @@ class ExploreController extends Controller
                 }
             }
 
+            $blockedIds = UserFilterService::getAll($user->profile_id);
+
             $pager = VideoHashtag::where('video_hashtags.hashtag_id', $hashtagId)
                 ->where('video_hashtags.visibility', 1)
                 ->join('videos', 'videos.id', '=', 'video_hashtags.video_id')
@@ -76,6 +79,7 @@ class ExploreController extends Controller
                 ->where('videos.status', 2)
                 ->where('videos.likes', '>', $minLikes)
                 ->where('profiles.status', 1)
+                ->when(! empty($blockedIds), fn ($q) => $q->whereNotIn('videos.profile_id', $blockedIds))
                 ->select('video_hashtags.*')
                 ->orderByDesc('video_hashtags.id')
                 ->cursorPaginate(

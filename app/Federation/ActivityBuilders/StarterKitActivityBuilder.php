@@ -29,6 +29,7 @@ class StarterKitActivityBuilder
                 'featuredObject' => $acct->getAccountPermalink(),
                 'featuredObjectType' => 'Person',
                 'featureAuthorization' => $acct->getAttestationUrl(),
+                'published' => $acct->approved_at->toIso8601ZuluString(),
             ];
         });
 
@@ -100,8 +101,10 @@ class StarterKitActivityBuilder
             '@context' => 'https://www.w3.org/ns/activitystreams',
             'id' => $acct->getPermalink(),
             'type' => 'FeaturedItem',
-            'object' => $acct->getAccountPermalink(),
+            'featuredObject' => $acct->getAccountPermalink(),
+            'featuredObjectType' => 'Person',
             'featureAuthorization' => $acct->getAttestationUrl(),
+            'published' => $acct->approved_at->toIso8601ZuluString(),
         ];
 
         return $res;

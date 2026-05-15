@@ -22,6 +22,7 @@ use App\Models\Profile;
 use App\Models\ProfileLink;
 use App\Models\SystemMessage;
 use App\Models\UserFilter;
+use App\Models\Video;
 use App\Models\VideoLike;
 use App\Services\AccountService;
 use App\Services\AccountSuggestionService;
@@ -31,6 +32,7 @@ use App\Services\FollowerService;
 use App\Services\LinkLimitService;
 use App\Services\NotificationService;
 use App\Services\PushTokenCacheService;
+use App\Services\StudioService;
 use App\Services\SystemMessageService;
 use App\Services\UserActivityService;
 use App\Services\UserAuditLogService;
@@ -178,7 +180,7 @@ class AccountController extends Controller
 
     public function getSystemNotification(Request $request, $id)
     {
-        $systemMessage = SystemMessage::active()->published()->where('key_id', $id)->first();
+        $systemMessage = SystemMessage::active()->published()->where('key_id', $id)->firstOrFail();
         $cached = app(SystemMessageService::class)->getFull($systemMessage->id);
 
         return response()->json(['data' => $cached]);
@@ -211,6 +213,7 @@ class AccountController extends Controller
             FollowerService::refreshAndSync($pid, $profile->id);
             AccountSuggestionService::removeForUser($pid, $profile->id);
             AccountSuggestionService::invalidate($pid);
+            UserFilterService::getAll($pid, true);
 
             $res = (new ProfileResource($profile))->toArray($request);
             $res['is_blocking'] = true;
@@ -235,6 +238,7 @@ class AccountController extends Controller
 
             AccountSuggestionService::invalidate($pid);
             FollowerService::refreshAndSync($pid, $profile->id);
+            UserFilterService::getAll($pid, true);
 
             $res = (new ProfileResource($profile))->toArray($request);
             $res['is_blocking'] = false;
@@ -461,6 +465,8 @@ class AccountController extends Controller
             }
         }
 
+        abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($authProfileId, $profile->id), 404, 'Resource not available');
+
         $isOwner = $authProfileId && ((int) $authProfileId === (int) $profile->id || $request->user()->is_admin);
         $hasSearch = $request->filled('search');
 
@@ -523,6 +529,8 @@ class AccountController extends Controller
             }
         }
 
+        abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($authProfileId, $profile->id), 404, 'Resource not available');
+
         $isOwner = $authProfileId && ((int) $authProfileId === (int) $profile->id || $request->user()->is_admin);
         $hasSearch = $request->filled('search');
 
@@ -576,7 +584,7 @@ class AccountController extends Controller
         $authProfileId = $request->user()->profile_id;
 
         if ($authProfileId == $id) {
-            return $this->error('Cannot get mutual following with yourself', 200);
+            return $this->error('Cannot get mutual following with yourself', 422);
         }
 
         if (! $request->user()->can_follow || $request->user()->cannot('viewAny', [Profile::class])) {
@@ -812,7 +820,7 @@ class AccountController extends Controller
         ]);
     }
 
-    public function defaultCursorTokenResponse($request, $limit)
+    public function defaultCursorTokenResponse(Request $request, int $limit)
     {
         return response()->json([
             'data' => [],
@@ -876,6 +884,7 @@ class AccountController extends Controller
         $links = $profile->profileLinks()->orderBy('position')->get();
 
         app(UserAuditLogService::class)->logAccountDeleteProfileLink($user, ['old' => $oldLinks, 'new' => $profile->links]);
+        app(StudioService::class)->forgetSummary($profile->id);
 
         return $this->data([
             'id' => (string) $profile->id,
@@ -962,8 +971,14 @@ class AccountController extends Controller
     {
         $user = $request->user();
 
+        $totalVideos = Video::where('profile_id', $user->profile_id)->published()->count();
+        $totalEmbeds = Video::where('profile_id', $user->profile_id)->published()->embeddable()->count();
+
         $res = [
             'hide_ai' => $user->hide_ai,
+            'can_embed' => $user->can_embed,
+            'total_videos' => $totalVideos,
+            'total_embeds' => $totalEmbeds,
         ];
 
         return $this->data($res);
@@ -998,6 +1013,37 @@ class AccountController extends Controller
         return $this->data([
             'hide_ai' => $newValue,
         ]);
+    }
+
+    public function updateEmbedSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'action' => 'required|string|in:disable_all,enable_all',
+        ]);
+
+        $user = $request->user();
+
+        abort_if(! $user->can_embed, 403, '<p class="font-bold text-red-500">You have been restricted from the embed feature.</p><br/>If you think this was a mistake, please contact the admins.');
+
+        $action = $validated['action'];
+
+        if ($action === 'disable_all') {
+            Video::where('profile_id', $user->profile_id)->published()->update(['can_embed' => false]);
+        } else {
+            Video::where('profile_id', $user->profile_id)->published()->update(['can_embed' => true]);
+        }
+
+        $totalVideos = Video::where('profile_id', $user->profile_id)->published()->count();
+        $totalEmbeds = Video::where('profile_id', $user->profile_id)->published()->embeddable()->count();
+
+        $res = [
+            'hide_ai' => $user->hide_ai,
+            'can_embed' => $user->can_embed,
+            'total_videos' => $totalVideos,
+            'total_embeds' => $totalEmbeds,
+        ];
+
+        return $this->data($res);
     }
 
     public function profileLinkStore(Request $request)
@@ -1045,6 +1091,8 @@ class AccountController extends Controller
         $links = $profile->profileLinks()->orderBy('position')->get();
 
         app(UserAuditLogService::class)->logAccountAddProfileLink($user, ['old' => $oldLinks, 'new' => $profile->links]);
+
+        app(StudioService::class)->forgetSummary($profile->id);
 
         $res = [
             'id' => (string) $profile->id,

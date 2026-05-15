@@ -6,7 +6,7 @@
             class="flex-shrink-0"
         />
 
-        <div class="flex flex-col flex-1 h-screen lg:w-[calc(100%-260px)]">
+        <div class="flex flex-col flex-1 lg:w-[calc(100%-260px)]">
             <StudioHeader
                 @toggleMobileDrawer="toggleMobileDrawer"
                 @openLogin="openLoginModal"

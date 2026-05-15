@@ -65,6 +65,7 @@ class StoreVideoRequest extends FormRequest
             'can_comment' => 'nullable|boolean',
             'can_duet' => 'nullable|boolean',
             'can_stitch' => 'nullable|boolean',
+            'can_embed' => 'nullable|boolean',
             'is_sensitive' => 'nullable|boolean',
             'alt_text' => 'nullable|sometimes|string|max:2000',
             'contains_ai' => 'nullable|boolean',
@@ -82,7 +83,7 @@ class StoreVideoRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        $fields = ['can_download', 'can_comment', 'can_duet', 'can_stitch', 'is_sensitive', 'contains_ai', 'contains_ad'];
+        $fields = ['can_download', 'can_comment', 'can_duet', 'can_stitch', 'can_embed', 'is_sensitive', 'contains_ai', 'contains_ad'];
         foreach ($fields as $key) {
             if ($this->has($key)) {
                 $this->merge([

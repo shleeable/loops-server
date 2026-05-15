@@ -48,6 +48,8 @@ class NotificationResource extends JsonResource
             Notification::KIT_ACCOUNT_REJECTED => $this->starterKitAccountRejected(),
             Notification::KIT_YOU_IN_REMOVED => $this->starterKitYouInRemoved(),
             Notification::KIT_YOU_IN_NEW_MEMBERS => $this->starterKitYouInNewMembers(),
+            Notification::KIT_ONLY_YOU_FOLLOW_ADDED_YOU => $this->starterKitOnlyYouFollowAutoApprovedAdded(),
+            Notification::KIT_AUTO_APPROVE_ADDED_YOU => $this->starterKitAutoApprovedAdded(),
             default => [
                 'id' => (string) $this->id,
                 'type' => 'internal',
@@ -72,6 +74,30 @@ class NotificationResource extends JsonResource
             'type' => 'system.message',
             'systemType' => $subType,
             'systemMessage' => $systemMessage,
+            'read_at' => $this->read_at,
+            'created_at' => $this->created_at,
+        ];
+    }
+
+    protected function starterKitAutoApprovedAdded()
+    {
+        return [
+            'id' => (string) $this->id,
+            'type' => 'starterKit.autoAdded',
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
+            'kit' => app(StarterKitService::class)->getCompact($this->meta['starter_kit_id']),
+            'read_at' => $this->read_at,
+            'created_at' => $this->created_at,
+        ];
+    }
+
+    protected function starterKitOnlyYouFollowAutoApprovedAdded()
+    {
+        return [
+            'id' => (string) $this->id,
+            'type' => 'starterKit.autoAddedYouFollow',
+            'actor' => AccountService::get($this->profile_id, false) ?: $this->unavailableAccount(),
+            'kit' => app(StarterKitService::class)->getCompact($this->meta['starter_kit_id']),
             'read_at' => $this->read_at,
             'created_at' => $this->created_at,
         ];

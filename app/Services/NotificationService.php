@@ -404,6 +404,44 @@ class NotificationService
         return $res;
     }
 
+    public static function starterKitAutoAdd($uid, $pid, $kitId)
+    {
+        if ($uid == $pid) {
+            return;
+        }
+
+        $res = Notification::updateOrCreate([
+            'type' => Notification::KIT_AUTO_APPROVE_ADDED_YOU,
+            'user_id' => $uid,
+            'profile_id' => $pid,
+            'meta' => [
+                'starter_kit_id' => $kitId,
+            ],
+        ]);
+        self::clearUnreadCount($uid);
+
+        return $res;
+    }
+
+    public static function starterKitAutoAddYouFollow($uid, $pid, $kitId)
+    {
+        if ($uid == $pid) {
+            return;
+        }
+
+        $res = Notification::updateOrCreate([
+            'type' => Notification::KIT_ONLY_YOU_FOLLOW_ADDED_YOU,
+            'user_id' => $uid,
+            'profile_id' => $pid,
+            'meta' => [
+                'starter_kit_id' => $kitId,
+            ],
+        ]);
+        self::clearUnreadCount($uid);
+
+        return $res;
+    }
+
     public static function starterKitAccountApproved($uid, $pid, $kitId)
     {
         if ($uid == $pid) {
@@ -444,8 +482,11 @@ class NotificationService
 
     public static function starterKitAddAccountDelete($uid, $pid, $kitId)
     {
-        $res = Notification::where([
-            'type' => Notification::KIT_AWAIT_APPROVAL,
+        $res = Notification::whereIn('type', [
+            Notification::KIT_AWAIT_APPROVAL,
+            Notification::KIT_ONLY_YOU_FOLLOW_ADDED_YOU,
+            Notification::KIT_AUTO_APPROVE_ADDED_YOU,
+        ])->where([
             'user_id' => $uid,
             'profile_id' => $pid,
             'meta->starter_kit_id' => $kitId,

@@ -24,6 +24,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\CheckAccountStatus::class,
         ]);
 
+        $middleware->appendToGroup('embed', [
+            \App\Http\Middleware\EmbedHeaders::class,
+            \Illuminate\Routing\Middleware\ThrottleRequests::class,
+        ]);
+
         $getenv = static function (string $key, $default = null) {
             $val = $_SERVER[$key] ?? $_ENV[$key] ?? (getenv($key) !== false ? getenv($key) : null);
 

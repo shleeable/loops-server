@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\DeleteVideoRequest;
 use App\Http\Requests\GetMentionAutocomplete;
 use App\Http\Requests\GetTagAutocomplete;
+use App\Http\Requests\StoreCommentMediaRequest;
 use App\Http\Requests\StoreCommentReplyUpdateRequest;
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\StoreCommentUpdateRequest;
@@ -22,6 +23,7 @@ use App\Http\Resources\VideoCaptionEditResource;
 use App\Http\Resources\VideoLikeResource;
 use App\Http\Resources\VideoRepostResource;
 use App\Http\Resources\VideoResource;
+use App\Jobs\Comment\CommentKlipyMediaShareTriggerJob;
 use App\Jobs\Federation\DeliverCommentLikeActivity;
 use App\Jobs\Federation\DeliverCommentReplyLikeActivity;
 use App\Jobs\Federation\DeliverUndoCommentLikeActivity;
@@ -51,10 +53,12 @@ use App\Services\AccountService;
 use App\Services\ActivityPubCacheService;
 use App\Services\ConfigService;
 use App\Services\FederationDispatcher;
+use App\Services\KlipyMediaSelector;
 use App\Services\LikeService;
 use App\Services\NotificationService;
 use App\Services\SanitizeService;
 use App\Services\UserActivityService;
+use App\Services\UserFilterService;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -126,6 +130,7 @@ class VideoController extends Controller
         $model = null;
         $s3Path = null;
         $thumbnailPath = null;
+        $canEmbed = (bool) $request->user()->can_embed;
 
         try {
             DB::beginTransaction();
@@ -137,6 +142,7 @@ class VideoController extends Controller
             $model->is_sensitive = $request->filled('is_sensitive') ? (bool) $request->boolean('is_sensitive') : false;
             $model->comment_state = $request->filled('comment_state') ? ($request->input('comment_state') == 4 ? 4 : 0) : 4;
             $model->can_download = $request->filled('can_download') ? $request->boolean('can_download') : false;
+            $model->can_embed = $canEmbed && $request->filled('can_embed') ? $request->boolean('can_embed') : false;
             $model->can_duet = $request->filled('can_duet') ? $request->boolean('can_duet') : false;
             $model->can_stitch = $request->filled('can_stitch') ? $request->boolean('can_stitch') : false;
             $model->alt_text = $request->filled('alt_text') ? app(SanitizeService::class)->cleanPlainText($request->alt_text) : null;
@@ -279,6 +285,8 @@ class VideoController extends Controller
         $pid = $request->user()->profile_id;
         $updatedCaption = $this->purifyText($request->caption);
         $video = Video::published()->findOrFail($id);
+        $canEmbed = (bool) $request->user()->can_embed;
+
         if ($video->caption !== $updatedCaption) {
             VideoCaptionEdit::create([
                 'video_id' => $video->id,
@@ -288,6 +296,7 @@ class VideoController extends Controller
         }
         $video->caption = $updatedCaption;
         $video->can_download = $request->has('can_download') ? $request->boolean('can_download') : false;
+        $video->can_embed = $canEmbed && $request->has('can_embed') ? $request->boolean('can_embed') : false;
         $video->comment_state = $request->has('can_comment') ? ($request->boolean('can_comment') ? 4 : 0) : 0;
         $video->is_pinned = $request->has('is_pinned') ? $request->boolean('is_pinned') : 0;
         $video->pinned_order = $request->has('is_pinned') ? Video::whereStatus(2)->whereProfileId($pid)->whereIsPinned(true)->count() + 1 : 0;
@@ -431,6 +440,10 @@ class VideoController extends Controller
             return $this->error('Video not found or is unavailable', 404);
         }
 
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($pid, $video->profile_id), 404, 'Resource not available');
+        }
+
         $like = VideoLike::firstOrCreate([
             'profile_id' => $pid,
             'video_id' => $video->id,
@@ -524,7 +537,11 @@ class VideoController extends Controller
             return $this->error('Video not found or is unavailable or has comments disabled', 404);
         }
 
-        $comments = Comment::withTrashed()
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($pid, $video->profile_id), 404, 'Resource not available');
+        }
+
+        $comments = Comment::with('mediaAttachments')->withTrashed()
             ->whereVideoId($video->id)
             ->where('is_hidden', false)
             ->orderByDesc('id')
@@ -542,7 +559,12 @@ class VideoController extends Controller
             return $this->error('Video not found or is unavailable or has comments disabled', 404);
         }
 
-        $comments = Comment::withTrashed()
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($pid, $video->profile_id), 404, 'Resource not available');
+        }
+
+        $comments = Comment::with('mediaAttachments')
+            ->withTrashed()
             ->whereVideoId($video->id)
             ->where('is_hidden', true)
             ->orderByDesc('id')
@@ -565,6 +587,10 @@ class VideoController extends Controller
 
         if (! $video || $request->user()->cannot('view', [Video::class, $video])) {
             return $this->error('Video not found or is unavailable or has comments disabled', 404);
+        }
+
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($pid, $video->profile_id), 404, 'Resource not available');
         }
 
         $comments = CommentReply::withTrashed()
@@ -654,6 +680,71 @@ class VideoController extends Controller
             CommentResource::collection([$comment]);
     }
 
+    public function storeCommentMedia(StoreCommentMediaRequest $request, $vid)
+    {
+        $user = $request->user();
+        $pid = $user->profile_id;
+        $video = Video::published()->canComment()->find($vid);
+
+        if (! $video || $user->cannot('view', [Video::class, $video])) {
+            return $this->error('Video not found or is unavailable or has comments disabled', 404);
+        }
+
+        $body = $request->filled('comment') ? $this->purifyText($request->comment) : null;
+        $klipy = $request->input('item');
+        $type = $request->input('type');
+        $klipyId = data_get($klipy, 'id', $klipy['slug']);
+
+        $picked = app(KlipyMediaSelector::class)->pick($klipy, $type);
+
+        $comment = new Comment;
+        $comment->video_id = $vid;
+        $comment->profile_id = $pid;
+        $comment->caption = $body;
+        $comment->status = 'active';
+        $comment->save();
+
+        if ($body) {
+            $comment->syncHashtagsFromCaption();
+            $comment->syncMentionsFromCaption();
+        }
+
+        $comment->mediaAttachments()->create([
+            'profile_id' => $pid,
+            'remote_url' => $picked['url'],
+            'mime_type' => $picked['mime_type'],
+            'width' => $picked['width'],
+            'height' => $picked['height'],
+            'description' => $klipy['title'],
+            'provider' => 'klipy',
+            'external_id' => $klipyId,
+            'visibility' => 1,
+        ]);
+
+        $comment->recalculateMedia();
+
+        $comment->refresh();
+
+        $config = app(ConfigService::class);
+        if ($config->federation()) {
+            app(FederationDispatcher::class)->dispatchCommentCreation($comment);
+        }
+        if ($config->pushNotifications() && $pid != $video->profile_id) {
+            SendPushNotificationJob::dispatch_newVideoComment(
+                profileId: $video->profile_id,
+                videoId: $video->id,
+                actorId: $pid,
+                commentId: $comment->id,
+            );
+        }
+
+        CommentKlipyMediaShareTriggerJob::dispatch((string) $klipyId, $type, (string) $user->id);
+
+        $video->recalculateCommentsCount();
+
+        return CommentResource::collection([$comment->load('mediaAttachments')]);
+    }
+
     public function storeCommentUpdate(StoreCommentUpdateRequest $request, $vid)
     {
         $pid = $request->user()->profile_id;
@@ -740,8 +831,10 @@ class VideoController extends Controller
 
         if ($comment->children_count) {
             $comment->update(['caption' => null, 'status' => 'deleted_by_user']);
+            $comment->mediaAttachments()->delete();
             $comment->delete();
         } else {
+            $comment->mediaAttachments()->delete();
             $comment->forceDelete();
         }
 

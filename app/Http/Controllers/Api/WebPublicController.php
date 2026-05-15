@@ -32,6 +32,7 @@ use App\Services\IntlService;
 use App\Services\ReportService;
 use App\Services\StarterKitService;
 use App\Services\SystemMessageService;
+use App\Services\UserFilterService;
 use App\Support\CursorToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -82,6 +83,7 @@ class WebPublicController extends Controller
         }
 
         if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($request->user()->profile_id, $video->profile_id), 404, 'Resource not available');
             // @phpstan-ignore-next-line
             $video->is_bookmarked = VideoBookmark::whereProfileId($request->user()->profile_id)->whereVideoId($video->id)->exists();
         }
@@ -96,13 +98,19 @@ class WebPublicController extends Controller
     {
         $video = Video::with('profile')->published()->canComment()->find($id);
 
+        abort_if(! $video, 404, 'Resource not available');
         abort_if($video->profile->status != 1, 400, 'Resource not available');
 
-        if (! $video || ($request->user() && $request->user()->cannot('view', [Video::class, $video]))) {
+        if (($request->user() && $request->user()->cannot('view', [Video::class, $video]))) {
             return $this->error('Video not found or is unavailable or has comments disabled', 404);
         }
 
-        $comments = Comment::withTrashed()
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($request->user()->profile_id, $video->profile_id), 404, 'Resource not available');
+        }
+
+        $comments = Comment::with('mediaAttachments')
+            ->withTrashed()
             ->whereVideoId($video->id)
             ->where('is_hidden', false)
             ->orderByDesc('id')
@@ -119,9 +127,16 @@ class WebPublicController extends Controller
     {
         $video = Video::with('profile')->published()->canComment()->find($videoId);
 
+        abort_if(! $video, 404, 'Resource not available');
+
         abort_if($video->profile->status != 1, 400, 'Resource not available');
 
-        $comment = Comment::withTrashed()
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($request->user()->profile_id, $video->profile_id), 404, 'Resource not available');
+        }
+
+        $comment = Comment::with('mediaAttachments')
+            ->withTrashed()
             ->whereVideoId($video->id)
             ->where('is_hidden', false)
             ->findOrFail($commentId);
@@ -140,6 +155,10 @@ class WebPublicController extends Controller
         }
 
         abort_if($video->profile->status != 1, 400, 'Resource not available');
+
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($request->user()->profile_id, $video->profile_id), 404, 'Resource not available');
+        }
 
         $reply = CommentReply::withTrashed()
             ->with(['profile', 'parent'])
@@ -175,10 +194,16 @@ class WebPublicController extends Controller
 
         $video = Video::with('profile')->published()->canComment()->find($id);
 
+        abort_if(! $video, 404, 'Resource not available');
+
         abort_if($video->profile->status != 1, 400, 'Resource not available');
 
-        if (! $video || ($request->user() && $request->user()->cannot('view', [Video::class, $video]))) {
+        if (($request->user() && $request->user()->cannot('view', [Video::class, $video]))) {
             return $this->error('Video not found or is unavailable or has comments disabled', 404);
+        }
+
+        if ($request->user()) {
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($request->user()->profile_id, $video->profile_id), 404, 'Resource not available');
         }
 
         $comments = CommentReply::withTrashed()
@@ -209,6 +234,10 @@ class WebPublicController extends Controller
             return $this->error('This resource is not available', 403);
         }
 
+        if ($user = $request->user()) {
+            abort_if(! $user->is_admin && UserFilterService::isBlocking($user->profile_id, $id), 404, 'Resource not available');
+        }
+
         $res = (new ProfileResource($profile))->toArray($request);
         $res['is_owner'] = $request->user()?->profile_id == $profile->id;
         $res['likes_count'] = AccountService::getAccountLikesCount($profile->id);
@@ -232,6 +261,10 @@ class WebPublicController extends Controller
             return $this->error('Unavailable', 403);
         }
 
+        if ($user = $request->user()) {
+            abort_if(! $user->is_admin && UserFilterService::isBlocking($user->profile_id, $id), 404, 'Resource not available');
+        }
+
         $followers = Follower::whereFollowingId($id)->whereHas('profile', fn ($q) => $q->where('status', 1))->orderBy('id')->limit(15)->get();
 
         return FollowerResource::collection($followers);
@@ -247,6 +280,10 @@ class WebPublicController extends Controller
 
         if ($request->user() && $request->user()->cannot('viewAny', [Profile::class])) {
             return $this->error('Unavailable', 403);
+        }
+
+        if ($user = $request->user()) {
+            abort_if(! $user->is_admin && UserFilterService::isBlocking($user->profile_id, $id), 404, 'Resource not available');
         }
 
         $followers = Follower::whereProfileId($id)->whereHas('following', fn ($q) => $q->where('status', 1))->orderBy('id')->limit(15)->get();
@@ -266,6 +303,10 @@ class WebPublicController extends Controller
 
         $sort = $request->input('sort', 'Latest');
         $showPinned = $sort === 'Latest';
+
+        if ($user = $request->user()) {
+            abort_if(! $user->is_admin && UserFilterService::isBlocking($user->profile_id, $id), 404, 'Resource not available');
+        }
 
         $profile = Profile::findOrFail($id);
 
@@ -455,6 +496,7 @@ class WebPublicController extends Controller
         $config = FrontendService::getCache();
         $config['app']['software'] = 'loops';
         $config['app']['version'] = app('app_version');
+        $config['hasKlipy'] = (bool) ! empty(config('klipy.api_key'));
         unset($config['branding']);
 
         return response()->json($config);

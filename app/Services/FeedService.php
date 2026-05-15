@@ -49,13 +49,10 @@ class FeedService
 
     public static function getVideoFeed($profileId, $limit = 10, $hideAi = false)
     {
-        $blockedSubquery = UserFilterService::getFilters($profileId);
+        $blockedIds = UserFilterService::getAll($profileId);
 
         $videos = Video::join('profiles', 'videos.profile_id', '=', 'profiles.id')
-            ->leftJoinSub($blockedSubquery, 'blocked', function ($join) {
-                $join->on('videos.profile_id', '=', 'blocked.account_id');
-            })
-            ->whereNull('blocked.account_id')
+            ->when(! empty($blockedIds), fn ($q) => $q->whereNotIn('videos.profile_id', $blockedIds))
             ->when($hideAi, function ($query, $hideAi) {
                 $query->where('contains_ai', false);
             })
@@ -73,13 +70,10 @@ class FeedService
 
     public static function getNetworkFeedOg($profileId, $limit = 10)
     {
-        $blockedSubquery = UserFilterService::getFilters($profileId);
+        $blockedIds = UserFilterService::getAll($profileId);
 
         $videos = Video::join('profiles', 'videos.profile_id', '=', 'profiles.id')
-            ->leftJoinSub($blockedSubquery, 'blocked', function ($join) {
-                $join->on('videos.profile_id', '=', 'blocked.account_id');
-            })
-            ->whereNull('blocked.account_id')
+            ->when(! empty($blockedIds), fn ($q) => $q->whereNotIn('videos.profile_id', $blockedIds))
             ->orderBy('videos.id', 'desc')
             ->where('videos.status', 2)
             ->where('is_local', false)
@@ -95,14 +89,11 @@ class FeedService
 
     public static function getNetworkFeedPager(int $profileId, int $limit = 10, ?string $decodedCursor = null): CursorPaginator
     {
-        $blockedSubquery = UserFilterService::getFilters($profileId);
+        $blockedIds = UserFilterService::getAll($profileId);
 
         $videos = Video::query()
             ->join('profiles', 'videos.profile_id', '=', 'profiles.id')
-            ->leftJoinSub($blockedSubquery, 'blocked', function ($join) {
-                $join->on('videos.profile_id', '=', 'blocked.account_id');
-            })
-            ->whereNull('blocked.account_id')
+            ->when(! empty($blockedIds), fn ($q) => $q->whereNotIn('videos.profile_id', $blockedIds))
             ->where('videos.status', 2)
             ->where('videos.is_local', false)
             ->whereNotNull('videos.vid_optimized')

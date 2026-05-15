@@ -504,28 +504,36 @@ class StarterKitController extends Controller
             return $this->error('You do not have permission for this action');
         }
 
-        if ($acct->kit_status != 0 || $acct->approved_at || $acct->rejected_at) {
+        if ($acct->kit_status !== StarterKitAccount::STATUS_PENDING || $acct->approved_at || $acct->rejected_at) {
             return $this->error('You do not have permission for this action');
         }
 
-        if ($validated['decision'] === 'approved') {
-            $acct->kit_status = 1;
-            $acct->approved_at = now();
-            $acct->rejected_at = null;
-            app(StarterKitService::class)->handleAccept($starterKit, $acct);
-            NotifyStarterKitUsersOfNewMember::dispatch($starterKit, $acct)->onQueue('notify')->delay(now()->addSeconds(5));
-        } else {
-            $acct->kit_status = 2;
-            $acct->rejected_at = now();
-            $acct->approved_at = null;
-            app(StarterKitService::class)->handleReject($starterKit, $acct);
+        if (! $starterKit->is_local && ! $acct->remote_object_id) {
+            return $this->error('Unable to respond — missing federation context');
         }
 
-        NotificationService::starterKitAddAccountDelete($acct->profile_id, $starterKit->profile_id, $starterKit->id);
+        $service = app(StarterKitService::class);
 
-        app(StarterKitService::class)->getAccountStats($starterKit->profile_id, true);
+        if ($validated['decision'] === 'approved') {
+            $acct->kit_status = StarterKitAccount::STATUS_APPROVED;
+            $acct->approved_at = now();
+            $acct->rejected_at = null;
+            $acct->save();
 
-        $acct->save();
+            $service->handleAccept($starterKit, $acct);
+
+            NotifyStarterKitUsersOfNewMember::dispatch($starterKit, $acct)
+                ->onQueue('notify')
+                ->delay(now()->addSeconds(5));
+        } else {
+            $acct->kit_status = StarterKitAccount::STATUS_REJECTED;
+            $acct->rejected_at = now();
+            $acct->approved_at = null;
+            $acct->save();
+
+            $service->handleReject($starterKit, $acct);
+        }
+
         $starterKit->syncAccountCount();
 
         return $this->success();
@@ -544,20 +552,21 @@ class StarterKitController extends Controller
             return $this->error('You do not have permission for this action');
         }
 
-        if ($acct->kit_status === 0 || $acct->kit_status === 2) {
+        if ($acct->kit_status !== StarterKitAccount::STATUS_APPROVED) {
             return $this->error('You do not have permission for this action');
         }
 
-        $acct->kit_status = 2;
+        if (! $starterKit->is_local && ! $acct->getAttestationUrl()) {
+            return $this->error('Unable to revoke — missing federation context');
+        }
+
+        $acct->kit_status = StarterKitAccount::STATUS_REJECTED;
         $acct->rejected_at = now();
         $acct->approved_at = null;
-        app(StarterKitService::class)->handleReject($starterKit, $acct);
-
-        NotificationService::starterKitAddAccountDelete($acct->profile_id, $starterKit->profile_id, $starterKit->id);
-
-        app(StarterKitService::class)->getAccountStats($starterKit->profile_id, true);
-
         $acct->save();
+
+        app(StarterKitService::class)->handleRevoke($starterKit, $acct);
+
         $starterKit->syncAccountCount();
 
         return $this->success();

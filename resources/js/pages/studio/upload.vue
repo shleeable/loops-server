@@ -615,6 +615,19 @@
                                         <div>
                                             <span
                                                 class="text-sm font-medium text-gray-700 dark:text-gray-200"
+                                                >Embeds</span
+                                            >
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                                Manage whether your videos can be embedded on other
+                                                sites.
+                                            </p>
+                                        </div>
+                                        <ToggleSwitch v-model="settings.allowEmbeds" />
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <span
+                                                class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                                 >{{ $t('studio.duet') }}</span
                                             >
                                             <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -971,6 +984,7 @@ const settings = reactive({
     allowComments: true,
     allowDownloads: true,
     allowDuets: true,
+    allowEmbeds: true,
     allowStitch: true,
     containsAd: false,
     containsAi: false
@@ -1324,6 +1338,7 @@ const resetForm = () => {
     settings.allowComments = true
     settings.allowDuets = true
     settings.allowStitch = true
+    settings.allowEmbeds = true
     settings.containsAd = false
     settings.containsAi = false
     showAutocomplete.value = false
@@ -1629,6 +1644,7 @@ const handleSubmit = async () => {
         formData.append('lang', settings.lang)
         formData.append('comment_state', settings.allowComments ? 4 : 0)
         formData.append('can_download', settings.allowDownloads)
+        formData.append('can_embed', settings.allowEmbeds)
         formData.append('is_sensitive', settings.nsfw ? 1 : 0)
         formData.append('contains_ad', settings.containsAd ? 1 : 0)
         formData.append('contains_ai', settings.containsAi ? 1 : 0)

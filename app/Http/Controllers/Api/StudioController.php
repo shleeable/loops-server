@@ -23,9 +23,11 @@ class StudioController extends Controller
     {
         $validated = $request->validate([
             'search' => ['sometimes', 'nullable', 'string', 'min:2', 'max:30'],
-            'limit' => ['sometimes', 'integer', 'min:1', 'max:10'],
+            'limit' => ['sometimes', 'integer', 'min:1', 'max:20'],
             'sort_field' => ['sometimes', 'string', Rule::in(['created_at'])],
             'sort_direction' => ['sometimes', 'string', Rule::in(['asc', 'desc'])],
+            'filter' => ['sometimes', 'string', Rule::in(['all', 'pinned', 'processing'])],
+            'only_embeds' => ['sometimes', 'boolean'],
         ]);
 
         $pid = $request->user()->profile_id;
@@ -33,16 +35,31 @@ class StudioController extends Controller
         $limit = $validated['limit'] ?? 10;
         $sortBy = $validated['sort_field'] ?? 'created_at';
         $sortDir = $validated['sort_direction'] ?? 'desc';
+        $filter = $validated['filter'] ?? 'all';
+        $onlyEmbeds = isset($validated['only_embeds']) ? $validated['only_embeds'] : false;
 
         if ($search !== null && $search !== '') {
             $search = $this->escapeLike($search);
         }
 
+        $status = $onlyEmbeds ? [2] : [1, 2];
+
         $total = VideoService::totalUserCount($pid, false);
 
         $videos = Video::whereProfileId($pid)
+            ->whereIn('status', $status)
             ->when($search, function ($query, $search) {
                 $query->where('caption', 'like', "%{$search}%");
+            })
+            ->when($onlyEmbeds, function ($query) {
+                $query->where('can_embed', true);
+            })
+            ->when($filter, function ($query, $filter) {
+                if ($filter === 'pinned') {
+                    $query->where('is_pinned', 1);
+                } elseif ($filter === 'processing') {
+                    $query->where('status', 1);
+                }
             })
             ->orderBy('created_at', $sortDir)
             ->cursorPaginate($limit)

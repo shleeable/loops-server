@@ -8,6 +8,7 @@ use App\Http\Requests\AdminResetProfilePasswordRequest;
 use App\Http\Requests\AdminSendProfileEmailRequest;
 use App\Http\Requests\StoreAdminInviteRequest;
 use App\Http\Resources\AdminAuditLogResource;
+use App\Http\Resources\AdminBlockedTermResource;
 use App\Http\Resources\AdminHashtagResource;
 use App\Http\Resources\AdminInstanceResource;
 use App\Http\Resources\AdminInviteResource;
@@ -15,6 +16,7 @@ use App\Http\Resources\AdminProfileResource;
 use App\Http\Resources\AdminStarterKitHistoryResource;
 use App\Http\Resources\AdminStarterKitResource;
 use App\Http\Resources\AdminUserAuditLogResource;
+use App\Http\Resources\AdminVideoResource;
 use App\Http\Resources\CommentReplyResource;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\ProfileResource;
@@ -27,6 +29,7 @@ use App\Mail\AdminMessageMail;
 use App\Mail\AdminPasswordResetMail;
 use App\Models\AdminAuditLog;
 use App\Models\AdminInvite;
+use App\Models\BlockedTerm;
 use App\Models\Comment;
 use App\Models\CommentReply;
 use App\Models\Follower;
@@ -49,6 +52,7 @@ use App\Services\ExploreService;
 use App\Services\InstanceService;
 use App\Services\NodeinfoCrawlerService;
 use App\Services\PrivateMediaTokenService;
+use App\Services\ProfanityFilterService;
 use App\Services\PushTokenCacheService;
 use App\Services\SanitizeService;
 use App\Services\StarterKitPendingChangeService;
@@ -56,6 +60,7 @@ use App\Services\StarterKitService;
 use App\Services\VersionCheckService;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -63,6 +68,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
 {
@@ -77,27 +83,35 @@ class AdminController extends Controller
     {
         $search = $request->query('q');
         $sort = $request->query('sort');
+        $local = $request->query('local');
 
         $query = Video::when($search, function ($query, $search) {
-            $query->join('profiles', 'videos.profile_id', '=', 'profiles.id')
-                ->where('profiles.username', 'like', '%'.$search.'%')
-                ->select('videos.*');
+            $isUsername = str_starts_with($search, 'username:');
+            if ($isUsername) {
+                $username = substr($search, 9);
+                $query->join('profiles', 'videos.profile_id', '=', 'profiles.id')
+                    ->where('profiles.username', $username)
+                    ->select('videos.*');
+            } else {
+                $query->where('caption', 'like', '%'.$search.'%');
+            }
         });
+
+        if ($local == true) {
+            $query->where('is_local', true);
+        }
 
         $query = $this->applySorting($query, $sort);
         $videos = $query->orderByDesc('id')->cursorPaginate(10)->withQueryString();
 
-        return VideoResource::collection($videos);
+        return AdminVideoResource::collection($videos);
     }
 
     public function videoShow(Request $request, $id)
     {
         $video = Video::findOrFail($id);
 
-        $res = (new VideoResource($video))->toArray($request);
-        $res['status'] = $video->statusLabel();
-        $res['media']['size'] = $video->size_kb;
-        $res['hid'] = $video->hashid();
+        $res = (new AdminVideoResource($video))->toArray($request);
         $res['reported_count'] = Report::whereReportedVideoId($id)->count();
 
         return $this->data($res);
@@ -105,11 +119,27 @@ class AdminController extends Controller
 
     public function videoCommentsShow(Request $request, $id)
     {
-        $video = Video::findOrFail($id);
+        $validated = $request->validate([
+            'limit' => 'sometimes|integer|min:1|max:50',
+            'sort' => 'sometimes|nullable|in:newest,oldest,most_liked,most_comments',
+        ]);
 
-        $comments = Comment::whereVideoId($video->id)
-            ->orderByDesc('id')
-            ->cursorPaginate(5);
+        $video = Video::findOrFail($id);
+        $limit = $validated['limit'];
+        $sort = $validated['sort'] ?? 'newest';
+        $sortBy = match ($sort) {
+            'newest' => ['column' => 'id', 'dir' => 'desc'],
+            'oldest' => ['column' => 'id', 'dir' => 'asc'],
+            'most_liked' => ['column' => 'likes', 'dir' => 'desc'],
+            'most_comments' => ['column' => 'replies', 'dir' => 'desc'],
+            default => ['column' => 'id', 'dir' => 'desc'],
+        };
+
+        $comments = Comment::withTrashed()
+            ->with('mediaAttachments')
+            ->whereVideoId($video->id)
+            ->orderBy($sortBy['column'], $sortBy['dir'])
+            ->cursorPaginate($limit);
 
         return CommentResource::collection($comments);
     }
@@ -117,13 +147,59 @@ class AdminController extends Controller
     public function videoModerate(Request $request, $id)
     {
         $request->validate([
-            'action' => 'required|in:unpublished,publish,delete',
+            'action' => 'required|in:unpublished,publish,delete,ai,ad,nsfw,embed',
         ]);
 
         $action = $request->input('action');
 
+        $video = Video::findOrFail($id);
+
+        if ($action === 'ai') {
+            $oldState = $video->contains_ai;
+            $video->contains_ai = ! $video->contains_ai;
+            $video->saveQuietly();
+            VideoService::getMediaData($video->id, true);
+            $changes = ['old' => ['contains_ai' => $oldState], 'new' => ['contains_ai' => ! $oldState]];
+            app(AdminAuditLogService::class)->logVideoModerate($request->user(), $video, $changes);
+
+            return $this->data((new AdminVideoResource($video)));
+        }
+
+        if ($action === 'embed') {
+            abort_if(! $video->is_local, 422, 'Can only toggle embeds for local videos');
+            $oldState = $video->can_embed;
+            $video->can_embed = ! $video->can_embed;
+            $video->saveQuietly();
+            VideoService::getMediaData($video->id, true);
+            $changes = ['old' => ['can_embed' => $oldState], 'new' => ['can_embed' => ! $oldState]];
+            app(AdminAuditLogService::class)->logVideoModerate($request->user(), $video, $changes);
+
+            return $this->data((new AdminVideoResource($video)));
+        }
+
+        if ($action === 'ad') {
+            $oldState = $video->contains_ad;
+            $video->contains_ad = ! $video->contains_ad;
+            $video->saveQuietly();
+            VideoService::getMediaData($video->id, true);
+            $changes = ['old' => ['contains_ad' => $oldState], 'new' => ['contains_ad' => ! $oldState]];
+            app(AdminAuditLogService::class)->logVideoModerate($request->user(), $video, $changes);
+
+            return $this->data((new AdminVideoResource($video)));
+        }
+
+        if ($action === 'nsfw') {
+            $oldState = $video->is_sensitive;
+            $video->is_sensitive = ! $video->is_sensitive;
+            $video->saveQuietly();
+            VideoService::getMediaData($video->id, true);
+            $changes = ['old' => ['is_sensitive' => $oldState], 'new' => ['is_sensitive' => ! $oldState]];
+            app(AdminAuditLogService::class)->logVideoModerate($request->user(), $video, $changes);
+
+            return $this->data((new AdminVideoResource($video)));
+        }
+
         if ($action === 'delete') {
-            $video = Video::findOrFail($id);
             $pid = $video->profile_id;
             VideoService::deleteMediaData($video->id);
 
@@ -150,7 +226,6 @@ class AdminController extends Controller
             return $this->success();
         }
 
-        $video = Video::findOrFail($id);
         $video->status = $action == 'unpublished' ? 6 : 2;
 
         if ($action == 'unpublished') {
@@ -161,7 +236,7 @@ class AdminController extends Controller
         $video->saveQuietly();
         VideoService::getMediaData($video->id, true);
 
-        $res = (new VideoResource($video))->toArray($request);
+        $res = (new AdminVideoResource($video))->toArray($request);
         $res['status'] = $video->statusLabel();
         $res['media']['size'] = $video->size_kb;
         $res['hid'] = $video->hashid();
@@ -271,13 +346,38 @@ class AdminController extends Controller
                 'comment_likes' => $comment->likes,
             ]
         );
+        $children = 1;
 
-        $parent = $comment->parent;
+        $parent = Comment::withTrashed()->find($comment->comment_id);
+        if ($parent) {
+            $children = CommentReply::where('comment_id', $comment->comment_id)->whereNotIn('id', [$comment->id])->count();
+            $parent->replies = $children;
+            $parent->saveQuietly();
+            $parent->refresh();
+        }
+
         $comment->forceDelete();
-        $parent->recalculateReplies();
-        $video->decrement('comments');
+
+        if ($parent && $parent->deleted_at && $parent->replies === 0) {
+            $parent->forceDelete();
+        }
+
+        $video->recalculateCommentsCount();
 
         return $this->success();
+    }
+
+    public function videoAuditLog(Request $request, $id)
+    {
+        $video = Video::findOrFail($id);
+
+        $auditLogs = AdminAuditLog::whereActivityType('App\Models\Video')
+            ->whereActivityId($video->id)
+            ->orderByDesc('id')
+            ->cursorPaginate(15)
+            ->withQueryString();
+
+        return AdminAuditLogResource::collection($auditLogs);
     }
 
     public function profiles(Request $request)
@@ -361,6 +461,7 @@ class AdminController extends Controller
             $res['has_2fa'] = (bool) $user->has_2fa && $user->two_factor_secret;
             $res['last_ip'] = $user->is_admin ? null : $user->last_ip;
             $res['push_platform'] = $user->push_token_platform;
+            $res['can_embed'] = (bool) $user->can_embed;
             if ($user->last_active_at) {
                 $res['last_active_at'] = $user->last_active_at->format('c');
             }
@@ -409,6 +510,7 @@ class AdminController extends Controller
             'can_comment' => 'sometimes|boolean',
             'can_like' => 'sometimes|boolean',
             'can_report' => 'sometimes|boolean',
+            'can_embed' => 'sometimes|boolean',
             'can_create_starter_kits' => 'sometimes|boolean',
             'can_use_starter_kits' => 'sometimes|boolean',
         ]);
@@ -425,6 +527,14 @@ class AdminController extends Controller
         if ($profile->local) {
             if ($profile->user && $profile->user->is_admin) {
                 return $this->success();
+            }
+            if (isset($userValidated['can_embed']) && ! $userValidated['can_embed']) {
+                $user = $profile->user;
+
+                if ($user->can_embed) {
+                    Video::published()->where('profile_id', $profile->id)->where('can_embed', true)->update(['can_embed' => false]);
+                }
+
             }
             $user = User::whereProfileId($id)->firstOrFail();
             $user->update($userValidated);
@@ -702,6 +812,54 @@ class AdminController extends Controller
         }
     }
 
+    public function profileDeleteAllComments(Request $request, $id)
+    {
+        $pid = $request->user()->profile_id;
+
+        $profile = Profile::findOrFail($id);
+
+        if ($profile->user_id) {
+            abort_if($profile->user->is_admin, 403, 'You cannot perform this action');
+        }
+
+        app(AdminAuditLogService::class)->logProfileDeleteAllComments($request->user(), $profile);
+
+        DB::transaction(function () use ($profile) {
+            CommentReply::withTrashed()->where('profile_id', $profile->id)
+                ->chunkById(200, function (Collection $comments) {
+                    foreach ($comments as $comment) {
+                        $video = $comment->video;
+                        $parentId = $comment->comment_id;
+                        $comment->forceDelete();
+                        $parent = Comment::withTrashed()->find($parentId);
+                        if ($parent) {
+                            $parent->recalculateReplies();
+                        }
+                        $video->recalculateCommentsCount();
+                    }
+                }, column: 'id');
+        });
+
+        DB::transaction(function () use ($profile) {
+            Comment::withTrashed()->where('profile_id', $profile->id)
+                ->chunkById(200, function (Collection $comments) {
+                    foreach ($comments as $comment) {
+                        $video = $comment->video;
+                        $replies = $comment->replies;
+                        if ($replies === 0) {
+                            $comment->forceDelete();
+                        } else {
+                            $comment->update(['caption' => null, 'status' => 'deleted_by_admin']);
+                            $comment->delete();
+                        }
+                        $video->recalculateCommentsCount();
+                    }
+                }, column: 'id');
+        });
+
+        return $this->success();
+    }
+
     public function reportCount(Request $request)
     {
         $res = app(AdminDashboardService::class)->getReportsCount();
@@ -928,6 +1086,8 @@ class AdminController extends Controller
 
         $query = Comment::query();
 
+        $query = $query->with('mediaAttachments');
+
         if ($local) {
             $query->whereNull('ap_id');
         }
@@ -968,9 +1128,22 @@ class AdminController extends Controller
         return CommentResource::collection($comments);
     }
 
+    public function getCommentReplies(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'limit' => 'sometimes|integer|min:1|max:50',
+        ]);
+
+        $limit = $validated['limit'];
+
+        $comments = CommentReply::with('mediaAttachments')->whereCommentId($id)->cursorPaginate($limit)->withQueryString();
+
+        return CommentReplyResource::collection($comments);
+    }
+
     public function getComment(Request $request, $id)
     {
-        $query = Comment::findOrFail($id);
+        $query = Comment::with('mediaAttachments')->findOrFail($id);
 
         return new CommentResource($query);
     }
@@ -1018,6 +1191,196 @@ class AdminController extends Controller
             ->withQueryString();
 
         return CommentReplyResource::collection($comments);
+    }
+
+    public function blockedTerms(Request $request)
+    {
+        $query = BlockedTerm::query();
+
+        $search = $request->filled('q') ? $request->query('q') : null;
+
+        $sort = $request->query('sort') ?? 'newest';
+
+        if ($type = $request->input('type')) {
+            $query->where('type', $type);
+        }
+
+        if ($search) {
+            $query->where('term', 'like', "%{$search}%");
+        }
+
+        $query = $this->applySorting($query, $sort);
+
+        $res = $query->cursorPaginate(25)->withQueryString();
+
+        return AdminBlockedTermResource::collection($res);
+    }
+
+    public function blockedTermsStore(Request $request)
+    {
+        $data = $request->validate([
+            'term' => ['required', 'string', 'max:120', 'unique:blocked_terms,term'],
+            'type' => ['required', 'in:block,allow'],
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $data['term'] = mb_strtolower(trim($data['term']));
+        $data['created_by'] = $request->user()->id;
+
+        $term = BlockedTerm::create($data);
+
+        app(AdminAuditLogService::class)->logBlockedTermCreate($request->user(), $term);
+        BlockedTerm::flushCache();
+
+        return new AdminBlockedTermResource($term);
+    }
+
+    public function blockedTermsUpdate(Request $request, BlockedTerm $blockedTerm)
+    {
+        $data = $request->validate([
+            'term' => ['sometimes', 'string', 'max:120', 'unique:blocked_terms,term,'.$blockedTerm->id],
+            'type' => ['sometimes', 'in:block,allow'],
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        if (isset($data['term'])) {
+            $data['term'] = mb_strtolower(trim($data['term']));
+        }
+        $old = $blockedTerm->only(['term', 'type', 'note']);
+        $blockedTerm->update($data);
+        $blockedTerm->refresh();
+
+        $changes = ['old' => $old, 'new' => $blockedTerm->only(['term', 'type', 'note'])];
+
+        app(AdminAuditLogService::class)->logBlockedTermUpdate($request->user(), $blockedTerm, $changes);
+
+        BlockedTerm::flushCache();
+
+        return new AdminBlockedTermResource($blockedTerm);
+    }
+
+    public function blockedTermsDestroy(Request $request, BlockedTerm $blockedTerm)
+    {
+        $changes = $blockedTerm->only(['id', 'term', 'type', 'note', 'created_by', 'created_at']);
+        app(AdminAuditLogService::class)->logBlockedTermDelete($request->user(), $blockedTerm, $changes);
+
+        $blockedTerm->delete();
+        BlockedTerm::flushCache();
+
+        return response()->noContent();
+    }
+
+    public function blockedTermsTest(Request $request, ProfanityFilterService $filter)
+    {
+        $data = $request->validate([
+            'query' => ['required', 'string', 'max:500'],
+        ]);
+
+        return response()->json($filter->inspect($data['query']));
+    }
+
+    public function blockedTermsBulkFlushCache(Request $request)
+    {
+        BlockedTerm::flushCache();
+
+        return response()->noContent();
+    }
+
+    public function blockedTermsCounts(Request $request)
+    {
+        $counts = Cache::remember('admin:blocked-terms:counts', now()->addHours(15), function () {
+            $byType = BlockedTerm::selectRaw('type, COUNT(*) as count')
+                ->groupBy('type')
+                ->pluck('count', 'type');
+
+            return [
+                'total' => (int) $byType->sum(),
+                'block' => (int) ($byType['block'] ?? 0),
+                'allow' => (int) ($byType['allow'] ?? 0),
+            ];
+        });
+
+        return response()->json($counts);
+    }
+
+    public function blockedTermsExport(Request $request)
+    {
+        $validated = $request->validate([
+            'type' => 'required|in:all,block,allow',
+            'format' => 'required|in:list,csv,json',
+        ]);
+
+        $stamp = now()->format('Y-m-d');
+
+        $ext = match ($validated['format']) {
+            'list' => 'txt',
+            'csv' => 'csv',
+            'json' => 'json',
+            default => 'txt',
+        };
+
+        $filename = "blocked-terms-{$validated['type']}-{$stamp}.{$ext}";
+
+        return match ($validated['format']) {
+            'list' => $this->exportList($validated['type'], $filename),
+            'csv' => $this->exportCsv($validated['type'], $filename),
+            'json' => $this->exportJson($validated['type'], $filename),
+            default => [],
+        };
+    }
+
+    public function blockedTermsDeleteAll(Request $request)
+    {
+        $validated = $request->validate([
+            'type' => 'required|in:all,block,allow',
+        ]);
+
+        $query = BlockedTerm::query();
+        if ($validated['type'] !== 'all') {
+            $query->where('type', $validated['type']);
+        }
+
+        app(AdminAuditLogService::class)->logBlockedTermDeleteAll($request->user(), ['total' => $query->count()]);
+
+        $deleted = $query->delete();
+
+        BlockedTerm::flushCache();
+
+        return response()->json(['deleted' => (int) $deleted]);
+    }
+
+    public function blockedTermsBulkImport(Request $request)
+    {
+        $data = $request->validate([
+            'terms' => ['required', 'array', 'max:1000'],
+            'terms.*' => ['required', 'string', 'max:120'],
+            'type' => ['required', 'in:block,allow'],
+            'note' => ['sometimes', 'nullable', 'string', 'max:500'],
+        ]);
+
+        $now = now();
+        $userId = $request->user()->id;
+
+        $rows = collect($data['terms'])
+            ->map(fn ($t) => mb_strtolower(trim($t)))
+            ->filter()
+            ->unique()
+            ->map(fn ($term) => [
+                'term' => $term,
+                'type' => $data['type'],
+                'note' => $data['note'],
+                'created_by' => $userId,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])
+            ->all();
+
+        BlockedTerm::insertOrIgnore($rows);
+        BlockedTerm::flushCache();
+
+        app(AdminAuditLogService::class)->logBlockedTermBulkImport($request->user(), ['total' => count($rows)]);
+
+        return response()->json(['inserted' => count($rows)]);
     }
 
     public function hashtags(Request $request)
@@ -1679,6 +2042,7 @@ class AdminController extends Controller
             }
             (new AdminAuditLogService)->logStarterKitApproved($request->user()->profile_id, $starterKit->fresh(), null);
             app(StarterKitService::class)->applyBundledPendingChanges($starterKit->fresh());
+            app(StarterKitService::class)->submitToObservatory($starterKit->fresh());
         } elseif ($action === 'suspend') {
             $starterKit->status = 5;
             $starterKit->admin_approved_at = null;
@@ -1692,6 +2056,7 @@ class AdminController extends Controller
         } elseif ($action === 'delete') {
             (new AdminAuditLogService)->logStarterKitDelete($request->user()->profile_id, $starterKit, ['title' => $starterKit->title, 'profile_id' => $starterKit->profile_id]);
             app(StarterKitService::class)->forget($starterKit->id);
+            app(StarterKitService::class)->submitDeletionToObservatory($starterKit);
             $starterKit->delete();
             app(AdminDashboardService::class)->getReportsCount(true);
 
@@ -1901,6 +2266,8 @@ class AdminController extends Controller
             'count_desc' => ['count', 'desc'],
             'domain_asc' => ['domain', 'asc'],
             'domain_desc' => ['domain', 'desc'],
+            'term_asc' => ['term', 'asc'],
+            'term_desc' => ['term', 'desc'],
         ];
 
         if (str_starts_with($sort, 'is_')) {
@@ -2000,5 +2367,87 @@ class AdminController extends Controller
         }
 
         return false;
+    }
+
+    protected function exportList(string $type, string $filename): StreamedResponse
+    {
+        return response()->streamDownload(function () use ($type) {
+            $handle = fopen('php://output', 'w');
+
+            $query = BlockedTerm::query()->orderBy('id');
+            if ($type !== 'all') {
+                $query->where('type', $type);
+            }
+
+            $query->chunk(1000, function ($terms) use ($handle) {
+                foreach ($terms as $term) {
+                    fwrite($handle, $term->term."\n");
+                }
+            });
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+        ]);
+    }
+
+    protected function exportCsv(string $type, string $filename): StreamedResponse
+    {
+        return response()->streamDownload(function () use ($type) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, ['term', 'type', 'note', 'created_at']);
+
+            $query = BlockedTerm::query()->orderBy('id');
+            if ($type !== 'all') {
+                $query->where('type', $type);
+            }
+
+            $query->chunk(1000, function ($terms) use ($handle) {
+                foreach ($terms as $term) {
+                    fputcsv($handle, [
+                        $term->term,
+                        $term->type,
+                        $term->note,
+                        $term->created_at?->toIso8601String(),
+                    ]);
+                }
+            });
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    protected function exportJson(string $type, string $filename)
+    {
+        $data = [];
+        $query = BlockedTerm::query()->orderBy('id');
+        if ($type !== 'all') {
+            $query->where('type', $type);
+        }
+
+        $query->chunk(1000, function ($terms) use (&$data) {
+            foreach ($terms as $term) {
+                $data[] = [
+                    'term' => $term->term,
+                    'type' => $term->type,
+                    'note' => $term->note,
+                    'created_at' => $term->created_at?->toIso8601String(),
+                ];
+            }
+        });
+
+        $payload = [
+            'exported_at' => now()->toIso8601String(),
+            'type' => $type,
+            'count' => count($data),
+            'terms' => $data,
+        ];
+
+        return response()->json($payload, 200, [
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 }

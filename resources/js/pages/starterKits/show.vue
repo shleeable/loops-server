@@ -147,7 +147,7 @@
                         {{ $t('common.starterKits') }}
                     </router-link>
 
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-col md:flex-row items-center gap-2">
                         <AnimatedButton
                             v-if="starterKit.status === 10"
                             size="xs"
@@ -159,6 +159,19 @@
                             <div class="flex items-center justify-center gap-1.5">
                                 <ShareIcon class="w-4 h-4" />
                                 {{ copied ? $t('post.copiedExclamation') : $t('common.share') }}
+                            </div>
+                        </AnimatedButton>
+
+                        <AnimatedButton
+                            v-if="starterKit.status === 10 && !starterKit.is_local"
+                            size="xs"
+                            @click="handleViewOriginal"
+                            variant="outline"
+                            :pill="true"
+                        >
+                            <div class="flex items-center justify-center gap-1.5">
+                                <GlobeAmericasIcon class="w-4 h-4" />
+                                View Original
                             </div>
                         </AnimatedButton>
 
@@ -666,6 +679,7 @@ import {
     ExclamationTriangleIcon,
     FlagIcon,
     GlobeAltIcon,
+    GlobeAmericasIcon,
     PencilIcon,
     ShareIcon,
     UserGroupIcon,
@@ -829,6 +843,18 @@ const retryLoad = () => {
 
 const handleProfileClick = (url) => {
     router.push('/@' + url)
+}
+
+const handleViewOriginal = async () => {
+    const remoteUrl = starterKit.value.remote_url
+    if (!remoteUrl) {
+        await alertModal(
+            '⚠️ ' + t('common.somethingWentWrong'),
+            'We cannot redirect you to the original Starter Kit at this time, please try again later.'
+        )
+        return
+    }
+    window.open(remoteUrl, '_blank', 'noopener,noreferrer')
 }
 
 const copyFederatedUrl = async () => {

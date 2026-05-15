@@ -314,7 +314,9 @@
             </div>
 
             <div class="flex-shrink-0">
-                <div class="flex items-center px-8 mt-4 justify-between">
+                <div
+                    class="grid grid-cols-2 gap-y-2 px-4 mt-4 sm:flex sm:items-center sm:justify-between sm:px-8"
+                >
                     <div class="pb-4 text-center flex items-center">
                         <button
                             @click="currentVideo.has_liked == true ? unlikePost() : likePost()"
@@ -334,6 +336,7 @@
                             class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold hover:text-[#F02C56] dark:hover:text-[#F02C56] transition-colors cursor-pointer"
                         >
                             {{ formatCount(currentVideo.likes) }}
+                            <span class="inline-flex md:hidden">Likes</span>
                         </button>
                     </div>
 
@@ -347,6 +350,7 @@
                             class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
                         >
                             {{ formatCount(currentVideo.comments) }}
+                            <span class="inline-flex md:hidden">Comments</span>
                         </span>
                     </div>
 
@@ -362,6 +366,7 @@
                             class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold hover:text-[#F02C56] dark:hover:text-[#F02C56] transition-colors cursor-pointer"
                         >
                             {{ formatCount(currentVideo.shares) }}
+                            <span class="inline-flex md:hidden">Shares</span>
                         </button>
                     </div>
 
@@ -380,7 +385,26 @@
                             class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
                         >
                             {{ formatCount(currentVideo.bookmarks) }}
+                            <span class="inline-flex md:hidden">Saves</span>
                         </span>
+                    </div>
+
+                    <div
+                        v-if="currentVideo.permissions.can_embed"
+                        class="pb-4 text-center flex items-center"
+                    >
+                        <button class="flex items-center cursor-pointer" @click="handleEmbed">
+                            <div
+                                class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50"
+                            >
+                                <CodeBracketIcon class="h-4 w-4 text-gray-400" />
+                            </div>
+                            <span
+                                class="text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
+                            >
+                                Embed
+                            </span>
+                        </button>
                     </div>
 
                     <div
@@ -388,12 +412,16 @@
                         class="pb-4 text-center flex items-center"
                     >
                         <div class="relative">
-                            <button @click="showMenu = !showMenu">
+                            <button @click="showMenu = !showMenu" class="flex items-center">
                                 <div
                                     class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-50 cursor-pointer"
                                 >
                                     <EllipsisVerticalIcon class="h-5 w-5" />
                                 </div>
+                                <span
+                                    class="inline-flex md:hidden text-sm pl-2 pr-4 text-gray-800 dark:text-slate-500 font-semibold"
+                                    >Menu</span
+                                >
                             </button>
 
                             <div
@@ -414,7 +442,7 @@
                     </div>
                 </div>
 
-                <div class="flex justify-center px-8 mb-3">
+                <div class="hidden md:flex justify-center px-8 mb-3">
                     <UrlCopyInput :url="`${currentVideo.url}`" />
                 </div>
             </div>
@@ -452,6 +480,12 @@
             :url="currentVideo?.url"
             :share-text="`Check out ${currentVideo?.account?.username}'s loop`"
         />
+
+        <EmbedShareModal
+            :open="showEmbedModal"
+            :video="currentVideo"
+            @close="showEmbedModal = false"
+        />
     </div>
 </template>
 
@@ -482,7 +516,8 @@ import {
     FlagIcon,
     EyeIcon,
     ArrowLeftIcon,
-    PlayIcon
+    PlayIcon,
+    CodeBracketIcon
 } from '@heroicons/vue/24/outline'
 import { BookmarkIcon as SolidBookmark } from '@heroicons/vue/24/solid'
 import UrlCopyInput from '@/components/Form/UrlCopyInput.vue'
@@ -492,6 +527,7 @@ import EditHistoryModal from '@/components/Status/EditHistoryModal.vue'
 import InteractionModal from '@/components/Status/InteractionModal.vue'
 import { useReportModal } from '@/composables/useReportModal'
 import ShareVideoModal from '@/components/Status/ShareVideoModal.vue'
+import EmbedShareModal from '@/components/Status/EmbedShareModal.vue'
 
 const { openVideoHistory } = useEditHistory()
 
@@ -521,6 +557,7 @@ const isPlaying = ref(false)
 const showControls = ref(false)
 const controlsTimeout = ref(null)
 const showShareModal = ref(false)
+const showEmbedModal = ref(false)
 
 const currentVideo = computed(() => videoStore.video)
 const userId = computed(() => authStore.id)
@@ -552,6 +589,10 @@ const retryLoad = async () => {
 
 const goHome = () => {
     router.push('/')
+}
+
+const handleEmbed = () => {
+    showEmbedModal.value = true
 }
 
 const handleViewSensitiveContent = () => {

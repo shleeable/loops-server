@@ -39,7 +39,7 @@
             :has-actions="false"
             :sort-options="sortOptions"
             :show-local-filter="true"
-            :initial-local-filter="true"
+            :initial-local-filter="localOnly"
             :initial-sort="sortBy"
             :initial-search-query="searchQuery"
             @local-change="handleLocalChange"
@@ -259,7 +259,7 @@ const pagination = ref({
 
 const searchQuery = ref(route.query.q || '')
 const sortBy = ref(route.query.sortBy || localStorage.getItem('loops_admin_skits_sortby') || '')
-const localOnly = ref(true)
+const localOnly = ref(localStorage.getItem('loops_admin_starterkits_localOnly') || false)
 const DEBOUNCE_DELAY = 300
 let searchTimeout = null
 
@@ -380,9 +380,15 @@ watch(
     }
 )
 
-watch(localOnly, () => {
+watch(localOnly, (newQuery) => {
     if (searchTimeout) {
         clearTimeout(searchTimeout)
+    }
+
+    if (newQuery) {
+        localStorage.setItem('loops_admin_starterkits_localOnly', newQuery)
+    } else {
+        localStorage.removeItem('loops_admin_starterkits_localOnly')
     }
 
     searchTimeout = setTimeout(() => {

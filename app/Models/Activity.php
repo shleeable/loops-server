@@ -52,13 +52,21 @@ class Activity extends Model
         'object_type',
         'object_id',
         'activity_id',
+        'to',
+        'cc',
+        'raw_activity',
+        'bcc',
         'payload',
         'processed',
         'created_at',
     ];
 
     protected $casts = [
+        'to' => 'array',
+        'cc' => 'array',
+        'bcc' => 'array',
         'payload' => 'array',
+        'raw_activity' => 'array',
         'processed' => 'boolean',
         'created_at' => 'datetime',
     ];

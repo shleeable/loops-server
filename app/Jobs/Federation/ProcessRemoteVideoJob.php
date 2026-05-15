@@ -4,8 +4,10 @@ namespace App\Jobs\Federation;
 
 use App\Federation\Audience;
 use App\Models\Profile;
+use App\Models\RemoteSearchImport;
 use App\Models\Video;
 use App\Services\SanitizeService;
+use App\Services\VideoService;
 use Carbon\Carbon;
 use Exception;
 use FFMpeg\Format\Video\X264;
@@ -17,6 +19,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 use Throwable;
@@ -42,17 +45,20 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
 
     protected array $attachment;
 
+    protected $remoteSearchImportId;
+
     const STATUS_PROCESSING = 1;
 
     const STATUS_PUBLISHED = 2;
 
     const STATUS_FAILED = 3;
 
-    public function __construct(int $profileId, array $object, array $attachment)
+    public function __construct(int $profileId, array $object, array $attachment, ?int $remoteSearchImportId = null)
     {
         $this->profileId = $profileId;
         $this->object = $object;
         $this->attachment = $attachment;
+        $this->remoteSearchImportId = $remoteSearchImportId;
     }
 
     /**
@@ -102,9 +108,13 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
                 ->withVisibility('public')
                 ->save($s3Path);
 
+            $thumbnailPath = $this->extractThumbnail($relativeTempPath, $s3Path, $video->id);
+
             $video->update([
                 'vid' => $s3Path,
                 'vid_optimized' => $s3Path,
+                'thumbnail_path' => $thumbnailPath,
+                'has_thumb' => $thumbnailPath !== null,
                 'processing_status' => 'completed',
                 'size_kb' => $sizeKb,
                 'duration' => (int) round($duration),
@@ -119,6 +129,16 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
                 $video->syncMentionsFromCaption();
             }
 
+            VideoService::deleteMediaData($video->id);
+
+            if ($this->remoteSearchImportId) {
+                RemoteSearchImport::where('id', $this->remoteSearchImportId)
+                    ->whereNull('searchable_id')
+                    ->update([
+                        'searchable_id' => $video->id,
+                        'searchable_type' => $video->getMorphClass(),
+                    ]);
+            }
         } catch (Throwable $e) {
             $this->handleFailure($e, $video, $remoteUrl);
         } finally {
@@ -158,6 +178,44 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
     }
 
     /**
+     * Extracts a thumbnail from the local temp video and uploads it to S3.
+     * Failures are logged but don't fail the job — video is still usable without a thumb.
+     */
+    protected function extractThumbnail(string $relativeTempPath, string $s3VideoPath, int $videoId): ?string
+    {
+        try {
+            $ext = pathinfo($s3VideoPath, PATHINFO_EXTENSION);
+            $randomStr = Str::random(8);
+            $thumbS3Path = str_replace('.'.$ext, '_thumb_'.$randomStr.'.jpg', $s3VideoPath);
+
+            FFMpeg::open($relativeTempPath)
+                ->getFrameFromSeconds(0)
+                ->export()
+                ->toDisk('s3')
+                ->withVisibility('public')
+                ->save($thumbS3Path);
+
+            if (! Storage::disk('s3')->exists($thumbS3Path)) {
+                Log::warning('ProcessRemoteVideoJob: Thumbnail not created on S3', [
+                    'video_id' => $videoId,
+                    'path' => $thumbS3Path,
+                ]);
+
+                return null;
+            }
+
+            return $thumbS3Path;
+        } catch (Throwable $e) {
+            Log::warning('ProcessRemoteVideoJob: Thumbnail extraction failed', [
+                'video_id' => $videoId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
      * Downloads video to temp directory with security checks.
      */
     protected function downloadVideo(string $url): string
@@ -179,7 +237,7 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
         $fileHandle = fopen($fullPath, 'w+');
 
         $response = Http::timeout(120)
-            ->withHeaders(['User-Agent' => config('app.user_agent', 'Laravel/1.0')])
+            ->withHeaders(['User-Agent' => app('user_agent')])
             ->withOptions([
                 'sink' => $fileHandle,
                 'progress' => function ($downloadTotal, $downloadedBytes) use ($maxSize) {

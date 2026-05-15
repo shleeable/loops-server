@@ -152,6 +152,17 @@ class Profile extends Model
      **/
 
     /**
+     * starter_kit_state Bitmask
+     * 0 = Disabled (auto-reject)
+     * 1 = Only accounts I follow (auto-approve)
+     * 2 = Accounts I follow (manual approval)
+     * 3 = Reserved
+     * 4 = Reserved
+     * 5 = Permission required (manual approval)
+     * 6 = Auto-allow everyone (auto-approve)
+     **/
+
+    /**
      * Indicates if the IDs are auto-incrementing.
      *
      * @var bool
@@ -216,7 +227,9 @@ class Profile extends Model
         'can_report' => 'boolean',
         'discoverable' => 'boolean',
         'updated_at' => 'datetime',
+        'starter_kit_state' => 'integer',
         'manuallyApprovesFollowers' => 'boolean',
+        'last_fetched_at' => 'datetime',
     ];
 
     public function videos(): HasMany

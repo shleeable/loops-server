@@ -27,6 +27,8 @@ class AdminAuditLogResource extends JsonResource
         $auditor = AccountService::getByUserId($this->user_id);
 
         $resource = [];
+        $actor = null;
+        $videoActorTypes = ['report:delete_comment_reply', 'video:delete_comment'];
 
         if ($this->activity_type && $this->activity_id) {
             $resource = match ($this->activity_type) {
@@ -41,6 +43,10 @@ class AdminAuditLogResource extends JsonResource
             };
         }
 
+        if (in_array($this->type, $videoActorTypes)) {
+            $actor = AccountService::compact($this->value['comment_profile_id'], false) ?? null;
+        }
+
         return [
             'id' => $this->id,
             'auditor' => $auditor,
@@ -48,6 +54,7 @@ class AdminAuditLogResource extends JsonResource
             'value' => $this->value,
             'model' => $this->activity_type,
             'resource' => $resource,
+            'actor' => $actor,
             'created_at' => $this->created_at,
         ];
     }
