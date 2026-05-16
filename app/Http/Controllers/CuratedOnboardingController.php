@@ -59,6 +59,12 @@ class CuratedOnboardingController extends Controller
 
     public function verifyEmail(Request $request): JsonResponse
     {
+        if (! $this->service->isEnabled()) {
+            return response()->json([
+                'message' => 'Registration is not currently accepting applications.',
+            ], 403);
+        }
+
         $hasCaptcha = config('captcha.enabled');
 
         $rules = [
@@ -108,6 +114,12 @@ class CuratedOnboardingController extends Controller
 
     public function verifyInvite(Request $request): JsonResponse
     {
+        if (! $this->service->isEnabled()) {
+            return response()->json([
+                'message' => 'Registration is not currently accepting applications.',
+            ], 403);
+        }
+
         $hasCaptcha = config('captcha.enabled');
 
         $rules = [
@@ -180,6 +192,12 @@ class CuratedOnboardingController extends Controller
 
     public function usernameCheck(Request $request): JsonResponse
     {
+        if (! $this->service->isEnabled()) {
+            return response()->json([
+                'message' => 'Registration is not currently accepting applications.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'onboarding_token' => ['required', 'string', 'size:64'],
             'username' => ['required', new ValidUsername, 'string', 'min:3', 'max:24'],
@@ -202,6 +220,12 @@ class CuratedOnboardingController extends Controller
 
     public function completeOnboarding(Request $request): JsonResponse
     {
+        if (! $this->service->isEnabled()) {
+            return response()->json([
+                'message' => 'Registration is not currently accepting applications.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'onboarding_token' => ['required', 'string', 'size:64'],
             'username' => ['required', new ValidUsername, 'string', 'min:3', 'max:24', 'unique:users,username'],
@@ -272,29 +296,5 @@ class CuratedOnboardingController extends Controller
     protected function validateOnboardingToken(string $token): ?array
     {
         return Cache::get("onboarding_token:{$token}");
-    }
-
-    public function status(Request $request): JsonResponse
-    {
-        $request->validate([
-            'email' => ['required', 'email'],
-            'token' => ['required', 'string'],
-        ]);
-
-        $application = \App\Models\CuratedApplication::where('email', $request->email)
-            ->latest()
-            ->first();
-
-        if (! $application) {
-            return response()->json([
-                'message' => 'No application found.',
-            ], 404);
-        }
-
-        return response()->json([
-            'status' => $application->status,
-            'submitted_at' => $application->created_at->toIso8601String(),
-            'reviewed_at' => $application->reviewed_at?->toIso8601String(),
-        ]);
     }
 }

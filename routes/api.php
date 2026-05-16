@@ -367,11 +367,10 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/onboarding/config', [CuratedOnboardingController::class, 'config']);
     Route::prefix('/v1/onboarding')->group(function () {
         Route::post('apply', [CuratedOnboardingController::class, 'apply'])->middleware(['throttle:curated-apply']);
-        Route::post('verify-email', [CuratedOnboardingController::class, 'verifyEmail']);
-        Route::post('verify-invite', [CuratedOnboardingController::class, 'verifyInvite']);
-        Route::post('username-check', [CuratedOnboardingController::class, 'usernameCheck']);
-        Route::post('complete', [CuratedOnboardingController::class, 'completeOnboarding']);
-        Route::get('status', [CuratedOnboardingController::class, 'status']);
+        Route::post('verify-email', [CuratedOnboardingController::class, 'verifyEmail'])->middleware(['throttle:3,1']);
+        Route::post('verify-invite', [CuratedOnboardingController::class, 'verifyInvite'])->middleware(['throttle:3,1']);
+        Route::post('username-check', [CuratedOnboardingController::class, 'usernameCheck'])->middleware(['throttle:20,1']);
+        Route::post('complete', [CuratedOnboardingController::class, 'completeOnboarding'])->middleware(['throttle:3,1']);
     });
 
     // Admin
