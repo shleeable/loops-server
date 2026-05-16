@@ -19,6 +19,12 @@ class ActivityService
         $mapping = $this->getMapType($type);
 
         if (! $mapping) {
+            $ignoredTypes = ['EmojiReact', 'View'];
+
+            if (in_array($mapping, $ignoredTypes)) {
+                return;
+            }
+
             if (config('logging.dev_ap_log')) {
                 Log::warning("Unknown activity type: {$type}", [
                     'actor' => $actor->uri,
@@ -133,6 +139,8 @@ class ActivityService
         if (isset($mapping[$type])) {
             return $mapping[$type];
         }
+
+        return false;
     }
 
     /**
