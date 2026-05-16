@@ -19,9 +19,9 @@ class ActivityService
         $mapping = $this->getMapType($type);
 
         if (! $mapping) {
-            $ignoredTypes = ['EmojiReact', 'View'];
+            $ignoredTypes = ['EmojiReact', 'View', 'Question'];
 
-            if (in_array($mapping, $ignoredTypes)) {
+            if (in_array($type, $ignoredTypes)) {
                 return;
             }
 
