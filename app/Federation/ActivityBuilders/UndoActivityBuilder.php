@@ -96,6 +96,29 @@ class UndoActivityBuilder
     }
 
     /**
+     * Build an Undo activity for a Block
+     *
+     * @param  Profile  $actor  The local profile unblocking
+     * @param  string  $targetActorUrl  The actor being unblocked
+     * @param  string|null  $originalBlockId  The ID of the original Block activity
+     * @return array The ActivityPub Undo activity
+     */
+    public static function buildForBlock(Profile $actor, string $targetActorUrl, ?string $originalBlockId = null): array
+    {
+        $blockId = $actor->getActorId('#blocks/'.$originalBlockId);
+        $baseActivityId = $blockId.'/undo';
+
+        $blockActivity = [
+            'id' => $blockId,
+            'type' => 'Block',
+            'actor' => $actor->getActorId(),
+            'object' => $targetActorUrl,
+        ];
+
+        return self::build($actor, $blockActivity, $baseActivityId);
+    }
+
+    /**
      * Build an Undo activity with metadata
      *
      * @param  Profile  $actor  The local profile undoing the activity
