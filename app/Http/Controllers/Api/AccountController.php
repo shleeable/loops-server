@@ -134,7 +134,9 @@ class AccountController extends Controller
 
     public function notificationUnreadCount(Request $request)
     {
-        $pid = $request->user()->profile_id;
+        $user = $request->user();
+        app(UserActivityService::class)->markActive($user);
+        $pid = $user->profile_id;
 
         return $this->data(['unread_count' => NotificationService::getUnreadCount($pid)]);
     }
@@ -901,6 +903,7 @@ class AccountController extends Controller
     {
         $allowed = app(ConfigService::class)->pushNotifications();
         $user = $request->user();
+        app(UserActivityService::class)->markActive($user);
 
         $res = [
             'allowed' => (bool) $allowed,
