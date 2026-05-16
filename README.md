@@ -53,7 +53,7 @@ Check out the [translation guide](TRANSLATING.md) to learn how you can contribut
 
 ## License
 
-Loops Server is open-sourced software licensed under the AGPL license.
+Loops Server is open-sourced software licensed under the [AGPLv3 license](LICENSE).
 
 ## Communication
 
