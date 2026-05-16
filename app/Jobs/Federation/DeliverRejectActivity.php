@@ -105,37 +105,17 @@ class DeliverRejectActivity implements ShouldQueue
             if ($response->successful()) {
             } else {
                 $error = "Delivery failed with status {$response->status()}: {$response->body()}";
-                Log::warning($error, [
-                    'inbox' => $inboxUrl,
-                    'status' => $response->status(),
-                ]);
-
                 if ($response->serverError() || in_array($response->status(), [408, 429])) {
                     throw new \Exception($error);
                 }
             }
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
             $error = "Network error: {$e->getMessage()}";
-            Log::error($error, ['inbox' => $inboxUrl]);
-
             throw $e;
         } catch (\Exception $e) {
-            Log::error('Error delivering activity', [
-                'inbox' => $inboxUrl,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
             throw $e;
         }
     }
 
-    public function failed(\Throwable $exception)
-    {
-        Log::error('Activity delivery job failed permanently', [
-            'to' => $this->target->id,
-            'type' => 'Reject',
-            'error' => $exception->getMessage(),
-        ]);
-    }
+    public function failed(\Throwable $exception) {}
 }
