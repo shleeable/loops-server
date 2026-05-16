@@ -575,14 +575,14 @@ class Profile extends Model
             }
 
             $actorInbox = app(SanitizeService::class)->url($actorData['inbox'], true);
+            if (! $actorInbox) {
+                return $actor;
+            }
+
             $sharedInbox = data_get($actorData, 'endpoints.sharedInbox');
 
             if ($sharedInbox) {
                 $sharedInbox = app(SanitizeService::class)->url($sharedInbox, true);
-            }
-
-            if (! $actorInbox) {
-                return $actor;
             }
 
             $actorFollowers = null;
@@ -593,6 +593,11 @@ class Profile extends Model
             $actorFollowing = null;
             if (isset($actorData['following'])) {
                 $actorFollowing = app(SanitizeService::class)->url($actorData['following']);
+            }
+
+            $actorOutbox = null;
+            if (isset($actorData['outbox'])) {
+                $actorOutbox = app(SanitizeService::class)->url($actorData['outbox']);
             }
 
             $publicKey = null;
@@ -621,6 +626,16 @@ class Profile extends Model
                 }
 
             }
+
+            $remoteUrl = is_string(data_get($actorData, 'url')) ? data_get($actorData, 'url') : null;
+
+            if ($remoteUrl) {
+                $remoteUrl = app(SanitizeService::class)->url($remoteUrl);
+                if (! $remoteUrl) {
+                    return $actor;
+                }
+            }
+
             $starterKitStateCanFeature = data_get($actorData, 'interactionPolicy.canFeature', false);
             $starterKitState = 0;
 
@@ -639,8 +654,6 @@ class Profile extends Model
                 ]);
             }
 
-            $remoteUrl = is_string(data_get($actorData, 'url')) ? data_get($actorData, 'url') : null;
-
             $actor->forceFill([
                 'username' => $acct,
                 'name' => app(SanitizeService::class)->cleanPlainText($actorData['name'] ?? $username),
@@ -648,16 +661,16 @@ class Profile extends Model
                 'inbox_url' => $actorInbox,
                 'avatar' => $avatar,
                 'uri' => $actorId,
-                'remote_url' => $remoteUrl,
-                'outbox_url' => $actorData['outbox'] ?? null,
-                'followers_url' => $actorFollowers,
-                'following_url' => $actorFollowing,
+                'remote_url' => $remoteUrl ?? null,
+                'outbox_url' => $actorOutbox ?? null,
+                'followers_url' => $actorFollowers ?? null,
+                'following_url' => $actorFollowing ?? null,
                 'public_key' => $publicKey,
                 'manuallyApprovesFollowers' => data_get($actorData, 'manuallyApprovesFollowers', false),
                 'last_fetched_at' => now(),
                 'local' => false,
                 'domain' => $domain,
-                'shared_inbox_url' => $sharedInbox,
+                'shared_inbox_url' => $sharedInbox ?? null,
                 'starter_kit_state' => $starterKitState,
             ])->save();
         }
