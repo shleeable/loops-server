@@ -87,11 +87,16 @@ class AdminController extends Controller
 
         $query = Video::when($search, function ($query, $search) {
             $isUsername = str_starts_with($search, 'username:');
+            $isVisibility = str_starts_with($search, 'visibility:');
             if ($isUsername) {
                 $username = substr($search, 9);
                 $query->join('profiles', 'videos.profile_id', '=', 'profiles.id')
                     ->where('profiles.username', $username)
                     ->select('videos.*');
+            } elseif ($isVisibility) {
+                $vis = substr($search, 11);
+                $query->where('visibility', $vis);
+
             } else {
                 $query->where('caption', 'like', '%'.$search.'%');
             }
