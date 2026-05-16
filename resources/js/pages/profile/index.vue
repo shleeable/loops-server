@@ -292,6 +292,12 @@ const gotoProfile = (id) => {
     router.push(`/@${id}`)
 }
 
+const sanitize = (s) =>
+    s.replace(
+        /[<>&"']/g,
+        (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' })[c]
+    )
+
 const loadProfileData = async (userId) => {
     try {
         isLoading.value = true
@@ -306,7 +312,7 @@ const loadProfileData = async (userId) => {
             error.value = {
                 type: 'not-found',
                 message: t('profile.profile404ErrorMessage', {
-                    userid: userId
+                    userid: sanitize(userId)
                 })
             }
         } else if ([500, 502, 503].includes(err.response?.status)) {
