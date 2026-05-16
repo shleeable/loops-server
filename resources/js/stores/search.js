@@ -141,6 +141,18 @@ export const useSearchStore = defineStore('search', () => {
             loading.value = true
             nextCursor.value = null
             showRemoteLookupCta.value = false
+
+            if (activeTab.value === 'top') {
+                searchResults.value = { hashtags: [], users: [], videos: [], starter_kits: [] }
+            } else if (activeTab.value === 'users') {
+                searchResults.value.users = []
+            } else if (activeTab.value === 'videos') {
+                searchResults.value.videos = []
+            } else if (activeTab.value === 'tags') {
+                searchResults.value.hashtags = []
+            } else if (activeTab.value === 'starter_kits') {
+                searchResults.value.starter_kits = []
+            }
         }
 
         const requestId = ++activeRequestId
@@ -149,16 +161,10 @@ export const useSearchStore = defineStore('search', () => {
 
         error.value = null
         const axiosInstance = axios.getAxiosInstance()
+
         try {
-            const params = {
-                query: searchQuery.value,
-                per_page: 10
-            }
-
-            if (append && nextCursor.value) {
-                params.cursor = nextCursor.value
-            }
-
+            const params = { query: searchQuery.value, per_page: 10 }
+            if (append && nextCursor.value) params.cursor = nextCursor.value
             if (requestTab !== 'top') {
                 params.type = requestTab === 'tags' ? 'hashtags' : requestTab
             }
@@ -169,54 +175,50 @@ export const useSearchStore = defineStore('search', () => {
                 requestId !== activeRequestId ||
                 requestQuery !== searchQuery.value ||
                 requestTab !== activeTab.value
-            ) {
+            )
                 return
-            }
 
             const data = response.data
+            const payload = data.data || {}
 
             if (append) {
                 if (requestTab === 'users') {
                     searchResults.value.users = [
                         ...searchResults.value.users,
-                        ...(data.data.users || [])
+                        ...(payload.users || [])
                     ]
                 } else if (requestTab === 'videos') {
                     searchResults.value.videos = [
                         ...searchResults.value.videos,
-                        ...(data.data.videos || [])
+                        ...(payload.videos || [])
                     ]
                 } else if (requestTab === 'tags') {
                     searchResults.value.hashtags = [
                         ...searchResults.value.hashtags,
-                        ...(data.data.hashtags || [])
+                        ...(payload.hashtags || [])
                     ]
                 } else if (requestTab === 'starter_kits') {
                     searchResults.value.starter_kits = [
                         ...searchResults.value.starter_kits,
-                        ...(data.data.starter_kits || [])
+                        ...(payload.starter_kits || [])
                     ]
                 }
             } else {
-                loading.value = true
-                nextCursor.value = null
-                showRemoteLookupCta.value = false
-
-                if (activeTab.value === 'top') {
+                if (requestTab === 'top') {
                     searchResults.value = {
-                        hashtags: [],
-                        users: [],
-                        videos: [],
-                        starter_kits: []
+                        hashtags: payload.hashtags || [],
+                        users: payload.users || [],
+                        videos: payload.videos || [],
+                        starter_kits: payload.starter_kits || []
                     }
-                } else if (activeTab.value === 'users') {
-                    searchResults.value.users = []
-                } else if (activeTab.value === 'videos') {
-                    searchResults.value.videos = []
-                } else if (activeTab.value === 'tags') {
-                    searchResults.value.hashtags = []
-                } else if (activeTab.value === 'starter_kits') {
-                    searchResults.value.starter_kits = []
+                } else if (requestTab === 'users') {
+                    searchResults.value.users = payload.users || []
+                } else if (requestTab === 'videos') {
+                    searchResults.value.videos = payload.videos || []
+                } else if (requestTab === 'tags') {
+                    searchResults.value.hashtags = payload.hashtags || []
+                } else if (requestTab === 'starter_kits') {
+                    searchResults.value.starter_kits = payload.starter_kits || []
                 }
             }
 
