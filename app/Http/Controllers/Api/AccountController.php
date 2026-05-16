@@ -225,7 +225,6 @@ class AccountController extends Controller
             NotificationService::clearUnreadCount($pid);
             NotificationService::clearUnreadCount($profile->id);
 
-            FollowerService::refreshAndSync($pid, $profile->id);
             AccountSuggestionService::removeForUser($pid, $profile->id);
             AccountSuggestionService::invalidate($pid);
 
@@ -240,6 +239,8 @@ class AccountController extends Controller
 
             return $res;
         });
+
+        FollowerService::refreshAndSync($pid, $profile->id);
 
         return response()->json($res);
     }
@@ -267,7 +268,6 @@ class AccountController extends Controller
             }
 
             AccountSuggestionService::invalidate($pid);
-            FollowerService::refreshAndSync($pid, $profile->id);
             UserFilterService::getAll($pid, true);
             UserFilterService::getAll($profile->id, true);
 
@@ -276,6 +276,8 @@ class AccountController extends Controller
 
             return $res;
         });
+
+        FollowerService::refreshAndSync($pid, $profile->id);
 
         return response()->json($res);
     }

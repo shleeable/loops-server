@@ -7,6 +7,7 @@ use App\Models\Notification;
 use App\Models\Profile;
 use App\Models\UserFilter;
 use App\Models\UserInterest;
+use App\Services\FollowerService;
 use App\Services\NotificationService;
 use App\Services\SanitizeService;
 use App\Services\UserFilterService;
@@ -78,6 +79,7 @@ class BlockHandler extends BaseHandler
 
             DB::commit();
 
+            FollowerService::refreshAndSync($targetProfile->id, $actor->id);
             UserFilterService::getAll($actor->id, true);
             UserFilterService::getAll($targetProfile->id, true);
 

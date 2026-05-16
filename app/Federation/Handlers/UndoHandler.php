@@ -14,6 +14,7 @@ use App\Models\UserFilter;
 use App\Models\Video;
 use App\Models\VideoLike;
 use App\Models\VideoRepost;
+use App\Services\FollowerService;
 use App\Services\NotificationService;
 use App\Services\SanitizeService;
 use App\Services\UserFilterService;
@@ -445,6 +446,7 @@ class UndoHandler extends BaseHandler
 
         Cache::forget(UserFilterService::ALL_CACHE_KEY.$actor->id);
         Cache::forget(UserFilterService::ALL_CACHE_KEY.$targetProfile->id);
+        FollowerService::refreshAndSync($targetProfile->id, $actor->id);
 
         if (config('logging.dev_log')) {
             Log::info('Successfully processed Undo Block', [
