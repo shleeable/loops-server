@@ -574,11 +574,53 @@ class Profile extends Model
                 return $actor;
             }
 
+            $actorInbox = app(SanitizeService::class)->url($actorData['inbox'], true);
+            $sharedInbox = data_get($actorData, 'endpoints.sharedInbox');
+
+            if ($sharedInbox) {
+                $sharedInbox = app(SanitizeService::class)->url($sharedInbox, true);
+            }
+
+            if (! $actorInbox) {
+                return $actor;
+            }
+
+            $actorFollowers = null;
+            if (isset($actorData['followers'])) {
+                $actorFollowers = app(SanitizeService::class)->url($actorData['followers']);
+            }
+
+            $actorFollowing = null;
+            if (isset($actorData['following'])) {
+                $actorFollowing = app(SanitizeService::class)->url($actorData['following']);
+            }
+
+            $publicKey = null;
+            if (isset($actorData['publicKey'], $actorData['publicKey']['publicKeyPem'])) {
+                $publicKey = $actorData['publicKey']['publicKeyPem'];
+                if (openssl_pkey_get_public($publicKey) === false) {
+                    return $actor;
+                }
+            }
+
+            $actorId = app(SanitizeService::class)->url($actorData['id']);
+            if (! $actorId) {
+                return $actor;
+            }
+
             $domain = parse_url($actorData['id'], PHP_URL_HOST);
             $username = $actorData['preferredUsername'];
             $acct = $username.'@'.$domain;
-            $sharedInbox = data_get($actorData, 'endpoints.sharedInbox');
             $avatar = data_get($actorData, 'icon.url');
+
+            if ($avatar) {
+                $avatar = app(SanitizeService::class)->url($avatar);
+
+                if (! $avatar) {
+                    return $actor;
+                }
+
+            }
             $starterKitStateCanFeature = data_get($actorData, 'interactionPolicy.canFeature', false);
             $starterKitState = 0;
 
@@ -603,14 +645,14 @@ class Profile extends Model
                 'username' => $acct,
                 'name' => app(SanitizeService::class)->cleanPlainText($actorData['name'] ?? $username),
                 'bio' => app(SanitizeService::class)->cleanHtmlWithSpacing($actorData['summary'] ?? null),
-                'inbox_url' => $actorData['inbox'],
+                'inbox_url' => $actorInbox,
                 'avatar' => $avatar,
-                'uri' => $actorData['id'],
+                'uri' => $actorId,
                 'remote_url' => $remoteUrl,
                 'outbox_url' => $actorData['outbox'] ?? null,
-                'followers_url' => $actorData['followers'] ?? null,
-                'following_url' => $actorData['following'] ?? null,
-                'public_key' => $actorData['publicKey']['publicKeyPem'] ?? null,
+                'followers_url' => $actorFollowers,
+                'following_url' => $actorFollowing,
+                'public_key' => $publicKey,
                 'manuallyApprovesFollowers' => data_get($actorData, 'manuallyApprovesFollowers', false),
                 'last_fetched_at' => now(),
                 'local' => false,
