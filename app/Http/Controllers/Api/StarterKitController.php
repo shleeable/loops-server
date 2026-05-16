@@ -27,6 +27,7 @@ use App\Services\NotificationService;
 use App\Services\PrivateMediaTokenService;
 use App\Services\StarterKitPendingChangeService;
 use App\Services\StarterKitService;
+use App\Services\UserFilterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -754,7 +755,7 @@ class StarterKitController extends Controller
         $followedProfileIds = [];
 
         foreach ($starterKit->approvedAccounts as $account) {
-            if ($account->id == $profile->id) {
+            if ((int) $account->id === (int) $profile->id) {
                 continue;
             }
 
@@ -765,6 +766,10 @@ class StarterKitController extends Controller
             if (Follower::whereProfileId($pid)->whereFollowingId($account->id)->exists()) {
                 $alreadyFollowingCount++;
 
+                continue;
+            }
+
+            if (UserFilterService::isBlocking($pid, $account->id)) {
                 continue;
             }
 
