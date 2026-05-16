@@ -298,7 +298,6 @@ class CreateHandler extends BaseHandler
             }
         }
 
-        throw new \Exception("Could not find local target for inReplyTo: {$inReplyToUrl}");
     }
 
     private function createComment(array $object, Profile $actor, Video $video)
