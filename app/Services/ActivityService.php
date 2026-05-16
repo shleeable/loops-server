@@ -129,6 +129,10 @@ class ActivityService
                 'handler' => \App\Federation\Handlers\RemoveHandler::class,
                 'validator' => \App\Federation\Validators\RemoveValidator::class,
             ],
+            'Block' => [
+                'handler' => \App\Federation\Handlers\BlockHandler::class,
+                'validator' => \App\Federation\Validators\BlockValidator::class,
+            ],
         ];
     }
 
