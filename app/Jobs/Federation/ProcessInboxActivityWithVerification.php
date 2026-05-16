@@ -204,6 +204,16 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
 
         $actorData = $this->fetchActorData($actorUrl, $activityPubService);
 
+        if (
+            $actorData
+            && ! isset($actorData['publicKey'])
+            && isset($actorData['owner'])
+            && is_string($actorData['owner'])
+            && parse_url($actorData['owner'], PHP_URL_HOST) === $originDomain
+        ) {
+            $actorData = $this->fetchActorData($actorData['owner'], $activityPubService);
+        }
+
         if (! $actorData || ! isset($actorData['publicKey']['publicKeyPem'])) {
             if (($this->activity['type'] ?? null) === 'Delete') {
                 Log::info('Accepting Delete despite missing actor (likely deleted)', [
@@ -211,6 +221,14 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
                 ]);
 
                 $existing = Profile::where('uri', $actorUrl)->first();
+
+                if (! $existing) {
+                    $stripped = preg_replace('#/(main-key|publickey|public-key)$#', '', $actorUrl);
+                    if ($stripped !== $actorUrl) {
+                        $existing = Profile::where('uri', $stripped)->first();
+                    }
+                }
+
                 if ($existing) {
                     return ['valid' => true, 'actor' => $existing];
                 }
@@ -219,6 +237,21 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
             }
 
             return ['valid' => false, 'reason' => 'Unable to fetch public key'];
+        }
+
+        $canonicalActorUrl = is_string($actorData['id'] ?? null) ? $actorData['id'] : $actorUrl;
+
+        if (parse_url($canonicalActorUrl, PHP_URL_HOST) !== $originDomain) {
+            return ['valid' => false, 'reason' => 'Actor id domain does not match keyId origin'];
+        }
+
+        if ($canonicalActorUrl !== $actorUrl) {
+            $existing = Profile::where('uri', $canonicalActorUrl)->first();
+            if ($existing && $existing->public_key) {
+                if ($this->verifyWithKey($signature, $existing->public_key, $headers, $signatureService)) {
+                    return ['valid' => true, 'actor' => $existing];
+                }
+            }
         }
 
         $publicKey = $actorData['publicKey']['publicKeyPem'];
@@ -433,26 +466,35 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
             }
         }
 
-        $res = Profile::updateOrCreate(
-            ['uri' => $actorUrlSafe],
-            [
-                'username' => $acct,
-                'name' => app(SanitizeService::class)->cleanPlainText($actorData['name'] ?? $username),
-                'bio' => app(SanitizeService::class)->cleanHtmlWithSpacing($actorData['summary'] ?? null),
-                'inbox_url' => $actorInbox,
-                'avatar' => $avatar,
-                'remote_url' => $remoteUrl,
-                'outbox_url' => $actorOutbox ?? null,
-                'followers_url' => $actorFollowers ?? null,
-                'following_url' => $actorFollowing ?? null,
-                'shared_inbox_url' => $sharedInbox ?? null,
-                'public_key' => $publicKey,
-                'manuallyApprovesFollowers' => data_get($actorData, 'manuallyApprovesFollowers', false),
-                'last_fetched_at' => now(),
-                'local' => false,
-                'domain' => $domain,
-            ]
-        );
+        $attributes = [
+            'username' => $acct,
+            'name' => app(SanitizeService::class)->cleanPlainText($actorData['name'] ?? $username),
+            'bio' => app(SanitizeService::class)->cleanHtmlWithSpacing($actorData['summary'] ?? null),
+            'inbox_url' => $actorInbox,
+            'avatar' => $avatar,
+            'remote_url' => $remoteUrl,
+            'outbox_url' => $actorOutbox ?? null,
+            'followers_url' => $actorFollowers ?? null,
+            'following_url' => $actorFollowing ?? null,
+            'shared_inbox_url' => $sharedInbox ?? null,
+            'public_key' => $publicKey,
+            'manuallyApprovesFollowers' => data_get($actorData, 'manuallyApprovesFollowers', false),
+            'last_fetched_at' => now(),
+            'local' => false,
+            'domain' => $domain,
+        ];
+
+        $existing = Profile::where('uri', $actorUrlSafe)
+            ->orWhere('username', $acct)
+            ->first();
+
+        if ($existing) {
+            $existing->fill(array_merge($attributes, ['uri' => $actorUrlSafe]));
+            $existing->save();
+            $res = $existing;
+        } else {
+            $res = Profile::create(array_merge($attributes, ['uri' => $actorUrlSafe]));
+        }
 
         DiscoverInstance::dispatch($actorUrl)->onQueue('activitypub-in');
 
