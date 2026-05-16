@@ -11,6 +11,7 @@ use App\Models\UserFilter;
 use App\Models\Video;
 use App\Services\HashidService;
 use App\Services\SanitizeService;
+use App\Services\UserFilterService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -193,7 +194,7 @@ class CreateHandler extends BaseHandler
             if ($videoHashIdMatch && isset($videoHashIdMatch['hashId'])) {
                 $decodedId = HashidService::safeDecode($videoHashIdMatch['hashId']);
                 if ($decodedId !== null) {
-                    $video = Video::whereStatus(2)->whereKey($decodedId)->first();
+                    $video = Video::published()->canComment()->whereKey($decodedId)->first();
                     if ($video) {
                         return $this->createComment($object, $actor, $video);
                     }
@@ -207,7 +208,8 @@ class CreateHandler extends BaseHandler
                 constraints: ['profileId' => '\d+', 'videoId' => '\d+']
             );
             if ($videoMatch && isset($videoMatch['profileId'], $videoMatch['videoId'])) {
-                $video = Video::whereStatus(2)
+                $video = Video::published()
+                    ->canComment()
                     ->whereProfileId($videoMatch['profileId'])
                     ->whereKey($videoMatch['videoId'])
                     ->first();
@@ -224,9 +226,19 @@ class CreateHandler extends BaseHandler
             );
 
             if ($commentMatch && isset($commentMatch['profileId'], $commentMatch['commentId'])) {
-                $comment = Comment::whereProfileId($commentMatch['profileId'])->whereKey($commentMatch['commentId'])->first();
+                $comment = Comment::whereProfileId($commentMatch['profileId'])
+                    ->whereKey($commentMatch['commentId'])
+                    ->first();
+
                 if ($comment) {
-                    return $this->createComment($object, $actor, $comment->video);
+                    $video = Video::published()
+                        ->canComment()
+                        ->whereKey($comment->video_id)
+                        ->first();
+
+                    if ($video) {
+                        return $this->createComment($object, $actor, $video);
+                    }
                 }
             }
 
@@ -238,35 +250,75 @@ class CreateHandler extends BaseHandler
             );
 
             if ($replyMatch && isset($replyMatch['profileId'], $replyMatch['replyId'])) {
-                $commentReply = CommentReply::whereProfileId($replyMatch['profileId'])->whereKey($replyMatch['replyId'])->first();
+                $commentReply = CommentReply::whereProfileId($replyMatch['profileId'])
+                    ->whereKey($replyMatch['replyId'])
+                    ->first();
+
                 if ($commentReply) {
-                    return $this->createCommentReply($object, $actor, $commentReply->video_id, $commentReply->comment_id);
+                    $video = Video::published()
+                        ->canComment()
+                        ->whereKey($commentReply->video_id)
+                        ->first();
+
+                    if ($video) {
+                        return $this->createCommentReply($object, $actor, $video, $commentReply->comment_id);
+                    }
                 }
             }
         }
 
         if (! $isLocal) {
-            $video = Video::where('ap_id', $inReplyToUrl)->first();
+            $video = Video::where('ap_id', $inReplyToUrl)->published()->canComment()->first();
             if ($video) {
                 return $this->createComment($object, $actor, $video);
             }
 
             $comment = Comment::where('ap_id', $inReplyToUrl)->first();
             if ($comment) {
-                return $this->createComment($object, $actor, $comment->video);
+                $video = Video::published()
+                    ->canComment()
+                    ->whereKey($comment->video_id)
+                    ->first();
+
+                if ($video) {
+                    return $this->createComment($object, $actor, $video);
+                }
             }
 
             $commentReply = CommentReply::where('ap_id', $inReplyToUrl)->first();
             if ($commentReply) {
-                return $this->createCommentReply($object, $actor, $commentReply->video_id, $commentReply->comment_id);
+                $video = Video::published()
+                    ->canComment()
+                    ->whereKey($commentReply->video_id)
+                    ->first();
+
+                if ($video) {
+                    return $this->createCommentReply($object, $actor, $video, $commentReply->comment_id);
+                }
             }
         }
 
         throw new \Exception("Could not find local target for inReplyTo: {$inReplyToUrl}");
     }
 
-    private function createComment(array $object, Profile $actor, Video $video): Comment
+    private function createComment(array $object, Profile $actor, Video $video)
     {
+        if ($video->status != 2 || $video->comment_state != 4) {
+            throw new \Exception("Video does not accept comments: {$video->id}");
+        }
+
+        if (app(UserFilterService::class)->isBlocking($video->profile_id, $actor->id)) {
+            if (config('logging.dev_log')) {
+                Log::info('Rejected federated comment: video owner blocks actor', [
+                    'video_id' => $video->id,
+                    'owner_id' => $video->profile_id,
+                    'actor_id' => $actor->id,
+                ]);
+            }
+
+            return;
+        }
+
         if (isset($object['id'])) {
             $existing = Comment::where('ap_id', $object['id'])->first();
             if ($existing) {
@@ -297,8 +349,26 @@ class CreateHandler extends BaseHandler
         return $comment;
     }
 
-    private function createCommentReply(array $object, Profile $actor, int $videoId, int $commentId): CommentReply
+    private function createCommentReply(array $object, Profile $actor, Video $video, int $commentId)
     {
+        if ($video->status != 2 || $video->comment_state != 4) {
+            throw new \Exception("Video does not accept comments: {$video->id}");
+        }
+
+        if (app(UserFilterService::class)->isBlocking($video->profile_id, $actor->id)) {
+            if (config('logging.dev_log')) {
+                Log::info('Rejected federated comment reply: video owner blocks actor', [
+                    'video_id' => $video->id,
+                    'owner_id' => $video->profile_id,
+                    'actor_id' => $actor->id,
+                ]);
+            }
+
+            return;
+        }
+
+        $videoId = $video->id;
+
         if (isset($object['id'])) {
             $existing = CommentReply::where('ap_id', $object['id'])->first();
             if ($existing) {

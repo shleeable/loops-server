@@ -9,6 +9,7 @@ use App\Models\StarterKit;
 use App\Models\StarterKitAccount;
 use App\Services\FollowerService;
 use App\Services\NotificationService;
+use App\Services\UserFilterService;
 use Illuminate\Support\Facades\Log;
 
 class FeatureRequestHandler extends BaseHandler
@@ -31,6 +32,20 @@ class FeatureRequestHandler extends BaseHandler
                 'kit_owner' => $kit->profile_id,
                 'actor' => $actor->id,
             ]);
+
+            return;
+        }
+
+        if (UserFilterService::isBlocking($target->id, $kit->profile_id)) {
+            if (config('logging.dev_log')) {
+
+                Log::warning('FeatureRequest: target profile blocking actor', [
+                    'kit_id' => $kit->id,
+                    'kit_owner' => $kit->profile_id,
+                    'actor' => $actor->id,
+                    'target' => $target->id,
+                ]);
+            }
 
             return;
         }
