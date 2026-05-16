@@ -64,6 +64,7 @@ class UndoValidator extends BaseValidator
             'Follow' => $this->validateUndoFollow($object),
             'Like' => $this->validateUndoLike($object),
             'Announce' => $this->validateUndoAnnounce($object),
+            'Block' => $this->validateUndoBlock($object),
             default => $this->validateGenericUndo($object)
         };
     }
@@ -100,6 +101,20 @@ class UndoValidator extends BaseValidator
     {
         if (empty($announceObject['object']) || ! is_string($announceObject['object'])) {
             throw new \Exception('Undo Announce "object" (the original activity) is missing its own "object" (the status URI).');
+        }
+    }
+
+    /**
+     * @throws \Exception
+     */
+    private function validateUndoBlock(array $blockObject): void
+    {
+        if (empty($blockObject['object']) || ! is_string($blockObject['object'])) {
+            throw new \Exception('Undo Block "object" (the original activity) is missing its own "object" (the profile URI).');
+        }
+
+        if (! $this->isLocalProfile($blockObject['object'])) {
+            throw new \Exception("Undo Block rejected: target profile '{$blockObject['object']}' is not a local profile.");
         }
     }
 
