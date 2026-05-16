@@ -128,19 +128,19 @@ Route::prefix('api')->group(function () {
 
     Route::post('/v1/invite/verify', [AdminInviteController::class, 'verifyInvite']);
     Route::post('/v1/invite/check-username', [AdminInviteController::class, 'checkUsername']);
-    Route::post('/v1/invite/register', [AdminInviteController::class, 'register']);
+    Route::post('/v1/invite/register', [AdminInviteController::class, 'register'])->middleware('throttle:3,15');
     Route::post('/v1/invite/verify-age', [AdminInviteController::class, 'verifyAge']);
 
     // Auth
-    Route::post('/v1/auth/2fa/verify', [AuthController::class, 'verifyTwoFactor']);
+    Route::post('/v1/auth/2fa/verify', [AuthController::class, 'verifyTwoFactor'])->middleware('throttle:5,1');
     Route::post('/v1/auth/register/email', [UserRegisterVerifyController::class, 'sendEmailVerification']);
     Route::post('/v1/auth/register/email/resend', [UserRegisterVerifyController::class, 'resendEmailVerification']);
     Route::post('/v1/auth/register/email/verify', [UserRegisterVerifyController::class, 'verifyEmailVerification']);
     Route::post('/v1/auth/register/username', [UserRegisterVerifyController::class, 'claimUsername']);
     Route::post('/v1/auth/register/verify-age', [UserRegisterVerifyController::class, 'verifyAge']);
-    Route::post('/v1/auth/verify/email', [EmailVerificationController::class, 'initiate']);
-    Route::post('/v1/auth/verify/email/confirm', [EmailVerificationController::class, 'confirm']);
-    Route::post('/v1/auth/verify/email/resend', [EmailVerificationController::class, 'resend']);
+    Route::post('/v1/auth/verify/email', [EmailVerificationController::class, 'initiate'])->middleware('throttle:10,1');
+    Route::post('/v1/auth/verify/email/confirm', [EmailVerificationController::class, 'confirm'])->middleware('throttle:10,1');
+    Route::post('/v1/auth/verify/email/resend', [EmailVerificationController::class, 'resend'])->middleware('throttle:10,1');
     Route::post('/v1/auth/apple', [AppleAuthController::class, 'handle']);
 
     // Studio
