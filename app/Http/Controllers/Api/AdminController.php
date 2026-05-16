@@ -523,7 +523,6 @@ class AdminController extends Controller
 
         $oldValues = $profile->only(['can_upload', 'can_follow', 'can_comment', 'can_like', 'can_share', 'can_report', 'can_create_starter_kits', 'can_use_starter_kits']);
 
-        $profile->update($validated);
         if ($profile->local) {
             if ($profile->user && $profile->user->is_admin) {
                 return $this->success();
@@ -539,6 +538,8 @@ class AdminController extends Controller
             $user = User::whereProfileId($id)->firstOrFail();
             $user->update($userValidated);
         }
+
+        $profile->update($validated);
 
         app(AdminAuditLogService::class)->logProfileAdminPermissionUpdate($request->user(), $profile, ['old' => $oldValues, 'new' => $validated]);
 
