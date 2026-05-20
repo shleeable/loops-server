@@ -252,7 +252,12 @@ class WebfingerService
             ],
         ];
 
-        array_push($links, $this->getAvatarLink($actor));
+        $avatar = $this->getAvatarLink($actor);
+
+        if ($avatar) {
+            array_push($links, $avatar);
+        }
+
         array_push($links, $this->getIntents());
 
         return [
