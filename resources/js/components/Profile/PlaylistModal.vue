@@ -27,7 +27,7 @@
                     </button>
                 </div>
 
-                <div ref="bodyEl" @scroll="onScroll" class="flex-1 overflow-y-auto">
+                <div ref="bodyEl" @scroll="onScroll" class="flex-1 min-h-0 overflow-y-auto">
                     <div v-if="isLoading && !videos.length" class="flex justify-center py-16">
                         <Spinner />
                     </div>
