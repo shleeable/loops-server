@@ -2,9 +2,15 @@
 
 namespace App\Models;
 
+use App\Concerns\HasSnowflakePrimary;
+use App\Policies\PlaylistPolicy;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $id
@@ -34,8 +40,26 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  *
  * @mixin \Eloquent
  */
+#[UsePolicy(PlaylistPolicy::class)]
 class Playlist extends Model
 {
+    use HasSnowflakePrimary;
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    public const VISIBILITY_PUBLIC = 'public';
+
+    public const VISIBILITY_UNLISTED = 'unlisted';
+
+    public const VISIBILITY_FOLLOWERS = 'followers';
+
+    public const VISIBILITY_PRIVATE = 'private';
+
     protected $fillable = [
         'profile_id',
         'name',
@@ -48,11 +72,19 @@ class Playlist extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'videos_count' => 'integer',
+        'profile_id' => 'integer',
     ];
 
     public function profile(): BelongsTo
     {
         return $this->belongsTo(Profile::class);
+    }
+
+    #[Scope]
+    protected function published(Builder $query): void
+    {
+        $query->where('videos_count', '>', 1);
     }
 
     /**
@@ -64,6 +96,43 @@ class Playlist extends Model
             ->withPivot('position')
             ->withTimestamps()
             ->orderByPivot('position');
+    }
+
+    /**
+     * Restrict playlists to those a given viewer is allowed to see on a profile.
+     *
+     * - Owner: sees everything except nothing (all visibilities).
+     * - Follower: public + followers.
+     * - Guest / non-follower: public only.
+     * - Unlisted is never returned in profile listings regardless of viewer.
+     */
+    protected function scopeVisibleOnProfile(Builder $query, int $ownerId, ?int $viewerId): Builder
+    {
+        // Owner viewing their own profile — show everything except unlisted.
+        if ($viewerId && $viewerId === $ownerId) {
+            return $query->whereIn('visibility', [
+                self::VISIBILITY_PUBLIC,
+                self::VISIBILITY_FOLLOWERS,
+                self::VISIBILITY_PRIVATE,
+            ]);
+        }
+
+        if (! $viewerId) {
+            return $query->where('visibility', self::VISIBILITY_PUBLIC);
+        }
+
+        return $query->where(function (Builder $q) use ($ownerId, $viewerId) {
+            $q->where('visibility', self::VISIBILITY_PUBLIC)
+                ->orWhere(function (Builder $q) use ($ownerId, $viewerId) {
+                    $q->where('visibility', self::VISIBILITY_FOLLOWERS)
+                        ->whereExists(function ($sub) use ($ownerId, $viewerId) {
+                            $sub->select(DB::raw(1))
+                                ->from('followers')
+                                ->where('profile_id', $viewerId)
+                                ->where('following_id', $ownerId);
+                        });
+                });
+        });
     }
 
     public function addVideo(Video $video, ?int $position = null): void
@@ -112,6 +181,8 @@ class Playlist extends Model
         $firstVideo = $this->videos()->first();
         if ($firstVideo) {
             $this->update(['cover_image' => $firstVideo->thumb()]);
+        } else {
+            $this->update(['cover_image' => null]);
         }
     }
 
