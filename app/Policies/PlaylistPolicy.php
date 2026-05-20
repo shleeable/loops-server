@@ -4,6 +4,8 @@ namespace App\Policies;
 
 use App\Models\Playlist;
 use App\Models\User;
+use App\Services\FollowerService;
+use App\Services\PlaylistService;
 
 class PlaylistPolicy
 {
@@ -20,6 +22,22 @@ class PlaylistPolicy
      */
     public function view(User $user, Playlist $playlist): bool
     {
+        if ($user->is_admin || $user->profile_id == $playlist->profile_id) {
+            return true;
+        }
+
+        if ($playlist->visibility === 'public' || $playlist->visibility === 'unlisted') {
+            return true;
+        }
+
+        if ($playlist->visibility === 'followers') {
+            if (FollowerService::follows($user->profile_id, $playlist->profile_id)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
         return false;
     }
 
@@ -28,13 +46,21 @@ class PlaylistPolicy
      */
     public function create(User $user): bool
     {
-        $profile = $user->profile;
+        if ($user->is_admin) {
+            return true;
+        }
 
-        if ($profile->followers < 100 || $profile->video_count < 20) {
+        if (! $user->can_playlist) {
             return false;
         }
 
-        return true;
+        $profile = $user->profile;
+
+        if (PlaylistService::canCreatePlaylist($profile)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

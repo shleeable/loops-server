@@ -9,6 +9,7 @@ use App\Http\Resources\AccountCompactResource;
 use App\Http\Resources\FollowerResource;
 use App\Http\Resources\FollowingResource;
 use App\Http\Resources\NotificationResource;
+use App\Http\Resources\PlaylistResource;
 use App\Http\Resources\ProfileResource;
 use App\Http\Resources\UserVideoLikeResource;
 use App\Jobs\Federation\DeliverBlockActivity;
@@ -20,6 +21,7 @@ use App\Models\Follower;
 use App\Models\FollowRequest;
 use App\Models\HiddenSuggestion;
 use App\Models\Notification;
+use App\Models\Playlist;
 use App\Models\Profile;
 use App\Models\ProfileLink;
 use App\Models\SystemMessage;
@@ -1173,5 +1175,17 @@ class AccountController extends Controller
         $profile->update(['starter_kit_state' => $validated['state']]);
 
         return $this->data(['state_int' => $state]);
+    }
+
+    public function accountPlaylists(Request $request, $id)
+    {
+        $viewerId = optional($request->user())->profile_id;
+
+        $playlists = Playlist::published()
+            ->where('profile_id', $id)
+            ->visibleOnProfile((int) $id, $viewerId ? (int) $viewerId : null)
+            ->cursorPaginate(10);
+
+        return PlaylistResource::collection($playlists);
     }
 }

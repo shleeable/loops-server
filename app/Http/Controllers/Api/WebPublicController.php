@@ -8,6 +8,7 @@ use App\Http\Resources\CommentReplyResource;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\FollowerResource;
 use App\Http\Resources\FollowingResource;
+use App\Http\Resources\PlaylistResource;
 use App\Http\Resources\ProfileResource;
 use App\Http\Resources\StarterKitResource;
 use App\Http\Resources\VideoHashtagResource;
@@ -17,6 +18,7 @@ use App\Models\CommentReply;
 use App\Models\Follower;
 use App\Models\Hashtag;
 use App\Models\Page;
+use App\Models\Playlist;
 use App\Models\Profile;
 use App\Models\StarterKit;
 use App\Models\SystemMessage;
@@ -653,6 +655,19 @@ class WebPublicController extends Controller
         }
 
         return redirect('/@'.$user->username);
+    }
+
+    public function accountPlaylists(Request $request, $id)
+    {
+        $viewerId = optional($request->user())->profile_id;
+
+        $playlists = Playlist::published()
+            ->where('profile_id', $id)
+            ->visibleOnProfile((int) $id, $viewerId ? (int) $viewerId : null)
+            ->orderBy('order_column')
+            ->cursorPaginate(6);
+
+        return PlaylistResource::collection($playlists);
     }
 
     private function defaultCollection($meta = [])

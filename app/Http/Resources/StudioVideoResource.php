@@ -63,7 +63,7 @@ class StudioVideoResource extends JsonResource
                 'url' => $this->shareUrl(),
                 'pinned' => $this->is_pinned,
                 'privacy' => 'everyone',
-                'views_count' => 0,
+                'views_count' => $this->views,
                 'has_liked' => null,
                 'permissions' => [
                     'can_comment' => (bool) $this->comment_state == 4,

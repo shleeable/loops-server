@@ -19,6 +19,8 @@ use App\Http\Resources\AdminUserAuditLogResource;
 use App\Http\Resources\AdminVideoResource;
 use App\Http\Resources\CommentReplyResource;
 use App\Http\Resources\CommentResource;
+use App\Http\Resources\PlaylistResource;
+use App\Http\Resources\PlaylistVideoResource;
 use App\Http\Resources\ProfileResource;
 use App\Http\Resources\ReportResource;
 use App\Http\Resources\StarterKitPendingChangeResource;
@@ -35,6 +37,7 @@ use App\Models\CommentReply;
 use App\Models\Follower;
 use App\Models\Hashtag;
 use App\Models\Instance;
+use App\Models\Playlist;
 use App\Models\Profile;
 use App\Models\Report;
 use App\Models\StarterKit;
@@ -85,18 +88,12 @@ class AdminController extends Controller
         $sort = $request->query('sort');
         $local = $request->query('local');
 
-        $query = Video::when($search, function ($query, $search) {
-            $isUsername = str_starts_with($search, 'username:');
-            $isVisibility = str_starts_with($search, 'visibility:');
-            if ($isUsername) {
+        $query = Video::query()->when($search, function ($query, $search) {
+            if (str_starts_with($search, 'username:')) {
                 $username = substr($search, 9);
-                $query->join('profiles', 'videos.profile_id', '=', 'profiles.id')
-                    ->where('profiles.username', $username)
-                    ->select('videos.*');
-            } elseif ($isVisibility) {
-                $vis = substr($search, 11);
-                $query->where('visibility', $vis);
-
+                $query->whereHas('profile', fn ($q) => $q->where('username', $username));
+            } elseif (str_starts_with($search, 'visibility:')) {
+                $query->where('visibility', substr($search, 11));
             } else {
                 $query->where('caption', 'like', '%'.$search.'%');
             }
@@ -107,7 +104,7 @@ class AdminController extends Controller
         }
 
         $query = $this->applySorting($query, $sort);
-        $videos = $query->orderByDesc('id')->cursorPaginate(10)->withQueryString();
+        $videos = $query->cursorPaginate(10)->withQueryString();
 
         return AdminVideoResource::collection($videos);
     }
@@ -491,6 +488,7 @@ class AdminController extends Controller
         $res['can_create_starter_kits'] = (bool) $profile->can_create_starter_kits;
         $res['can_use_starter_kits'] = (bool) $profile->can_use_starter_kits;
         $res['can_report'] = (bool) $profile->can_report;
+        $res['can_playlist'] = (bool) $profile->can_playlist;
         $res['updated_at'] = $profile->updated_at;
 
         return $this->data($res);
@@ -507,6 +505,7 @@ class AdminController extends Controller
             'can_report' => 'sometimes|boolean',
             'can_create_starter_kits' => 'sometimes|boolean',
             'can_use_starter_kits' => 'sometimes|boolean',
+            'can_playlist' => 'sometimes|boolean',
         ]);
 
         $userValidated = $request->validate([
@@ -518,6 +517,7 @@ class AdminController extends Controller
             'can_embed' => 'sometimes|boolean',
             'can_create_starter_kits' => 'sometimes|boolean',
             'can_use_starter_kits' => 'sometimes|boolean',
+            'can_playlist' => 'sometimes|boolean',
         ]);
 
         $profile = Profile::find($id);
@@ -526,7 +526,7 @@ class AdminController extends Controller
             return $this->error('Ooops!');
         }
 
-        $oldValues = $profile->only(['can_upload', 'can_follow', 'can_comment', 'can_like', 'can_share', 'can_report', 'can_create_starter_kits', 'can_use_starter_kits']);
+        $oldValues = $profile->only(['can_upload', 'can_follow', 'can_comment', 'can_like', 'can_share', 'can_report', 'can_create_starter_kits', 'can_use_starter_kits', 'can_playlist']);
 
         if ($profile->local) {
             if ($profile->user && $profile->user->is_admin) {
@@ -1433,6 +1433,54 @@ class AdminController extends Controller
         app(ExploreService::class)->getTrendingTags(true);
 
         Cache::forget(ExploreService::GUEST_TAG_FEED_KEY.$hashtag->id);
+
+        return $this->success();
+    }
+
+    public function playlists(Request $request)
+    {
+        $q = $request->query('q');
+        $sort = $request->query('sort');
+
+        $query = Playlist::when($q, function ($query, $q) {
+            $query->where('name', 'like', $q.'%')->orderByDesc('videos_count');
+        });
+
+        $query = $this->applySorting($query, $sort);
+
+        $playlists = $query->cursorPaginate(10)->withQueryString();
+
+        return PlaylistResource::collection($playlists);
+    }
+
+    public function playlistShow(Request $request, $id)
+    {
+        $playlist = Playlist::findOrFail($id);
+
+        return new PlaylistResource($playlist);
+    }
+
+    public function playlistShowVideos(Request $request, $id)
+    {
+        $playlist = Playlist::findOrFail($id);
+
+        $videos = $playlist->videos()
+            ->select('videos.*', 'playlist_video.position')
+            ->orderBy('playlist_video.position')
+            ->orderBy('playlist_video.video_id')
+            ->cursorPaginate(5)
+            ->withQueryString();
+
+        return PlaylistVideoResource::collection($videos);
+    }
+
+    public function playlistDelete(Request $request, $id)
+    {
+        $playlist = Playlist::findOrFail($id);
+
+        app(AdminAuditLogService::class)->logPlaylistDelete($request->user(), $playlist, ['name' => $playlist->name, 'description' => $playlist->description, 'visibility' => $playlist->visibility, 'profile_id' => $playlist->profile_id, 'video_ids' => $playlist->videos()->pluck('id')]);
+
+        $playlist->delete();
 
         return $this->success();
     }

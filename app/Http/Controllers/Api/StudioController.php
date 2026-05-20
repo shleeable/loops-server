@@ -78,7 +78,7 @@ class StudioController extends Controller
         $validated = $request->validate([
             'search' => ['sometimes', 'nullable', 'string', 'min:2', 'max:30'],
             'limit' => ['sometimes', 'integer', 'min:1', 'max:10'],
-            'sort_field' => ['sometimes', 'string', Rule::in(['created_at'])],
+            'sort_field' => ['sometimes', 'string', Rule::in(['created_at', 'likes', 'comments'])],
             'sort_direction' => ['sometimes', 'string', Rule::in(['asc', 'desc'])],
         ]);
 
@@ -93,9 +93,7 @@ class StudioController extends Controller
         }
 
         $videos = Video::select('videos.*')
-            ->published()
-            ->leftJoin('playlist_video', 'videos.id', '=', 'playlist_video.video_id')
-            ->whereNull('playlist_video.video_id')
+            ->publishedAndPublic()
             ->where('videos.profile_id', $pid)
             ->when($search, function ($query, $search) {
                 $query->where('videos.caption', 'like', "%{$search}%");

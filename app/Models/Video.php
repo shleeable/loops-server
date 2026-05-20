@@ -249,6 +249,12 @@ class Video extends Model
         $query->where('comment_state', 4);
     }
 
+    #[Scope]
+    protected function publishedAndPublic(Builder $query): void
+    {
+        $query->where('status', 2)->where('visibility', 1);
+    }
+
     public function statusLabel()
     {
         return match ($this->status) {

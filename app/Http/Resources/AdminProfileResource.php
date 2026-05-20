@@ -76,6 +76,7 @@ class AdminProfileResource extends JsonResource
             'can_create_starter_kits' => $this->can_create_starter_kits,
             'can_report' => $this->can_report,
             'can_embed' => $canEmbed,
+            'can_playlist' => $this->can_playlist,
             'delete_after' => $deleteAfter,
             'last_active_at' => $lastActiveAt,
             'created_at' => $this->created_at->format('c'),
