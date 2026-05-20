@@ -237,6 +237,11 @@ class AdminAuditLogService
         return $this->log($user, 'video:delete', $changes, $video, null, 1);
     }
 
+    public function logPlaylistDelete(User|int $user, $playlist, $changes)
+    {
+        return $this->log($user, 'playlist:delete', $changes, $playlist, null, 1);
+    }
+
     public function logVideoUnpublish(User|int $user, $video, $changes)
     {
         return $this->log($user, 'video:unpublish', $changes, $video, null, 1);
