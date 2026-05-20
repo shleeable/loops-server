@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $playlist_id
@@ -31,4 +32,9 @@ class PlaylistVideo extends Model
         'video_id',
         'position',
     ];
+
+    public function video(): BelongsTo
+    {
+        return $this->belongsTo(Playlist::class);
+    }
 }

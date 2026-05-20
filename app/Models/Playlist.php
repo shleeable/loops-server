@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
  * @property string $visibility
  * @property string|null $cover_image
  * @property-read int|null $videos_count
+ * @property int $order_column
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Profile $profile
@@ -67,6 +68,7 @@ class Playlist extends Model
         'visibility',
         'cover_image',
         'videos_count',
+        'order_column',
     ];
 
     protected $casts = [
@@ -74,7 +76,17 @@ class Playlist extends Model
         'updated_at' => 'datetime',
         'videos_count' => 'integer',
         'profile_id' => 'integer',
+        'order_column' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Playlist $playlist) {
+            if (! $playlist->order_column) {
+                $playlist->order_column = static::where('profile_id', $playlist->profile_id)->max('order_column') + 1;
+            }
+        });
+    }
 
     public function profile(): BelongsTo
     {
@@ -147,6 +159,7 @@ class Playlist extends Model
         $this->videos()->attach($video->id, ['position' => $position]);
         $this->updateCoverImage();
         $this->updateProfileHasPlaylists();
+        $this->updateVideoCount();
     }
 
     public function removeVideo(Video $video): void
@@ -155,6 +168,7 @@ class Playlist extends Model
         $this->reorderPositions();
         $this->updateCoverImage();
         $this->updateProfileHasPlaylists();
+        $this->updateVideoCount();
     }
 
     public function reorderVideos(array $videoIds): void
@@ -164,6 +178,7 @@ class Playlist extends Model
         }
 
         $this->updateCoverImage();
+        $this->updateVideoCount();
     }
 
     protected function reorderPositions(): void
@@ -173,6 +188,8 @@ class Playlist extends Model
         foreach ($videos as $index => $video) {
             $this->videos()->updateExistingPivot($video->getKey(), ['position' => $index]);
         }
+
+        $this->updateVideoCount();
     }
 
     protected function updateCoverImage(): void
@@ -184,6 +201,12 @@ class Playlist extends Model
         } else {
             $this->update(['cover_image' => null]);
         }
+    }
+
+    public function updateVideoCount(): void
+    {
+        $count = $this->videos()->count();
+        $this->update(['videos_count' => $count]);
     }
 
     public function updateProfileHasPlaylists(): void
@@ -219,5 +242,53 @@ class Playlist extends Model
         }
 
         return false;
+    }
+
+    public static function reorder(int $profileId, array $orderedIds): void
+    {
+        if (empty($orderedIds)) {
+            return;
+        }
+
+        if (count($orderedIds) > 100) {
+            throw new \InvalidArgumentException('Too many playlists to reorder at once.');
+        }
+
+        $orderedIds = array_map('intval', $orderedIds);
+
+        if (count($orderedIds) !== count(array_unique($orderedIds))) {
+            throw new \InvalidArgumentException('Duplicate playlist IDs.');
+        }
+
+        DB::transaction(function () use ($profileId, $orderedIds) {
+            $currentPositions = static::where('profile_id', $profileId)
+                ->whereIn('id', $orderedIds)
+                ->pluck('order_column', 'id');
+
+            if ($currentPositions->count() !== count($orderedIds)) {
+                throw new \InvalidArgumentException('One or more playlist IDs are invalid.');
+            }
+
+            $sortedPositions = $currentPositions->values()->sort()->values();
+
+            $cases = [];
+            $bindings = [];
+
+            foreach ($orderedIds as $index => $id) {
+                $cases[] = 'WHEN id = ? THEN ?';
+                $bindings[] = $id;
+                $bindings[] = $sortedPositions[$index];
+            }
+
+            $bindings[] = $profileId;
+            array_push($bindings, ...$orderedIds);
+
+            DB::update(
+                'UPDATE playlists SET order_column = CASE '
+                .implode(' ', $cases)
+                .' END WHERE profile_id = ? AND id IN ('.implode(',', array_fill(0, count($orderedIds), '?')).')',
+                $bindings
+            );
+        });
     }
 }
