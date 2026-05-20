@@ -201,7 +201,6 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/playlists/{id}/videos', [VideoPlaylistController::class, 'videos'])->middleware([OptionalAuth::class]);
     Route::get('/v1/playlists/{id}', [VideoPlaylistController::class, 'show'])->middleware([OptionalAuth::class]);
 
-
     // Bookmarks
     Route::get('/v1/account/favourites', [VideoBookmarkController::class, 'bookmarks'])->middleware('auth:web,api');
 
