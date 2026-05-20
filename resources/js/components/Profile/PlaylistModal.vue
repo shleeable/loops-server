@@ -1,16 +1,16 @@
 <template>
     <Teleport to="body">
         <div
-            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            class="fixed inset-0 z-50 flex items-center justify-center overflow-hidden p-4 bg-black/60 backdrop-blur-sm"
             @click.self="$emit('close')"
         >
             <div
-                class="w-full max-w-xl max-h-[85vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                class="flex max-h-[85dvh] lg:max-h-[65dvh] w-full max-w-xl min-h-0 flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900"
                 role="dialog"
                 aria-modal="true"
             >
                 <div
-                    class="relative border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex-shrink-0"
+                    class="relative shrink-0 border-b border-gray-200 px-6 py-4 dark:border-gray-800"
                 >
                     <h2
                         class="text-center font-bold text-xl text-gray-900 dark:text-gray-100 tracking-tight truncate px-8"
@@ -27,7 +27,11 @@
                     </button>
                 </div>
 
-                <div ref="bodyEl" @scroll="onScroll" class="flex-1 min-h-0 overflow-y-auto">
+                <div
+                    ref="bodyEl"
+                    @scroll="onScroll"
+                    class="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+                >
                     <div v-if="isLoading && !videos.length" class="flex justify-center py-16">
                         <Spinner />
                     </div>
@@ -115,7 +119,7 @@
                     </div>
 
                     <div
-                        v-else-if="videos.length && !nextCursor"
+                        v-else-if="videos && videos.length && !nextCursor"
                         class="text-center py-4 text-xs text-gray-400 dark:text-gray-500"
                     >
                         end of playlist
@@ -148,7 +152,7 @@ const isLoadingMore = ref(false)
 const error = ref(null)
 const bodyEl = ref(null)
 
-const thumbFor = (v) => v.media.thumbnail || v.thumbnail || v.media_url || v.cover_image || null
+const thumbFor = (v) => v.media?.thumbnail || v.cover_image || null
 
 const load = async (reset = false) => {
     if (reset) {
@@ -193,7 +197,9 @@ const loadMore = async () => {
 
 const onScroll = () => {
     if (!bodyEl.value) return
+
     const el = bodyEl.value
+
     if (el.scrollHeight - el.scrollTop - el.clientHeight < 200) {
         loadMore()
     }

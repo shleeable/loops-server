@@ -44,7 +44,7 @@ class VideoPlaylistController extends Controller
             ->select('videos.*', 'playlist_video.position')
             ->orderBy('playlist_video.position')
             ->orderBy('playlist_video.video_id')
-            ->cursorPaginate(5)
+            ->cursorPaginate(10)
             ->withQueryString();
 
         return PlaylistVideoResource::collection($videos);
