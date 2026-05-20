@@ -1,6 +1,9 @@
 <template>
     <MainLayout>
-        <div v-if="!isLoading && !error && profileStore.id" class="pt-[30px] px-5">
+        <div
+            v-if="!isLoading && !error && profileStore.id"
+            class="pt-[30px] px-5 align-center xl:max-w-7xl xl:mx-auto"
+        >
             <ProfileHeader />
 
             <ProfileTabBar
@@ -11,6 +14,8 @@
                 @filter-change="handleFilterChange"
                 ref="tabBarRef"
             />
+
+            <ProfilePlaylists v-if="playlists && playlists.length" :playlists="playlists" />
 
             <div v-if="show" class="mt-4 grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-3">
                 <div v-for="post in displayPosts" :key="post.id">
@@ -133,6 +138,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import MainLayout from '~/layouts/MainLayout.vue'
 import ProfileVideoCard from '~/components/Profile/ProfileVideoCard.vue'
+import ProfilePlaylists from '~/components/Profile/ProfilePlaylists.vue'
 import { useProfileStore } from '~/stores/profile'
 import { useAuthStore } from '~/stores/auth'
 import { useUtils } from '@/composables/useUtils'
@@ -158,7 +164,7 @@ const currentTab = ref('videos')
 const currentFilter = ref('Latest')
 const tabBarRef = ref(null)
 
-const { posts, allLikes, bookmarkedPosts } = storeToRefs(profileStore)
+const { posts, allLikes, bookmarkedPosts, playlists } = storeToRefs(profileStore)
 
 const displayPosts = computed(() => {
     if (currentTab.value === 'bookmarks') {

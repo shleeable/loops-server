@@ -26,6 +26,8 @@ export const useProfileStore = defineStore('profile', {
         hasAtom: false,
         hasAtomUrl: null,
         links: [],
+        playlists: [],
+        playlistsNextCursor: null,
         followersNextCursor: null,
         followingNextCursor: null,
         isFollowing: null,
@@ -175,6 +177,8 @@ export const useProfileStore = defineStore('profile', {
                     await this.getProfilePosts(res.data.data.id)
                 }
 
+                await this.getPlaylists(res.data.data.id)
+
                 this.id = res.data.data.id
                 this.username = res.data.data.username
                 this.name = res.data.data.name
@@ -194,6 +198,28 @@ export const useProfileStore = defineStore('profile', {
                 this.manuallyApprovesFollowers = res.data.data?.manually_approves_followers
             } catch (error) {
                 console.error('Error fetching profile:', error)
+                throw error
+            }
+        },
+
+        async getPlaylists(id, cursor = null) {
+            const axiosInstance = axios.getAxiosInstance()
+
+            try {
+                const response = await axiosInstance.get(`/api/v1/account/playlists/${id}`, {
+                    params: cursor ? { cursor } : {}
+                })
+                if (!cursor) {
+                    this.playlists = response.data.data
+                } else {
+                    this.playlists = [...this.playlists, ...response.data.data]
+                }
+
+                this.playlistsNextCursor = response.data.meta.next_cursor
+
+                return response.data
+            } catch (error) {
+                console.error('Error fetching profile playlists:', error)
                 throw error
             }
         },

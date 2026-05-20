@@ -208,6 +208,37 @@ export const hashtagsApi = {
     }
 }
 
+// Playlists
+export const playlistsApi = {
+    async getPlaylists({
+        cursor = null,
+        direction = 'next',
+        search = '',
+        limit = 15,
+        sort = null
+    } = {}) {
+        return await apiClient.get('/api/v1/admin/playlists', {
+            cursor: cursor,
+            limit: limit,
+            q: search,
+            sort: sort
+        })
+    },
+
+    async getPlaylist(id) {
+        return await apiClient.get(`/api/v1/admin/playlists/${id}`)
+    },
+
+    async getPlaylistVideos(id, cursor = null) {
+        const params = cursor ? { cursor: cursor } : null
+        return await apiClient.get(`/api/v1/admin/playlists/${id}/videos`, params)
+    },
+
+    async deletePlaylist(id) {
+        return await apiClient.post(`/api/v1/admin/playlists/${id}/delete`)
+    }
+}
+
 // Reports API
 export const reportsApi = {
     async getReports({

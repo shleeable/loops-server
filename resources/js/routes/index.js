@@ -475,6 +475,19 @@ const router = createRouter({
                     meta: { requiresAdmin: true }
                 },
                 {
+                    path: 'playlists/:id',
+                    name: 'PlaylistsShow',
+                    component: () => import('~/pages/admin/PlaylistShow.vue'),
+                    params: true,
+                    meta: { requiresAdmin: true }
+                },
+                {
+                    path: 'playlists',
+                    name: 'Playlists',
+                    component: () => import('~/pages/admin/Playlists.vue'),
+                    meta: { requiresAdmin: true }
+                },
+                {
                     path: 'reports/:id',
                     name: 'ReportView',
                     component: () => import('~/pages/admin/ReportShow.vue'),

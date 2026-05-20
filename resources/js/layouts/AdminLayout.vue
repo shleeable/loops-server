@@ -350,7 +350,8 @@ import {
     MagnifyingGlassIcon,
     ChevronDownIcon,
     WalletIcon,
-    ChatBubbleBottomCenterIcon
+    ChatBubbleBottomCenterIcon,
+    QueueListIcon
 } from '@heroicons/vue/24/outline'
 import { useAdminStore } from '~/stores/admin'
 
@@ -374,6 +375,7 @@ const navigation = computed(() => [
         items: [
             { name: 'Hashtags', href: '/admin/hashtags', icon: HashtagIcon },
             { name: 'Comments', href: '/admin/comments', icon: ChatBubbleOvalLeftIcon },
+            { name: 'Playlists', href: '/admin/playlists', icon: QueueListIcon },
             { name: 'Replies', href: '/admin/replies', icon: ChatBubbleLeftRightIcon },
             { name: 'Videos', href: '/admin/videos', icon: VideoCameraIcon }
         ]

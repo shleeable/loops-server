@@ -94,16 +94,9 @@ const isMobile = computed(() => windowWidth.value < 1024)
 const sections = computed(() => {
     const manageLinks = [
         { name: 'Analytics', path: '/studio/', icon: 'bx bx-bar-chart' },
-        { name: t('studio.posts'), path: '/studio/posts', icon: 'bx bx-video' }
+        { name: t('studio.posts'), path: '/studio/posts', icon: 'bx bx-video' },
+        { name: t('studio.playlists'), path: '/studio/playlists', icon: 'bx bx-list-ul' }
     ]
-
-    if (authStore.getUser?.follower_count > 100 && authStore.getUser?.post_count > 20) {
-        manageLinks.push({
-            name: t('studio.playlists'),
-            path: '/studio/playlists',
-            icon: 'bx bx-list-ul'
-        })
-    }
 
     return [
         {

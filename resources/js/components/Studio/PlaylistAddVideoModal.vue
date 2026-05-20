@@ -35,8 +35,8 @@
                                     {{ $t('studio.addVideosToPlaylist') }}
                                 </DialogTitle>
 
-                                <div class="mb-4">
-                                    <div class="relative">
+                                <div class="mb-4 flex gap-2">
+                                    <div class="relative flex-1">
                                         <div
                                             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
                                         >
@@ -50,6 +50,68 @@
                                             class="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-transparent"
                                         />
                                     </div>
+
+                                    <Listbox v-model="selectedSort">
+                                        <div class="relative w-52">
+                                            <ListboxButton
+                                                class="relative w-full cursor-pointer rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-[10px] pl-3 pr-10 text-left text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                            >
+                                                <span class="block truncate">{{
+                                                    selectedSort.label
+                                                }}</span>
+                                                <span
+                                                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
+                                                >
+                                                    <ChevronUpDownIcon
+                                                        class="h-5 w-5 text-gray-400"
+                                                    />
+                                                </span>
+                                            </ListboxButton>
+                                            <transition
+                                                leave-active-class="transition duration-100 ease-in"
+                                                leave-from-class="opacity-100"
+                                                leave-to-class="opacity-0"
+                                            >
+                                                <ListboxOptions
+                                                    class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white dark:bg-gray-700 py-1 text-sm shadow-lg ring-1 ring-black/5 dark:ring-white/10 focus:outline-none"
+                                                >
+                                                    <ListboxOption
+                                                        v-for="option in sortOptions"
+                                                        :key="option.id"
+                                                        :value="option"
+                                                        v-slot="{ active, selected }"
+                                                        as="template"
+                                                    >
+                                                        <li
+                                                            :class="[
+                                                                active
+                                                                    ? 'bg-red-50 dark:bg-red-900/30 text-red-900 dark:text-red-100'
+                                                                    : 'text-gray-900 dark:text-gray-100',
+                                                                'relative cursor-pointer select-none py-2 pl-10 pr-4'
+                                                            ]"
+                                                        >
+                                                            <span
+                                                                :class="[
+                                                                    selected
+                                                                        ? 'font-medium'
+                                                                        : 'font-normal',
+                                                                    'block truncate'
+                                                                ]"
+                                                            >
+                                                                {{ option.label }}
+                                                            </span>
+                                                            <span
+                                                                v-if="selected"
+                                                                class="absolute inset-y-0 left-0 flex items-center pl-3 text-red-600 dark:text-red-400"
+                                                            >
+                                                                <CheckIcon class="h-5 w-5" />
+                                                            </span>
+                                                        </li>
+                                                    </ListboxOption>
+                                                </ListboxOptions>
+                                            </transition>
+                                        </div>
+                                    </Listbox>
                                 </div>
 
                                 <div
@@ -100,7 +162,7 @@
                                         <img
                                             :src="video.media.thumbnail"
                                             :alt="video.caption"
-                                            class="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                                            class="w-9 h-16 rounded-lg object-cover flex-shrink-0"
                                             onerror="
                                                 this.src = '/storage/videos/video-placeholder.jpg'
                                                 this.onerror = null
@@ -112,9 +174,29 @@
                                             >
                                                 {{ video.caption || 'Untitled Video' }}
                                             </p>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">
-                                                {{ formatDate(video.created_at) }}
-                                            </p>
+                                            <div
+                                                class="flex gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400"
+                                            >
+                                                <div>
+                                                    {{ formatDate(video.created_at) }}
+                                                </div>
+
+                                                <div>·</div>
+
+                                                <div>
+                                                    {{ formatCount(video.views_count) }} Views
+                                                </div>
+
+                                                <div>·</div>
+
+                                                <div>{{ formatCount(video.likes) }} Likes</div>
+
+                                                <div>·</div>
+
+                                                <div>
+                                                    {{ formatCount(video.comments) }} Comments
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -177,10 +259,42 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
-import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
-import { MagnifyingGlassIcon, VideoCameraIcon } from '@heroicons/vue/24/outline'
 import { useUtils } from '@/composables/useUtils'
 import { usePlaylistStore } from '@/stores/playlist'
+import {
+    TransitionRoot,
+    TransitionChild,
+    Dialog,
+    DialogPanel,
+    DialogTitle,
+    Listbox,
+    ListboxButton,
+    ListboxOptions,
+    ListboxOption
+} from '@headlessui/vue'
+import {
+    MagnifyingGlassIcon,
+    VideoCameraIcon,
+    ChevronUpDownIcon,
+    CheckIcon
+} from '@heroicons/vue/24/outline'
+
+const STORAGE_KEY = 'loops_studio_playlists_add_sort'
+
+const sortOptions = [
+    { id: 'newest', label: 'Newest videos', field: 'created_at', direction: 'desc' },
+    { id: 'oldest', label: 'Oldest videos', field: 'created_at', direction: 'asc' },
+    { id: 'most_liked', label: 'Most liked', field: 'likes', direction: 'desc' },
+    { id: 'most_commented', label: 'Most commented', field: 'comments', direction: 'desc' }
+]
+
+const getStoredSort = () => {
+    const storedId = localStorage.getItem(STORAGE_KEY)
+    return sortOptions.find((opt) => opt.id === storedId) || sortOptions[0]
+}
+
+const selectedSort = ref(getStoredSort())
+const skipNextSortWatch = ref(false)
 
 const props = defineProps({
     isOpen: {
@@ -200,7 +314,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'added'])
 
 const playlistStore = usePlaylistStore()
-const { formatDate } = useUtils()
+const { formatDate, formatNumber, formatCount } = useUtils()
 
 const { availableVideos, loading } = storeToRefs(playlistStore)
 const hasMore = computed(() => playlistStore.availableVideosPagination.hasMore)
@@ -256,7 +370,9 @@ const loadVideos = async (cursor = null) => {
             search: searchQuery.value,
             cursor,
             limit: 10,
-            excludeIds: props.excludeVideoIds
+            excludeIds: props.excludeVideoIds,
+            sortField: selectedSort.value.field,
+            sortDirection: selectedSort.value.direction
         })
 
         if (!cursor) {
@@ -324,12 +440,24 @@ const closeModal = () => {
     }
 }
 
+watch(selectedSort, (newVal) => {
+    localStorage.setItem(STORAGE_KEY, newVal.id)
+    if (skipNextSortWatch.value) {
+        skipNextSortWatch.value = false
+        return
+    }
+    playlistStore.clearAvailableVideos()
+    loadVideos()
+})
+
 watch(
     () => props.isOpen,
     (isOpen) => {
         if (isOpen) {
             selectedVideos.value = new Set()
             searchQuery.value = ''
+            skipNextSortWatch.value = true
+            selectedSort.value = getStoredSort()
             playlistStore.clearAvailableVideos()
             loadVideos()
         }

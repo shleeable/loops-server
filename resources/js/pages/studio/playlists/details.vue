@@ -188,17 +188,24 @@
                                         {{ video.caption || 'Untitled Video' }}
                                     </p>
                                     <div
-                                        class="flex items-center space-x-4 mt-1 text-xs text-gray-500 dark:text-gray-400"
+                                        class="flex items-center gap-2 mt-3 text-xs text-gray-500 dark:text-gray-400"
                                     >
-                                        <span class="flex items-center">
+                                        <div>{{ formatDate(video.created_at) }}</div>
+                                        <div>·</div>
+                                        <div class="flex items-center">
+                                            <EyeIcon class="h-4 w-4 mr-1" />
+                                            {{ video.views?.toLocaleString() || 0 }}
+                                        </div>
+                                        <div>·</div>
+                                        <div class="flex items-center">
                                             <HeartIcon class="h-4 w-4 mr-1" />
                                             {{ video.likes?.toLocaleString() || 0 }}
-                                        </span>
-                                        <span class="flex items-center">
+                                        </div>
+                                        <div>·</div>
+                                        <div class="flex items-center">
                                             <ChatBubbleLeftIcon class="h-4 w-4 mr-1" />
                                             {{ video.comments?.toLocaleString() || 0 }}
-                                        </span>
-                                        <span>{{ formatDate(video.created_at) }}</span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -207,16 +214,28 @@
                                         :to="`/v/${video.hid}`"
                                         class="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-medium border-blue-300 text-blue-700 bg-blue-50/60 hover:bg-blue-100 hover:border-blue-400 dark:border-blue-500/70 dark:text-blue-300 dark:bg-blue-900/20 dark:hover:bg-blue-900/50 dark:hover:border-blue-300 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 cursor-pointer"
                                     >
-                                        <EyeIcon class="w-4 h-4" />
-                                        {{ $t('studio.view') }}
+                                        <Tooltip title="View this video">
+                                            <EyeIcon class="w-4 h-4" />
+                                        </Tooltip>
                                     </router-link>
+
+                                    <button
+                                        v-if="index !== 0"
+                                        @click="moveToFirst(video.id)"
+                                        class="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-medium border-yellow-300 text-yellow-700 bg-yellow-50/60 hover:bg-yellow-100 hover:border-yellow-400 dark:border-yello-500/70 dark:text-yellow-300 dark:bg-yellow-900/20 dark:hover:bg-yellow-900/50 dark:hover:border-yellow-300 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 cursor-pointer"
+                                    >
+                                        <Tooltip title="Move to first position">
+                                            <BarsArrowUpIcon class="w-4 h-4" />
+                                        </Tooltip>
+                                    </button>
 
                                     <button
                                         @click="removeVideo(video.id)"
                                         class="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-medium border-red-300 text-red-700 bg-red-50/60 hover:bg-red-100 hover:border-red-400 dark:border-red-500/70 dark:text-red-300 dark:bg-red-900/20 dark:hover:bg-red-900/50 dark:hover:border-red-300 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 cursor-pointer"
                                     >
-                                        <TrashIcon class="w-4 h-4" />
-                                        {{ $t('common.remove') }}
+                                        <Tooltip title="Remove from playlist">
+                                            <TrashIcon class="w-4 h-4" />
+                                        </Tooltip>
                                     </button>
                                 </div>
                             </div>
@@ -234,7 +253,7 @@
                 </div>
             </div>
 
-            <PlaylistModal
+            <StudioPlaylistModal
                 :is-open="showEditModal"
                 :playlist="playlist"
                 @close="showEditModal = false"
@@ -254,12 +273,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, inject } from 'vue'
+import { ref, computed, onMounted, inject, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { usePlaylistStore } from '@/stores/playlist'
 import { useUtils } from '@/composables/useUtils'
-import PlaylistModal from '@/components/Studio/PlaylistModal.vue'
+import PlaylistModal from '@/components/Studio/StudioPlaylistModal.vue'
 import AddVideoModal from '@/components/Studio/PlaylistAddVideoModal.vue'
 import {
     EyeIcon,
@@ -271,7 +290,8 @@ import {
     PencilSquareIcon,
     Bars3Icon,
     HeartIcon,
-    ChatBubbleLeftIcon
+    ChatBubbleLeftIcon,
+    BarsArrowUpIcon
 } from '@heroicons/vue/24/outline'
 import { VueDraggableNext as draggable } from 'vue-draggable-next'
 import { useAlertModal } from '@/composables/useAlertModal.js'
@@ -287,7 +307,7 @@ const { formatDate } = useUtils()
 const { alertModal, confirmModal } = useAlertModal()
 const { t } = useI18n()
 
-const playlistId = computed(() => parseInt(route.params.id))
+const playlistId = computed(() => route.params.id)
 const loading = ref(false)
 const loadingVideos = ref(false)
 const playlist = computed(() => playlistStore.playlist)
@@ -342,10 +362,11 @@ const handleReorder = async () => {
     try {
         const videoIds = videos.value.map((v) => v.id)
         await playlistStore.reorderPlaylist(playlistId.value, videoIds)
+        await nextTick()
         await loadPlaylist()
     } catch (error) {
         console.error('Error reordering videos:', error)
-        await loadVideos()
+        await loadPlaylist()
     }
 }
 
@@ -424,6 +445,27 @@ const getVisibilityBadgeClass = (visibility) => {
     }
 }
 
+const moveToFirst = async (videoId) => {
+    const currentIndex = videos.value.findIndex((v) => v.id === videoId)
+    if (currentIndex <= 0) return
+
+    const previousOrder = [...videos.value]
+    const video = videos.value[currentIndex]
+    videos.value = [
+        video,
+        ...videos.value.slice(0, currentIndex),
+        ...videos.value.slice(currentIndex + 1)
+    ]
+
+    try {
+        const videoIds = videos.value.map((v) => v.id)
+        await playlistStore.reorderPlaylist(playlistId.value, videoIds)
+    } catch (error) {
+        console.error('Error moving video to first:', error)
+        videos.value = previousOrder
+    }
+}
+
 const formatVisibility = (visibility) => {
     const labels = {
         public: 'Public',
@@ -435,10 +477,6 @@ const formatVisibility = (visibility) => {
 }
 
 onMounted(() => {
-    if (authStore.getUser?.post_count < 20 || authStore.getUser?.follower_count < 100) {
-        router.push('/studio')
-        return
-    }
     loadPlaylist()
     loadVideos()
 })

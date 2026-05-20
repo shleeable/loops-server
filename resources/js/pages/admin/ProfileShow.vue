@@ -1043,7 +1043,8 @@ import {
     VideoCameraIcon,
     Cog6ToothIcon,
     ChatBubbleBottomCenterIcon,
-    CodeBracketIcon
+    CodeBracketIcon,
+    QueueListIcon
 } from '@heroicons/vue/24/outline'
 import DropdownDivider from '@/components/DropdownDivider.vue'
 import AdminSendEmailModal from '@/components/Admin/AdminSendEmailModal.vue'
@@ -1115,6 +1116,12 @@ const permissionConfig = [
     { key: 'can_follow', label: 'Follow', description: 'Can follow', icon: UserPlusIcon },
     { key: 'can_like', label: 'Likes', description: 'Can like', icon: HeartIcon },
     { key: 'can_report', label: 'Reports', description: 'Can create reports', icon: FlagIcon },
+    {
+        key: 'can_playlist',
+        label: 'Playlists',
+        description: 'Can create playlists',
+        icon: QueueListIcon
+    },
     {
         key: 'can_create_starter_kits',
         label: 'Starter Kits',

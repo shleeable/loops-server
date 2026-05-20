@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\StudioAnalyticsController;
 use App\Http\Controllers\Api\StudioController;
 use App\Http\Controllers\Api\UserPreferencesController;
 use App\Http\Controllers\Api\VideoController;
+use App\Http\Controllers\Api\VideoPlaylistController;
 use App\Http\Controllers\Api\VideoSoundController;
 use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\AppleAuthController;
@@ -148,6 +149,8 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/studio/playlist-posts', [StudioController::class, 'getAvailableVideosForPlaylists'])->middleware('auth:web,api');
     Route::post('/v1/studio/upload', [VideoController::class, 'store'])->middleware('auth:web,api');
     Route::post('/v1/studio/duet/upload', [DuetController::class, 'store'])->middleware('auth:web,api');
+    Route::get('/v1/studio/playlists/limits', [PlaylistController::class, 'getLimits'])->middleware('auth:web,api');
+    Route::post('/v1/studio/playlists/profile-reorder', [PlaylistController::class, 'reorderPlaylistOrder'])->middleware('auth:web,api');
     Route::apiResource('/v1/studio/playlists', PlaylistController::class)->middleware('auth:web,api');
     Route::get('/v1/studio/playlists/{playlist}/videos', [PlaylistController::class, 'videos'])->middleware('auth:web,api');
     Route::post('/v1/studio/playlists/{playlist}/videos', [PlaylistController::class, 'addVideo'])->middleware('auth:web,api');
@@ -191,7 +194,13 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/account/follow/{id}', [AccountController::class, 'follow'])->middleware('auth:web,api');
     Route::post('/v1/account/unfollow/{id}', [AccountController::class, 'unfollow'])->middleware('auth:web,api');
     Route::post('/v1/account/undo-follow-request/{id}', [AccountController::class, 'undoFollowRequest'])->middleware('auth:web,api');
+    Route::get('/v1/account/playlists/{id}', [WebPublicController::class, 'accountPlaylists'])->middleware([OptionalAuth::class]);
     Route::get('/v1/account/videos/likes', [AccountController::class, 'accountVideoLikes'])->middleware('auth:web,api');
+
+    // Playlists
+    Route::get('/v1/playlists/{id}/videos', [VideoPlaylistController::class, 'videos'])->middleware([OptionalAuth::class]);
+    Route::get('/v1/playlists/{id}', [VideoPlaylistController::class, 'show'])->middleware([OptionalAuth::class]);
+
 
     // Bookmarks
     Route::get('/v1/account/favourites', [VideoBookmarkController::class, 'bookmarks'])->middleware('auth:web,api');
@@ -435,6 +444,10 @@ Route::prefix('api')->group(function () {
         Route::post('/videos/{id}/moderate', [AdminController::class, 'videoModerate'])->middleware('auth:web,api');
         Route::get('/video/{id}', [AdminController::class, 'videoShow'])->middleware('auth:web,api');
         Route::get('/profiles', [AdminController::class, 'profiles'])->middleware('auth:web,api');
+        Route::post('/playlists/{id}/delete', [AdminController::class, 'playlistDelete'])->middleware('auth:web,api');
+        Route::get('/playlists/{id}/videos', [AdminController::class, 'playlistShowVideos'])->middleware('auth:web,api');
+        Route::get('/playlists/{id}', [AdminController::class, 'playlistShow'])->middleware('auth:web,api');
+        Route::get('/playlists', [AdminController::class, 'playlists'])->middleware('auth:web,api');
         Route::get('/hashtags', [AdminController::class, 'hashtags'])->middleware('auth:web,api');
         Route::get('/hashtag/{id}', [AdminController::class, 'getHashtag'])->middleware('auth:web,api');
         Route::post('/hashtags/{id}/update', [AdminController::class, 'hashtagsUpdate'])->middleware('auth:web,api');

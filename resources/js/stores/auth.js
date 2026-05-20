@@ -51,6 +51,8 @@ export const useAuthStore = defineStore('auth', {
             this.loading = false
             this.error = null
             this.authRedirect = null
+
+            localStorage.clear()
         },
 
         async resetMyPassword(data) {
