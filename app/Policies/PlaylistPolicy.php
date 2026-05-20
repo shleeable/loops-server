@@ -68,6 +68,10 @@ class PlaylistPolicy
      */
     public function update(User $user, Playlist $playlist): bool
     {
+        if (! $user->can_playlist) {
+            return false;
+        }
+
         return (int) $user->profile_id === (int) $playlist->profile_id;
     }
 
@@ -76,7 +80,7 @@ class PlaylistPolicy
      */
     public function delete(User $user, Playlist $playlist): bool
     {
-        return $user->profile_id === $playlist->profile_id;
+        return (int) $user->profile_id === (int) $playlist->profile_id;
     }
 
     /**
