@@ -35,6 +35,7 @@ use Laravel\Passport\HasApiTokens;
  * @property int $can_use_starter_kits
  * @property int $can_embed
  * @property int $can_report
+ * @property int $can_playlist
  * @property int $hide_ai
  * @property int $hide_sensitive
  * @property string|null $remember_token
@@ -179,6 +180,7 @@ class User extends Authenticatable implements OAuthenticatable
         'hide_ai',
         'hide_sensitive',
         'can_embed',
+        'can_playlist',
     ];
 
     protected $hidden = [
@@ -218,6 +220,7 @@ class User extends Authenticatable implements OAuthenticatable
         'register_source',
         'must_change_password',
         'can_embed',
+        'can_playlist',
     ];
 
     protected function casts(): array
@@ -240,6 +243,7 @@ class User extends Authenticatable implements OAuthenticatable
             'can_report' => 'boolean',
             'can_comment' => 'boolean',
             'can_embed' => 'boolean',
+            'can_playlist' => 'boolean',
         ];
     }
 
@@ -325,6 +329,12 @@ class User extends Authenticatable implements OAuthenticatable
     public function starterKits(): HasMany
     {
         return $this->hasMany(StarterKit::class, 'profile_id', 'profile_id');
+    }
+
+    /** @return HasMany<Playlist, $this> */
+    public function playlists(): HasMany
+    {
+        return $this->hasMany(Playlist::class, 'profile_id', 'profile_id');
     }
 
     public function videoViews(): HasMany

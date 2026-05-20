@@ -58,6 +58,7 @@ use Illuminate\Support\Facades\DB;
  * @property int $can_create_starter_kits
  * @property int $can_use_starter_kits
  * @property int $can_report
+ * @property int $can_playlist
  * @property int $hide_ai
  * @property int $hide_sensitive
  * @property int $manuallyApprovesFollowers
@@ -205,6 +206,7 @@ class Profile extends Model
         'can_report',
         'hide_ai',
         'hide_sensitive',
+        'can_playlist',
     ];
 
     protected $guarded = [];
@@ -222,6 +224,7 @@ class Profile extends Model
         'can_comment' => 'boolean',
         'can_share' => 'boolean',
         'can_like' => 'boolean',
+        'can_playlist' => 'boolean',
         'can_create_starter_kits' => 'boolean',
         'can_use_starter_kits' => 'boolean',
         'can_report' => 'boolean',
