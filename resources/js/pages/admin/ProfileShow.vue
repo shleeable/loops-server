@@ -1158,6 +1158,7 @@ const auditTypeLabels = {
     'profile:2fa_disable': 'Two factor auth disabled by admin',
     'profile:send_email': 'Email sent',
     'profile:password_reset': 'Password reset',
+    'profile:avatar_delete': 'Avatar deleted by admin',
     'profile:delete_all_comments': 'Delete all comments/replies by this user'
 }
 
@@ -1165,6 +1166,7 @@ const auditTypeStyles = {
     'profile:permissions': 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
     'profile:suspend': 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
     'profile:revoke_sessions': 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    'profile:avatar_delete': 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
     'profile:unsuspend': 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300',
     'profile:delete': 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
     'profile:notes': 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
@@ -1188,6 +1190,7 @@ const auditTypeIcons = {
     'profile:suspend': NoSymbolIcon,
     'profile:unsuspend': CheckIcon,
     'profile:delete': TrashIcon,
+    'profile:avatar_delete': TrashIcon,
     'profile:delete_all_comments': TrashIcon,
     'profile:notes': PencilSquareIcon,
     'profile:verify': CheckBadgeIcon,
