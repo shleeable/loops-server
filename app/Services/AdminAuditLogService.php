@@ -172,6 +172,11 @@ class AdminAuditLogService
         return $this->log($user, 'profile:avatar_delete', null, $profile, null, 1);
     }
 
+    public function logProfileRevokeAllSessions(User|int $user, $profile)
+    {
+        return $this->log($user, 'profile:revoke_sessions', null, $profile, null, 1);
+    }
+
     public function logProfileDisableTwoFactorAuth(User|int $user, $profile)
     {
         return $this->log($user, 'profile:2fa_disable', null, $profile, null, 1);

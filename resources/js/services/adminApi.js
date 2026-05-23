@@ -389,6 +389,10 @@ export const profilesApi = {
         return await apiClient.post(`/api/v1/admin/profiles/${id}/reset-password`, payload)
     },
 
+    async updateProfileRevokeAllSessions(id) {
+        return await apiClient.post(`/api/v1/admin/profiles/${id}/revoke-all-sessions`)
+    },
+
     async deleteProfile(id) {
         return { success: true }
     }

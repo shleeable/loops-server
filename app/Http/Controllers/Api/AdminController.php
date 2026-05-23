@@ -71,6 +71,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Laravel\Passport\Token;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
@@ -862,6 +863,24 @@ class AdminController extends Controller
                     }
                 }, column: 'id');
         });
+
+        return $this->success();
+    }
+
+    public function profileRevokeAllSessions(Request $request, $id)
+    {
+        $pid = $request->user()->profile_id;
+
+        $profile = Profile::with('user')->where('local', true)->findOrFail($id);
+
+        abort_if($profile->user->is_admin, 403, 'You cannot perform this action');
+
+        User::find($profile->user->id)->tokens()->each(function (Token $token) {
+            $token->revoke();
+            $token->refreshToken?->revoke();
+        });
+
+        app(AdminAuditLogService::class)->logProfileRevokeAllSessions($request->user(), $profile);
 
         return $this->success();
     }

@@ -475,6 +475,7 @@ Route::prefix('api')->group(function () {
         Route::post('/profiles/{id}/send-email', [AdminController::class, 'profileAdminSendEmail'])->middleware(['auth:web,api', 'throttle:30,1']);
         Route::post('/profiles/{id}/reset-password', [AdminController::class, 'profileAdminResetPassword'])->middleware(['auth:web,api', 'throttle:10,1']);
         Route::post('/profiles/{id}/delete-all-comments', [AdminController::class, 'profileDeleteAllComments'])->middleware(['auth:web,api']);
+        Route::post('/profiles/{id}/revoke-all-sessions', [AdminController::class, 'profileRevokeAllSessions'])->middleware(['auth:web,api']);
         Route::get('/settings', [AdminSettingsController::class, 'index'])->middleware('auth:web,api');
         Route::put('/settings', [AdminSettingsController::class, 'update'])->middleware('auth:web,api');
         Route::post('/settings/update-logo', [AdminSettingsController::class, 'updateLogo'])->middleware('auth:web,api');

@@ -168,9 +168,9 @@
                                             Disable Two Factor
                                         </DropdownItem>
 
-                                        <DropdownItem>
+                                        <DropdownItem @click="handleRevokeAllSessions">
                                             <KeyIcon class="h-4 w-4 mr-1.5" />
-                                            Revoke all sessions
+                                            Revoke API sessions
                                         </DropdownItem>
 
                                         <DropdownDivider class="my-1" />
@@ -1146,6 +1146,7 @@ const permissionConfig = [
 const auditTypeLabels = {
     'profile:update_notes': 'Admin notes updated',
     'profile:permissions': 'Permissions Updated',
+    'profile:revoke_sessions': 'Revoke mobile sessions',
     'profile:suspend': 'Suspended',
     'profile:unsuspend': 'Unsuspended',
     'profile:delete': 'Deleted',
@@ -1163,6 +1164,7 @@ const auditTypeLabels = {
 const auditTypeStyles = {
     'profile:permissions': 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
     'profile:suspend': 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    'profile:revoke_sessions': 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
     'profile:unsuspend': 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300',
     'profile:delete': 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
     'profile:notes': 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
@@ -1182,6 +1184,7 @@ const auditTypeStyles = {
 const auditTypeIcons = {
     'profile:update_notes': PencilSquareIcon,
     'profile:permissions': LockClosedIcon,
+    'profile:revoke_sessions': LockClosedIcon,
     'profile:suspend': NoSymbolIcon,
     'profile:unsuspend': CheckIcon,
     'profile:delete': TrashIcon,
@@ -2019,6 +2022,22 @@ const handleDeleteAvatar = async () => {
         await fetchAuditLog(profile.value.id)
     } catch (error) {
         console.error('Error unsuspending profile:', error)
+    }
+}
+
+const handleRevokeAllSessions = async () => {
+    const result = await confirmModal(
+        'Confirm Revoke All Sessions',
+        `Are you sure you want to revoke all of <strong>${profile.value.username}</strong>'s sessions?`
+    )
+    if (!result) return
+
+    try {
+        await profilesApi.updateProfileRevokeAllSessions(profile.value.id)
+        await fetchProfile(profile.value.id)
+        await fetchAuditLog(profile.value.id)
+    } catch (error) {
+        console.error('Error revoking profile sessions:', error)
     }
 }
 
