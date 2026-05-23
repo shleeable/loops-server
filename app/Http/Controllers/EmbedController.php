@@ -34,7 +34,7 @@ class EmbedController extends Controller
                 'theme' => $theme,
             ]);
         }
-        
+
         if ($video->has_audio && $video->sound_id) {
             $res['audio'] = [
                 'cover' => data_get($res, 'account.avatar', '/storage/avatars/default.jpg'),
