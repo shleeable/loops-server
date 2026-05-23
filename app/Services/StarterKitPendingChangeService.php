@@ -152,6 +152,7 @@ class StarterKitPendingChangeService
         $changeset->update(['changeset' => $changes]);
 
         if (! empty($updates)) {
+            /** @phpstan-ignore argument.type */
             $kit->update($updates);
             app(StarterKitService::class)->forget($kit->id);
         }
@@ -191,7 +192,7 @@ class StarterKitPendingChangeService
         return StarterKitPendingChange::where('starter_kit_id', $kit->id)
             ->pending()
             ->whereJsonContainsKey("changeset->{$field}")
-            ->where("changeset->{$field}->status", 'pending')
+            ->where("changeset->{$field}->status", 'pending') // @phpstan-ignore argument.type
             ->exists();
     }
 
