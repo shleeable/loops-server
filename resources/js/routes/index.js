@@ -244,6 +244,12 @@ const router = createRouter({
         //   meta: { requiresAuth: false }
         // },
         {
+            path: '/dmca',
+            name: 'dmca',
+            component: () => import('~/pages/platform/legal/dmca.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
             path: '/contact',
             name: 'contact',
             component: () => import('~/pages/platform/contact.vue'),

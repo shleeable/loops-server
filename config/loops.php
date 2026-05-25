@@ -17,6 +17,7 @@ return [
 
     'emails' => [
         'support' => env('LOOPS_EMAILS_SUPPORT'),
+        'dmca' => env('LOOPS_EMAILS_DMCA'),
     ],
 
     'feed' => [

@@ -238,7 +238,11 @@
             <div class="flex pt-1 text-[11px] text-gray-500 px-3 flex-wrap">
                 <template v-for="link in footerLinks" :key="link.name">
                     <div class="pt-1 pr-4 font-medium flex">
+                        <a v-if="link.external" :href="link.path" target="_blank">{{
+                            link.name
+                        }}</a>
                         <router-link
+                            v-else
                             :to="link.path"
                             class="dfi"
                             activeClass="text-black dark:text-slate-300"
@@ -246,37 +250,9 @@
                         >
                     </div>
                 </template>
-
-                <div>
-                    <button
-                        class="p-1.5 font-medium flex cursor-pointer"
-                        @click="openLanguagePicker"
-                        aria-label="Change language"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="currentColor"
-                            class="size-4"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="m10.5 21 5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802"
-                            />
-                        </svg>
-
-                        <LanguagePicker
-                            :is-open="isLanguagePickerOpen"
-                            @close="closeLanguagePicker"
-                        />
-                    </button>
-                </div>
             </div>
 
-            <div class="flex justify-between flex-col gap-3 px-3 mt-5">
+            <div class="flex justify-between flex-col gap-3 px-3 mt-3">
                 <div class="flex flex-col">
                     <div class="text-[10.5px] text-gray-500 dark:text-gray-300 font-light dbi">
                         {{ getCopyright() }}
@@ -290,6 +266,36 @@
                             >{{ t('nav.poweredBy') }} Loops</a
                         >
                     </div>
+                </div>
+            </div>
+
+            <div class="flex items-center mx-2 mt-2 gap-3">
+                <div>
+                    <button
+                        class="p-1.5 font-medium flex cursor-pointer dark:text-gray-300"
+                        @click="handleLangPicker"
+                        aria-label="Change language"
+                    >
+                        <LanguageIcon class="size-5 md:size-4 dark:text-gray-300" />
+
+                        <LanguagePicker
+                            :is-open="isLanguagePickerOpen"
+                            @close="closeLanguagePicker"
+                        />
+                    </button>
+                </div>
+
+                <div>
+                    <button
+                        class="p-1.5 font-medium flex cursor-pointer"
+                        @click="handleToggleDarkMode"
+                        aria-label="Toggle theme"
+                    >
+                        <component
+                            :is="isDark ? SunIcon : MoonIcon"
+                            class="size-5 md:size-4 dark:text-gray-300"
+                        />
+                    </button>
                 </div>
             </div>
 
@@ -312,9 +318,9 @@ import { useAlertModal } from '@/composables/useAlertModal.js'
 import AnimatedButton from '../AnimatedButton.vue'
 import SparklesAltIcon from '../Icons/SparklesAltIcon.vue'
 import AccountSwitcher from '../Auth/AccountSwitcher.vue'
+import { SunIcon, MoonIcon, LanguageIcon } from '@heroicons/vue/24/outline'
 const { t } = useI18n()
 const { isLanguagePickerOpen, openLanguagePicker, closeLanguagePicker } = useLanguagePicker()
-
 const props = defineProps({
     isOpen: {
         type: Boolean,
@@ -428,10 +434,10 @@ const mainLinks = computed(() => {
             //     icon: 'bx bx-message-dots'
             // },
             {
-                id: 'upload',
-                name: t('nav.upload'),
-                path: `/studio/upload`,
-                icon: 'bx bx-video-plus'
+                id: isMobile.value ? 'studio' : 'upload',
+                name: isMobile.value ? 'Analytics' : t('nav.upload'),
+                path: isMobile.value ? '/studio/' : `/studio/upload`,
+                icon: isMobile.value ? 'bx bx-trending-up' : 'bx bx-video-plus'
             },
             {
                 id: 'profile',
@@ -447,6 +453,15 @@ const mainLinks = computed(() => {
                 name: t('common.following'),
                 path: '/feed/following',
                 icon: 'bx bx-user-plus'
+            })
+        }
+
+        if (authStore.getUser && isLargeScreen.value) {
+            links.splice(5, 0, {
+                id: 'desktop-studio',
+                name: 'Analytics',
+                path: '/studio',
+                icon: 'bx bx-trending-up'
             })
         }
 
@@ -528,7 +543,13 @@ const footerLinks = computed(() => {
     const links = [
         { name: t('nav.about'), path: '/about' },
         { name: t('nav.contact'), path: '/contact' },
-        { name: t('nav.community'), path: '/community-guidelines' },
+        { name: 'Community', path: '/community-guidelines' },
+        { name: 'DMCA', path: '/dmca' },
+        {
+            name: 'Loops for iOS',
+            path: 'https://apps.apple.com/us/app/loops-by-pixelfed/id6499375182',
+            external: true
+        },
         // { name: t('nav.developers'), path: '/platform/developers' },
         // { name: t('nav.help'), path: '/help-center' },
         { name: t('nav.privacy'), path: '/privacy' },
@@ -586,6 +607,15 @@ const handleLinkClick = () => {
     if (isMobile.value) {
         closeMobileDrawer()
     }
+}
+
+const handleLangPicker = () => {
+    showMoreMenu.value = false
+    if (isMobile.value) {
+        closeMobileDrawer()
+    }
+
+    openLanguagePicker()
 }
 
 const handleLogout = async () => {
