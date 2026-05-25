@@ -30,7 +30,7 @@
                         </div>
                         <div v-if="profile.is_admin" class="mt-1 md:mt-0">
                             <Tooltip
-                                title="Verifed Staff Account"
+                                title="Verified Staff Account"
                                 body="This acccount belongs to an admin or staff member of this server."
                             >
                                 <span
