@@ -100,7 +100,7 @@
                             <button
                                 v-if="profile.id == authStore.getUser.id"
                                 @click="openEditProfile"
-                                class="flex items-center gap-2 sm:gap-3 rounded-md py-1.5 px-4 sm:px-6 text-sm sm:text-[15px] font-semibold border hover:bg-gray-100 dark:text-slate-400 dark:border-slate-500 dark:hover:bg-slate-900 cursor-pointer"
+                                class="flex items-center gap-2 sm:gap-3 rounded-xl py-[5px] px-4 sm:px-6 text-sm sm:text-[15px] font-semibold border hover:bg-gray-100 dark:text-slate-400 dark:border-slate-500 dark:hover:bg-slate-900 cursor-pointer"
                             >
                                 <div>{{ t('profile.editProfile') }}</div>
                             </button>
@@ -109,14 +109,14 @@
                                 <button
                                     v-if="profile.relationship.blocking"
                                     @click="handleUnblock"
-                                    class="flex item-center rounded-md py-[4px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-[#F02C56] cursor-pointer"
+                                    class="flex item-center rounded-xl py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-[#F02C56] cursor-pointer"
                                 >
                                     {{ t('profile.blocked') }}
                                 </button>
                                 <button
                                     v-else-if="isFollowingRequestPending"
                                     @click="handleUndoFollowRequest"
-                                    class="flex item-center gap-2 rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-border-[#F02C56] cursor-pointer"
+                                    class="flex item-center gap-2 rounded-xl py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-border-[#F02C56] cursor-pointer"
                                 >
                                     <Spinner v-if="isPollingFollowState" size="xs" />
                                     {{ t('profile.followRequestPending') }}
@@ -124,7 +124,7 @@
                                 <button
                                     v-else-if="!profile.isFollowing"
                                     @click="handleToggleFollow"
-                                    class="flex item-center rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-white bg-red-500 hover:bg-red-400 font-semibold border dark:border-slate-950 cursor-pointer"
+                                    class="flex item-center rounded-xl py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-white bg-red-500 hover:bg-red-400 font-semibold border dark:border-slate-950 cursor-pointer"
                                 >
                                     {{
                                         profile.manuallyApprovesFollowers
@@ -135,7 +135,7 @@
                                 <button
                                     v-else
                                     @click="handleToggleFollow"
-                                    class="flex item-center rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-border-[#F02C56] cursor-pointer"
+                                    class="flex item-center rounded-xl py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-border-[#F02C56] cursor-pointer"
                                 >
                                     {{ t('common.unfollow') }}
                                 </button>
@@ -145,7 +145,7 @@
                         <button
                             v-if="!authStore.authenticated"
                             @click="showRemoteFollowModal = true"
-                            class="flex item-center rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-white bg-red-500 hover:bg-red-400 font-semibold border dark:border-slate-950 cursor-pointer"
+                            class="flex item-center rounded-xl py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-white bg-red-500 hover:bg-red-400 font-semibold border dark:border-slate-950 cursor-pointer"
                         >
                             {{ t('common.follow') }}
                         </button>
