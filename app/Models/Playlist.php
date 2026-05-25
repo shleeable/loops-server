@@ -149,8 +149,6 @@ class Playlist extends Model
 
     public function addVideo(Video $video, ?int $position = null): void
     {
-        $video->playlists()->detach();
-
         if ($position === null) {
             $maxPosition = $this->videos()->max('position') ?? -1;
             $position = $maxPosition + 1;
