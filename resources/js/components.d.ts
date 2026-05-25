@@ -98,6 +98,7 @@ declare module 'vue' {
     PendingRemoteVideoCard: typeof import('./components/Search/PendingRemoteVideoCard.vue')['default']
     PlaylistAddVideoModal: typeof import('./components/Studio/PlaylistAddVideoModal.vue')['default']
     PlaylistModal: typeof import('./components/Profile/PlaylistModal.vue')['default']
+    PlaylistPanel: typeof import('./components/Status/PlaylistPanel.vue')['default']
     ProfileHeader: typeof import('./components/Profile/ProfileHeader.vue')['default']
     ProfileHeaderInfoModal: typeof import('./components/Profile/ProfileHeaderInfoModal.vue')['default']
     ProfileHoverCard: typeof import('./components/ProfileHoverCard.vue')['default']

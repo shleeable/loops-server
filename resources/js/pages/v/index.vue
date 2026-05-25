@@ -448,9 +448,60 @@
             </div>
 
             <div
-                class="flex-1 min-h-0 border-t-2 border-gray-100 dark:border-slate-800 bg-[#F8F8F8] dark:bg-slate-900"
+                class="flex-1 min-h-0 border-t-2 border-gray-100 dark:border-slate-800 bg-[#F8F8F8] dark:bg-slate-900 flex flex-col"
             >
-                <Comments />
+                <div
+                    v-if="hasPlaylist"
+                    class="flex-shrink-0 flex border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950"
+                >
+                    <button
+                        @click="activeTab = 'playlist'"
+                        class="flex-1 relative py-3 text-sm font-semibold transition-colors cursor-pointer"
+                        :class="
+                            activeTab === 'playlist'
+                                ? 'text-[#F02C56]'
+                                : 'text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200'
+                        "
+                    >
+                        Playlist
+                        <span
+                            v-if="activeTab === 'playlist'"
+                            class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F02C56]"
+                        ></span>
+                    </button>
+                    <button
+                        @click="activeTab = 'comments'"
+                        class="flex-1 relative py-3 text-sm font-semibold transition-colors cursor-pointer"
+                        :class="
+                            activeTab === 'comments'
+                                ? 'text-[#F02C56]'
+                                : 'text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200'
+                        "
+                    >
+                        {{ $t('post.comments') }}
+                        <span
+                            v-if="currentVideo?.comments"
+                            class="ml-1 text-xs font-medium text-gray-400 dark:text-slate-500"
+                        >
+                            {{ formatCount(currentVideo.comments) }}
+                        </span>
+                        <span
+                            v-if="activeTab === 'comments'"
+                            class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F02C56]"
+                        ></span>
+                    </button>
+                </div>
+
+                <div class="flex-1 min-h-0">
+                    <PlaylistPanel
+                        v-if="hasPlaylist"
+                        v-show="activeTab === 'playlist'"
+                        :playlist-id="playlistId"
+                        :current-video-hid="route.params.id"
+                        @error="onPlaylistError"
+                    />
+                    <Comments v-show="!hasPlaylist || activeTab === 'comments'" />
+                </div>
             </div>
         </div>
 
@@ -500,6 +551,7 @@ import { useHashids } from '@/composables/useHashids'
 import { useAlertModal } from '@/composables/useAlertModal.js'
 import { useUtils } from '@/composables/useUtils'
 import { useEditHistory } from '@/composables/useEditHistory'
+import PlaylistPanel from '@/components/Status/PlaylistPanel.vue'
 import {
     ArrowPathIcon,
     VideoCameraSlashIcon,
@@ -558,6 +610,15 @@ const showControls = ref(false)
 const controlsTimeout = ref(null)
 const showShareModal = ref(false)
 const showEmbedModal = ref(false)
+const activeTab = ref('playlist')
+const playlistId = computed(() => route.query.playlist_id)
+const playlistFailed = ref(false)
+const hasPlaylist = computed(() => !!route.query.playlist_id && !playlistFailed.value)
+
+const onPlaylistError = () => {
+    playlistFailed.value = true
+    activeTab.value = 'comments'
+}
 
 const currentVideo = computed(() => videoStore.video)
 const userId = computed(() => authStore.id)
@@ -917,6 +978,24 @@ watch(isVideoLoaded, (newVal) => {
     ) {
     }
 })
+
+watch(
+    () => route.params.id,
+    () => {
+        isVideoLoading.value = true
+        isVideoLoaded.value = false
+        error.value = null
+        loadPost()
+    }
+)
+
+watch(
+    () => route.query.playlist_id,
+    () => {
+        playlistFailed.value = false
+        activeTab.value = 'playlist'
+    }
+)
 
 const likePost = async () => {
     if (!authStore.isAuthenticated) {
