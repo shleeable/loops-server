@@ -361,11 +361,13 @@ watch(
     () => props.show,
     (isShown) => {
         if (isShown) {
+            document.body.style.overflow = 'hidden'
             activeTab.value = props.tab
             if (!hasLoadedInitially.value[activeTab.value]) {
                 loadMore()
             }
         } else {
+            document.body.style.overflow = ''
             hasLoadedInitially.value = { followers: false, following: false }
             hasMore.value = { followers: true, following: true }
             page.value = { followers: 1, following: 1 }
@@ -373,6 +375,10 @@ watch(
         }
     }
 )
+
+onUnmounted(() => {
+    document.body.style.overflow = ''
+})
 
 useInfiniteScroll(
     containerRef,

@@ -350,7 +350,8 @@ import {
     MagnifyingGlassIcon,
     ChevronDownIcon,
     WalletIcon,
-    ChatBubbleBottomCenterIcon
+    ChatBubbleBottomCenterIcon,
+    QueueListIcon
 } from '@heroicons/vue/24/outline'
 import { useAdminStore } from '~/stores/admin'
 
@@ -374,6 +375,7 @@ const navigation = computed(() => [
         items: [
             { name: 'Hashtags', href: '/admin/hashtags', icon: HashtagIcon },
             { name: 'Comments', href: '/admin/comments', icon: ChatBubbleOvalLeftIcon },
+            { name: 'Playlists', href: '/admin/playlists', icon: QueueListIcon },
             { name: 'Replies', href: '/admin/replies', icon: ChatBubbleLeftRightIcon },
             { name: 'Videos', href: '/admin/videos', icon: VideoCameraIcon }
         ]
@@ -417,14 +419,7 @@ const navigation = computed(() => [
     {
         title: 'Federation',
         items: [
-            {
-                name: 'Instances',
-                icon: ServerStackIcon,
-                subItems: [
-                    { name: 'Overview', href: '/admin/instances' },
-                    { name: 'Manage', href: '/admin/instances/manage' }
-                ]
-            },
+            { name: 'Instances', href: '/admin/instances', icon: ServerStackIcon },
             { name: 'Relays', href: '/admin/relays', icon: ArrowPathIcon }
         ]
     },

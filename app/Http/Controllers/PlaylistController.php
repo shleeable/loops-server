@@ -2,20 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Requests\CreatePlaylistRequest;
 use App\Http\Resources\PlaylistResource;
 use App\Http\Resources\PlaylistVideoResource;
 use App\Models\Playlist;
-use App\Models\PlaylistVideo;
 use App\Models\Video;
+use App\Services\PlaylistService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class PlaylistController extends Controller
 {
+    use ApiHelpers;
+
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware('auth:web,api');
     }
 
     public function index(Request $request)
@@ -34,9 +37,14 @@ class PlaylistController extends Controller
             });
         }
 
-        $sortField = $request->input('sort_field', 'created_at');
-        $sortDirection = $request->input('sort_direction', 'desc');
-        $query->orderBy('created_at', $sortDirection);
+        $allowed = ['created_at', 'order_column', 'name'];
+        $sortField = $request->input('sort_field', 'order_column');
+        $sortDirection = $request->input('sort_direction', 'asc');
+
+        $query->orderBy(
+            in_array($sortField, $allowed) ? $sortField : 'order_column',
+            $sortDirection === 'asc' ? 'asc' : 'desc'
+        );
 
         $perPage = $request->input('limit', 10);
         $playlists = $query->cursorPaginate($perPage);
@@ -55,9 +63,9 @@ class PlaylistController extends Controller
 
     public function show(Request $request, Playlist $playlist)
     {
-        $viewer = $request->user()?->profile;
+        $pid = $request->user()->profile_id;
 
-        if (! $playlist->isVisibleTo($viewer)) {
+        if ((int) $playlist->profile_id !== (int) $pid) {
             abort(403, 'You do not have permission to view this playlist.');
         }
 
@@ -78,7 +86,12 @@ class PlaylistController extends Controller
 
         $perPage = $request->input('limit', 10);
 
-        $videos = $playlist->videos()->cursorPaginate($perPage)->withQueryString();
+        $videos = $playlist->videos()
+            ->select('videos.*', 'playlist_video.position')
+            ->orderBy('playlist_video.position')
+            ->orderBy('playlist_video.video_id')
+            ->cursorPaginate($perPage)
+            ->withQueryString();
 
         return PlaylistVideoResource::collection($videos);
     }
@@ -132,12 +145,6 @@ class PlaylistController extends Controller
             abort(403, 'You can only add your own videos to playlists.');
         }
 
-        $existsInOtherPlaylists = PlaylistVideo::where('video_id', $video->id)->exists();
-
-        if ($existsInOtherPlaylists) {
-            abort(403, 'Video already exists in another playlist.');
-        }
-
         $playlist->addVideo($video, $validated['position'] ?? null);
 
         $playlist->update(['videos_count' => $playlist->videos()->count()]);
@@ -168,5 +175,34 @@ class PlaylistController extends Controller
         $playlist->reorderVideos($validated['video_ids']);
 
         return response()->json(['message' => 'Playlist reordered']);
+    }
+
+    public function reorderPlaylistOrder(Request $request)
+    {
+        $request->validate([
+            'playlist_ids' => 'required|array',
+            'playlist_ids.*' => 'required|integer',
+        ]);
+
+        $profile = $request->user()->profile;
+
+        $count = Playlist::where('profile_id', $profile->id)
+            ->whereIn('id', $request->input('playlist_ids'))
+            ->count();
+
+        if ($count !== count($request->input('playlist_ids'))) {
+            abort(403, 'Invalid playlist IDs');
+        }
+
+        Playlist::reorder($profile->id, $request->input('playlist_ids'));
+
+        return response()->json(['message' => 'Playlists reordered']);
+    }
+
+    public function getLimits(Request $request)
+    {
+        $profile = $request->user()->profile;
+
+        return $this->data(PlaylistService::getDetails($profile));
     }
 }

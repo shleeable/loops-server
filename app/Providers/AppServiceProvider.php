@@ -21,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton('app_version', function () {
-            return '1.0.0-beta.10';
+            return '1.0.0-beta.12';
         });
 
         $this->app->singleton('user_agent', function () {
@@ -77,6 +77,36 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return $limits(perMinute: config('loops.api.rate_limits.guests.per_minute'), perHour: config('loops.api.rate_limits.guests.per_hour'));
+        });
+
+        RateLimiter::for('profile-username', function (Request $request) {
+            $user = $request->user();
+            $actor = $user
+                ? "u:{$user->id}"
+                : 'ip:'.$request->ip();
+
+            $tooMany = fn ($req, array $headers) => response()->json([
+                'message' => 'Too many requests',
+                'retry_after' => $headers['Retry-After'] ?? null,
+            ], 429)->withHeaders($headers);
+
+            $limits = function (int $perMinute, int $perHour, int $perDay) use ($actor, $tooMany) {
+                return [
+                    Limit::perMinute($perMinute)->by("m:$actor")->response($tooMany),
+                    Limit::perHour($perHour)->by("h:$actor")->response($tooMany),
+                    Limit::perHour($perDay)->by("d:$actor")->response($tooMany),
+                ];
+            };
+
+            if ($user?->is_admin) {
+                return;
+            }
+
+            if ($user) {
+                return $limits(perMinute: config('loops.api.rate_limits.users.per_minute'), perHour: config('loops.api.rate_limits.users.per_hour'), perDay: 3000);
+            }
+
+            return $limits(perMinute: 10, perHour: 30, perDay: 100);
         });
 
         RateLimiter::for('autocomplete', function (Request $request) {

@@ -1,6 +1,9 @@
 <template>
     <MainLayout>
-        <div v-if="!isLoading && !error && profileStore.id" class="pt-[30px] px-5">
+        <div
+            v-if="!isLoading && !error && profileStore.id"
+            class="pt-[30px] px-5 align-center xl:max-w-7xl xl:mx-auto"
+        >
             <ProfileHeader />
 
             <ProfileTabBar
@@ -11,6 +14,8 @@
                 @filter-change="handleFilterChange"
                 ref="tabBarRef"
             />
+
+            <ProfilePlaylists v-if="playlists && playlists.length" :playlists="playlists" />
 
             <div v-if="show" class="mt-4 grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-3">
                 <div v-for="post in displayPosts" :key="post.id">
@@ -89,12 +94,16 @@
             <div
                 class="flex flex-col items-center justify-center min-h-[400px] max-w-md mx-auto text-center"
             >
-                <div class="text-6xl mb-6">😵</div>
+                <div class="text-6xl mb-6">
+                    <ExclamationTriangleIcon class="size-20 text-red-500" />
+                </div>
                 <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
                     {{
                         error.type === 'not-found'
                             ? $t('profile.profileNotFound')
-                            : $t('common.somethingWentWrong')
+                            : error.type === 'rate-limit'
+                              ? 'Rate limited'
+                              : $t('common.somethingWentWrong')
                     }}
                 </h2>
                 <p
@@ -102,24 +111,34 @@
                     v-html="error.message"
                 ></p>
 
-                <div class="space-y-3 w-full">
-                    <button
+                <div class="flex flex-col gap-3 w-full">
+                    <AnimatedButton
+                        variant="primary"
+                        class="w-full"
+                        size="lg"
+                        pill
                         @click="retryLoad"
                         :disabled="retryLoading"
-                        class="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center"
                     >
-                        <Spinner v-if="retryLoading" class="w-4 h-4 mr-2" />
-                        <span>{{
-                            retryLoading ? $t('common.retryingDotDotDot') : $t('common.tryAgain')
-                        }}</span>
-                    </button>
+                        <div class="flex items-center gap-3">
+                            <Spinner v-if="retryLoading" class="w-4 h-4 mr-2" />
+                            <span>{{
+                                retryLoading
+                                    ? $t('common.retryingDotDotDot')
+                                    : $t('common.tryAgain')
+                            }}</span>
+                        </div>
+                    </AnimatedButton>
 
-                    <button
+                    <AnimatedButton
+                        variant="light"
+                        class="w-full"
+                        size="lg"
+                        pill
                         @click="$router.push('/')"
-                        class="w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
                     >
                         {{ $t('common.goToHome') }}
-                    </button>
+                    </AnimatedButton>
                 </div>
             </div>
         </div>
@@ -133,12 +152,13 @@ import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import MainLayout from '~/layouts/MainLayout.vue'
 import ProfileVideoCard from '~/components/Profile/ProfileVideoCard.vue'
+import ProfilePlaylists from '~/components/Profile/ProfilePlaylists.vue'
 import { useProfileStore } from '~/stores/profile'
 import { useAuthStore } from '~/stores/auth'
 import { useUtils } from '@/composables/useUtils'
 import { useI18n } from 'vue-i18n'
 import { useHead } from '@unhead/vue'
-import { BookmarkIcon } from '@heroicons/vue/24/outline'
+import { BookmarkIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
 
 const { formatCount } = useUtils()
 const authStore = useAuthStore()
@@ -158,7 +178,7 @@ const currentTab = ref('videos')
 const currentFilter = ref('Latest')
 const tabBarRef = ref(null)
 
-const { posts, allLikes, bookmarkedPosts } = storeToRefs(profileStore)
+const { posts, allLikes, bookmarkedPosts, playlists } = storeToRefs(profileStore)
 
 const displayPosts = computed(() => {
     if (currentTab.value === 'bookmarks') {
@@ -292,6 +312,12 @@ const gotoProfile = (id) => {
     router.push(`/@${id}`)
 }
 
+const sanitize = (s) =>
+    s.replace(
+        /[<>&"']/g,
+        (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' })[c]
+    )
+
 const loadProfileData = async (userId) => {
     try {
         isLoading.value = true
@@ -306,7 +332,7 @@ const loadProfileData = async (userId) => {
             error.value = {
                 type: 'not-found',
                 message: t('profile.profile404ErrorMessage', {
-                    userid: userId
+                    userid: sanitize(userId)
                 })
             }
         } else if ([500, 502, 503].includes(err.response?.status)) {
@@ -318,6 +344,11 @@ const loadProfileData = async (userId) => {
             error.value = {
                 type: 'network-error',
                 message: t('profile.profileOfflineErrorMessage')
+            }
+        } else if (err.response?.status === 429) {
+            error.value = {
+                type: 'rate-limit',
+                message: 'You have been rate limited. Please try again later.'
             }
         } else {
             error.value = {

@@ -17,7 +17,19 @@ class CreatePlaylistRequest extends FormRequest
             return false;
         }
 
-        Gate::authorize('create', Playlist::class);
+        $response = Gate::inspect('create', Playlist::class);
+
+        if ($response->denied()) {
+            abort(403, 'You are not authorized to create a playlist.'
+                .'<br/><br/>This could mean:'
+                .'<ul style="list-style: disc; padding-left: 1.25rem; margin-top: 0.5rem;" class="text-sm">'
+                .'<li>You haven\'t posted enough videos or don\'t have enough followers yet</li>'
+                .'<li>You\'ve reached your playlist limit for your current tier</li>'
+                .'<li>Your account has been restricted from this feature</li>'
+                .'</ul>'
+                .'<br/><p class="text-sm">If you think this is a mistake, please contact support.</p>'
+            );
+        }
 
         return true;
     }

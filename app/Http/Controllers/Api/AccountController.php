@@ -9,19 +9,24 @@ use App\Http\Resources\AccountCompactResource;
 use App\Http\Resources\FollowerResource;
 use App\Http\Resources\FollowingResource;
 use App\Http\Resources\NotificationResource;
+use App\Http\Resources\PlaylistResource;
 use App\Http\Resources\ProfileResource;
 use App\Http\Resources\UserVideoLikeResource;
+use App\Jobs\Federation\DeliverBlockActivity;
 use App\Jobs\Federation\DeliverFollowRequest;
+use App\Jobs\Federation\DeliverUndoBlockActivity;
 use App\Jobs\Federation\DeliverUndoFollowActivity;
 use App\Jobs\Federation\DeliverUndoFollowRequestActivity;
 use App\Models\Follower;
 use App\Models\FollowRequest;
 use App\Models\HiddenSuggestion;
 use App\Models\Notification;
+use App\Models\Playlist;
 use App\Models\Profile;
 use App\Models\ProfileLink;
 use App\Models\SystemMessage;
 use App\Models\UserFilter;
+use App\Models\UserInterest;
 use App\Models\Video;
 use App\Models\VideoLike;
 use App\Services\AccountService;
@@ -39,6 +44,7 @@ use App\Services\UserAuditLogService;
 use App\Services\UserFilterService;
 use App\Support\CursorToken;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -134,7 +140,9 @@ class AccountController extends Controller
 
     public function notificationUnreadCount(Request $request)
     {
-        $pid = $request->user()->profile_id;
+        $user = $request->user();
+        app(UserActivityService::class)->markActive($user);
+        $pid = $user->profile_id;
 
         return $this->data(['unread_count' => NotificationService::getUnreadCount($pid)]);
     }
@@ -189,7 +197,7 @@ class AccountController extends Controller
     public function accountBlock(Request $request, $id)
     {
         $pid = $request->user()->profile_id;
-        abort_if($pid == $id, 403, 'You cannot block yourself');
+        abort_if((int) $pid === (int) $id, 403, 'You cannot block yourself');
 
         $profile = Profile::findOrFail($id);
 
@@ -199,8 +207,10 @@ class AccountController extends Controller
 
         app(UserActivityService::class)->markActive($request->user());
 
-        $res = DB::transaction(function () use ($pid, $profile, $request) {
-            UserFilter::updateOrCreate([
+        $actor = $request->user()->profile;
+
+        $res = DB::transaction(function () use ($pid, $profile, $actor, $request) {
+            $filter = UserFilter::updateOrCreate([
                 'profile_id' => $pid,
                 'account_id' => $profile->id,
             ]);
@@ -210,10 +220,21 @@ class AccountController extends Controller
             FollowRequest::whereProfileId($pid)->whereFollowingId($profile->id)->delete();
             FollowRequest::whereProfileId($profile->id)->whereFollowingId($pid)->delete();
 
-            FollowerService::refreshAndSync($pid, $profile->id);
+            UserInterest::where('profile_id', $pid)->where('interest_type', 'creator')->where('interest_value', $profile->id)->delete();
+            UserInterest::where('profile_id', $profile->id)->where('interest_type', 'creator')->where('interest_value', $pid)->delete();
+            Notification::where('user_id', $pid)->where('profile_id', $profile->id)->delete();
+            Notification::where('user_id', $profile->id)->where('profile_id', $pid)->delete();
+            NotificationService::clearUnreadCount($pid);
+            NotificationService::clearUnreadCount($profile->id);
+
             AccountSuggestionService::removeForUser($pid, $profile->id);
             AccountSuggestionService::invalidate($pid);
-            UserFilterService::getAll($pid, true);
+
+            if ($filter->wasRecentlyCreated && ! $profile->local && $profile->inbox_url) {
+                DeliverBlockActivity::dispatch($actor, $profile, $filter->id)->onQueue('activitypub-out')->afterCommit();
+            }
+
+            Cache::forget(UserFilterService::ALL_CACHE_KEY.$pid);
 
             $res = (new ProfileResource($profile))->toArray($request);
             $res['is_blocking'] = true;
@@ -221,30 +242,44 @@ class AccountController extends Controller
             return $res;
         });
 
+        FollowerService::refreshAndSync($pid, $profile->id);
+
         return response()->json($res);
     }
 
     public function accountUnblock(Request $request, $id)
     {
         $pid = $request->user()->profile_id;
-        abort_if($pid == $id, 403, 'You cannot unblock yourself');
+        abort_if((int) $pid === (int) $id, 403, 'You cannot unblock yourself');
 
         $profile = Profile::findOrFail($id);
+        $actor = $request->user()->profile;
 
-        $res = DB::transaction(function () use ($pid, $profile, $request) {
-            UserFilter::whereProfileId($pid)
+        $res = DB::transaction(function () use ($pid, $profile, $actor, $request) {
+            $filter = UserFilter::whereProfileId($pid)
                 ->whereAccountId($profile->id)
-                ->delete();
+                ->first();
+
+            if ($filter) {
+                $filterId = $filter->id;
+                $filter->delete();
+
+                if (! $profile->local && $profile->inbox_url) {
+                    DeliverUndoBlockActivity::dispatch($actor, $profile, $filterId)->onQueue('activitypub-out')->afterCommit();
+                }
+            }
 
             AccountSuggestionService::invalidate($pid);
-            FollowerService::refreshAndSync($pid, $profile->id);
             UserFilterService::getAll($pid, true);
+            UserFilterService::getAll($profile->id, true);
 
             $res = (new ProfileResource($profile))->toArray($request);
             $res['is_blocking'] = false;
 
             return $res;
         });
+
+        FollowerService::refreshAndSync($pid, $profile->id);
 
         return response()->json($res);
     }
@@ -901,6 +936,7 @@ class AccountController extends Controller
     {
         $allowed = app(ConfigService::class)->pushNotifications();
         $user = $request->user();
+        app(UserActivityService::class)->markActive($user);
 
         $res = [
             'allowed' => (bool) $allowed,
@@ -1139,5 +1175,17 @@ class AccountController extends Controller
         $profile->update(['starter_kit_state' => $validated['state']]);
 
         return $this->data(['state_int' => $state]);
+    }
+
+    public function accountPlaylists(Request $request, $id)
+    {
+        $viewerId = optional($request->user())->profile_id;
+
+        $playlists = Playlist::published()
+            ->where('profile_id', $id)
+            ->visibleOnProfile((int) $id, $viewerId ? (int) $viewerId : null)
+            ->cursorPaginate(10);
+
+        return PlaylistResource::collection($playlists);
     }
 }

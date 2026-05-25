@@ -19,6 +19,12 @@ class ActivityService
         $mapping = $this->getMapType($type);
 
         if (! $mapping) {
+            $ignoredTypes = ['EmojiReact', 'View', 'Question'];
+
+            if (in_array($type, $ignoredTypes)) {
+                return;
+            }
+
             if (config('logging.dev_ap_log')) {
                 Log::warning("Unknown activity type: {$type}", [
                     'actor' => $actor->uri,
@@ -123,6 +129,10 @@ class ActivityService
                 'handler' => \App\Federation\Handlers\RemoveHandler::class,
                 'validator' => \App\Federation\Validators\RemoveValidator::class,
             ],
+            'Block' => [
+                'handler' => \App\Federation\Handlers\BlockHandler::class,
+                'validator' => \App\Federation\Validators\BlockValidator::class,
+            ],
         ];
     }
 
@@ -133,6 +143,8 @@ class ActivityService
         if (isset($mapping[$type])) {
             return $mapping[$type];
         }
+
+        return false;
     }
 
     /**

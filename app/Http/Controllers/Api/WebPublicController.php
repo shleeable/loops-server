@@ -8,6 +8,7 @@ use App\Http\Resources\CommentReplyResource;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\FollowerResource;
 use App\Http\Resources\FollowingResource;
+use App\Http\Resources\PlaylistResource;
 use App\Http\Resources\ProfileResource;
 use App\Http\Resources\StarterKitResource;
 use App\Http\Resources\VideoHashtagResource;
@@ -17,6 +18,7 @@ use App\Models\CommentReply;
 use App\Models\Follower;
 use App\Models\Hashtag;
 use App\Models\Page;
+use App\Models\Playlist;
 use App\Models\Profile;
 use App\Models\StarterKit;
 use App\Models\SystemMessage;
@@ -224,24 +226,33 @@ class WebPublicController extends Controller
 
     public function getAccountInfoByUsername(Request $request, $id)
     {
-        if ($request->user() && $request->user()->cannot('viewAny', [Video::class])) {
+        $user = $request->user();
+
+        if ($user && $user->cannot('viewAny', [Video::class])) {
             return $this->error('Please finish setting up your account', 403);
         }
 
-        $profile = Profile::whereUsername($id)->firstOrFail();
+        $profile = Profile::whereUsername($id)
+            ->with('user')
+            ->firstOrFail();
 
         if ($profile->status != 1) {
             return $this->error('This resource is not available', 403);
         }
 
-        if ($user = $request->user()) {
-            abort_if(! $user->is_admin && UserFilterService::isBlocking($user->profile_id, $id), 404, 'Resource not available');
+        if ($user) {
+            abort_if(
+                ! $user->is_admin && UserFilterService::isBlocking($user->profile_id, $profile->id),
+                404,
+                'Resource not available'
+            );
         }
 
         $res = (new ProfileResource($profile))->toArray($request);
-        $res['is_owner'] = $request->user()?->profile_id == $profile->id;
+        $res['is_owner'] = $user?->profile_id === $profile->id;
         $res['likes_count'] = AccountService::getAccountLikesCount($profile->id);
-        if ($profile->user_id && $profile->user->has_atom) {
+
+        if ($profile->user_id && $profile->user?->has_atom) {
             $res['has_atom'] = true;
             $res['has_atom_url'] = route('user.atom', $profile->id);
         }
@@ -653,6 +664,19 @@ class WebPublicController extends Controller
         }
 
         return redirect('/@'.$user->username);
+    }
+
+    public function accountPlaylists(Request $request, $id)
+    {
+        $viewerId = optional($request->user())->profile_id;
+
+        $playlists = Playlist::published()
+            ->where('profile_id', $id)
+            ->visibleOnProfile((int) $id, $viewerId ? (int) $viewerId : null)
+            ->orderBy('order_column')
+            ->cursorPaginate(6);
+
+        return PlaylistResource::collection($playlists);
     }
 
     private function defaultCollection($meta = [])

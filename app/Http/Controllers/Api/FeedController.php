@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\VideoResource;
 use App\Models\Video;
 use App\Services\FeedService;
+use App\Services\FollowerService;
 use App\Services\UserActivityService;
 use Illuminate\Http\Request;
 
@@ -68,6 +69,7 @@ class FeedController extends Controller
 
         $feed = Video::query()
             ->published()
+            ->whereIn('visibility', [1, 2, 3, 4])
             ->where(function ($q) use ($me) {
                 $q->where('videos.profile_id', $me)
                     ->orWhereExists(function ($sub) use ($me) {
@@ -97,18 +99,30 @@ class FeedController extends Controller
         $videoId = $request->input('id');
         $limit = $request->input('limit', 10);
 
+        $user = $request->user();
+        $authProfileId = $user->profile_id;
+
         $video = Video::where('profile_id', $profileId)
             ->where('id', $videoId)
             ->published()
             ->firstOrFail();
 
-        if ($request->user() && $request->user()->cannot('view', $video->profile)) {
+        if ($user && $request->user()->cannot('view', $video->profile)) {
             return $this->error('Cannot access this profile', 403);
         }
 
-        $authProfileId = $request->user()?->profile_id;
+        $isSelf = (int) $authProfileId === (int) $profileId;
+        $visibilityScopes = [1];
+
+        if ($isSelf) {
+            $visibilityScopes = [1, 2, 3, 4, 5];
+        } else {
+            $follows = FollowerService::follows($authProfileId, $video->profile_id);
+            $visibilityScopes = $follows ? [1, 2, 3, 4] : [1, 2, 3];
+        }
 
         $feed = Video::select('videos.*')
+            ->whereIn('visibility', $visibilityScopes)
             ->selectRaw('CASE WHEN video_bookmarks.id IS NOT NULL THEN 1 ELSE 0 END as is_bookmarked')
             ->leftJoin('video_bookmarks', function ($join) use ($authProfileId) {
                 $join->on('video_bookmarks.video_id', '=', 'videos.id')

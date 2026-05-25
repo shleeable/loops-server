@@ -28,10 +28,22 @@
                         >
                             &commat;{{ textTruncate(profile.username, 50) }}
                         </div>
+                        <div v-if="profile.is_admin" class="mt-1 md:mt-0">
+                            <Tooltip
+                                title="Verified Staff Account"
+                                body="This acccount belongs to an admin or staff member of this server."
+                            >
+                                <span
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-600 dark:text-red-400"
+                                >
+                                    <CheckBadgeIcon class="w-3.5 h-3.5" /> Staff
+                                </span>
+                            </Tooltip>
+                        </div>
                     </div>
 
                     <div
-                        class="flex items-center justify-center lg:justify-start gap-8 lg:gap-6 flex-wrap mt-3 sm:mt-0"
+                        class="flex items-center justify-center lg:justify-start gap-8 lg:gap-6 flex-wrap mt-3 sm:mt-1"
                     >
                         <div class="text-center lg:flex items-center gap-1 lg:text-left">
                             <div class="text-base">
@@ -88,7 +100,7 @@
                             <button
                                 v-if="profile.id == authStore.getUser.id"
                                 @click="openEditProfile"
-                                class="flex items-center gap-2 sm:gap-3 rounded-md py-1.5 px-4 sm:px-6 text-sm sm:text-[15px] font-semibold border hover:bg-gray-100 dark:text-slate-400 dark:border-slate-500 dark:hover:bg-slate-900 cursor-pointer"
+                                class="flex items-center gap-2 sm:gap-3 rounded-xl py-[5px] px-4 sm:px-6 text-sm sm:text-[15px] font-semibold border hover:bg-gray-100 dark:text-slate-400 dark:border-slate-500 dark:hover:bg-slate-900 cursor-pointer"
                             >
                                 <div>{{ t('profile.editProfile') }}</div>
                             </button>
@@ -97,14 +109,14 @@
                                 <button
                                     v-if="profile.relationship.blocking"
                                     @click="handleUnblock"
-                                    class="flex item-center rounded-md py-[4px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-[#F02C56] cursor-pointer"
+                                    class="flex item-center rounded-xl py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-[#F02C56] cursor-pointer"
                                 >
                                     {{ t('profile.blocked') }}
                                 </button>
                                 <button
                                     v-else-if="isFollowingRequestPending"
                                     @click="handleUndoFollowRequest"
-                                    class="flex item-center gap-2 rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-border-[#F02C56] cursor-pointer"
+                                    class="flex item-center gap-2 rounded-xl py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-border-[#F02C56] cursor-pointer"
                                 >
                                     <Spinner v-if="isPollingFollowState" size="xs" />
                                     {{ t('profile.followRequestPending') }}
@@ -112,7 +124,7 @@
                                 <button
                                     v-else-if="!profile.isFollowing"
                                     @click="handleToggleFollow"
-                                    class="flex item-center rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-white bg-red-500 hover:bg-red-400 font-semibold border dark:border-slate-950 cursor-pointer"
+                                    class="flex item-center rounded-xl py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-white bg-red-500 hover:bg-red-400 font-semibold border dark:border-slate-950 cursor-pointer"
                                 >
                                     {{
                                         profile.manuallyApprovesFollowers
@@ -123,7 +135,7 @@
                                 <button
                                     v-else
                                     @click="handleToggleFollow"
-                                    class="flex item-center rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-border-[#F02C56] cursor-pointer"
+                                    class="flex item-center rounded-xl py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-[#F02C56] border-[#F02C56] font-semibold border dark:border-border-[#F02C56] cursor-pointer"
                                 >
                                     {{ t('common.unfollow') }}
                                 </button>
@@ -133,16 +145,25 @@
                         <button
                             v-if="!authStore.authenticated"
                             @click="showRemoteFollowModal = true"
-                            class="flex item-center rounded-md py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-white bg-red-500 hover:bg-red-400 font-semibold border dark:border-slate-950 cursor-pointer"
+                            class="flex item-center rounded-xl py-[5px] px-6 sm:px-8 text-sm sm:text-[15px] text-white bg-red-500 hover:bg-red-400 font-semibold border dark:border-slate-950 cursor-pointer"
                         >
                             {{ t('common.follow') }}
+                        </button>
+
+                        <button
+                            @click="showProfileInfoModal = true"
+                            class="flex items-center justify-center w-8 h-8 rounded-xl border border-gray-300 hover:bg-gray-100 dark:border-slate-500 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                            aria-label="Account details"
+                        >
+                            <IdentificationIcon class="w-4 h-4 dark:text-slate-400" />
                         </button>
 
                         <ShareModal
                             type="profile"
                             :url="profile.local ? profile.url : profile.remote_url"
                             :username="profile.username"
-                            class="flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 hover:bg-gray-100 dark:border-slate-500 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                            class="flex items-center justify-center w-8 h-8 rounded-xl border border-gray-300 hover:bg-gray-100 dark:border-slate-500 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                            aria-label="Open share modal"
                         >
                             <ShareIcon class="w-4 h-4 text-gray-600 dark:text-slate-400" />
                         </ShareModal>
@@ -152,7 +173,8 @@
                             type="atom"
                             :url="profile.hasAtomUrl"
                             :username="profile.username"
-                            class="flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 hover:bg-gray-100 dark:border-slate-500 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                            class="flex items-center justify-center w-8 h-8 rounded-xl border border-gray-300 hover:bg-gray-100 dark:border-slate-500 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                            aria-label="Open Atom feed modal"
                         >
                             <RssIcon class="w-4 h-4 text-gray-600 dark:text-slate-400" />
                         </ShareModal>
@@ -172,7 +194,7 @@
                                 type="button"
                                 aria-haspopup="menu"
                                 :aria-expanded="showMenu"
-                                class="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800/80 border border-gray-200/70 dark:border-gray-800/70 bg-white/70 dark:bg-gray-950/40 backdrop-blur transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-950"
+                                class="flex items-center justify-center w-8 h-8 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800/80 border border-gray-200/70 dark:border-gray-800/70 bg-white/70 dark:bg-gray-950/40 backdrop-blur transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-950"
                             >
                                 <EllipsisHorizontalIcon
                                     class="w-5 h-5 text-gray-500 dark:text-gray-400"
@@ -252,7 +274,7 @@
                                                 @click="handleBlock"
                                                 type="button"
                                                 role="menuitem"
-                                                class="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-left text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10"
+                                                class="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-left text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10"
                                             >
                                                 <NoSymbolIcon
                                                     class="w-4 h-4 text-red-600/80 dark:text-red-300/80"
@@ -309,7 +331,8 @@
                             :href="linkItem.link"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="inline-flex items-center gap-2 px-3 py-[3px] text-xs text-xs rounded-2xl border border-gray-200 font-medium dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-950 transition-colors cursor-pointer"
+                            :class="index === 0 ? 'inline-flex' : 'hidden lg:inline-flex'"
+                            class="items-center gap-2 px-3 py-[3px] text-xs rounded-2xl border border-gray-200 font-medium dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-950 transition-colors cursor-pointer"
                             :title="linkItem.url"
                         >
                             <LinkIcon class="w-3 h-3 flex-shrink-0" />
@@ -321,6 +344,15 @@
                                 class="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0"
                             />
                         </a>
+
+                        <button
+                            v-if="profile.links.length > 1"
+                            @click="showProfileInfoModal = true"
+                            type="button"
+                            class="lg:hidden inline-flex items-center px-3 py-[3px] text-xs rounded-2xl border border-gray-200 font-semibold dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-950 transition-colors cursor-pointer"
+                        >
+                            +{{ profile.links.length - 1 }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -336,13 +368,19 @@
         :tab="followersTab"
     />
 
-    <RemoteFollowModal
-        v-model="showRemoteFollowModal"
-        :username="profile.username"
-        :url="profile.url"
-    />
-
     <Teleport to="body">
+        <RemoteFollowModal
+            v-model="showRemoteFollowModal"
+            :username="profile.username"
+            :url="profile.url"
+        />
+
+        <ProfileHeaderInfoModal
+            v-model="showProfileInfoModal"
+            :profile="profile"
+            :username="profile.username"
+            :url="profile.local ? profile.url : profile.remote_url"
+        />
         <EditModal
             v-if="showEditModal"
             @close="showEditModal = false"
@@ -376,7 +414,9 @@ import {
     LinkIcon,
     CheckBadgeIcon,
     ArrowTopRightOnSquareIcon,
-    RssIcon
+    RssIcon,
+    IdentificationIcon,
+    CheckCircleIcon
 } from '@heroicons/vue/24/outline'
 import RemoteFollowModal from './RemoteFollowModal.vue'
 
@@ -393,6 +433,7 @@ const showFollowersModal = ref(false)
 const showEditModal = ref(false)
 const showMenu = ref(false)
 const showRemoteFollowModal = ref(false)
+const showProfileInfoModal = ref(false)
 const menuRef = ref(null)
 const followersTab = ref('followers')
 const isFollowing = computed(() => profile.isFollowing)

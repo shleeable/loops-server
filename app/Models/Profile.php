@@ -58,6 +58,7 @@ use Illuminate\Support\Facades\DB;
  * @property int $can_create_starter_kits
  * @property int $can_use_starter_kits
  * @property int $can_report
+ * @property int $can_playlist
  * @property int $hide_ai
  * @property int $hide_sensitive
  * @property int $manuallyApprovesFollowers
@@ -205,6 +206,7 @@ class Profile extends Model
         'can_report',
         'hide_ai',
         'hide_sensitive',
+        'can_playlist',
     ];
 
     protected $guarded = [];
@@ -222,6 +224,7 @@ class Profile extends Model
         'can_comment' => 'boolean',
         'can_share' => 'boolean',
         'can_like' => 'boolean',
+        'can_playlist' => 'boolean',
         'can_create_starter_kits' => 'boolean',
         'can_use_starter_kits' => 'boolean',
         'can_report' => 'boolean',
@@ -230,6 +233,7 @@ class Profile extends Model
         'starter_kit_state' => 'integer',
         'manuallyApprovesFollowers' => 'boolean',
         'last_fetched_at' => 'datetime',
+        'has_playlists' => 'boolean',
     ];
 
     public function videos(): HasMany
@@ -563,62 +567,128 @@ class Profile extends Model
 
         $actor = static::where('uri', $url)->where('local', false)->first();
 
-        if (! $actor || $forceRefresh) {
-            $actorData = $actorData ?? app(ActivityService::class)->fetchRemoteActor($url);
-
-            if (! $actorData || ! isset($actorData['id'], $actorData['preferredUsername'], $actorData['inbox'], $actorData['type'])) {
-                return $actor;
-            }
-
-            if (! $actorData['type'] || $actorData['type'] !== 'Person') {
-                return $actor;
-            }
-
-            $domain = parse_url($actorData['id'], PHP_URL_HOST);
-            $username = $actorData['preferredUsername'];
-            $acct = $username.'@'.$domain;
-            $sharedInbox = data_get($actorData, 'endpoints.sharedInbox');
-            $avatar = data_get($actorData, 'icon.url');
-            $starterKitStateCanFeature = data_get($actorData, 'interactionPolicy.canFeature', false);
-            $starterKitState = 0;
-
-            if ($starterKitStateCanFeature) {
-                $starterKitState = $this->resolveStarterKitState($starterKitStateCanFeature);
-            }
-
-            if (! $actor) {
-                $actor = static::where('username', $acct)->where('local', false)->first();
-            }
-
-            if (! $actor) {
-                /** @phpstan-ignore-next-line new.static */
-                $actor = new static([
-                    'local' => false,
-                ]);
-            }
-
-            $remoteUrl = is_string(data_get($actorData, 'url')) ? data_get($actorData, 'url') : null;
-
-            $actor->forceFill([
-                'username' => $acct,
-                'name' => app(SanitizeService::class)->cleanPlainText($actorData['name'] ?? $username),
-                'bio' => app(SanitizeService::class)->cleanHtmlWithSpacing($actorData['summary'] ?? null),
-                'inbox_url' => $actorData['inbox'],
-                'avatar' => $avatar,
-                'uri' => $actorData['id'],
-                'remote_url' => $remoteUrl,
-                'outbox_url' => $actorData['outbox'] ?? null,
-                'followers_url' => $actorData['followers'] ?? null,
-                'following_url' => $actorData['following'] ?? null,
-                'public_key' => $actorData['publicKey']['publicKeyPem'] ?? null,
-                'manuallyApprovesFollowers' => data_get($actorData, 'manuallyApprovesFollowers', false),
-                'last_fetched_at' => now(),
-                'local' => false,
-                'domain' => $domain,
-                'shared_inbox_url' => $sharedInbox,
-                'starter_kit_state' => $starterKitState,
-            ])->save();
+        if ($actor && ! $forceRefresh) {
+            return $actor;
         }
+
+        $actorData = $actorData ?? app(ActivityService::class)->fetchRemoteActor($url);
+
+        if (! $actorData || ! isset($actorData['id'], $actorData['preferredUsername'], $actorData['inbox'], $actorData['type'])) {
+            return $actor;
+        }
+
+        if ($actorData['type'] !== 'Person') {
+            return $actor;
+        }
+
+        $urlHost = parse_url($url, PHP_URL_HOST);
+        $idHost = parse_url($actorData['id'], PHP_URL_HOST);
+        if (! $urlHost || ! $idHost || strtolower($urlHost) !== strtolower($idHost)) {
+            return $actor;
+        }
+
+        $actorInbox = app(SanitizeService::class)->url($actorData['inbox'], true);
+        if (! $actorInbox) {
+            return $actor;
+        }
+
+        $sharedInbox = data_get($actorData, 'endpoints.sharedInbox');
+
+        if ($sharedInbox) {
+            $sharedInbox = app(SanitizeService::class)->url($sharedInbox, true);
+        }
+
+        $actorFollowers = null;
+        if (isset($actorData['followers'])) {
+            $actorFollowers = app(SanitizeService::class)->url($actorData['followers']);
+        }
+
+        $actorFollowing = null;
+        if (isset($actorData['following'])) {
+            $actorFollowing = app(SanitizeService::class)->url($actorData['following']);
+        }
+
+        $actorOutbox = null;
+        if (isset($actorData['outbox'])) {
+            $actorOutbox = app(SanitizeService::class)->url($actorData['outbox']);
+        }
+
+        $publicKey = null;
+        if (isset($actorData['publicKey'], $actorData['publicKey']['publicKeyPem'])) {
+            $publicKey = $actorData['publicKey']['publicKeyPem'];
+            if (openssl_pkey_get_public($publicKey) === false) {
+                return $actor;
+            }
+        }
+
+        $actorId = app(SanitizeService::class)->url($actorData['id']);
+        if (! $actorId) {
+            return $actor;
+        }
+
+        $domain = parse_url($actorData['id'], PHP_URL_HOST);
+        $username = $actorData['preferredUsername'];
+        $acct = $username.'@'.$domain;
+        $avatar = data_get($actorData, 'icon.url');
+
+        if ($avatar) {
+            $avatar = app(SanitizeService::class)->url($avatar);
+
+            if (! $avatar) {
+                return $actor;
+            }
+        }
+
+        $remoteUrl = is_string(data_get($actorData, 'url')) ? data_get($actorData, 'url') : null;
+
+        if ($remoteUrl) {
+            $remoteUrl = app(SanitizeService::class)->url($remoteUrl);
+            if (! $remoteUrl) {
+                return $actor;
+            }
+        }
+
+        $starterKitStateCanFeature = data_get($actorData, 'interactionPolicy.canFeature', false);
+        $starterKitState = 0;
+
+        if ($starterKitStateCanFeature) {
+            $starterKitState = $this->resolveStarterKitState($starterKitStateCanFeature);
+        }
+
+        if (! $actor) {
+            $actor = static::where('local', false)
+                ->where(function ($q) use ($actorId, $acct) {
+                    $q->where('uri', $actorId)->orWhere('username', $acct);
+                })
+                ->first();
+        }
+
+        if (! $actor) {
+            /** @phpstan-ignore-next-line new.static */
+            $actor = new static([
+                'local' => false,
+            ]);
+        }
+
+        $actor->forceFill([
+            'username' => $acct,
+            'name' => app(SanitizeService::class)->cleanPlainText($actorData['name'] ?? $username),
+            'bio' => app(SanitizeService::class)->cleanHtmlWithSpacing($actorData['summary'] ?? null),
+            'inbox_url' => $actorInbox,
+            'avatar' => $avatar,
+            'uri' => $actorId,
+            'remote_url' => $remoteUrl ?? null,
+            'outbox_url' => $actorOutbox ?? null,
+            'followers_url' => $actorFollowers ?? null,
+            'following_url' => $actorFollowing ?? null,
+            'public_key' => $publicKey,
+            'manuallyApprovesFollowers' => data_get($actorData, 'manuallyApprovesFollowers', false),
+            'last_fetched_at' => now(),
+            'local' => false,
+            'domain' => $domain,
+            'shared_inbox_url' => $sharedInbox ?? null,
+            'starter_kit_state' => $starterKitState,
+        ])->save();
 
         return $actor;
     }

@@ -21,6 +21,10 @@
                         :src="a.avatar"
                         class="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800 object-cover -ml-2 first:ml-0 shadow-sm"
                         :style="{ zIndex: 4 - i }"
+                        onerror="
+                            this.src = '/storage/avatars/default.jpg'
+                            this.onerror = null
+                        "
                     />
                 </div>
             </div>

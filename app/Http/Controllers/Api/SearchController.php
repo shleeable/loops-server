@@ -28,6 +28,7 @@ use App\Services\VideoService;
 use App\Services\WebfingerService;
 use App\Support\CursorToken;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -455,40 +456,35 @@ class SearchController extends Controller
             }
         }
 
-        return $this->fetchRemoteStarterKit($query);
+        return $this->findOrRefreshRemoteStarterKit($query);
     }
 
-    protected function fetchRemoteStarterKit(string $url): ?StarterKit
+    protected function findOrRefreshRemoteStarterKit(string $url, ?StarterKit $existing = null): ?StarterKit
     {
-        try {
-            $existing = StarterKit::where(function ($query) use ($url) {
-                $query->where('remote_object_url', $url)
-                    ->orWhere('remote_url', $url);
-            })->first();
+        $existing ??= StarterKit::where(function ($query) use ($url) {
+            $query->where('remote_object_url', $url)
+                ->orWhere('remote_url', $url);
+        })->first();
 
-            if ($existing) {
+        if ($existing && $existing->last_fetched_at?->gt(now()->subDay())) {
+            return $existing;
+        }
+
+        try {
+            $response = app(ActivityPubService::class)->get($url);
+
+            if (! $response || ! is_array($response) || ($response['type'] ?? null) !== 'FeaturedCollection') {
                 return $existing;
             }
 
-            $response = app(ActivityPubService::class)->get($url);
-
-            if (! $response || ! is_array($response)) {
-                return null;
-            }
-
-            $type = $response['type'] ?? null;
-            if ($type !== 'FeaturedCollection') {
-                return null;
-            }
-
-            return $this->importRemoteStarterKit($response, $url);
-        } catch (\Exception $e) {
-            Log::warning('Remote starter kit fetch failed', [
+            return $this->importRemoteStarterKit($response, $url) ?? $existing;
+        } catch (\Throwable $e) {
+            Log::warning('Remote starter kit refresh failed', [
                 'url' => $url,
                 'error' => $e->getMessage(),
             ]);
 
-            return null;
+            return $existing;
         }
     }
 
@@ -531,13 +527,15 @@ class SearchController extends Controller
                 'status' => 10,
                 'visibility' => '1',
                 'created_at' => $data['published'] ?? now(),
-                'updated_at' => $data['updated'] ?? now(),
+                'last_fetched_at' => now(),
             ]
         );
 
         $this->syncRemoteKitItems($kit, $items);
 
         FetchRemoteStarterKitMedia::dispatch($kit->id);
+
+        app(StarterKitService::class)->forget($kit->id);
 
         return $kit;
     }
@@ -563,6 +561,7 @@ class SearchController extends Controller
 
     protected function syncRemoteKitItems(StarterKit $kit, array $items): void
     {
+        $resolved = [];
         $order = 0;
 
         foreach ($items as $item) {
@@ -571,9 +570,7 @@ class SearchController extends Controller
             }
 
             $actorUrl = $item['featuredObject'] ?? null;
-            $objectType = $item['featuredObjectType'] ?? null;
-
-            if (! $actorUrl || $objectType !== 'Person') {
+            if (! $actorUrl || ($item['featuredObjectType'] ?? null) !== 'Person') {
                 continue;
             }
 
@@ -582,7 +579,7 @@ class SearchController extends Controller
             if (! $profile) {
                 try {
                     $profile = app(Profile::class)->findOrCreateFromUrl($actorUrl);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     Log::debug('Failed to resolve kit item actor', ['url' => $actorUrl]);
 
                     continue;
@@ -593,18 +590,44 @@ class SearchController extends Controller
                 continue;
             }
 
-            $kit->starterKitAccounts()->updateOrCreate(
-                ['profile_id' => $profile->id],
-                [
-                    'kit_status' => 1,
-                    'kit_account_local' => $profile->local,
-                    'order' => $order++,
-                    'approved_at' => now(),
-                    'attestation_url' => $item['featureAuthorization'],
-                    'remote_object_id' => $item['id'] ?? null,
-                ]
-            );
+            $resolved[$profile->id] = [
+                'kit_status' => 1,
+                'kit_account_local' => $profile->local,
+                'order' => $order++,
+                'approved_at' => now(),
+                'attestation_url' => $item['featureAuthorization'] ?? null,
+                'remote_object_id' => $item['id'] ?? null,
+            ];
         }
+
+        if (empty($resolved)) {
+            Log::warning('Remote starter kit returned no resolvable members; skipping prune', [
+                'kit_id' => $kit->id,
+            ]);
+
+            return;
+        }
+
+        $profileIds = array_keys($resolved);
+
+        DB::transaction(function () use ($kit, $resolved, $profileIds) {
+            $kit->starterKitAccounts()
+                ->whereNotIn('profile_id', $profileIds)
+                ->delete();
+
+            foreach ($resolved as $profileId => $attrs) {
+                $kit->starterKitAccounts()->updateOrCreate(
+                    ['profile_id' => $profileId],
+                    $attrs,
+                );
+            }
+
+            $count = count($profileIds);
+            $kit->update([
+                'total_accounts' => $count,
+                'approved_accounts' => $count,
+            ]);
+        });
     }
 
     public function remoteLookup(Request $request)
@@ -878,12 +901,14 @@ class SearchController extends Controller
             })->first();
 
             if ($existingKit) {
+                $kit = $this->findOrRefreshRemoteStarterKit($url, $existingKit);
+
                 return [
                     'data' => [
                         'hashtags' => [],
                         'users' => [],
                         'videos' => [],
-                        'starter_kits' => [app(StarterKitService::class)->get($existingKit->id)],
+                        'starter_kits' => [app(StarterKitService::class)->get($kit->id)],
                     ],
                 ];
             }

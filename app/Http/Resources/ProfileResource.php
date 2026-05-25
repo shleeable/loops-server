@@ -52,6 +52,11 @@ class ProfileResource extends JsonResource
             'is_blocking' => null,
             'manually_approves_followers' => $this->manuallyApprovesFollowers,
             'links' => $this->links ?? [],
+            'has_playlists' => $this->has_playlists,
+            'is_admin' => $this->when(
+                $this->relationLoaded('user'),
+                fn () => (bool) $this->user?->is_admin
+            ),
             'created_at' => $this->created_at->format('c'),
         ];
     }

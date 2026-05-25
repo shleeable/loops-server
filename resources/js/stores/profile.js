@@ -23,9 +23,15 @@ export const useProfileStore = defineStore('profile', {
         followingCount: 0,
         followers: [],
         following: [],
+        created_at: null,
+        is_admin: null,
+        is_owner: null,
+        has_playlists: null,
         hasAtom: false,
         hasAtomUrl: null,
         links: [],
+        playlists: [],
+        playlistsNextCursor: null,
         followersNextCursor: null,
         followingNextCursor: null,
         isFollowing: null,
@@ -68,7 +74,11 @@ export const useProfileStore = defineStore('profile', {
                 this.url = res.data.data.url
                 this.links = res.data.data.links
                 this.local = res.data.data.local
+                this.is_admin = res.data.data?.is_admin
+                this.created_at = res.data.data.created_at
                 this.remote_url = res.data.data.remote_url
+                this.has_playlists = res.data.data?.has_playlists
+                this.is_owner = res.data.data?.is_owner
                 this.postCount = res.data.data.post_count
                 this.followerCount = res.data.data.follower_count
                 this.followingCount = res.data.data.following_count
@@ -175,6 +185,10 @@ export const useProfileStore = defineStore('profile', {
                     await this.getProfilePosts(res.data.data.id)
                 }
 
+                if (res.data.data?.has_playlists) {
+                    await this.getPlaylists(res.data.data.id)
+                }
+
                 this.id = res.data.data.id
                 this.username = res.data.data.username
                 this.name = res.data.data.name
@@ -183,6 +197,10 @@ export const useProfileStore = defineStore('profile', {
                 this.url = res.data.data.url
                 this.local = res.data.data.local
                 this.remote_url = res.data.data.remote_url
+                this.is_admin = res.data.data?.is_admin
+                this.created_at = res.data.data.created_at
+                this.is_owner = res.data.data?.is_owner
+                this.has_playlists = res.data.data?.has_playlists
                 this.links = res.data.data.links
                 this.postCount = res.data.data.post_count
                 this.followerCount = res.data.data.follower_count
@@ -194,6 +212,28 @@ export const useProfileStore = defineStore('profile', {
                 this.manuallyApprovesFollowers = res.data.data?.manually_approves_followers
             } catch (error) {
                 console.error('Error fetching profile:', error)
+                throw error
+            }
+        },
+
+        async getPlaylists(id, cursor = null) {
+            const axiosInstance = axios.getAxiosInstance()
+
+            try {
+                const response = await axiosInstance.get(`/api/v1/account/playlists/${id}`, {
+                    params: cursor ? { cursor } : {}
+                })
+                if (!cursor) {
+                    this.playlists = response.data.data
+                } else {
+                    this.playlists = [...this.playlists, ...response.data.data]
+                }
+
+                this.playlistsNextCursor = response.data.meta.next_cursor
+
+                return response.data
+            } catch (error) {
+                console.error('Error fetching profile playlists:', error)
                 throw error
             }
         },
@@ -295,6 +335,7 @@ export const useProfileStore = defineStore('profile', {
                 this.url = res.url
                 this.local = res.local
                 this.remote_url = res?.remote_url
+                this.created_at = res?.created_at
                 this.links = res.links
                 this.postCount = res.post_count
                 this.allLikes = res.likes_count
@@ -468,10 +509,16 @@ export const useProfileStore = defineStore('profile', {
             this.postCount = 0
             this.followingCount = 0
             this.followerCount = 0
+            this.is_admin = null
+            this.is_owner = null
             this.posts = null
             this.local = null
             this.postsNextCursor = null
             this.postsSort = null
+            this.created_at = null
+            this.has_playlists = null
+            this.playlists = []
+            this.playlistsNextCursor = null
             this.links = []
             this.followers = []
             this.following = []

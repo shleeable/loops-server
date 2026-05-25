@@ -16,7 +16,11 @@ export const useAuthStore = defineStore('auth', {
         authModalOpen: false,
         authModalMode: 'login',
         needsTwoFactor: false,
-        authRedirect: null
+        authRedirect: null,
+        linkedAccounts: [],
+        linkedMax: 5,
+        linkedLoading: false,
+        addAccountMode: false
     }),
 
     getters: {
@@ -25,7 +29,11 @@ export const useAuthStore = defineStore('auth', {
         getUser: (state) => state.user,
         getError: (state) => state.error,
         isOpen: (state) => state.authModalOpen,
-        authMode: (state) => state.authModalMode
+        authMode: (state) => state.authModalMode,
+        hasMultipleAccounts: (state) => state.linkedAccounts.length > 1,
+        canAddAccount: (state) => state.linkedAccounts.length < state.linkedMax,
+        activeAccount: (state) => state.linkedAccounts.find((a) => a.is_active) || null,
+        otherAccounts: (state) => state.linkedAccounts.filter((a) => !a.is_active)
     },
 
     actions: {
@@ -36,8 +44,9 @@ export const useAuthStore = defineStore('auth', {
         },
 
         closeAuthModal() {
-            this.authModalMode = 'login'
+            this.addAccountMode = false
             this.authModalOpen = false
+            this.authModalMode = 'login'
         },
 
         resetUser() {
@@ -51,6 +60,8 @@ export const useAuthStore = defineStore('auth', {
             this.loading = false
             this.error = null
             this.authRedirect = null
+
+            localStorage.clear()
         },
 
         async resetMyPassword(data) {
@@ -88,6 +99,7 @@ export const useAuthStore = defineStore('auth', {
         async login(credentials) {
             const appConfig = window.appConfig
             const axiosInstance = axios.getAxiosInstance()
+            const isAddingAccount = this.addAccountMode || credentials.add_account === true
             try {
                 this.loading = true
                 this.error = null
@@ -95,7 +107,7 @@ export const useAuthStore = defineStore('auth', {
                 await axiosInstance.get('/sanctum/csrf-cookie')
                 const response = await axiosInstance.post(
                     appConfig.app.url + '/login',
-                    credentials,
+                    { ...credentials, add_account: isAddingAccount },
                     {
                         headers: {
                             Accept: 'application/json',
@@ -104,6 +116,7 @@ export const useAuthStore = defineStore('auth', {
                         }
                     }
                 )
+
                 if (response.data.has_2fa) {
                     this.needsTwoFactor = true
                     return response
@@ -111,6 +124,13 @@ export const useAuthStore = defineStore('auth', {
                 if (response.data.must_change_password) {
                     return response
                 }
+
+                if (isAddingAccount && response.data.success) {
+                    this.addAccountMode = false
+                    window.location.href = response.data.redirect || appConfig.app.url
+                    return response
+                }
+
                 const userData = await axiosInstance.get('/api/v1/account/info/self')
                 this.user = userData.data.data
                 this.authenticated = true
@@ -404,6 +424,88 @@ export const useAuthStore = defineStore('auth', {
 
         clearError() {
             this.error = null
+        },
+
+        async fetchLinkedAccounts() {
+            const axiosInstance = axios.getAxiosInstance()
+            this.linkedLoading = true
+            try {
+                const { data } = await axiosInstance.get('/api/v1/auth/accounts')
+                this.linkedAccounts = data.accounts || []
+                this.linkedMax = data.max || 5
+            } catch (e) {
+                // 401 means session expired; let the existing interceptor handle it.
+                this.linkedAccounts = []
+            } finally {
+                this.linkedLoading = false
+            }
+        },
+
+        async switchAccount(accountId) {
+            const axiosInstance = axios.getAxiosInstance()
+            try {
+                const res = await axiosInstance.post('/api/v1/auth/accounts/switch', {
+                    account_id: accountId
+                })
+                if (res.status === 200) {
+                    window.location.href = '/'
+                }
+                return res.data
+            } catch (e) {
+                return {
+                    success: false,
+                    message: e?.response?.data?.message || 'Could not switch accounts.'
+                }
+            }
+        },
+
+        async removeLinkedAccount(accountId) {
+            const axiosInstance = axios.getAxiosInstance()
+            try {
+                const res = await axiosInstance.post('/api/v1/auth/accounts/remove', {
+                    account_id: accountId
+                })
+
+                if (res.status !== 200) {
+                    window.location.href = '/'
+                }
+
+                const data = res.data
+
+                if (data.success) {
+                    if (!data.logged_in) {
+                        window.location.href = '/'
+                        return data
+                    }
+                    if (this.activeAccount && this.activeAccount.id === accountId) {
+                        window.location.href = '/'
+                        return data
+                    }
+                    this.linkedAccounts = data.linked || []
+                }
+                return data
+            } catch (e) {
+                return {
+                    success: false,
+                    message: e?.response?.data?.message || 'Could not remove account.'
+                }
+            }
+        },
+
+        async logoutAll() {
+            const axiosInstance = axios.getAxiosInstance()
+            try {
+                const { data } = await axiosInstance.post('/api/v1/auth/accounts/logout-all')
+                window.location.href = data?.redirect || '/'
+            } catch (e) {
+                // Even on error, just bounce home.
+                window.location.href = '/'
+            }
+        },
+
+        openAddAccountModal() {
+            this.addAccountMode = true
+            this.openAuthModal('login')
         }
     }
 })

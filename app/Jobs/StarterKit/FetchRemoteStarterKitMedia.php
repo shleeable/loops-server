@@ -142,6 +142,7 @@ class FetchRemoteStarterKitMedia implements ShouldQueue
                 'visibility' => 'public',
             ]);
 
+            /** @phpstan-ignore argument.type */
             $kit->update([
                 "{$type}_path" => $path,
                 "{$type}_url" => Storage::disk('s3')->url($path),

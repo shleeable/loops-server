@@ -10,11 +10,15 @@ use App\Models\CommentReplyRepost;
 use App\Models\CommentRepost;
 use App\Models\Follower;
 use App\Models\Profile;
+use App\Models\UserFilter;
 use App\Models\Video;
 use App\Models\VideoLike;
 use App\Models\VideoRepost;
+use App\Services\FollowerService;
 use App\Services\NotificationService;
 use App\Services\SanitizeService;
+use App\Services\UserFilterService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -35,6 +39,7 @@ class UndoHandler extends BaseHandler
                 'Follow' => $this->handleUndoFollow($activity, $actor, $object),
                 'Like' => $this->handleUndoLike($activity, $actor, $object),
                 'Announce' => $this->handleUndoAnnounce($activity, $actor, $object),
+                'Block' => $this->handleUndoBlock($activity, $actor, $object),
                 default => $this->handleGenericUndo($activity, $actor, $object)
             };
 
@@ -398,6 +403,57 @@ class UndoHandler extends BaseHandler
             CommentReply::class => $this->handleCommentReplyUndoShare($status, $actor),
             default => null,
         };
+
+        return true;
+    }
+
+    private function handleUndoBlock(array $activity, Profile $actor, array $blockObject): bool
+    {
+        $targetUrl = $blockObject['object'];
+        $targetProfile = $this->findLocalProfile($targetUrl);
+
+        if (! $targetProfile) {
+            throw new \Exception("Target profile not found for unblock: {$targetUrl}");
+        }
+
+        if ((int) $actor->id === (int) $targetProfile->id) {
+            if (config('logging.dev_log')) {
+                Log::info('Ignoring self-unblock activity', [
+                    'actor' => $actor->username,
+                    'target_url' => $targetUrl,
+                ]);
+            }
+
+            return true;
+        }
+
+        $existingBlock = UserFilter::where('profile_id', $actor->id)
+            ->where('account_id', $targetProfile->id)
+            ->first();
+
+        if (! $existingBlock) {
+            if (config('logging.dev_log')) {
+                Log::info('Undo Block - block does not exist', [
+                    'actor' => $actor->username,
+                    'target' => $targetProfile->username,
+                ]);
+            }
+
+            return true;
+        }
+
+        $existingBlock->delete();
+
+        Cache::forget(UserFilterService::ALL_CACHE_KEY.$actor->id);
+        Cache::forget(UserFilterService::ALL_CACHE_KEY.$targetProfile->id);
+        FollowerService::refreshAndSync($targetProfile->id, $actor->id);
+
+        if (config('logging.dev_log')) {
+            Log::info('Successfully processed Undo Block', [
+                'actor' => $actor->username,
+                'target' => $targetProfile->username,
+            ]);
+        }
 
         return true;
     }

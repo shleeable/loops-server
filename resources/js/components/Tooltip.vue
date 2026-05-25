@@ -52,7 +52,7 @@
                 <div
                     v-if="showArrow"
                     :class="[
-                        'absolute h-2 w-2 rotate-45',
+                        'absolute h-2 w-2',
                         arrowClasses,
                         actualPosition === 'top' ? '-bottom-1' : '-top-1'
                     ]"

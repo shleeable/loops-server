@@ -128,49 +128,20 @@ class DeliverDeleteCommentActivity implements ShouldBeUnique, ShouldQueue
                 ->post($this->inboxUrl, $activity);
 
             if ($response->successful()) {
-                $this->devLog && Log::info('Activity delivered successfully', [
-                    'inbox' => $this->inboxUrl,
-                    'recipients' => count($this->recipientProfileIds),
-                    'status' => $response->status(),
-                ]);
-
                 return;
             }
 
             if ($response->clientError() && ! in_array($response->status(), [408, 429])) {
-                $this->devLog && Log::warning("Permanent client error {$response->status()}", [
-                    'inbox' => $this->inboxUrl,
-                ]);
                 $this->delete();
 
                 return;
             }
-
-            throw new \Exception("Delivery failed with status {$response->status()}");
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            if ($this->devLog) {
-                $error = "Network error: {$e->getMessage()}";
-                Log::error($error, ['inbox' => $inboxUrl]);
-            }
             throw $e;
         } catch (\Exception $e) {
-            if ($this->devLog) {
-                Log::error('Error delivering activity', [
-                    'inbox' => $inboxUrl,
-                    'error' => $e->getMessage(),
-                ]);
-            }
             throw $e;
         }
     }
 
-    public function failed(\Throwable $exception)
-    {
-        Log::error('Activity delivery job failed permanently', [
-            'inbox' => $this->inboxUrl,
-            'recipients' => count($this->recipientProfileIds),
-            'type' => 'Delete',
-            'error' => $exception->getMessage(),
-        ]);
-    }
+    public function failed(\Throwable $exception) {}
 }

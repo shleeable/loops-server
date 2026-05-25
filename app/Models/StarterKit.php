@@ -174,6 +174,7 @@ class StarterKit extends Model
         'disabled_message',
         'rejected_message',
         'delete_after',
+        'last_fetched_at',
     ];
 
     protected $casts = [
@@ -191,6 +192,7 @@ class StarterKit extends Model
         'admin_approved_at' => 'datetime',
         'observatory_submitted_at' => 'datetime',
         'delete_after' => 'datetime',
+        'last_fetched_at' => 'datetime',
     ];
 
     /**

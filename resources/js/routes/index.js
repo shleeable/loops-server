@@ -244,6 +244,12 @@ const router = createRouter({
         //   meta: { requiresAuth: false }
         // },
         {
+            path: '/dmca',
+            name: 'dmca',
+            component: () => import('~/pages/platform/legal/dmca.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
             path: '/contact',
             name: 'contact',
             component: () => import('~/pages/platform/contact.vue'),
@@ -472,6 +478,19 @@ const router = createRouter({
                     path: 'hashtags',
                     name: 'Hashtags',
                     component: () => import('~/pages/admin/Hashtags.vue'),
+                    meta: { requiresAdmin: true }
+                },
+                {
+                    path: 'playlists/:id',
+                    name: 'PlaylistsShow',
+                    component: () => import('~/pages/admin/PlaylistShow.vue'),
+                    params: true,
+                    meta: { requiresAdmin: true }
+                },
+                {
+                    path: 'playlists',
+                    name: 'Playlists',
+                    component: () => import('~/pages/admin/Playlists.vue'),
                     meta: { requiresAdmin: true }
                 },
                 {

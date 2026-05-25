@@ -143,9 +143,17 @@
                                     >
                                         {{ $t('studio.deletePlaylist') }}
                                     </button>
-                                    <div v-else></div>
+                                    <div v-else>
+                                        <AnimatedButton
+                                            v-if="loadedCache"
+                                            variant="primaryOutline"
+                                            size="sm"
+                                            @click="resetFormAndCache"
+                                            >Clear
+                                        </AnimatedButton>
+                                    </div>
 
-                                    <div class="flex space-x-3">
+                                    <div class="space-x-3">
                                         <button
                                             type="button"
                                             @click="closeModal"
@@ -156,6 +164,7 @@
                                         </button>
                                         <AnimatedButton
                                             type="submit"
+                                            size="sm"
                                             :disabled="loading || !isFormValid"
                                         >
                                             {{
@@ -178,7 +187,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import { useI18n } from 'vue-i18n'
 import { useAlertModal } from '@/composables/useAlertModal.js'
@@ -192,8 +201,14 @@ const props = defineProps({
     playlist: {
         type: Object,
         default: null
+    },
+    onSave: {
+        type: Function,
+        required: true
     }
 })
+
+const CACHE_KEY = 'loops_playlist_form_draft'
 
 const emit = defineEmits(['close', 'save', 'delete'])
 
@@ -205,6 +220,7 @@ const form = ref({
     visibility: 'public'
 })
 
+const loadedCache = ref(false)
 const loading = ref(false)
 const error = ref(null)
 
@@ -238,6 +254,8 @@ watch(
                 description: props.playlist.description || '',
                 visibility: props.playlist.visibility
             }
+        } else if (isOpen && !props.playlist) {
+            loadCachedForm()
         }
 
         if (!isOpen) {
@@ -246,6 +264,28 @@ watch(
     }
 )
 
+const loadCachedForm = () => {
+    if (props.playlist) {
+        console.log('tried loading cache while in edit mode')
+        return
+    }
+    const cached = localStorage.getItem(CACHE_KEY)
+    if (cached) {
+        console.log(cached)
+        try {
+            const parsed = JSON.parse(cached)
+            if (parsed) {
+                form.value = {
+                    name: parsed.name ?? '',
+                    description: parsed.description ?? '',
+                    visibility: parsed.visibility ?? 'public'
+                }
+                loadedCache.value = true
+            }
+        } catch {}
+    }
+}
+
 const resetForm = () => {
     form.value = {
         name: '',
@@ -253,6 +293,23 @@ const resetForm = () => {
         visibility: 'public'
     }
     error.value = null
+}
+
+const resetFormAndCache = () => {
+    form.value = {
+        name: '',
+        description: '',
+        visibility: 'public'
+    }
+    error.value = null
+    loadedCache.value = false
+    localStorage.removeItem(CACHE_KEY)
+}
+
+const cacheForm = async () => {
+    const cached = JSON.stringify(form.value)
+    await nextTick()
+    localStorage.setItem(CACHE_KEY, cached)
 }
 
 const closeModal = () => {
@@ -269,11 +326,14 @@ const handleSubmit = async () => {
     error.value = null
 
     try {
-        emit('save', { ...form.value, id: props.playlist?.id })
-        resetForm()
+        if (!props.playlist) {
+            cacheForm()
+        }
+        await props.onSave({ ...form.value, id: props.playlist?.id })
     } catch (err) {
-        error.value = err.message || 'An error occurred'
+        error.value = err.response?.data?.message || 'An error occurred'
     } finally {
+        resetForm()
         loading.value = false
     }
 }

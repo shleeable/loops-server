@@ -15,6 +15,12 @@ export const usePlaylistStore = defineStore('playlist', {
             nextCursor: null,
             hasMore: false
         },
+        detailLimits: {
+            feature_unavailable: false,
+            can_create: null,
+            max_limit: 0,
+            slots_available: 0
+        },
         loading: false,
         error: null
     }),
@@ -33,6 +39,30 @@ export const usePlaylistStore = defineStore('playlist', {
                 throw error
             } finally {
                 this.loading = false
+            }
+        },
+
+        async reorderPlaylists(playlistIds) {
+            try {
+                const response = await axios.post('/api/v1/studio/playlists/profile-reorder', {
+                    playlist_ids: playlistIds
+                })
+                return response.data
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to reorder playlists'
+                throw error
+            }
+        },
+
+        async fetchLimitDetails() {
+            try {
+                const response = await axios.get('/api/v1/studio/playlists/limits')
+                this.detailLimits = response.data.data
+                return response.data
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to fetch playlist details'
+                throw error
+            } finally {
             }
         },
 
@@ -180,7 +210,14 @@ export const usePlaylistStore = defineStore('playlist', {
         },
 
         async fetchAvailableVideos(params = {}) {
-            const { search = '', cursor = null, limit = 10, excludeIds = [] } = params
+            const {
+                search = '',
+                cursor = null,
+                limit = 10,
+                excludeIds = [],
+                sortField = 'created_at',
+                sortDirection = 'desc'
+            } = params
 
             this.loading = true
             this.error = null
@@ -191,8 +228,8 @@ export const usePlaylistStore = defineStore('playlist', {
                         search,
                         cursor,
                         limit,
-                        sort_field: 'created_at',
-                        sort_direction: 'desc'
+                        sort_field: sortField,
+                        sort_direction: sortDirection
                     }
                 })
 

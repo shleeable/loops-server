@@ -146,6 +146,7 @@
                                         >
                                     </label>
                                     <button
+                                        v-if="!authStore.addAccountMode"
                                         type="button"
                                         @click="currentMode = 'password-reset'"
                                         class="text-sm font-medium text-[#F02C56] hover:text-[#D7284A] dark:hover:text-[#D7284A] transition-colors cursor-pointer"
@@ -984,7 +985,9 @@
 
                             <div
                                 v-if="
-                                    (openRegistration && currentMode === 'login') ||
+                                    (!authStore.addAccountMode &&
+                                        openRegistration &&
+                                        currentMode === 'login') ||
                                     (currentMode === 'register' && registrationStep === 1)
                                 "
                                 class="mt-8 text-center"
@@ -1145,6 +1148,10 @@ const openRegistration = computed(() => {
 })
 
 const getTitle = () => {
+    if (authStore.addAccountMode) {
+        return t('accounts.addingAnotherAccount')
+    }
+
     switch (currentMode.value) {
         case 'login':
             return t('common.welcomeBack')
@@ -1177,6 +1184,10 @@ const getTitle = () => {
 }
 
 const getSubtitle = () => {
+    if (authStore.addAccountMode) {
+        return t('accounts.youCanSwitchAnytime')
+    }
+
     switch (currentMode.value) {
         case 'login':
             return t('common.signIntoYourAccountToContinue')
@@ -1607,7 +1618,8 @@ const handleLogin = async () => {
             password: form.value.password,
             remember: form.value.remember,
             captcha_type: form.value.captcha_type,
-            captcha_token: form.value.captcha_token
+            captcha_token: form.value.captcha_token,
+            add_account: authStore.addAccountMode
         })
 
         if (res.data.has_2fa) {

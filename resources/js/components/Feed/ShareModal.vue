@@ -8,12 +8,12 @@
             <Transition name="modal">
                 <div
                     v-if="isOpen"
-                    class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
+                    class="fixed inset-0 z-[70] flex items-center justify-center p-4"
                 >
                     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="close" />
 
                     <div
-                        class="relative w-full sm:max-w-md bg-white dark:bg-slate-900 sm:rounded-2xl rounded-t-2xl shadow-2xl border border-gray-100 dark:border-slate-800 overflow-hidden max-h-[90vh] flex flex-col"
+                        class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-800 overflow-hidden max-h-[90vh] flex flex-col"
                     >
                         <div
                             class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-slate-800 flex-shrink-0"
@@ -40,7 +40,7 @@
                             </button>
                         </div>
 
-                        <div class="overflow-y-auto p-5 space-y-5">
+                        <div class="flex-1 min-h-0 overflow-y-auto p-5 space-y-5">
                             <div>
                                 <label
                                     class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 block"
@@ -432,7 +432,14 @@ watch(isOpen, (val) => {
         serverError.value = ''
         serverInput.value = ''
         rememberedServer.value = false
+        document.body.style.overflow = 'hidden'
+    } else {
+        document.body.style.overflow = ''
     }
+})
+
+onUnmounted(() => {
+    document.body.style.overflow = ''
 })
 
 const copyLink = async () => {

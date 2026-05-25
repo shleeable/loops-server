@@ -26,7 +26,7 @@ class PlaylistResource extends JsonResource
         $account = AccountService::compact($this->profile_id);
 
         return [
-            'id' => $this->id,
+            'id' => (string) $this->id,
             'profile_id' => $this->profile_id,
             'name' => $this->name,
             'description' => $this->description,

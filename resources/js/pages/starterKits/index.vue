@@ -159,6 +159,10 @@
                                                         left: idx * 16 + 'px',
                                                         zIndex: 3 - idx
                                                     }"
+                                                    onerror="
+                                                        this.src = '/storage/avatars/default.jpg'
+                                                        this.onerror = null
+                                                    "
                                                 />
                                             </div>
                                         </div>

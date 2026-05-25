@@ -25,10 +25,12 @@ use App\Http\Controllers\Api\StudioAnalyticsController;
 use App\Http\Controllers\Api\StudioController;
 use App\Http\Controllers\Api\UserPreferencesController;
 use App\Http\Controllers\Api\VideoController;
+use App\Http\Controllers\Api\VideoPlaylistController;
 use App\Http\Controllers\Api\VideoSoundController;
 use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\AppleAuthController;
 use App\Http\Controllers\AtomFeedController;
+use App\Http\Controllers\Auth\AccountSwitcherController;
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CuratedOnboardingController;
@@ -113,6 +115,25 @@ Route::middleware(['auth:web,api'])
         Route::get('{type}/search', [KlipyController::class, 'search'])->middleware('throttle:klipy')->name('klipy.search');
     });
 
+Route::middleware(['auth:web,api'])
+    ->prefix('api/v1/auth/accounts')
+    ->name('auth.accounts.')
+    ->group(function () {
+        Route::get('/', [AccountSwitcherController::class, 'index'])
+            ->name('index');
+
+        Route::post('/switch', [AccountSwitcherController::class, 'switch'])
+            ->middleware('throttle:20,1')
+            ->name('switch');
+
+        Route::post('/remove', [AccountSwitcherController::class, 'remove'])
+            ->middleware('throttle:20,1')
+            ->name('remove');
+
+        Route::post('/logout-all', [AccountSwitcherController::class, 'logoutAll'])
+            ->name('logout-all');
+    });
+
 Route::prefix('api')->group(function () {
     Route::post('/v1/apps', [AuthController::class, 'registerApp']);
     Route::get('/v1/config', [WebPublicController::class, 'appConfiguration'])->middleware([OptionalAuth::class, 'throttle:api']);
@@ -128,19 +149,19 @@ Route::prefix('api')->group(function () {
 
     Route::post('/v1/invite/verify', [AdminInviteController::class, 'verifyInvite']);
     Route::post('/v1/invite/check-username', [AdminInviteController::class, 'checkUsername']);
-    Route::post('/v1/invite/register', [AdminInviteController::class, 'register']);
+    Route::post('/v1/invite/register', [AdminInviteController::class, 'register'])->middleware('throttle:3,15');
     Route::post('/v1/invite/verify-age', [AdminInviteController::class, 'verifyAge']);
 
     // Auth
-    Route::post('/v1/auth/2fa/verify', [AuthController::class, 'verifyTwoFactor']);
+    Route::post('/v1/auth/2fa/verify', [AuthController::class, 'verifyTwoFactor'])->middleware('throttle:5,1');
     Route::post('/v1/auth/register/email', [UserRegisterVerifyController::class, 'sendEmailVerification']);
     Route::post('/v1/auth/register/email/resend', [UserRegisterVerifyController::class, 'resendEmailVerification']);
     Route::post('/v1/auth/register/email/verify', [UserRegisterVerifyController::class, 'verifyEmailVerification']);
     Route::post('/v1/auth/register/username', [UserRegisterVerifyController::class, 'claimUsername']);
     Route::post('/v1/auth/register/verify-age', [UserRegisterVerifyController::class, 'verifyAge']);
-    Route::post('/v1/auth/verify/email', [EmailVerificationController::class, 'initiate']);
-    Route::post('/v1/auth/verify/email/confirm', [EmailVerificationController::class, 'confirm']);
-    Route::post('/v1/auth/verify/email/resend', [EmailVerificationController::class, 'resend']);
+    Route::post('/v1/auth/verify/email', [EmailVerificationController::class, 'initiate'])->middleware('throttle:10,1');
+    Route::post('/v1/auth/verify/email/confirm', [EmailVerificationController::class, 'confirm'])->middleware('throttle:10,1');
+    Route::post('/v1/auth/verify/email/resend', [EmailVerificationController::class, 'resend'])->middleware('throttle:10,1');
     Route::post('/v1/auth/apple', [AppleAuthController::class, 'handle']);
 
     // Studio
@@ -148,6 +169,8 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/studio/playlist-posts', [StudioController::class, 'getAvailableVideosForPlaylists'])->middleware('auth:web,api');
     Route::post('/v1/studio/upload', [VideoController::class, 'store'])->middleware('auth:web,api');
     Route::post('/v1/studio/duet/upload', [DuetController::class, 'store'])->middleware('auth:web,api');
+    Route::get('/v1/studio/playlists/limits', [PlaylistController::class, 'getLimits'])->middleware('auth:web,api');
+    Route::post('/v1/studio/playlists/profile-reorder', [PlaylistController::class, 'reorderPlaylistOrder'])->middleware('auth:web,api');
     Route::apiResource('/v1/studio/playlists', PlaylistController::class)->middleware('auth:web,api');
     Route::get('/v1/studio/playlists/{playlist}/videos', [PlaylistController::class, 'videos'])->middleware('auth:web,api');
     Route::post('/v1/studio/playlists/{playlist}/videos', [PlaylistController::class, 'addVideo'])->middleware('auth:web,api');
@@ -181,7 +204,7 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/account/info/self', [AccountController::class, 'selfAccountInfo'])->middleware('auth:web,api');
     Route::get('/v1/account/info/{id}', [AccountController::class, 'getAccountInfo'])->middleware(['auth:web,api', 'throttle:api']);
     Route::get('/v1/account/state/{id}', [AccountController::class, 'getRelationshipState'])->middleware(['auth:web,api', 'throttle:api']);
-    Route::get('/v1/account/username/{id}', [WebPublicController::class, 'getAccountInfoByUsername'])->middleware('throttle:api');
+    Route::get('/v1/account/username/{id}', [WebPublicController::class, 'getAccountInfoByUsername'])->middleware('throttle:profile-username');
     Route::post('/v1/account/block/{id}', [AccountController::class, 'accountBlock'])->middleware('auth:web,api');
     Route::post('/v1/account/unblock/{id}', [AccountController::class, 'accountUnblock'])->middleware('auth:web,api');
     Route::get('/v1/account/followers/{id}', [AccountController::class, 'accountFollowers'])->middleware('auth:web,api');
@@ -191,7 +214,12 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/account/follow/{id}', [AccountController::class, 'follow'])->middleware('auth:web,api');
     Route::post('/v1/account/unfollow/{id}', [AccountController::class, 'unfollow'])->middleware('auth:web,api');
     Route::post('/v1/account/undo-follow-request/{id}', [AccountController::class, 'undoFollowRequest'])->middleware('auth:web,api');
+    Route::get('/v1/account/playlists/{id}', [WebPublicController::class, 'accountPlaylists'])->middleware([OptionalAuth::class]);
     Route::get('/v1/account/videos/likes', [AccountController::class, 'accountVideoLikes'])->middleware('auth:web,api');
+
+    // Playlists
+    Route::get('/v1/playlists/{id}/videos', [VideoPlaylistController::class, 'videos'])->middleware([OptionalAuth::class]);
+    Route::get('/v1/playlists/{id}', [VideoPlaylistController::class, 'show'])->middleware([OptionalAuth::class]);
 
     // Bookmarks
     Route::get('/v1/account/favourites', [VideoBookmarkController::class, 'bookmarks'])->middleware('auth:web,api');
@@ -289,7 +317,7 @@ Route::prefix('api')->group(function () {
 
     // Account Feeds
     Route::get('/v1/feed/account/self', [FeedController::class, 'selfAccountFeed'])->middleware('auth:web,api');
-    Route::get('/v1/feed/account/{id}/cursor', [FeedController::class, 'getAccountFeedWithCursor'])->middleware('throttle:api');
+    Route::get('/v1/feed/account/{id}/cursor', [FeedController::class, 'getAccountFeedWithCursor'])->middleware(['auth:web,api', 'throttle:api']);
     Route::get('/v1/feed/account/{id}', [WebPublicController::class, 'getAccountFeed'])->middleware('throttle:api');
 
     // Explore Feed
@@ -367,11 +395,10 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/onboarding/config', [CuratedOnboardingController::class, 'config']);
     Route::prefix('/v1/onboarding')->group(function () {
         Route::post('apply', [CuratedOnboardingController::class, 'apply'])->middleware(['throttle:curated-apply']);
-        Route::post('verify-email', [CuratedOnboardingController::class, 'verifyEmail']);
-        Route::post('verify-invite', [CuratedOnboardingController::class, 'verifyInvite']);
-        Route::post('username-check', [CuratedOnboardingController::class, 'usernameCheck']);
-        Route::post('complete', [CuratedOnboardingController::class, 'completeOnboarding']);
-        Route::get('status', [CuratedOnboardingController::class, 'status']);
+        Route::post('verify-email', [CuratedOnboardingController::class, 'verifyEmail'])->middleware(['throttle:3,1']);
+        Route::post('verify-invite', [CuratedOnboardingController::class, 'verifyInvite'])->middleware(['throttle:3,1']);
+        Route::post('username-check', [CuratedOnboardingController::class, 'usernameCheck'])->middleware(['throttle:20,1']);
+        Route::post('complete', [CuratedOnboardingController::class, 'completeOnboarding'])->middleware(['throttle:3,1']);
     });
 
     // Admin
@@ -436,6 +463,10 @@ Route::prefix('api')->group(function () {
         Route::post('/videos/{id}/moderate', [AdminController::class, 'videoModerate'])->middleware('auth:web,api');
         Route::get('/video/{id}', [AdminController::class, 'videoShow'])->middleware('auth:web,api');
         Route::get('/profiles', [AdminController::class, 'profiles'])->middleware('auth:web,api');
+        Route::post('/playlists/{id}/delete', [AdminController::class, 'playlistDelete'])->middleware('auth:web,api');
+        Route::get('/playlists/{id}/videos', [AdminController::class, 'playlistShowVideos'])->middleware('auth:web,api');
+        Route::get('/playlists/{id}', [AdminController::class, 'playlistShow'])->middleware('auth:web,api');
+        Route::get('/playlists', [AdminController::class, 'playlists'])->middleware('auth:web,api');
         Route::get('/hashtags', [AdminController::class, 'hashtags'])->middleware('auth:web,api');
         Route::get('/hashtag/{id}', [AdminController::class, 'getHashtag'])->middleware('auth:web,api');
         Route::post('/hashtags/{id}/update', [AdminController::class, 'hashtagsUpdate'])->middleware('auth:web,api');
@@ -464,6 +495,7 @@ Route::prefix('api')->group(function () {
         Route::post('/profiles/{id}/send-email', [AdminController::class, 'profileAdminSendEmail'])->middleware(['auth:web,api', 'throttle:30,1']);
         Route::post('/profiles/{id}/reset-password', [AdminController::class, 'profileAdminResetPassword'])->middleware(['auth:web,api', 'throttle:10,1']);
         Route::post('/profiles/{id}/delete-all-comments', [AdminController::class, 'profileDeleteAllComments'])->middleware(['auth:web,api']);
+        Route::post('/profiles/{id}/revoke-all-sessions', [AdminController::class, 'profileRevokeAllSessions'])->middleware(['auth:web,api']);
         Route::get('/settings', [AdminSettingsController::class, 'index'])->middleware('auth:web,api');
         Route::put('/settings', [AdminSettingsController::class, 'update'])->middleware('auth:web,api');
         Route::post('/settings/update-logo', [AdminSettingsController::class, 'updateLogo'])->middleware('auth:web,api');

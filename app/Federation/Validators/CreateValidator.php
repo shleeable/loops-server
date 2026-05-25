@@ -346,10 +346,7 @@ class CreateValidator extends BaseValidator
             $this->validateReplyChain($replyTo, $depth + 1);
 
         } catch (\Exception $e) {
-            if (config('logging.dev_log')) {
-                Log::error("Error fetching remote object '{$inReplyToUrl}'", ['error' => $e->getMessage()]);
-            }
-            throw new \Exception("Error during reply chain validation: {$e->getMessage()}");
+            return;
         }
     }
 }

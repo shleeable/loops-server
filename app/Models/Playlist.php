@@ -2,9 +2,15 @@
 
 namespace App\Models;
 
+use App\Concerns\HasSnowflakePrimary;
+use App\Policies\PlaylistPolicy;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $id
@@ -14,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string $visibility
  * @property string|null $cover_image
  * @property-read int|null $videos_count
+ * @property int $order_column
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Profile $profile
@@ -34,8 +41,26 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  *
  * @mixin \Eloquent
  */
+#[UsePolicy(PlaylistPolicy::class)]
 class Playlist extends Model
 {
+    use HasSnowflakePrimary;
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    public const VISIBILITY_PUBLIC = 'public';
+
+    public const VISIBILITY_UNLISTED = 'unlisted';
+
+    public const VISIBILITY_FOLLOWERS = 'followers';
+
+    public const VISIBILITY_PRIVATE = 'private';
+
     protected $fillable = [
         'profile_id',
         'name',
@@ -43,16 +68,35 @@ class Playlist extends Model
         'visibility',
         'cover_image',
         'videos_count',
+        'order_column',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'videos_count' => 'integer',
+        'profile_id' => 'integer',
+        'order_column' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Playlist $playlist) {
+            if (! $playlist->order_column) {
+                $playlist->order_column = static::where('profile_id', $playlist->profile_id)->max('order_column') + 1;
+            }
+        });
+    }
 
     public function profile(): BelongsTo
     {
         return $this->belongsTo(Profile::class);
+    }
+
+    #[Scope]
+    protected function published(Builder $query): void
+    {
+        $query->where('videos_count', '>', 1);
     }
 
     /**
@@ -66,10 +110,45 @@ class Playlist extends Model
             ->orderByPivot('position');
     }
 
+    /**
+     * Restrict playlists to those a given viewer is allowed to see on a profile.
+     *
+     * - Owner: sees everything except nothing (all visibilities).
+     * - Follower: public + followers.
+     * - Guest / non-follower: public only.
+     * - Unlisted is never returned in profile listings regardless of viewer.
+     */
+    protected function scopeVisibleOnProfile(Builder $query, int $ownerId, ?int $viewerId): Builder
+    {
+        // Owner viewing their own profile — show everything except unlisted.
+        if ($viewerId && $viewerId === $ownerId) {
+            return $query->whereIn('visibility', [
+                self::VISIBILITY_PUBLIC,
+                self::VISIBILITY_FOLLOWERS,
+                self::VISIBILITY_PRIVATE,
+            ]);
+        }
+
+        if (! $viewerId) {
+            return $query->where('visibility', self::VISIBILITY_PUBLIC);
+        }
+
+        return $query->where(function (Builder $q) use ($ownerId, $viewerId) {
+            $q->where('visibility', self::VISIBILITY_PUBLIC)
+                ->orWhere(function (Builder $q) use ($ownerId, $viewerId) {
+                    $q->where('visibility', self::VISIBILITY_FOLLOWERS)
+                        ->whereExists(function ($sub) use ($ownerId, $viewerId) {
+                            $sub->select(DB::raw(1))
+                                ->from('followers')
+                                ->where('profile_id', $viewerId)
+                                ->where('following_id', $ownerId);
+                        });
+                });
+        });
+    }
+
     public function addVideo(Video $video, ?int $position = null): void
     {
-        $video->playlists()->detach();
-
         if ($position === null) {
             $maxPosition = $this->videos()->max('position') ?? -1;
             $position = $maxPosition + 1;
@@ -78,6 +157,7 @@ class Playlist extends Model
         $this->videos()->attach($video->id, ['position' => $position]);
         $this->updateCoverImage();
         $this->updateProfileHasPlaylists();
+        $this->updateVideoCount();
     }
 
     public function removeVideo(Video $video): void
@@ -86,6 +166,7 @@ class Playlist extends Model
         $this->reorderPositions();
         $this->updateCoverImage();
         $this->updateProfileHasPlaylists();
+        $this->updateVideoCount();
     }
 
     public function reorderVideos(array $videoIds): void
@@ -95,6 +176,7 @@ class Playlist extends Model
         }
 
         $this->updateCoverImage();
+        $this->updateVideoCount();
     }
 
     protected function reorderPositions(): void
@@ -104,6 +186,8 @@ class Playlist extends Model
         foreach ($videos as $index => $video) {
             $this->videos()->updateExistingPivot($video->getKey(), ['position' => $index]);
         }
+
+        $this->updateVideoCount();
     }
 
     protected function updateCoverImage(): void
@@ -112,7 +196,15 @@ class Playlist extends Model
         $firstVideo = $this->videos()->first();
         if ($firstVideo) {
             $this->update(['cover_image' => $firstVideo->thumb()]);
+        } else {
+            $this->update(['cover_image' => null]);
         }
+    }
+
+    public function updateVideoCount(): void
+    {
+        $count = $this->videos()->count();
+        $this->update(['videos_count' => $count]);
     }
 
     public function updateProfileHasPlaylists(): void
@@ -148,5 +240,53 @@ class Playlist extends Model
         }
 
         return false;
+    }
+
+    public static function reorder(int $profileId, array $orderedIds): void
+    {
+        if (empty($orderedIds)) {
+            return;
+        }
+
+        if (count($orderedIds) > 100) {
+            throw new \InvalidArgumentException('Too many playlists to reorder at once.');
+        }
+
+        $orderedIds = array_map('intval', $orderedIds);
+
+        if (count($orderedIds) !== count(array_unique($orderedIds))) {
+            throw new \InvalidArgumentException('Duplicate playlist IDs.');
+        }
+
+        DB::transaction(function () use ($profileId, $orderedIds) {
+            $currentPositions = static::where('profile_id', $profileId)
+                ->whereIn('id', $orderedIds)
+                ->pluck('order_column', 'id');
+
+            if ($currentPositions->count() !== count($orderedIds)) {
+                throw new \InvalidArgumentException('One or more playlist IDs are invalid.');
+            }
+
+            $sortedPositions = $currentPositions->values()->sort()->values();
+
+            $cases = [];
+            $bindings = [];
+
+            foreach ($orderedIds as $index => $id) {
+                $cases[] = 'WHEN id = ? THEN ?';
+                $bindings[] = $id;
+                $bindings[] = $sortedPositions[$index];
+            }
+
+            $bindings[] = $profileId;
+            array_push($bindings, ...$orderedIds);
+
+            DB::update(
+                'UPDATE playlists SET order_column = CASE '
+                .implode(' ', $cases)
+                .' END WHERE profile_id = ? AND id IN ('.implode(',', array_fill(0, count($orderedIds), '?')).')',
+                $bindings
+            );
+        });
     }
 }

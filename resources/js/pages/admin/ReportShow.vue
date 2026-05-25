@@ -366,8 +366,9 @@
                                                 }}
                                             </router-link>
                                             <span class="text-gray-400 dark:text-gray-500">•</span>
-                                            <router-link
-                                                :to="report.content_preview.parent.url"
+                                            <a
+                                                :href="report.content_preview.parent.url"
+                                                target="_blank"
                                                 class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
                                             >
                                                 {{
@@ -375,7 +376,7 @@
                                                         report.content_preview.parent.created_at
                                                     )
                                                 }}
-                                            </router-link>
+                                            </a>
                                         </div>
 
                                         <div
@@ -458,12 +459,13 @@
                                                 @{{ report.content_preview.account.username }}
                                             </router-link>
                                             <span class="text-gray-400 dark:text-gray-500">•</span>
-                                            <router-link
-                                                :to="report.content_preview.url"
+                                            <a
+                                                :href="report.content_preview.url"
+                                                target="_blank"
                                                 class="hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200"
                                             >
                                                 {{ formatDate(report.content_preview.created_at) }}
-                                            </router-link>
+                                            </a>
                                         </div>
 
                                         <div
