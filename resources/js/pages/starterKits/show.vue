@@ -304,6 +304,10 @@
                                     <img
                                         :src="starterKit.creator.avatar"
                                         class="w-5 h-5 rounded-full"
+                                        onerror="
+                                            this.src = '/storage/avatars/default.jpg'
+                                            this.onerror = null
+                                        "
                                     />
                                     <span
                                         class="text-xs font-semibold text-gray-700 dark:text-gray-200"
@@ -325,6 +329,10 @@
                                     :src="account.avatar"
                                     class="w-9 h-9 rounded-full border-2 border-white dark:border-gray-900 object-cover -ml-2 first:ml-0 shadow-sm"
                                     :style="{ zIndex: 5 - i }"
+                                    onerror="
+                                        this.src = '/storage/avatars/default.jpg'
+                                        this.onerror = null
+                                    "
                                 />
                                 <span
                                     v-if="starterKit.approved_accounts > 5"
@@ -562,6 +570,10 @@
                                 :src="account.avatar"
                                 :alt="account.name"
                                 class="w-10 h-10 rounded-full object-cover flex-shrink-0 ring-2 ring-gray-100 dark:ring-gray-800"
+                                onerror="
+                                    this.src = '/storage/avatars/default.jpg'
+                                    this.onerror = null
+                                "
                             />
 
                             <div class="flex-1 min-w-0">
