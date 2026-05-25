@@ -226,24 +226,33 @@ class WebPublicController extends Controller
 
     public function getAccountInfoByUsername(Request $request, $id)
     {
-        if ($request->user() && $request->user()->cannot('viewAny', [Video::class])) {
+        $user = $request->user();
+
+        if ($user && $user->cannot('viewAny', [Video::class])) {
             return $this->error('Please finish setting up your account', 403);
         }
 
-        $profile = Profile::whereUsername($id)->firstOrFail();
+        $profile = Profile::whereUsername($id)
+            ->with('user')
+            ->firstOrFail();
 
         if ($profile->status != 1) {
             return $this->error('This resource is not available', 403);
         }
 
-        if ($user = $request->user()) {
-            abort_if(! $user->is_admin && UserFilterService::isBlocking($user->profile_id, $id), 404, 'Resource not available');
+        if ($user) {
+            abort_if(
+                ! $user->is_admin && UserFilterService::isBlocking($user->profile_id, $profile->id),
+                404,
+                'Resource not available'
+            );
         }
 
         $res = (new ProfileResource($profile))->toArray($request);
-        $res['is_owner'] = $request->user()?->profile_id == $profile->id;
+        $res['is_owner'] = $user?->profile_id === $profile->id;
         $res['likes_count'] = AccountService::getAccountLikesCount($profile->id);
-        if ($profile->user_id && $profile->user->has_atom) {
+
+        if ($profile->user_id && $profile->user?->has_atom) {
             $res['has_atom'] = true;
             $res['has_atom_url'] = route('user.atom', $profile->id);
         }

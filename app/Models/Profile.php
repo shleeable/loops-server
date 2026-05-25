@@ -233,6 +233,7 @@ class Profile extends Model
         'starter_kit_state' => 'integer',
         'manuallyApprovesFollowers' => 'boolean',
         'last_fetched_at' => 'datetime',
+        'has_playlists' => 'boolean',
     ];
 
     public function videos(): HasMany

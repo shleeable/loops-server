@@ -204,7 +204,7 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/account/info/self', [AccountController::class, 'selfAccountInfo'])->middleware('auth:web,api');
     Route::get('/v1/account/info/{id}', [AccountController::class, 'getAccountInfo'])->middleware(['auth:web,api', 'throttle:api']);
     Route::get('/v1/account/state/{id}', [AccountController::class, 'getRelationshipState'])->middleware(['auth:web,api', 'throttle:api']);
-    Route::get('/v1/account/username/{id}', [WebPublicController::class, 'getAccountInfoByUsername'])->middleware('throttle:api');
+    Route::get('/v1/account/username/{id}', [WebPublicController::class, 'getAccountInfoByUsername'])->middleware('throttle:profile-username');
     Route::post('/v1/account/block/{id}', [AccountController::class, 'accountBlock'])->middleware('auth:web,api');
     Route::post('/v1/account/unblock/{id}', [AccountController::class, 'accountUnblock'])->middleware('auth:web,api');
     Route::get('/v1/account/followers/{id}', [AccountController::class, 'accountFollowers'])->middleware('auth:web,api');
