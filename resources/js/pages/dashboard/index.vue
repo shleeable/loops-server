@@ -5,37 +5,6 @@
                 {{ t('settings.manageYourLoopsAccount') }}
             </h1>
             <hr class="border-gray-300 dark:border-gray-700" />
-            <section class="my-8">
-                <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">
-                    {{ t('settings.accountControl') }}
-                </h2>
-                <div class="flex gap-3 flex-col lg:flex-row">
-                    <div
-                        class="flex w-full justify-between items-center p-4 bg-white dark:bg-slate-950 rounded-lg shadow-sm"
-                    >
-                        <span class="text-sm text-gray-600 font-light">{{
-                            t('settings.deactivateAccount')
-                        }}</span>
-                        <router-link
-                            to="/dashboard/account/deactivate"
-                            class="font-medium text-sm text-red-500"
-                            >{{ t('settings.deactivate') }}</router-link
-                        >
-                    </div>
-                    <div
-                        class="flex w-full justify-between items-center p-4 bg-white dark:bg-slate-950 rounded-lg shadow-sm"
-                    >
-                        <span class="text-sm text-gray-600 font-light">{{
-                            t('settings.deleteAccount')
-                        }}</span>
-                        <router-link
-                            to="/dashboard/account/delete"
-                            class="font-medium text-sm text-red-500"
-                            >{{ t('settings.delete') }}</router-link
-                        >
-                    </div>
-                </div>
-            </section>
 
             <section class="my-8">
                 <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">
@@ -66,6 +35,26 @@
                             </div>
                         </div>
                     </router-link>
+
+                    <router-link
+                        to="/dashboard/account/content"
+                        class="bg-white dark:bg-slate-950 dark:hover:bg-slate-800 transition-colors hover:bg-gray-50 rounded-lg shadow-lg"
+                    >
+                        <div class="flex justify-between items-center p-4">
+                            <div class="flex items-center gap-5">
+                                <h3 class="font-medium mb-0 dark:text-gray-300">
+                                    Content preferences
+                                </h3>
+                                <p class="hidden lg:block text-xs text-gray-500 -mb-1 font-light">
+                                    Manage content preference settings
+                                </p>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="bx bx-chevron-right text-[20px] text-gray-400"></i>
+                            </div>
+                        </div>
+                    </router-link>
+
                     <router-link
                         to="/dashboard/account/email"
                         class="bg-white dark:bg-slate-950 dark:hover:bg-slate-800 transition-colors hover:bg-gray-50 rounded-lg shadow-lg"
@@ -84,6 +73,45 @@
                             </div>
                         </div>
                     </router-link>
+
+                    <router-link
+                        to="/dashboard/privacy"
+                        class="bg-white dark:bg-slate-950 dark:hover:bg-slate-800 transition-colors hover:bg-gray-50 rounded-lg shadow-lg"
+                    >
+                        <div class="flex justify-between items-center p-4">
+                            <div class="flex items-center gap-5">
+                                <h3 class="font-medium mb-0 dark:text-gray-300">
+                                    {{ $t('settings.privacy') }}
+                                </h3>
+                                <p class="hidden lg:block text-xs text-gray-500 -mb-1 font-light">
+                                    Manage privacy settings
+                                </p>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="bx bx-chevron-right text-[20px] text-gray-400"></i>
+                            </div>
+                        </div>
+                    </router-link>
+
+                    <router-link
+                        to="/dashboard/safety"
+                        class="bg-white dark:bg-slate-950 dark:hover:bg-slate-800 transition-colors hover:bg-gray-50 rounded-lg shadow-lg"
+                    >
+                        <div class="flex justify-between items-center p-4">
+                            <div class="flex items-center gap-5">
+                                <h3 class="font-medium mb-0 dark:text-gray-300">
+                                    {{ $t('settings.safety') }}
+                                </h3>
+                                <p class="hidden lg:block text-xs text-gray-500 -mb-1 font-light">
+                                    Manage safety settings
+                                </p>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="bx bx-chevron-right text-[20px] text-gray-400"></i>
+                            </div>
+                        </div>
+                    </router-link>
+
                     <router-link
                         to="/dashboard/account/security"
                         class="bg-white dark:bg-slate-950 dark:hover:bg-slate-800 transition-colors hover:bg-gray-50 rounded-lg shadow-lg"
@@ -139,6 +167,82 @@
                             </div>
                         </div>
                     </router-link>
+                </div>
+            </section>
+
+            <section class="my-8">
+                <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">More settings</h2>
+
+                <div class="flex flex-col gap-3">
+                    <router-link
+                        to="/dashboard/appearance"
+                        class="bg-white dark:bg-slate-950 dark:hover:bg-slate-800 transition-colors hover:bg-gray-50 rounded-lg shadow-lg"
+                    >
+                        <div class="flex justify-between items-center p-4">
+                            <div class="flex items-center gap-5">
+                                <h3 class="font-medium mb-0 dark:text-gray-300">
+                                    {{ t('nav.appearance') }}
+                                </h3>
+                                <p class="hidden lg:block text-xs text-gray-500 -mb-1 font-light">
+                                    Manage appearance settings
+                                </p>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="bx bx-chevron-right text-[20px] text-gray-400"></i>
+                            </div>
+                        </div>
+                    </router-link>
+
+                    <router-link
+                        to="/dashboard/sharing"
+                        class="bg-white dark:bg-slate-950 dark:hover:bg-slate-800 transition-colors hover:bg-gray-50 rounded-lg shadow-lg"
+                    >
+                        <div class="flex justify-between items-center p-4">
+                            <div class="flex items-center gap-5">
+                                <h3 class="font-medium mb-0 dark:text-gray-300">
+                                    {{ $t('settings.sharing') }}
+                                </h3>
+                                <p class="hidden lg:block text-xs text-gray-500 -mb-1 font-light">
+                                    Manage sharing settings
+                                </p>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="bx bx-chevron-right text-[20px] text-gray-400"></i>
+                            </div>
+                        </div>
+                    </router-link>
+                </div>
+            </section>
+
+            <section class="my-8">
+                <h2 class="tracking-tight font-light mb-4 dark:text-gray-300">
+                    {{ t('settings.accountControl') }}
+                </h2>
+                <div class="flex gap-3 flex-col lg:flex-row">
+                    <div
+                        class="flex w-full justify-between items-center p-4 bg-white dark:bg-slate-950 rounded-lg shadow-sm"
+                    >
+                        <span class="text-sm text-gray-600 font-light">{{
+                            t('settings.deactivateAccount')
+                        }}</span>
+                        <router-link
+                            to="/dashboard/account/deactivate"
+                            class="font-medium text-sm text-red-500"
+                            >{{ t('settings.deactivate') }}</router-link
+                        >
+                    </div>
+                    <div
+                        class="flex w-full justify-between items-center p-4 bg-white dark:bg-slate-950 rounded-lg shadow-sm"
+                    >
+                        <span class="text-sm text-gray-600 font-light">{{
+                            t('settings.deleteAccount')
+                        }}</span>
+                        <router-link
+                            to="/dashboard/account/delete"
+                            class="font-medium text-sm text-red-500"
+                            >{{ t('settings.delete') }}</router-link
+                        >
+                    </div>
                 </div>
             </section>
 

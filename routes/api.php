@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\VideoSoundController;
 use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\AppleAuthController;
 use App\Http\Controllers\AtomFeedController;
+use App\Http\Controllers\Auth\AccountSwitcherController;
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CuratedOnboardingController;
@@ -112,6 +113,25 @@ Route::middleware(['auth:web,api'])
     ->group(function () {
         Route::get('{type}/trending', [KlipyController::class, 'trending'])->name('klipy.trending');
         Route::get('{type}/search', [KlipyController::class, 'search'])->middleware('throttle:klipy')->name('klipy.search');
+    });
+
+Route::middleware(['auth:web,api'])
+    ->prefix('api/v1/auth/accounts')
+    ->name('auth.accounts.')
+    ->group(function () {
+        Route::get('/', [AccountSwitcherController::class, 'index'])
+            ->name('index');
+
+        Route::post('/switch', [AccountSwitcherController::class, 'switch'])
+            ->middleware('throttle:20,1')
+            ->name('switch');
+
+        Route::post('/remove', [AccountSwitcherController::class, 'remove'])
+            ->middleware('throttle:20,1')
+            ->name('remove');
+
+        Route::post('/logout-all', [AccountSwitcherController::class, 'logoutAll'])
+            ->name('logout-all');
     });
 
 Route::prefix('api')->group(function () {

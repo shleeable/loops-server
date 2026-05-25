@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Models\User;
+use App\Services\AccountSwitcherService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -16,68 +17,65 @@ class AuthController extends Controller
     public function verifyTwoFactor(Request $request)
     {
         $request->validate(['otp_code' => 'required|integer|digits:6']);
+
         $user = User::find(session('2fa:user:id'));
 
         if (! $user) {
             return response()->json(['success' => false, 'error' => 'Invalid session.', 'force_relogin' => false]);
         }
 
-        $google2fa = new Google2FA;
-        $secret = $user->two_factor_secret;
-        $attempts = session('2fa:user:attempts');
+        $attempts = (int) session('2fa:user:attempts', 0);
 
         if ($attempts >= 3) {
-            session()->forget('2fa:user:id');
-            session()->forget('2fa:user:attempts');
-            session()->forget('url.intended');
+            session()->forget(['2fa:user:id', '2fa:user:attempts', '2fa:user:remember', 'url.intended']);
 
             return response()->json(['success' => false, 'error' => 'Too many attempts', 'force_relogin' => true]);
         }
 
         $request->session()->increment('2fa:user:attempts');
 
-        if ($google2fa->verifyKey($secret, $request->otp_code)) {
-            Auth::login($user, session()->pull('2fa:remember', false));
+        $google2fa = new Google2FA;
 
-            session()->forget('2fa:user:id');
-            session()->forget('2fa:user:attempts');
-
-            $intendedUrl = session('url.intended');
-
-            if ($user->must_change_password) {
-                Session::put(ForcePasswordChangeController::SESSION_USER_ID, $user->id);
-                Session::put(ForcePasswordChangeController::SESSION_VERIFIED_AT, now()->timestamp);
-                Session::put(ForcePasswordChangeController::SESSION_ATTEMPTS, 0);
-
-                if ($intendedUrl = session('url.intended')) {
-                    Session::put(ForcePasswordChangeController::SESSION_INTENDED_URL, $intendedUrl);
-                }
-
-                Auth::logout();
-
-                return response()->json([
-                    'must_change_password' => true,
-                ]);
-            }
-
-            if ($intendedUrl && str_contains($intendedUrl, '/oauth/authorize')) {
-                session()->forget('url.intended');
-
-                return response()->json([
-                    'success' => true,
-                    'error' => null,
-                    'redirect' => $intendedUrl,
-                ]);
-            }
-
-            return response()->json([
-                'success' => true,
-                'error' => null,
-                'redirect' => url('/'),
-            ]);
+        if (! $google2fa->verifyKey($user->two_factor_secret, $request->otp_code)) {
+            return response()->json(['success' => false, 'error' => 'Invalid code, please try again.', 'force_relogin' => false]);
         }
 
-        return response()->json(['success' => false, 'error' => 'Invalid code, please try again.', 'force_relogin' => false]);
+        $remember = (bool) session('2fa:user:remember', false);
+
+        Auth::login($user, $remember);
+
+        $request->session()->put(
+            'password_hash_'.Auth::getDefaultDriver(),
+            $user->getAuthPassword()
+        );
+
+        app(AccountSwitcherService::class)->linkCurrentUser(remember: $remember);
+
+        session()->forget(['2fa:user:id', '2fa:user:attempts', '2fa:user:remember']);
+
+        $intendedUrl = session('url.intended');
+
+        if ($user->must_change_password) {
+            Session::put(ForcePasswordChangeController::SESSION_USER_ID, $user->id);
+            Session::put(ForcePasswordChangeController::SESSION_VERIFIED_AT, now()->timestamp);
+            Session::put(ForcePasswordChangeController::SESSION_ATTEMPTS, 0);
+
+            if ($intendedUrl) {
+                Session::put(ForcePasswordChangeController::SESSION_INTENDED_URL, $intendedUrl);
+            }
+
+            Auth::logout();
+
+            return response()->json(['must_change_password' => true]);
+        }
+
+        if ($intendedUrl && str_contains($intendedUrl, '/oauth/authorize')) {
+            session()->forget('url.intended');
+
+            return response()->json(['success' => true, 'error' => null, 'redirect' => $intendedUrl]);
+        }
+
+        return response()->json(['success' => true, 'error' => null, 'redirect' => url('/')]);
     }
 
     public function registerApp(Request $request)

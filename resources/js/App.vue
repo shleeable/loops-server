@@ -10,17 +10,20 @@
                 </template>
             </Suspense>
         </router-view>
-        <AuthModal v-if="authStore.isOpen" :mode="authStore.authMode" />
+        <AuthModal v-if="isOpen" :mode="authMode" />
     </div>
 </template>
 
 <script setup>
 import { onMounted, watch, inject } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { storeToRefs } from 'pinia'
 import AuthModal from '@/components/AuthModal.vue'
 import PageSkeleton from '@/components/Layout/PageSkeleton.vue'
 
 const authStore = useAuthStore()
+
+const { isOpen, authMode } = storeToRefs(authStore)
 
 onMounted(async () => {
     if (

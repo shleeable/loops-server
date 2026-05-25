@@ -139,7 +139,7 @@
                     </router-link>
                 </template>
 
-                <div class="relative">
+                <div class="hidden relative">
                     <button
                         @click="toggleMoreMenu"
                         class="w-full text-black dark:text-white hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
@@ -200,34 +200,13 @@
                             <i class="bx bx-cog mr-3 text-xl"></i>
                             <span class="text-sm font-medium">{{ t('nav.settings') }}</span>
                         </router-link>
-
-                        <div
-                            v-if="authStore.getUser"
-                            class="flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-300"
-                        >
-                            <button
-                                @click="handleLogout"
-                                class="flex items-center w-full cursor-pointer"
-                            >
-                                <svg
-                                    width="20"
-                                    height="20"
-                                    class="mr-3 text-xl"
-                                    fill="currentColor"
-                                    viewBox="0 0 24 24"
-                                    transform=""
-                                    id="injected-svg"
-                                >
-                                    <path d="M15 11H8v2h7v4l6-5-6-5z" />
-                                    <path
-                                        d="M5 21h7v-2H5V5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2"
-                                    />
-                                </svg>
-                                <span class="text-sm font-medium">{{ $t('nav.logOut') }}</span>
-                            </button>
-                        </div>
                     </div>
                 </div>
+                <template v-if="authStore.getUser">
+                    <div class="mt-4">
+                        <AccountSwitcher @close="handleLinkClick" />
+                    </div>
+                </template>
 
                 <template v-if="!authStore.getUser">
                     <div class="my-4 space-y-2">
@@ -332,6 +311,7 @@ import { useLanguagePicker } from '@/composables/useLanguagePicker'
 import { useAlertModal } from '@/composables/useAlertModal.js'
 import AnimatedButton from '../AnimatedButton.vue'
 import SparklesAltIcon from '../Icons/SparklesAltIcon.vue'
+import AccountSwitcher from '../Auth/AccountSwitcher.vue'
 const { t } = useI18n()
 const { isLanguagePickerOpen, openLanguagePicker, closeLanguagePicker } = useLanguagePicker()
 

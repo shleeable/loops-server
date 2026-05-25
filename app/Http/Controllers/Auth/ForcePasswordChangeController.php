@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ForcePasswordChangeRequest;
 use App\Models\User;
+use App\Services\AccountSwitcherService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -97,6 +98,10 @@ class ForcePasswordChangeController extends Controller
 
         Auth::guard()->login($user, $remember);
         $request->session()->regenerate();
+
+        app(AccountSwitcherService::class)->linkCurrentUser(
+            remember: $remember
+        );
 
         if ($intendedUrl && str_contains($intendedUrl, '/oauth/authorize')) {
             return response()->json([
