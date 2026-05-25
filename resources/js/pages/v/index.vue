@@ -112,13 +112,13 @@
 
             <div
                 v-if="currentVideo.media"
-                class="absolute object-cover w-full my-auto z-[-1] h-screen bg-black bg-center bg-cover blur-2xl opacity-50"
+                class="absolute object-cover w-full my-auto z-[-1] h-dvh bg-black bg-center bg-cover blur-2xl opacity-50"
                 :style="`background-image: url(${currentVideo.media.thumbnail})`"
             ></div>
 
             <div
                 v-if="!isVideoLoaded"
-                class="flex items-center justify-center bg-black h-screen lg:min-w-[480px]"
+                class="flex items-center justify-center bg-black h-dvh lg:min-w-[480px]"
             >
                 <div class="text-center">
                     <Spinner class="h-12 w-12 text-white mx-auto mb-4" />
@@ -128,7 +128,7 @@
                 </div>
             </div>
 
-            <div class="bg-black lg:min-w-[480px] relative">
+            <div class="bg-black w-full lg:min-w-[480px] relative h-full overflow-hidden">
                 <video
                     v-if="currentVideo.media"
                     ref="videoRef"
@@ -136,7 +136,7 @@
                     :controls="showControls"
                     playsinline
                     preload="auto"
-                    class="h-screen mx-auto"
+                    class="h-full mx-auto"
                     :class="{ 'opacity-0': !isVideoLoaded }"
                     :aria-label="currentVideo.media.alt_text"
                     :src="currentVideo.media.src_url"
