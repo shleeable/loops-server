@@ -9,14 +9,16 @@ Loops is a TikTok-like video sharing platform (with [ActivityPub](https://activi
 ## System Requirements
 
 ### Minimum Versions
+
 - **PHP**: 8.3+
 - **MySQL**: 8.0+
 - **Redis**: 6.0+
-- **FFmpeg**: 4.5+ (5.0+ recommended)
-- **Node.js**: 18+
+- **FFmpeg**: 4.5+ (8.0+ recommended)
+- **Node.js**: 20+
 - **Composer**: 2.0+
 
 ### PHP Extensions Required
+
 - BCMath
 - Ctype
 - Fileinfo
@@ -197,6 +199,7 @@ stopwaitsecs=3600
 Loops supports multiple mail providers. Configure one of the following:
 
 ### SMTP
+
 ```env
 MAIL_MAILER=smtp
 MAIL_HOST=your-smtp-host
@@ -207,6 +210,7 @@ MAIL_ENCRYPTION=tls
 ```
 
 ### Mailgun
+
 ```env
 MAIL_MAILER=mailgun
 MAILGUN_DOMAIN=your-domain.com
@@ -214,6 +218,7 @@ MAILGUN_SECRET=your-secret-key
 ```
 
 ### Amazon SES
+
 ```env
 MAIL_MAILER=ses
 AWS_ACCESS_KEY_ID=your-access-key
@@ -222,12 +227,14 @@ AWS_DEFAULT_REGION=us-east-1
 ```
 
 ### Postmark
+
 ```env
 MAIL_MAILER=postmark
 POSTMARK_TOKEN=your-server-token
 ```
 
 ### Resend
+
 ```env
 MAIL_MAILER=resend
 RESEND_KEY=your-api-key
@@ -240,6 +247,7 @@ RESEND_KEY=your-api-key
 Loops supports Cloudflare Turnstile and hCaptcha for spam protection.
 
 #### Cloudflare Turnstile
+
 ```env
 LOOPS_CAPTCHA=true
 LOOPS_CAPTCHA_DRIVER=turnstile
@@ -248,6 +256,7 @@ TURNSTILE_SECRET_KEY=your-secret-key
 ```
 
 #### hCaptcha
+
 ```env
 LOOPS_CAPTCHA=true
 LOOPS_CAPTCHA_DRIVER=hcaptcha
@@ -269,26 +278,26 @@ server {
     listen [::]:80;
     server_name your-domain.com;
     root /var/www/loops/public;
-    
+
     add_header X-Frame-Options "SAMEORIGIN";
     add_header X-Content-Type-Options "nosniff";
-    
+
     index index.php;
-    
+
     charset utf-8;
-    
+
     # Handle large video uploads
     client_max_body_size 100M;
-    
+
     location / {
         try_files $uri $uri/ /index.php?$query_string;
     }
-    
+
     location = /favicon.ico { access_log off; log_not_found off; }
     location = /robots.txt  { access_log off; log_not_found off; }
-    
+
     error_page 404 /index.php;
-    
+
     location ~ \.php$ {
         fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
@@ -304,15 +313,15 @@ server {
 <VirtualHost *:80>
     ServerName your-domain.com
     DocumentRoot /var/www/loops/public
-    
+
     <Directory /var/www/loops/public>
         AllowOverride All
         Require all granted
     </Directory>
-    
+
     # Handle large video uploads
     LimitRequestBody 104857600
-    
+
     ErrorLog ${APACHE_LOG_DIR}/loops_error.log
     CustomLog ${APACHE_LOG_DIR}/loops_access.log combined
 </VirtualHost>
@@ -398,6 +407,9 @@ git pull origin main
 
 # Update dependencies
 composer install --no-dev --optimize-autoloader
+
+# Install frontend deps + rebuild frontend
+npm ci && npm run build
 
 # Run migrations
 php artisan migrate
