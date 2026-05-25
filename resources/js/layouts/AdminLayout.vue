@@ -419,14 +419,7 @@ const navigation = computed(() => [
     {
         title: 'Federation',
         items: [
-            {
-                name: 'Instances',
-                icon: ServerStackIcon,
-                subItems: [
-                    { name: 'Overview', href: '/admin/instances' },
-                    { name: 'Manage', href: '/admin/instances/manage' }
-                ]
-            },
+            { name: 'Instances', href: '/admin/instances', icon: ServerStackIcon },
             { name: 'Relays', href: '/admin/relays', icon: ArrowPathIcon }
         ]
     },
