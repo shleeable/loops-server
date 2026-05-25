@@ -148,7 +148,9 @@
                             >
                                 Links
                             </p>
-                            <div class="flex flex-col gap-1.5 max-h-[180px] overflow-y-auto">
+                            <div
+                                class="flex flex-col gap-1.5 max-h-[215px] overflow-y-auto no-scrollbar"
+                            >
                                 <a
                                     v-for="(linkItem, index) in profile.links"
                                     :key="index"
@@ -254,6 +256,17 @@ const accountDomain = computed(() => {
     }
 
     return new URL(props.profile.remote_url).hostname
+})
+
+watch(
+    () => props.modelValue,
+    (val) => {
+        document.body.style.overflow = val ? 'hidden' : ''
+    }
+)
+
+onUnmounted(() => {
+    document.body.style.overflow = ''
 })
 
 async function copyUrl() {

@@ -368,20 +368,19 @@
         :tab="followersTab"
     />
 
-    <RemoteFollowModal
-        v-model="showRemoteFollowModal"
-        :username="profile.username"
-        :url="profile.url"
-    />
-
-    <ProfileHeaderInfoModal
-        v-model="showProfileInfoModal"
-        :profile="profile"
-        :username="profile.username"
-        :url="profile.local ? profile.url : profile.remote_url"
-    />
-
     <Teleport to="body">
+        <RemoteFollowModal
+            v-model="showRemoteFollowModal"
+            :username="profile.username"
+            :url="profile.url"
+        />
+
+        <ProfileHeaderInfoModal
+            v-model="showProfileInfoModal"
+            :profile="profile"
+            :username="profile.username"
+            :url="profile.local ? profile.url : profile.remote_url"
+        />
         <EditModal
             v-if="showEditModal"
             @close="showEditModal = false"
