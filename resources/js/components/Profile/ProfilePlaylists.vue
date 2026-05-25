@@ -1,4 +1,41 @@
 <template>
+    <div class="mt-6 lg:hidden">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            {{ $t('studio.playlists') }}
+        </h2>
+
+        <div
+            ref="mobileScrollEl"
+            @scroll="onMobileScroll"
+            class="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 snap-x scroll-smooth"
+            style="scrollbar-width: none; -ms-overflow-style: none"
+        >
+            <button
+                v-for="playlist in playlists"
+                :key="playlist.id"
+                @click="openPlaylist(playlist)"
+                class="flex-shrink-0 flex items-center gap-2.5 pl-3 pr-4 py-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 active:bg-gray-100 dark:active:bg-gray-800 transition-colors snap-start cursor-pointer"
+            >
+                <RectangleStackIcon
+                    class="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0"
+                />
+                <span
+                    class="font-semibold text-xs text-gray-900 dark:text-gray-100 whitespace-nowrap"
+                >
+                    {{ playlist.name }}
+                </span>
+            </button>
+
+            <div v-if="isLoadingMore" class="flex-shrink-0 flex items-center px-3">
+                <Spinner />
+            </div>
+        </div>
+
+        <h2 class="mt-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {{ $t('common.videos') }}
+        </h2>
+    </div>
+
     <div class="mt-6 hidden lg:block">
         <div class="flex items-center justify-between mb-3">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -78,19 +115,20 @@
         <h2 class="mt-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
             {{ $t('common.videos') }}
         </h2>
-
-        <PlaylistModal
-            v-if="selectedPlaylist"
-            :playlist="selectedPlaylist"
-            @close="selectedPlaylist = null"
-        />
     </div>
+
+    <PlaylistModal
+        v-if="selectedPlaylist"
+        :playlist="selectedPlaylist"
+        @close="selectedPlaylist = null"
+    />
 </template>
 
 <script setup>
 import { ref, onMounted, nextTick, inject, computed } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/20/solid'
 import { PlayIcon } from '@heroicons/vue/24/solid'
+import { RectangleStackIcon } from '@heroicons/vue/24/outline'
 import Spinner from '~/components/Spinner.vue'
 import PlaylistModal from '~/components/Profile/PlaylistModal.vue'
 import { useProfileStore } from '~/stores/profile'
@@ -102,6 +140,7 @@ const props = defineProps({
 const authStore = inject('authStore')
 const profileStore = useProfileStore()
 const scrollEl = ref(null)
+const mobileScrollEl = ref(null)
 const isLoadingMore = ref(false)
 const canScrollLeft = ref(false)
 const canScrollRight = ref(false)
@@ -130,6 +169,20 @@ const scrollBy = (delta) => {
     scrollEl.value?.scrollBy({ left: delta, behavior: 'smooth' })
 }
 
+const loadMore = async () => {
+    if (isLoadingMore.value || !profileStore.playlistsNextCursor) return false
+    isLoadingMore.value = true
+    try {
+        await profileStore.getPlaylists(profileStore.id, profileStore.playlistsNextCursor)
+        return true
+    } catch (e) {
+        console.error('Error loading more playlists:', e)
+        return false
+    } finally {
+        isLoadingMore.value = false
+    }
+}
+
 const onScroll = async () => {
     updateScrollState()
 
@@ -139,16 +192,23 @@ const onScroll = async () => {
     const distanceFromRight = el.scrollWidth - el.scrollLeft - el.clientWidth
 
     if (distanceFromRight < 240) {
-        isLoadingMore.value = true
-        try {
-            await profileStore.getPlaylists(profileStore.id, profileStore.playlistsNextCursor)
+        const loaded = await loadMore()
+        if (loaded) {
             await nextTick()
             updateScrollState()
-        } catch (e) {
-            console.error('Error loading more playlists:', e)
-        } finally {
-            isLoadingMore.value = false
         }
+    }
+}
+
+const onMobileScroll = async () => {
+    if (isLoadingMore.value || !profileStore.playlistsNextCursor) return
+
+    const el = mobileScrollEl.value
+    if (!el) return
+
+    const distanceFromRight = el.scrollWidth - el.scrollLeft - el.clientWidth
+    if (distanceFromRight < 200) {
+        await loadMore()
     }
 }
 

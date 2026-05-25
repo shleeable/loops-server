@@ -99,6 +99,7 @@ declare module 'vue' {
     PlaylistAddVideoModal: typeof import('./components/Studio/PlaylistAddVideoModal.vue')['default']
     PlaylistModal: typeof import('./components/Profile/PlaylistModal.vue')['default']
     ProfileHeader: typeof import('./components/Profile/ProfileHeader.vue')['default']
+    ProfileHeaderInfoModal: typeof import('./components/Profile/ProfileHeaderInfoModal.vue')['default']
     ProfileHoverCard: typeof import('./components/ProfileHoverCard.vue')['default']
     ProfileListCard: typeof import('./components/Profile/ProfileListCard.vue')['default']
     ProfilePlaylists: typeof import('./components/Profile/ProfilePlaylists.vue')['default']
