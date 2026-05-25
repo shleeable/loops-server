@@ -138,6 +138,47 @@
                                 </p>
                             </div>
                         </div>
+
+                        <div
+                            v-if="profile.links && profile.links.length"
+                            class="pt-4 pb-2 border-t border-gray-100 dark:border-gray-800"
+                        >
+                            <p
+                                class="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2"
+                            >
+                                Links
+                            </p>
+                            <div class="flex flex-col gap-1.5 max-h-[180px] overflow-y-auto">
+                                <a
+                                    v-for="(linkItem, index) in profile.links"
+                                    :key="index"
+                                    :href="linkItem.link"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="group flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800/60 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                >
+                                    <div
+                                        class="w-9 h-9 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center flex-shrink-0"
+                                    >
+                                        <LinkIcon
+                                            class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                        />
+                                    </div>
+                                    <span
+                                        class="text-sm font-medium text-gray-900 dark:text-white truncate flex-1"
+                                    >
+                                        {{ linkItem.url }}
+                                    </span>
+                                    <CheckBadgeIcon
+                                        v-if="linkItem.is_verified"
+                                        class="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0"
+                                    />
+                                    <ArrowTopRightOnSquareIcon
+                                        class="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    />
+                                </a>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="px-5 py-4 border-t border-gray-100 dark:border-gray-800">
@@ -182,6 +223,8 @@ import {
     IdentificationIcon,
     UserIcon,
     CalendarIcon,
+    LinkIcon,
+    CheckBadgeIcon,
     ArrowTopRightOnSquareIcon
 } from '@heroicons/vue/24/outline'
 

@@ -331,7 +331,8 @@
                             :href="linkItem.link"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="inline-flex items-center gap-2 px-3 py-[3px] text-xs text-xs rounded-2xl border border-gray-200 font-medium dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-950 transition-colors cursor-pointer"
+                            :class="index === 0 ? 'inline-flex' : 'hidden lg:inline-flex'"
+                            class="items-center gap-2 px-3 py-[3px] text-xs rounded-2xl border border-gray-200 font-medium dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-950 transition-colors cursor-pointer"
                             :title="linkItem.url"
                         >
                             <LinkIcon class="w-3 h-3 flex-shrink-0" />
@@ -343,6 +344,15 @@
                                 class="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0"
                             />
                         </a>
+
+                        <button
+                            v-if="profile.links.length > 1"
+                            @click="showProfileInfoModal = true"
+                            type="button"
+                            class="lg:hidden inline-flex items-center px-3 py-[3px] text-xs rounded-2xl border border-gray-200 font-semibold dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-950 transition-colors cursor-pointer"
+                        >
+                            +{{ profile.links.length - 1 }}
+                        </button>
                     </div>
                 </div>
             </div>
