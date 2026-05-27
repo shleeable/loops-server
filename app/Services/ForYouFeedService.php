@@ -24,7 +24,7 @@ class ForYouFeedService
 
     private const CREATOR_QUALITY_WEIGHT = 0.10;
 
-    private const MAX_AGE_DAYS = 365;
+    private const MAX_AGE_DAYS = 730;
 
     private const MIN_SCORE_THRESHOLD = 0.1;
 
