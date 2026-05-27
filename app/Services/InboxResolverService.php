@@ -137,9 +137,11 @@ class InboxResolverService
     public function chunkAllKnownInboxesFlat(callable $callback, int $chunkSize = 500): void
     {
         DB::table('profiles')
-            ->where('local', false)
-            ->whereNotNull('inbox_url')
-            ->selectRaw('DISTINCT COALESCE(shared_inbox_url, inbox_url) as inbox')
+            ->leftJoin('instances', 'instances.domain', '=', 'profiles.domain')
+            ->where('profiles.local', false)
+            ->whereNotNull('profiles.inbox_url')
+            ->where('instances.is_blocked', false)
+            ->selectRaw('DISTINCT COALESCE(profiles.shared_inbox_url, profiles.inbox_url) as inbox')
             ->orderBy('inbox')
             ->chunk($chunkSize, function ($rows) use ($callback) {
                 $inboxes = $rows->pluck('inbox');
@@ -160,11 +162,13 @@ class InboxResolverService
         $processedInboxes = collect();
 
         DB::table('profiles')
-            ->where('local', false)
-            ->whereNotNull('inbox_url')
+            ->leftJoin('instances', 'instances.domain', '=', 'profiles.domain')
+            ->where('profiles.local', false)
+            ->whereNotNull('profiles.inbox_url')
+            ->where('instances.is_blocked', false)
             ->select([
-                'id as profile_id',
-                DB::raw('COALESCE(shared_inbox_url, inbox_url) as inbox'),
+                'profiles.id as profile_id',
+                DB::raw('COALESCE(profiles.shared_inbox_url, profiles.inbox_url) as inbox'),
             ])
             ->chunkById($chunkSize, function ($profiles) use (&$processedInboxes) {
                 $grouped = $profiles->groupBy('inbox');
