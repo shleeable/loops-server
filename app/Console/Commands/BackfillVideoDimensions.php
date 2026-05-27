@@ -17,7 +17,7 @@ class BackfillVideoDimensions extends Command
     {
         $this->info('Populate missing width/height on videos using ffprobe metadata');
 
-        if (!$this->confirm('Do you wish to continue?')) {
+        if (! $this->confirm('Do you wish to continue?')) {
             $this->error('aborting...');
             exit;
         }
