@@ -9,7 +9,7 @@ use Symfony\Component\Process\Process;
 
 class BackfillVideoDimensions extends Command
 {
-    protected $signature = 'videos:backfill-dimensions {--chunk=200}';
+    protected $signature = 'videos:backfill-dimensions {--chunk=200} {--origin= : Override the URL host to bypass CDN cache)}';
 
     protected $description = 'Populate missing width/height on videos using ffprobe metadata';
 
@@ -21,6 +21,9 @@ class BackfillVideoDimensions extends Command
             $this->error('aborting...');
             exit;
         }
+
+        $origin = $this->option('origin');
+
         $query = Video::query()
             ->whereNotNull('vid_optimized')
             ->where('is_local', true)
@@ -29,12 +32,13 @@ class BackfillVideoDimensions extends Command
         $bar = $this->output->createProgressBar($query->count());
         $bar->start();
 
-        $query->lazyById((int) $this->option('chunk'))->each(function (Video $video) use ($bar) {
+        $query->lazyById((int) $this->option('chunk'))->each(function (Video $video) use ($bar, $origin) {
             try {
-                [$width, $height] = $this->probe($video);
+                [$width, $height] = $this->probe($video, $origin);
 
                 $video->forceFill(['width' => $width, 'height' => $height])->saveQuietly();
             } catch (\Throwable $e) {
+                $this->components->warn("Video {$video->id}: {$e->getMessage()}");
 
             } finally {
                 $bar->advance();
@@ -47,9 +51,13 @@ class BackfillVideoDimensions extends Command
         return self::SUCCESS;
     }
 
-    protected function probe(Video $video): array
+    protected function probe(Video $video, ?string $origin = null): array
     {
         $url = Storage::disk('s3')->url($video->vid_optimized);
+
+        if ($origin) {
+            $url = $this->rewriteHost($url, $origin);
+        }
 
         $process = new Process([
             'ffprobe',
@@ -78,5 +86,20 @@ class BackfillVideoDimensions extends Command
         }
 
         return [$width, $height];
+    }
+
+    protected function rewriteHost(string $url, string $origin): string
+    {
+        $o = parse_url($origin);
+        $u = parse_url($url);
+
+        $scheme = $o['scheme'] ?? $u['scheme'] ?? 'https';
+        $host = $o['host'] ?? $u['host'] ?? '';
+        $port = isset($o['port']) ? ':'.$o['port'] : '';
+
+        $path = $u['path'] ?? '';
+        $query = isset($u['query']) ? '?'.$u['query'] : '';
+
+        return "{$scheme}://{$host}{$port}{$path}{$query}";
     }
 }
