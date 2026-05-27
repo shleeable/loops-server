@@ -21,7 +21,9 @@ class InboxResolverService
             ->where('followers.following_id', $profileId)
             ->where('followers.profile_is_local', false)
             ->join('profiles', 'profiles.id', '=', 'followers.profile_id')
+            ->leftJoin('instances', 'instances.domain', '=', 'profiles.domain')
             ->whereNotNull('profiles.inbox_url')
+            ->where('instances.is_blocked', false)
             ->select([
                 'profiles.id as profile_id',
                 DB::raw('COALESCE(profiles.shared_inbox_url, profiles.inbox_url) as inbox'),
@@ -43,8 +45,20 @@ class InboxResolverService
      */
     public function getMentionInboxes($mentions): Collection
     {
-        return $mentions
-            ->filter(fn ($profile) => ! $profile->is_local && $profile->inbox_url)
+        $remote = $mentions->filter(fn ($profile) => ! $profile->is_local && $profile->inbox_url);
+
+        if ($remote->isEmpty()) {
+            return collect();
+        }
+
+        $blockedDomains = DB::table('instances')
+            ->whereIn('domain', $remote->pluck('domain')->filter()->unique()->values())
+            ->where('is_blocked', true)
+            ->pluck('domain')
+            ->flip();
+
+        return $remote
+            ->reject(fn ($profile) => $blockedDomains->has($profile->domain))
             ->groupBy(fn ($profile) => $profile->shared_inbox_url ?? $profile->inbox_url)
             ->map(fn ($group) => [
                 'inbox' => $group->first()->shared_inbox_url ?? $group->first()->inbox_url,
@@ -63,11 +77,13 @@ class InboxResolverService
     public function getAllKnownInboxes(): Collection
     {
         return DB::table('profiles')
-            ->where('local', false)
-            ->whereNotNull('inbox_url')
+            ->leftJoin('instances', 'instances.domain', '=', 'profiles.domain')
+            ->where('profiles.local', false)
+            ->whereNotNull('profiles.inbox_url')
+            ->where('instances.is_blocked', false)
             ->select([
-                'id as profile_id',
-                DB::raw('COALESCE(shared_inbox_url, inbox_url) as inbox'),
+                'profiles.id as profile_id',
+                DB::raw('COALESCE(profiles.shared_inbox_url, profiles.inbox_url) as inbox'),
             ])
             ->get()
             ->groupBy('inbox')
@@ -93,7 +109,9 @@ class InboxResolverService
             ->where('followers.following_id', $profileId)
             ->where('followers.profile_is_local', false)
             ->join('profiles', 'profiles.id', '=', 'followers.profile_id')
+            ->leftJoin('instances', 'instances.domain', '=', 'profiles.domain')
             ->whereNotNull('profiles.inbox_url')
+            ->where('instances.is_blocked', false)
             ->select([
                 'profiles.id as profile_id',
                 DB::raw('COALESCE(profiles.shared_inbox_url, profiles.inbox_url) as inbox'),
@@ -137,9 +155,11 @@ class InboxResolverService
     public function chunkAllKnownInboxesFlat(callable $callback, int $chunkSize = 500): void
     {
         DB::table('profiles')
-            ->where('local', false)
-            ->whereNotNull('inbox_url')
-            ->selectRaw('DISTINCT COALESCE(shared_inbox_url, inbox_url) as inbox')
+            ->leftJoin('instances', 'instances.domain', '=', 'profiles.domain')
+            ->where('profiles.local', false)
+            ->whereNotNull('profiles.inbox_url')
+            ->where('instances.is_blocked', false)
+            ->selectRaw('DISTINCT COALESCE(profiles.shared_inbox_url, profiles.inbox_url) as inbox')
             ->orderBy('inbox')
             ->chunk($chunkSize, function ($rows) use ($callback) {
                 $inboxes = $rows->pluck('inbox');
@@ -160,11 +180,13 @@ class InboxResolverService
         $processedInboxes = collect();
 
         DB::table('profiles')
-            ->where('local', false)
-            ->whereNotNull('inbox_url')
+            ->leftJoin('instances', 'instances.domain', '=', 'profiles.domain')
+            ->where('profiles.local', false)
+            ->whereNotNull('profiles.inbox_url')
+            ->where('instances.is_blocked', false)
             ->select([
-                'id as profile_id',
-                DB::raw('COALESCE(shared_inbox_url, inbox_url) as inbox'),
+                'profiles.id as profile_id',
+                DB::raw('COALESCE(profiles.shared_inbox_url, profiles.inbox_url) as inbox'),
             ])
             ->chunkById($chunkSize, function ($profiles) use (&$processedInboxes) {
                 $grouped = $profiles->groupBy('inbox');

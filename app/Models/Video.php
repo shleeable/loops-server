@@ -65,6 +65,8 @@ use Illuminate\Support\Facades\Storage;
  * @property int $can_stitch
  * @property int $is_pinned
  * @property int|null $pinned_order
+ * @property int|null $width
+ * @property int|null $height
  * @property string|null $category
  * @property string|null $ap_published_at
  * @property string|null $last_fetched_at
@@ -191,6 +193,8 @@ class Video extends Model
             'contains_ai' => 'boolean',
             'contains_ad' => 'boolean',
             'views' => 'integer',
+            'width' => 'integer',
+            'height' => 'integer',
             'federated_at' => 'datetime',
             'last_fetched_at' => 'datetime',
             'audio_allow_reuse' => 'boolean',
