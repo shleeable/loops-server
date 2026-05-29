@@ -37,7 +37,7 @@
                     </router-link>
 
                     <router-link
-                        to="/dashboard/account/content"
+                        to="/dashboard/content"
                         class="bg-white dark:bg-slate-950 dark:hover:bg-slate-800 transition-colors hover:bg-gray-50 rounded-lg shadow-lg"
                     >
                         <div class="flex justify-between items-center p-4">
