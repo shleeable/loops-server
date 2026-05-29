@@ -16,7 +16,6 @@
         </div>
 
         <div v-else-if="accounts.length > 0" class="relative">
-            <!-- Carousel container -->
             <div
                 ref="carouselRef"
                 class="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4"
@@ -89,11 +88,9 @@ import AccountCard from './AccountCard.vue'
 
 const emit = defineEmits(['account-followed', 'account-unfollowed'])
 
-// Composables
 const { data: suggestedData, isLoading, error, refetch } = useSuggestedAccounts()
 const { followAccount, unfollowAccount } = useFollowAccount()
 
-// Reactive data
 const carouselRef = ref(null)
 const followingStates = reactive({})
 const loadingStates = reactive({})
@@ -101,7 +98,6 @@ const canScrollLeft = ref(false)
 const canScrollRight = ref(false)
 const showNavigation = ref(false)
 
-// Computed
 const accounts = computed(() => suggestedData.value?.data || [])
 
 const handleFollow = async (account) => {
@@ -164,20 +160,16 @@ const handleResize = () => {
     updateScrollButtons()
 }
 
-// Lifecycle
 onMounted(() => {
-    // Initialize following states
     accounts.value.forEach((account) => {
         followingStates[account.id] = account.is_following || false
         loadingStates[account.id] = false
     })
 
-    // Setup scroll event listener
     if (carouselRef.value) {
         carouselRef.value.addEventListener('scroll', updateScrollButtons)
         window.addEventListener('resize', handleResize)
 
-        // Initial check
         setTimeout(handleResize, 100)
     }
 })
@@ -195,6 +187,7 @@ onUnmounted(() => {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
+
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
 }
