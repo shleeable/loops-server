@@ -117,21 +117,18 @@
         </h2>
     </div>
 
-    <PlaylistModal
-        v-if="selectedPlaylist"
-        :playlist="selectedPlaylist"
-        @close="selectedPlaylist = null"
-    />
+    <PlaylistModal v-if="selectedPlaylist" :playlist="selectedPlaylist" @close="closePlaylist" />
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, inject, computed } from 'vue'
+import { ref, onMounted, nextTick, inject, computed, watch } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/20/solid'
 import { PlayIcon } from '@heroicons/vue/24/solid'
 import { RectangleStackIcon } from '@heroicons/vue/24/outline'
 import Spinner from '~/components/Spinner.vue'
 import PlaylistModal from '~/components/Profile/PlaylistModal.vue'
 import { useProfileStore } from '~/stores/profile'
+import { useRoute, useRouter } from 'vue-router'
 
 const props = defineProps({
     playlists: { type: Array, required: true }
@@ -147,8 +144,37 @@ const canScrollRight = ref(false)
 const selectedPlaylist = ref(null)
 const failedImages = ref(new Set())
 
+const route = useRoute()
+const router = useRouter()
+
+const findPlaylist = (id) => props.playlists.find((p) => String(p.id) === String(id))
+
 const openPlaylist = (playlist) => {
     selectedPlaylist.value = playlist
+    if (String(route.query.playlist) !== String(playlist.id)) {
+        router.replace({ query: { ...route.query, playlist: playlist.id } })
+    }
+}
+
+const closePlaylist = () => {
+    selectedPlaylist.value = null
+    if (route.query.playlist) {
+        const { playlist, ...rest } = route.query
+        router.replace({ query: rest })
+    }
+}
+
+const openPlaylistById = async (id) => {
+    if (!id) return
+    if (selectedPlaylist.value && String(selectedPlaylist.value.id) === String(id)) return
+
+    let pl = findPlaylist(id)
+    while (!pl && profileStore.playlistsNextCursor) {
+        const loaded = await loadMore()
+        if (!loaded) break
+        pl = findPlaylist(id)
+    }
+    if (pl) selectedPlaylist.value = pl
 }
 
 const isOwner = computed(() => {
@@ -239,5 +265,21 @@ const formatVisibility = (visibility) => {
     return labels[visibility] || visibility
 }
 
-onMounted(() => nextTick(updateScrollState))
+onMounted(() => {
+    nextTick(updateScrollState)
+    if (route.query.playlist) {
+        openPlaylistById(route.query.playlist)
+    }
+})
+
+watch(
+    () => route.query.playlist,
+    (id) => {
+        if (id) {
+            openPlaylistById(id)
+        } else {
+            selectedPlaylist.value = null
+        }
+    }
+)
 </script>
