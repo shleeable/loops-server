@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class VideoService
 {
-    const CACHE_KEY = 'api:s:video:v1.1:';
+    const CACHE_KEY = 'api:s:video:v1.2:';
 
     public static function totalUserCount($pid, $onlyPublished = true, $refresh = false)
     {
@@ -105,6 +105,7 @@ class VideoService
                 'comments' => $video->comment_state === 4 ? $video->comments : 0,
                 'bookmarks' => $video->bookmarks,
                 'is_sensitive' => $video->is_sensitive,
+                'is_local' => $video->is_local,
                 'created_at' => $video->created_at->format('c'),
                 'updated_at' => $video->updated_at->format('c'),
                 'media' => [

@@ -241,6 +241,12 @@ class ObjectController extends Controller
             return response()->json(['error' => 'Resource does not exist'], 404);
         }
 
+        $isLocal = data_get($videoMetadata, 'is_local');
+
+        if ($isLocal === false) {
+            return response()->json(['error' => 'Resource does not exist'], 404);
+        }
+
         $acctId = data_get($videoMetadata, 'account.id', null);
 
         if (! hash_equals($acctId, $actor)) {
@@ -297,11 +303,6 @@ class ObjectController extends Controller
 
             if ($video && $video->is_local && $video->visibility === 1) {
                 abort_if($video->profile->status != 1, 403, 'Resource is not available');
-
-                // @phpstan-ignore-next-line
-                if ($video->visibility !== 1) {
-                    return $this->activityPubError('You do not have permission to access this resource.', 403);
-                }
 
                 return [
                     '@context' => 'https://www.w3.org/ns/activitystreams',
