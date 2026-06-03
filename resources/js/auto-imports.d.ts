@@ -319,10 +319,12 @@ declare global {
     const useUtils: typeof import('./composables/useUtils.js').useUtils
     const useVModel: typeof import('@vueuse/core').useVModel
     const useVModels: typeof import('@vueuse/core').useVModels
+    const useVersionCheck: typeof import('./composables/useViteVersion.js').useVersionCheck
     const useVibrate: typeof import('@vueuse/core').useVibrate
     const useVideoStore: typeof import('./stores/video.js').useVideoStore
     const useVideoTracking: typeof import('./composables/useVideoTracking.js').useVideoTracking
     const useVirtualList: typeof import('@vueuse/core').useVirtualList
+    const useViteVersion: typeof import('./composables/useViteVersion.js').useViteVersion
     const useWakeLock: typeof import('@vueuse/core').useWakeLock
     const useWebNotification: typeof import('@vueuse/core').useWebNotification
     const useWebSocket: typeof import('@vueuse/core').useWebSocket
@@ -829,6 +831,9 @@ declare module 'vue' {
             (typeof import('./composables/useVideoTracking.js'))['useVideoTracking']
         >
         readonly useVirtualList: UnwrapRef<(typeof import('@vueuse/core'))['useVirtualList']>
+        readonly useViteVersion: UnwrapRef<
+            (typeof import('./composables/useViteVersion.js'))['useViteVersion']
+        >
         readonly useWakeLock: UnwrapRef<(typeof import('@vueuse/core'))['useWakeLock']>
         readonly useWebNotification: UnwrapRef<
             (typeof import('@vueuse/core'))['useWebNotification']

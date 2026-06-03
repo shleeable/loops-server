@@ -658,17 +658,24 @@ router.beforeEach(async (to, from, next) => {
             return
         }
     }
-
     authMiddleware(to, from, next)
 })
 
-router.onError((error) => {
-    if (
-        /loading chunk/i.test(error.message) ||
-        /failed to fetch dynamically imported/i.test(error.message)
-    ) {
-        window.location.reload()
+router.onError((error, to) => {
+    if (!/dynamically imported module|module script failed/i.test(error?.message ?? '')) {
+        return
     }
+
+    if (sessionStorage.getItem('vite:reloaded')) {
+        return
+    }
+
+    sessionStorage.setItem('vite:reloaded', '1')
+    location.assign(to?.fullPath ?? '/')
+})
+
+router.afterEach(() => {
+    sessionStorage.removeItem('vite:reloaded')
 })
 
 export default router

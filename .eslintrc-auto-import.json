@@ -334,6 +334,7 @@
     "useVideoStore": true,
     "useVideoTracking": true,
     "useVirtualList": true,
+    "useViteVersion": true,
     "useWakeLock": true,
     "useWebNotification": true,
     "useWebSocket": true,
