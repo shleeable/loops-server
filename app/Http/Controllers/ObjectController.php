@@ -72,7 +72,7 @@ class ObjectController extends Controller
 
         $video = Video::with('profile')->whereStatus(2)->findOrFail($id);
 
-        if ($request->wantsJson() && $video->is_local) {
+        if ($request->wantsJson()) {
             abort_if($video->profile->status != 1, 403, 'Resource is not available');
 
             $config = app(ConfigService::class);
@@ -100,8 +100,10 @@ class ObjectController extends Controller
                 $comment = CommentReply::with('parent')->where('visibility', 1)->whereNull('ap_id')->where('status', 'active')->where('video_id', $vid)->findOrFail($cid);
 
                 return $this->renderVideoCommentReplyObject($video, $comment, $videoHashId, $hashId, $vid, $cid);
-            } else {
+            } elseif ($video->is_local) {
                 return $this->renderVideoObject($video, $hashId);
+            } else {
+                return view('welcome');
             }
         }
 
