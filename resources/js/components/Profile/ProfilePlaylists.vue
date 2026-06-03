@@ -150,31 +150,33 @@ const router = useRouter()
 const findPlaylist = (id) => props.playlists.find((p) => String(p.id) === String(id))
 
 const openPlaylist = (playlist) => {
-    selectedPlaylist.value = playlist
-    if (String(route.query.playlist) !== String(playlist.id)) {
-        router.replace({ query: { ...route.query, playlist: playlist.id } })
+    if (String(route.query.playlist) === String(playlist.id)) {
+        selectedPlaylist.value = playlist
+        return
     }
+    router.replace({ query: { ...route.query, playlist: playlist.id } }).catch(() => {})
 }
 
 const closePlaylist = () => {
     selectedPlaylist.value = null
     if (route.query.playlist) {
         const { playlist, ...rest } = route.query
-        router.replace({ query: rest })
+        router.replace({ query: rest }).catch(() => {})
     }
 }
 
 const openPlaylistById = async (id) => {
-    if (!id) return
-    if (selectedPlaylist.value && String(selectedPlaylist.value.id) === String(id)) return
-
+    if (!id) {
+        selectedPlaylist.value = null
+        return
+    }
     let pl = findPlaylist(id)
     while (!pl && profileStore.playlistsNextCursor) {
         const loaded = await loadMore()
         if (!loaded) break
         pl = findPlaylist(id)
     }
-    if (pl) selectedPlaylist.value = pl
+    selectedPlaylist.value = pl || null
 }
 
 const isOwner = computed(() => {
@@ -274,12 +276,7 @@ onMounted(() => {
 
 watch(
     () => route.query.playlist,
-    (id) => {
-        if (id) {
-            openPlaylistById(id)
-        } else {
-            selectedPlaylist.value = null
-        }
-    }
+    (id) => openPlaylistById(id),
+    { immediate: true }
 )
 </script>
