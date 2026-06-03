@@ -639,8 +639,8 @@ class SearchController extends Controller
         $query = trim($validated['q']);
         $currentUserId = $request->user()->profile_id;
 
-        # Matches @user@domain.ex (not @@, @user@, @@domain, @user@domain without FQDN)
-        $isWebfinger = (bool) preg_match( '/^@[\w.-]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i' , $query );
+        // Matches @user@domain.ex (not @@, @user@, @@domain, @user@domain without FQDN)
+        $isWebfinger = (bool) preg_match('/^@[\w.-]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i', $query);
 
         if ($isWebfinger) {
             $res = app(WebfingerService::class)->lookup($query);
