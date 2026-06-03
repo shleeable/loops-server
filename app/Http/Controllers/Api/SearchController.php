@@ -639,6 +639,34 @@ class SearchController extends Controller
         $query = trim($validated['q']);
         $currentUserId = $request->user()->profile_id;
 
+        $isWebfinger = str_starts_with($query, '@') && substr_count($query, '@') == 2;
+
+        if ($isWebfinger) {
+            $res = app(WebfingerService::class)->lookup($query);
+            if ($res) {
+                return response()->json([
+                    'data' => [
+                        'hashtags' => [],
+                        'users' => [new ProfileResource($res)],
+                        'videos' => [],
+                        'starter_kits' => [],
+                    ],
+                    'links' => [
+                        'first' => null,
+                        'last' => null,
+                        'prev' => null,
+                        'next' => null,
+                    ],
+                    'meta' => [
+                        'path' => $request->url(),
+                        'per_page' => 10,
+                        'next_cursor' => null,
+                        'prev_cursor' => null,
+                    ],
+                ]);
+            }
+        }
+
         if (app(SanitizeService::class)->isLocalObject($query)) {
             $res = $this->resolveUrl($request, $query, $currentUserId);
 

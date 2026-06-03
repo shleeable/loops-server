@@ -10,6 +10,35 @@ use Illuminate\Support\Facades\Log;
 class WebfingerService
 {
     /**
+     * Look up a profile from a webfinger-style handle (local or remote)
+     *
+     * @param  string  $resource  Format: @username@domain, username@domain, or acct:username@domain
+     */
+    public function lookup(string $resource): ?Profile
+    {
+        $resource = ltrim($resource, '@');
+
+        $parsed = $this->parseResource($resource);
+
+        if (! $parsed) {
+            return null;
+        }
+
+        if (str_contains($parsed['username'], '@')) {
+            return null;
+        }
+
+        if (strtolower($parsed['domain']) === strtolower($this->getLocalDomain())) {
+            return Profile::where('username', $parsed['username'])
+                ->where('local', true)
+                ->where('status', 1)
+                ->first();
+        }
+
+        return $this->findOrCreateRemoteActor("acct:{$parsed['username']}@{$parsed['domain']}");
+    }
+
+    /**
      * Look up a local resource
      *
      * @param  string  $resource  The resource identifier (e.g., acct:user@domain.com)
