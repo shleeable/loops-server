@@ -622,6 +622,31 @@ class SanitizeService
         return trim($cleaned);
     }
 
+    public function cleanPlainTextWithAllowedLineBreaks($text, $maxLineBreaks = 10)
+    {
+        if (empty($text)) {
+            return;
+        }
+
+        $cleaned = strip_tags($text);
+        $cleaned = str_replace(["\r\n", "\r"], "\n", $cleaned);
+        $cleaned = preg_replace('/[ \t]+(\n|$)/', '$1', $cleaned);
+        $cleaned = preg_replace("/\n{3,}/", "\n\n", $cleaned);
+
+        $lines = explode("\n", $cleaned);
+        if (count($lines) > $maxLineBreaks + 1) {
+            $kept = array_slice($lines, 0, $maxLineBreaks);
+            $remainder = array_slice($lines, $maxLineBreaks);
+
+            $merged = trim(preg_replace('/\s+/', ' ', implode(' ', $remainder)));
+
+            $lines = array_merge($kept, [$merged]);
+            $cleaned = implode("\n", $lines);
+        }
+
+        return trim($cleaned);
+    }
+
     public function cleanPlainTextWithoutLineBreaks($text)
     {
         if (empty($text)) {

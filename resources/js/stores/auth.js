@@ -366,7 +366,7 @@ export const useAuthStore = defineStore('auth', {
         async updateBio(name, bio) {
             const axiosInstance = axios.getAxiosInstance()
             try {
-                return await axiosInstance.post('/api/v1/account/settings/bio', {
+                return await axiosInstance.post('/api/v1/account/settings/profile-bio', {
                     name: name,
                     bio: bio
                 })

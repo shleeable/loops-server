@@ -238,6 +238,7 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/account/settings/birthdate', [SettingsController::class, 'checkBirthdate'])->middleware('auth:web,api');
     Route::post('/v1/account/settings/birthdate', [SettingsController::class, 'setBirthdate'])->middleware('auth:web,api');
     Route::post('/v1/account/settings/bio', [SettingsController::class, 'storeBio'])->middleware('auth:web,api');
+    Route::post('/v1/account/settings/profile-bio', [SettingsController::class, 'storeProfileBio'])->middleware('auth:web,api');
     Route::post('/v1/account/settings/update-avatar', [SettingsController::class, 'updateAvatar'])->middleware('auth:web,api');
     Route::post('/v1/account/settings/delete-avatar', [SettingsController::class, 'deleteAvatar'])->middleware('auth:web,api');
     Route::get('/v1/account/settings/security-config', [SettingsController::class, 'securityConfig'])->middleware('auth:web,api');
