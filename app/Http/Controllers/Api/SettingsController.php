@@ -76,6 +76,7 @@ class SettingsController extends Controller
 
         $res = AccountService::get($pid);
         $res['is_owner'] = true;
+        $res['likes_count'] = (int) AccountService::getAccountLikesCount($pid);
 
         return $this->data($res);
     }
@@ -117,6 +118,7 @@ class SettingsController extends Controller
 
         $res = AccountService::get($pid);
         $res['is_owner'] = true;
+        $res['likes_count'] = (int) AccountService::getAccountLikesCount($pid);
 
         return $this->data($res);
     }

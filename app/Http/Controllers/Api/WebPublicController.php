@@ -508,6 +508,7 @@ class WebPublicController extends Controller
         $config['app']['software'] = 'loops';
         $config['app']['version'] = app('app_version');
         $config['hasKlipy'] = (bool) ! empty(config('klipy.api_key'));
+        $config['account']['max_bio_length'] = 500;
         unset($config['branding']);
 
         return response()->json($config);
