@@ -20,6 +20,7 @@ use App\Models\StarterKitPendingChange;
 use App\Models\StarterKitTag;
 use App\Models\StarterKitUse;
 use App\Rules\ValidUsername;
+use App\Rules\ValidUsernameOrWebfinger;
 use App\Services\AccountService;
 use App\Services\AdminDashboardService;
 use App\Services\ConfigService;
@@ -81,7 +82,7 @@ class StarterKitController extends Controller
         $validated = $request->validate([
             'q' => [
                 'required',
-                new ValidUsername,
+                new ValidUsernameOrWebfinger,
                 'max:80',
             ],
         ]);
@@ -89,10 +90,9 @@ class StarterKitController extends Controller
         $user = $request->user();
         $starterKit = StarterKit::whereProfileId($user->profile_id)->findOrFail($id);
 
-        $q = $validated['q'];
+        $q = ltrim($validated['q'], '@');
 
-        $accounts = Profile::whereLocal(true)
-            ->whereStatus(1)
+        $accounts = Profile::whereStatus(1)
             ->where('can_use_starter_kits', true)
             ->whereIn('starter_kit_state', [1, 2, 3, 4, 5, 6])
             ->where(function ($query) use ($q) {
