@@ -47,6 +47,7 @@ class WebPublicController extends Controller
 {
     use ApiHelpers;
 
+    #[ExcludeRouteFromDocs]
     public function getFeed(Request $request)
     {
         $res = Cache::remember('wpc:get-feed', now()->addMinutes(45), function () {

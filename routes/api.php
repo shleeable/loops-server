@@ -193,8 +193,8 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/search/remote/status', [SearchController::class, 'remoteVideoStatus'])->middleware(['auth:web,api', 'throttle:searchV1Status']);
 
     // Feeds
-    Route::get('/v0/user/self', [AccountController::class, 'selfAccountInfo'])->middleware('auth:web,api');
-    Route::get('/v0/feed/for-you', [FeedController::class, 'getForYouFeed'])->middleware('auth:web,api');
+    Route::get('/v0/user/self', [AccountController::class, 'selfAccountInfoV0Deprecated'])->middleware('auth:web,api');
+    Route::get('/v0/feed/for-you', [FeedController::class, 'getForYouFeedDeprecated'])->middleware('auth:web,api');
     Route::get('/web/feed', [WebPublicController::class, 'getFeed'])->middleware('throttle:api');
 
     // Web Accounts

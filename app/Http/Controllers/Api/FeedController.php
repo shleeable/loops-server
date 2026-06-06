@@ -55,6 +55,21 @@ class FeedController extends Controller
         return VideoResource::collection($feed);
     }
 
+    #[ExcludeRouteFromDocs]
+    public function getForYouFeedDeprecated(Request $request)
+    {
+        $user = $request->user();
+        if ($user->cannot('viewAny', [Video::class])) {
+            return $this->error('Please finish setting up your account', 403);
+        }
+        app(UserActivityService::class)->markActive($user);
+        FeedService::enforcePaginationLimit($request);
+        $hideAi = $user->hide_ai;
+        $feed = FeedService::getVideoFeed($user->profile_id, 5, $hideAi);
+
+        return VideoResource::collection($feed);
+    }
+
     public function getFollowingFeed(Request $request)
     {
         $user = $request->user();
