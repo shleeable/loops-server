@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ForcePasswordChangeRequest;
 use App\Models\User;
 use App\Services\AccountSwitcherService;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 
+#[ExcludeAllRoutesFromDocs]
 class ForcePasswordChangeController extends Controller
 {
     public const SESSION_USER_ID = 'lps:pwchange:user:id';

@@ -6,11 +6,13 @@ use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Middleware\AdminOnlyAccess;
 use App\Models\RelaySubscription;
 use App\Services\RelayService;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+#[ExcludeAllRoutesFromDocs]
 class AdminRelayController extends Controller
 {
     use ApiHelpers;

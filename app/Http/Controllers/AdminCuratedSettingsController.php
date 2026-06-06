@@ -6,9 +6,11 @@ use App\Models\CuratedApplication;
 use App\Models\CuratedApplicationSettings;
 use App\Models\User;
 use App\Services\AccountService;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+#[ExcludeAllRoutesFromDocs]
 class AdminCuratedSettingsController extends Controller
 {
     public function show(): JsonResponse

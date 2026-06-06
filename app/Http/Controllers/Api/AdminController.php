@@ -62,6 +62,7 @@ use App\Services\StarterKitPendingChangeService;
 use App\Services\StarterKitService;
 use App\Services\VersionCheckService;
 use App\Services\VideoService;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -74,6 +75,7 @@ use Illuminate\Validation\Rule;
 use Laravel\Passport\Token;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+#[ExcludeAllRoutesFromDocs]
 class AdminController extends Controller
 {
     use ApiHelpers;

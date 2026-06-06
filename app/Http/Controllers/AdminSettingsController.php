@@ -12,6 +12,7 @@ use App\Services\RedisService;
 use App\Services\SanitizeService;
 use App\Services\SettingsFileService;
 use App\Services\UserAppPreferencesService;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -21,6 +22,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\File;
 use Intervention\Image\Laravel\Facades\Image;
 
+#[ExcludeAllRoutesFromDocs]
 class AdminSettingsController extends Controller
 {
     use ApiHelpers;

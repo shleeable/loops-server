@@ -9,11 +9,13 @@ use App\Models\DataExport;
 use App\Services\UserAuditLogService;
 use App\Services\UserDataService;
 use Cache;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
+#[ExcludeAllRoutesFromDocs]
 class AccountDataController extends Controller
 {
     use ApiHelpers;

@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Middleware\AdminOnlyAccess;
 use App\Models\Page;
 use App\Services\PageService;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs as AttributesExcludeAllRoutesFromDocs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
+#[AttributesExcludeAllRoutesFromDocs]
 class PageController extends Controller
 {
     public function __construct()

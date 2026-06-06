@@ -9,6 +9,7 @@ use App\Models\Video;
 use App\Services\FeedService;
 use App\Services\FollowerService;
 use App\Services\UserActivityService;
+use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
 use Illuminate\Http\Request;
 
 class FeedController extends Controller
@@ -39,6 +40,7 @@ class FeedController extends Controller
         return FeedService::getAccountFeed($request->user()->profile_id, $limit, $sort, $showPinned);
     }
 
+    #[ExcludeRouteFromDocs]
     public function getForYouFeed(Request $request)
     {
         $user = $request->user();

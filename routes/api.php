@@ -54,7 +54,6 @@ use App\Http\Middleware\AuthorizedFetch;
 use App\Http\Middleware\FederationEnabled;
 use App\Http\Middleware\OptionalAuth;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Vite;
 
 // Health check endpoints
 Route::get('/ping', [HealthController::class, 'ping'])->name('health.ping');
@@ -136,7 +135,7 @@ Route::middleware(['auth:web,api'])
     });
 
 Route::prefix('api')->group(function () {
-    Route::get('/v1/web/vmh', fn () => response()->json(['version' => Vite::manifestHash()])->header('Cache-Control', 'no-store'));
+    Route::get('/v1/web/vmh', [WebPublicController::class, 'viteManifestHash']);
     Route::post('/v1/apps', [AuthController::class, 'registerApp']);
     Route::get('/v1/config', [WebPublicController::class, 'appConfiguration'])->middleware([OptionalAuth::class, 'throttle:api']);
 
@@ -557,9 +556,7 @@ Route::prefix('api')->group(function () {
         Route::post('/blocked-terms/flush-cache', [AdminController::class, 'blockedTermsBulkFlushCache']);
     });
 
-    Route::any('{any}', function () {
-        return response()->json(['message' => 'Not Found.'], 404);
-    })->where('any', '.*');
+    Route::any('{any}', [WebPublicController::class, 'apiCatchAll'])->where('any', '.*');
 });
 
 Route::prefix('/ap')->middleware([AuthorizedFetch::class])->group(function () {

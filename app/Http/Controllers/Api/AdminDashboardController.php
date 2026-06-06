@@ -10,9 +10,11 @@ use App\Mail\NewCuratedApplicationMail;
 use App\Models\CuratedApplication;
 use App\Models\CuratedApplicationSettings;
 use App\Services\AdminDashboardService;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
+#[ExcludeAllRoutesFromDocs]
 class AdminDashboardController extends Controller
 {
     protected AdminDashboardService $dashboardService;
