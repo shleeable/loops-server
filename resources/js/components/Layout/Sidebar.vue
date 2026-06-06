@@ -541,13 +541,13 @@ const footerLinks = computed(() => {
         { name: t('nav.about'), path: '/about' },
         { name: t('nav.contact'), path: '/contact' },
         { name: 'Community', path: '/community-guidelines' },
+        { name: t('nav.developers'), path: 'https://joinloops.org/developers', external: true },
         { name: 'DMCA', path: '/dmca' },
         {
             name: 'Loops for iOS',
             path: 'https://apps.apple.com/us/app/loops-by-pixelfed/id6499375182',
             external: true
         },
-        // { name: t('nav.developers'), path: '/platform/developers' },
         // { name: t('nav.help'), path: '/help-center' },
         { name: t('nav.privacy'), path: '/privacy' },
         { name: t('nav.terms'), path: '/terms' }
