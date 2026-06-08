@@ -485,6 +485,9 @@ class Profile extends Model
         return $res;
     }
 
+    /**
+     * @param  array{automaticApproval?: list<string>, manualApproval?: list<string>}  $canFeature
+     */
     public function resolveStarterKitState(array $canFeature): int
     {
         $auto = $canFeature['automaticApproval'] ?? [];
