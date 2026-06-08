@@ -334,11 +334,20 @@
                                 mono
                             />
                             <DetailRow
+                                v-if="profile.register_ip"
+                                label="Register IP"
+                                :value="profile.register_ip"
+                                :icon="MapPinIcon"
+                                mono
+                                :url="`/admin/profiles?q=register_ip:${profile.register_ip}`"
+                            />
+                            <DetailRow
                                 v-if="profile.last_ip"
                                 label="Last IP"
                                 :value="profile.last_ip"
                                 :icon="MapPinIcon"
                                 mono
+                                :url="`/admin/profiles?q=ip:${profile.last_ip}`"
                             />
                             <DetailRow
                                 v-if="profile.last_active_at"
@@ -1489,7 +1498,7 @@ const QuickInfoCard = {
 }
 
 const DetailRow = {
-    props: ['icon', 'label', 'value', 'mono'],
+    props: ['icon', 'label', 'value', 'mono', 'url'],
     setup(props) {
         return () =>
             h('div', { class: 'flex items-start gap-3 px-5 py-4 sm:px-6' }, [
@@ -1510,7 +1519,16 @@ const DetailRow = {
                                 props.mono ? 'font-mono' : ''
                             ]
                         },
-                        props.value
+                        props.url
+                            ? h(
+                                  'a',
+                                  {
+                                      href: props.url,
+                                      class: 'text-blue-600 hover:underline dark:text-blue-400'
+                                  },
+                                  props.value
+                              )
+                            : props.value
                     )
                 ])
             ])

@@ -409,7 +409,23 @@ class AdminController extends Controller
         }
 
         if (! empty($search)) {
-            if (str_starts_with($search, 'bio:')) {
+            if (str_starts_with($search, 'ip:')) {
+                $ip = trim(substr($search, 3));
+                if (! empty($ip)) {
+                    if (! $this->queryHasJoin($query, 'users')) {
+                        $query->join('users', 'profiles.id', '=', 'users.profile_id');
+                    }
+                    $query->where('users.last_ip', $ip);
+                }
+            } else if (str_starts_with($search, 'register_ip:')) {
+                $ip = trim(substr($search, 12));
+                if (! empty($ip)) {
+                    if (! $this->queryHasJoin($query, 'users')) {
+                        $query->join('users', 'profiles.id', '=', 'users.profile_id');
+                    }
+                    $query->where('users.register_ip', $ip);
+                }
+            } else if (str_starts_with($search, 'bio:')) {
                 $bio = trim(substr($search, 4));
                 if (! empty($bio)) {
                     $query->where('profiles.bio', 'like', '%'.$bio.'%');
@@ -465,6 +481,7 @@ class AdminController extends Controller
             $res['has_push'] = (bool) $user->push_token;
             $res['has_2fa'] = (bool) $user->has_2fa && $user->two_factor_secret;
             $res['last_ip'] = $user->is_admin ? null : $user->last_ip;
+            $res['register_ip'] = $user->is_admin ? null : $user->register_ip;
             $res['push_platform'] = $user->push_token_platform;
             $res['can_embed'] = (bool) $user->can_embed;
             if ($user->last_active_at) {
