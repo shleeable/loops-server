@@ -29,11 +29,13 @@ class PlaylistVideoResource extends JsonResource
     {
         $video = VideoService::getMediaData($this->id);
 
-        $video['pivot'] = [
-            'position' => $this->pivot->position,
-            'added_at' => $this->pivot->created_at,
+        return [
+            ...$video,
+            ...(new VideoResource($this->resource))->toArray($request),
+            'pivot' => [
+                'position' => $this->pivot->position,
+                'added_at' => $this->pivot->created_at,
+            ],
         ];
-
-        return $video;
     }
 }
