@@ -417,7 +417,7 @@ class AdminController extends Controller
                     }
                     $query->where('users.last_ip', $ip);
                 }
-            } else if (str_starts_with($search, 'register_ip:')) {
+            } elseif (str_starts_with($search, 'register_ip:')) {
                 $ip = trim(substr($search, 12));
                 if (! empty($ip)) {
                     if (! $this->queryHasJoin($query, 'users')) {
@@ -425,7 +425,7 @@ class AdminController extends Controller
                     }
                     $query->where('users.register_ip', $ip);
                 }
-            } else if (str_starts_with($search, 'bio:')) {
+            } elseif (str_starts_with($search, 'bio:')) {
                 $bio = trim(substr($search, 4));
                 if (! empty($bio)) {
                     $query->where('profiles.bio', 'like', '%'.$bio.'%');
