@@ -936,6 +936,17 @@ class SearchController extends Controller
             if ($existingKit) {
                 $kit = $this->findOrRefreshRemoteStarterKit($url, $existingKit);
 
+                if (! $kit) {
+                    return [
+                        'data' => [
+                            'hashtags' => [],
+                            'users' => [],
+                            'videos' => [],
+                            'starter_kits' => [],
+                        ],
+                    ];
+                }
+
                 return [
                     'data' => [
                         'hashtags' => [],
@@ -1093,6 +1104,17 @@ class SearchController extends Controller
     protected function handleRemoteFeaturedCollection($request, array $data, string $url): ?array
     {
         $kit = $this->importRemoteStarterKit($data, $url);
+
+        if (! $kit) {
+            return [
+                'data' => [
+                    'hashtags' => [],
+                    'users' => [],
+                    'videos' => [],
+                    'starter_kits' => [],
+                ],
+            ];
+        }
 
         return [
             'data' => [
