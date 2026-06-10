@@ -132,6 +132,12 @@ class EmailChangeController extends Controller
             'user_id' => 'required|integer|min:1|max:9999999999',
             'token' => 'required|string',
         ]);
+
+        $user = $request->user();
+        if ($request->input('user_id') != $user->id) {
+            return $this->error('Invalid user_id value, please try again', 422);
+        }
+
         $id = $request->input('user_id');
         $token = $request->input('token');
 
