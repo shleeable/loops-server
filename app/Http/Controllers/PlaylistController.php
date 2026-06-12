@@ -47,7 +47,8 @@ class PlaylistController extends Controller
         );
 
         $perPage = $request->input('limit', 10);
-        $playlists = $query->cursorPaginate($perPage);
+        $perPage = max(1, min($perPage, 20));
+        $playlists = $query->cursorPaginate($perPage)->withQueryString();
 
         return PlaylistResource::collection($playlists);
     }
