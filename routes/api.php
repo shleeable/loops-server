@@ -175,6 +175,7 @@ Route::prefix('api')->group(function () {
     Route::apiResource('/v1/studio/playlists', PlaylistController::class)->middleware('auth:web,api');
     Route::get('/v1/studio/playlists/{playlist}/videos', [PlaylistController::class, 'videos'])->middleware('auth:web,api');
     Route::post('/v1/studio/playlists/{playlist}/videos', [PlaylistController::class, 'addVideo'])->middleware('auth:web,api');
+    Route::post('/v1/studio/playlists/{playlist}/videos/{video}/delete', [PlaylistController::class, 'removeVideo'])->middleware('auth:web,api');
     Route::delete('/v1/studio/playlists/{playlist}/videos/{video}', [PlaylistController::class, 'removeVideo'])->middleware('auth:web,api');
     Route::put('/v1/studio/playlists/{playlist}/reorder', [PlaylistController::class, 'reorder'])->middleware('auth:web,api');
     Route::get('/v1/studio/analytics/views', [StudioAnalyticsController::class, 'videoViews'])->middleware('auth:web,api');
