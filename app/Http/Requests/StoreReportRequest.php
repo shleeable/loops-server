@@ -32,7 +32,7 @@ class StoreReportRequest extends FormRequest
         return [
             'type' => 'required|in:video,profile,comment,reply,hashtag,starter_kit',
             'id' => 'required|string',
-            'key' => 'required|integer|min:1010|max:1026',
+            'key' => 'required|integer|min:1009|max:1026',
             'comment' => 'sometimes|nullable|string|min:1|max:500',
         ];
     }

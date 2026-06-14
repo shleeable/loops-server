@@ -28,6 +28,10 @@ export function useReportModal() {
 
     const REPORT_CATEGORIES = computed(() => [
         {
+            key: '1009',
+            message: t('reports.types.1009', 'Untagged AI content')
+        },
+        {
             key: '1010',
             message: t('reports.types.1010', 'Inappropriate and irrelevant search')
         },
