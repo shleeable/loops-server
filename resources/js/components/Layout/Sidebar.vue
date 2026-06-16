@@ -544,6 +544,11 @@ const footerLinks = computed(() => {
         { name: t('nav.developers'), path: 'https://joinloops.org/developers', external: true },
         { name: 'DMCA', path: '/dmca' },
         {
+            name: 'Loops for Android',
+            path: 'https://play.google.com/store/apps/details?id=com.pixelfed.loops',
+            external: true
+        },
+        {
             name: 'Loops for iOS',
             path: 'https://apps.apple.com/us/app/loops-by-pixelfed/id6499375182',
             external: true
