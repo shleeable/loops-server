@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SearchFollowersRequest;
+use App\Http\Requests\UpdatePushNotificationRequest;
 use App\Http\Resources\AccountCompactResource;
 use App\Http\Resources\FollowerResource;
 use App\Http\Resources\FollowingResource;
@@ -967,7 +968,7 @@ class AccountController extends Controller
         return $this->data($res);
     }
 
-    public function enablePushNotifications(Request $request)
+    public function enablePushNotifications(UpdatePushNotificationRequest $request)
     {
         $allowed = app(ConfigService::class)->pushNotifications();
 
