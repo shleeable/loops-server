@@ -2,10 +2,6 @@
 
 Loops is a TikTok-like video sharing platform (with [ActivityPub](https://activitypub.rocks) federation) built with Laravel. This guide covers installation, configuration, and deployment.
 
-> [!WARNING]
-> **S3-Compatible Storage Required**
-> Currently, Loops **requires an S3-compatible filesystem** (like AWS S3, MinIO, or DigitalOcean Spaces) for avatar and video storage. Support for local storage is on the way but is not yet implemented. Please ensure you have S3 credentials ready before proceeding.
-
 ## System Requirements
 
 ### Minimum Versions
@@ -114,7 +110,10 @@ MAIL_ENCRYPTION=null
 MAIL_FROM_ADDRESS="hello@example.com"
 MAIL_FROM_NAME="${APP_NAME}"
 
-# For S3 storage
+# Storage
+# Loops uses S3-compatible storage by default. To use S3, uncomment and fill
+# in the values below. To run on local disk instead, leave them commented and
+# see "Using Local Storage Instead of S3" below.
 # AWS_ACCESS_KEY_ID=
 # AWS_SECRET_ACCESS_KEY=
 # AWS_DEFAULT_REGION=us-east-1
@@ -126,6 +125,58 @@ MAIL_FROM_NAME="${APP_NAME}"
 FFMPEG_BINARIES=/usr/bin/ffmpeg
 FFPROBE_BINARIES=/usr/bin/ffprobe
 ```
+
+## Using Local Storage Instead of S3
+
+> [!NOTE]
+> By default Loops stores avatars and videos on S3-compatible storage. If you'd rather keep everything on your server's local disk, the steps below switch storage over with a single config change — no code modifications required.
+
+Loops resolves its media disk by the name `s3`. Avatars, videos, and thumbnails are all read and written through `Storage::disk('s3')` and the FFmpeg processing pipeline. Because Laravel disks are just named configuration entries, you can repoint that name at the `local` driver and every storage call will use your server's filesystem instead of an S3 bucket.
+
+### 1. Redefine the `s3` Disk
+
+Open `config/filesystems.php` and replace the `s3` disk definition with a local one:
+
+```php
+'s3' => [
+    'driver' => 'local',
+    'root' => storage_path('app/public'),
+    'url' => env('APP_URL').'/storage',
+    'visibility' => 'public',
+    'throw' => false,
+],
+```
+
+The disk keeps the name `s3`, but now stores files under `storage/app/public` and serves them from `APP_URL/storage`. Any `AWS_*` values in your `.env` are simply ignored.
+
+### 2. Confirm the Storage Symlink
+
+You already ran this in step 4 of installation, but if not:
+
+```bash
+php artisan storage:link
+```
+
+This symlinks `public/storage` to `storage/app/public` so uploaded media is reachable over HTTP.
+
+### 3. Rebuild Cached Config
+
+If you've cached your configuration (as recommended for production), rebuild it so the change takes effect:
+
+```bash
+php artisan config:clear
+php artisan config:cache
+```
+
+### Caveats
+
+- **Disk space:** All avatars and videos now live on your server's disk. Make sure the volume backing `storage/` has room for your expected media, and keep an eye on it as your instance grows.
+- **The disk is still named `s3`:** This is cosmetic. The name is only an identifier, so everything works — it just looks unusual in your config.
+- **Serving:** Files are served directly by your web server from `APP_URL/storage` rather than streamed through PHP. The Nginx and Apache examples in this guide already expose the `storage` symlink.
+- **Permissions:** Ensure `storage/` is writable by your web and queue user (see [File Permissions](#file-permissions)).
+- **Custom URLs:** This relies on media URLs being generated through `Storage::disk('s3')->url()`. If you've customized anything to build URLs directly from `AWS_URL`, those spots won't pick up the local path.
+
+This approach works reliably today. A dedicated media-disk environment variable is planned to make the choice between local and S3 storage more explicit down the line.
 
 ## Database Setup
 
