@@ -121,9 +121,7 @@
                         <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-6">
                             {{ pageTitle }}
                         </h1>
-                        <div
-                            class="w-24 h-1 bg-gradient-to-r from-purple-500 to-blue-500 mx-auto rounded-full"
-                        ></div>
+                        <div class="w-24 h-1 bg-red-500 mx-auto rounded-full"></div>
                     </div>
                 </div>
             </header>
