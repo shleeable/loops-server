@@ -103,6 +103,17 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
                     : null;
             }
 
+            if ($verifiedActor instanceof Profile && $verifiedActor->status !== 1) {
+                Log::info('Inbox activity dropped: suspended actor profile', [
+                    'activity_type' => $this->activity['type'] ?? 'unknown',
+                    'activity_id' => $this->activity['id'] ?? null,
+                    'profile_id' => $verifiedActor->id,
+                    'status' => $verifiedActor->status,
+                ]);
+
+                return;
+            }
+
             if ($this->isUserInbox && $this->targetActor) {
                 ProcessInboxActivity::dispatch($this->activity, $verifiedActor, $this->targetActor)
                     ->onQueue('activitypub-in');
