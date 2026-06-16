@@ -34,3 +34,5 @@ _ide_helper_models.php
 api.json
 public/loops-embed.js
 public/embed.js
+.eslintrc-auto-import.json
+resources/js/auto-imports.d.ts
