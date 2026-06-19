@@ -220,6 +220,12 @@ const router = createRouter({
             }
         },
         {
+            path: '/download-the-app',
+            name: 'downloadTheApp',
+            component: () => import('~/pages/platform/download-the-app.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
             path: '/pages/:slug',
             name: 'CustomPage',
             component: DynamicPage,
