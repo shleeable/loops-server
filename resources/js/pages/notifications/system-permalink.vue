@@ -1,5 +1,5 @@
 <template>
-    <BlankLayout>
+    <BlankScreenLayout>
         <div
             v-if="loading"
             class="container mx-auto min-h-screen flex h-full bg-white dark:bg-gray-900 transition-colors"
@@ -112,7 +112,7 @@
                 </div>
             </section>
         </div>
-    </BlankLayout>
+    </BlankScreenLayout>
 </template>
 
 <script setup>
@@ -130,7 +130,7 @@ import {
     MegaphoneIcon,
     ArrowRightIcon
 } from '@heroicons/vue/24/outline'
-import BlankLayout from '@/layouts/BlankLayout.vue'
+import BlankScreenLayout from '@/layouts/BlankScreenLayout.vue'
 
 const systemTypeConfig = {
     info: {
