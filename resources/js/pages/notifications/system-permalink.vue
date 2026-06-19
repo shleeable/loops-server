@@ -105,7 +105,7 @@
             <section class="pb-20 mb-20 bg-white dark:bg-gray-900">
                 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div
-                        class="bg-white dark:bg-gray-800/50 rounded-2xl sm:p-8 md:border border-gray-200 dark:border-gray-700"
+                        class="bg-white dark:bg-gray-800/50 rounded-2xl p-6 sm:p-8 md:border border-gray-200 dark:border-gray-700"
                     >
                         <div class="" v-html="formattedBody"></div>
                     </div>
