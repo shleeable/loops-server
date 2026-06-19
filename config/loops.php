@@ -108,6 +108,10 @@ return [
         'monthly_video_limit' => env('LOOPS_REMSEARCH_MONTHLY_VID_LIMIT', 30),
     ],
 
+    'system_notifications' => [
+        'enabled' => env('LOOPS_SYSTEM_NOTIFICATIONS_ENABLED', true),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Local Domains (Same-Server Instances)
