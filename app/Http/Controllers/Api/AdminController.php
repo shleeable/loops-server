@@ -1776,9 +1776,9 @@ class AdminController extends Controller
         }, $request->domains);
 
         $updatedCount = Instance::whereIn('domain', $domains)
-            ->update(['allow_video_posts' => $request->allow_video_posts]);
+            ->update(['allow_video_posts' => $request->allow_video_posts, 'allow_videos_in_fyf' => $request->allow_video_posts]);
 
-        app(AdminAuditLogService::class)->logInstanceDomainsUpdateAllowVideoPosts($request->user(), ['domains' => $domains, 'allow_video_posts' => $request->allow_video_posts]);
+        app(AdminAuditLogService::class)->logInstanceDomainsUpdateAllowVideoPosts($request->user(), ['domains' => $domains, 'allow_video_posts' => $request->allow_video_posts, 'allow_videos_in_fyf' => $request->allow_video_posts]);
         app(InstanceService::class)->flushStats();
 
         return response()->json([
