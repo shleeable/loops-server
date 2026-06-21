@@ -179,11 +179,27 @@
                             <HashtagsList :hashtags="searchResults.hashtags.slice(0, 10)" />
                         </section>
 
+                        <section v-if="searchResults.starter_kits?.length > 0">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                    Starter Kits
+                                </h2>
+                                <button
+                                    @click="handleTabChange('starter_kits')"
+                                    class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                                >
+                                    See more →
+                                </button>
+                            </div>
+                            <StarterKitsGrid :kits="searchResults.starter_kits" />
+                        </section>
+
                         <div
                             v-if="
                                 !searchResults.users?.length &&
                                 !searchResults.videos?.length &&
                                 !searchResults.hashtags?.length &&
+                                !searchResults.starter_kits?.length &&
                                 !showRemoteLookupCta &&
                                 !remoteLookupLoading &&
                                 !pendingVideo

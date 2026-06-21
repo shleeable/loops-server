@@ -373,7 +373,7 @@ export function useUtils() {
                             to: mentionPath(mention),
                             class: mentionClass
                         },
-                        () => segment.content
+                        () => `@${mention.username}`
                     )
                 }
 

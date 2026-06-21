@@ -126,6 +126,10 @@ class SearchController extends Controller
             $nextLaravelCursor = $pager->nextCursor()?->encode();
             $nextCursorToken = CursorToken::encode($nextLaravelCursor, $ctx, $hops + 1);
 
+            if (str_starts_with($like, '@') && substr_count($like, '@') === 1) {
+                $like = substr($like, 1);
+            }
+
             $usersData = Profile::query()
                 ->select(['profiles.id', 'profiles.username', 'profiles.name', 'profiles.followers', 'profiles.status'])
                 ->withFollowingStatus($authProfileId)
@@ -146,18 +150,23 @@ class SearchController extends Controller
                 ->limit(6)
                 ->get();
 
-            $starterKits = StarterKit::query()
-                ->select(['id', 'title', 'description', 'slug', 'remote_url', 'approved_accounts', 'is_local', 'is_discoverable', 'is_sensitive', 'uses', 'icon_url', 'header_url', 'profile_id', 'total_accounts', 'status', 'created_at', 'updated_at'])
-                ->where('status', 10)
-                ->where(function ($q) use ($like) {
-                    $q->where('title', 'like', $like)
-                        ->orWhere('description', 'like', $like);
-                })
-                ->orderByDesc('approved_accounts')
-                ->limit(3)
-                ->get();
+            $urlKit = $this->resolveStarterKitFromUrl($query);
+            if ($urlKit) {
+                $starterKitsData = collect([$urlKit]);
+            } else {
+                $starterKits = StarterKit::query()
+                    ->select(['id', 'title', 'description', 'slug', 'remote_url', 'approved_accounts', 'is_local', 'is_discoverable', 'is_sensitive', 'uses', 'icon_url', 'header_url', 'profile_id', 'total_accounts', 'status', 'created_at', 'updated_at'])
+                    ->where('status', 10)
+                    ->where(function ($q) use ($like) {
+                        $q->where('title', 'like', $like)
+                            ->orWhere('description', 'like', $like);
+                    })
+                    ->orderByDesc('approved_accounts')
+                    ->limit(3)
+                    ->get();
 
-            $starterKitsData = StarterKitResource::collection($starterKits);
+                $starterKitsData = StarterKitResource::collection($starterKits);
+            }
             $hashtagsData = $hashtags;
         }
 
@@ -214,6 +223,7 @@ class SearchController extends Controller
                 ->where('can_search', true)
                 ->where('name', 'like', $like)
                 ->orderByDesc('count')
+                ->orderByDesc('id')
                 ->cursorPaginate(
                     perPage: $limit,
                     columns: ['*'],
@@ -446,13 +456,17 @@ class SearchController extends Controller
             if (isset($match['hash']) && $match['hash']) {
                 $hashId = HashidService::safeDecode($match['hash']);
 
-                return StarterKit::where('status', 10)
-                    ->findOrFail($hashId);
+                $res = StarterKit::where('status', 10)->find($hashId);
+                if ($res) {
+                    return $res;
+                }
             }
 
             if (isset($match['id'])) {
-                return StarterKit::where('status', 10)
-                    ->findOrFail($match['id']);
+                $res = StarterKit::where('status', 10)->find($match['id']);
+                if ($res) {
+                    return $res;
+                }
             }
         }
 
