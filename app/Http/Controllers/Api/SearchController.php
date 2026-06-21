@@ -570,7 +570,12 @@ class SearchController extends Controller
             }
 
             $actorUrl = $item['featuredObject'] ?? null;
-            if (! $actorUrl || ($item['featuredObjectType'] ?? null) !== 'Person') {
+            // Temporarily disable this due to Mastodon bug https://github.com/mastodon/mastodon/issues/39544
+            // if (! $actorUrl || ($item['featuredObjectType'] ?? null) !== 'Person') {
+            //     continue;
+            // }
+
+            if (! $actorUrl) {
                 continue;
             }
 
