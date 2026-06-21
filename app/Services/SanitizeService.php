@@ -199,6 +199,7 @@ class SanitizeService
         $domains = Instance::whereIsBlocked(true)->pluck('domain')->toArray();
 
         if (! empty($domains)) {
+            $domains = array_map('strtolower', $domains);
             Redis::sadd(self::BANNED_DOMAINS_SET_KEY, ...$domains);
         }
 
@@ -399,7 +400,7 @@ class SanitizeService
             if ($label === '' || strlen($label) > 63) {
                 return false;
             }
-            if (! preg_match('/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])$/i', $label)) {
+            if (! preg_match('/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i', $label)) {
                 return false;
             }
         }
