@@ -142,6 +142,10 @@ class SearchController extends Controller
                 ->limit(2)
                 ->get();
 
+            if (str_starts_with($like, '#') && substr_count($like, '#') === 1) {
+                $like = substr($like, 1);
+            }
+
             $hashtags = Hashtag::query()
                 ->select(['id', 'name', 'name_normalized', 'count', 'can_search', 'created_at'])
                 ->where('can_search', true)
@@ -193,6 +197,10 @@ class SearchController extends Controller
         }
 
         if ($type === 'users') {
+            if (str_starts_with($like, '@') && substr_count($like, '@') === 1) {
+                $like = substr($like, 1);
+            }
+
             $users = Profile::query()
                 ->select(['profiles.id', 'profiles.username', 'profiles.name', 'profiles.followers', 'profiles.status'])
                 ->withFollowingStatus($authProfileId)
@@ -218,6 +226,10 @@ class SearchController extends Controller
         }
 
         if ($type === 'hashtags') {
+            if (str_starts_with($like, '#') && substr_count($like, '#') === 1) {
+                $like = substr($like, 1);
+            }
+
             $hashtags = Hashtag::query()
                 ->select(['id', 'name', 'name_normalized', 'count', 'can_search', 'created_at'])
                 ->where('can_search', true)
