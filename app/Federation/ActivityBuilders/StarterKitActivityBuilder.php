@@ -27,7 +27,6 @@ class StarterKitActivityBuilder
                 'id' => $acct->getPermalink(),
                 'type' => 'FeaturedItem',
                 'featuredObject' => $acct->getAccountPermalink(),
-                'featuredObjectType' => 'Person',
                 'featureAuthorization' => $acct->getAttestationUrl(),
                 'published' => $acct->approved_at->toIso8601ZuluString(),
             ];
@@ -102,7 +101,6 @@ class StarterKitActivityBuilder
             'id' => $acct->getPermalink(),
             'type' => 'FeaturedItem',
             'featuredObject' => $acct->getAccountPermalink(),
-            'featuredObjectType' => 'Person',
             'featureAuthorization' => $acct->getAttestationUrl(),
             'published' => $acct->approved_at->toIso8601ZuluString(),
         ];
