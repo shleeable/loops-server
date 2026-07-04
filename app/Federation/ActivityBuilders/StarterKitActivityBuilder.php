@@ -4,7 +4,6 @@ namespace App\Federation\ActivityBuilders;
 
 use App\Models\StarterKit;
 use App\Models\StarterKitAccount;
-use App\Services\AutoLinkerService;
 use App\Services\StarterKitService;
 
 class StarterKitActivityBuilder
@@ -37,7 +36,7 @@ class StarterKitActivityBuilder
             'id' => $kit->getPermalink(),
             'type' => 'FeaturedCollection',
             'name' => $kit->title,
-            'summary' => AutoLinkerService::link($kit->description),
+            'summary' => $kit->description,
             'attributedTo' => $creator,
             'url' => $kit->publicUrl(),
             'sensitive' => $kit->is_sensitive,
