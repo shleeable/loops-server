@@ -58,7 +58,7 @@ class SettingsController extends Controller
         }
 
         if ($request->filled('bio')) {
-            $profile->bio = $this->purifyTextWithoutLineBreaks($request->input('bio'));
+            $profile->bio = $this->cleanPlainTextWithAllowedLineBreaks($request->input('bio'));
         }
 
         $profile->save();
@@ -76,6 +76,49 @@ class SettingsController extends Controller
 
         $res = AccountService::get($pid);
         $res['is_owner'] = true;
+        $res['likes_count'] = (int) AccountService::getAccountLikesCount($pid);
+
+        return $this->data($res);
+    }
+
+    public function storeProfileBio(UpdateProfileRequest $request)
+    {
+        $user = $request->user();
+        $pid = $user->profile_id;
+        $profile = $user->profile;
+        $originalData = $user->only(['name', 'bio']);
+
+        app(UserActivityService::class)->markActive($user);
+
+        if ($request->filled('name')) {
+            $name = $request->input('name') ?: AccountService::getDefaultDisplayName($user->profile_id);
+            $profile->name = $this->purifyTextWithoutLineBreaks($name);
+            $user->name = $this->purifyTextWithoutLineBreaks($name);
+            $user->save();
+        }
+
+        if ($request->filled('bio')) {
+            $profile->bio = $this->cleanPlainTextWithAllowedLineBreaks($request->input('bio'));
+        } else {
+            $profile->bio = null;
+        }
+
+        $profile->save();
+
+        $changedFields = [];
+        foreach ($request->validated() as $key => $value) {
+            if ($originalData[$key] !== $value) {
+                $changedFields[] = $key;
+            }
+        }
+
+        $this->auditService->logProfileUpdated($user, $changedFields);
+
+        AccountService::del($pid);
+
+        $res = AccountService::get($pid);
+        $res['is_owner'] = true;
+        $res['likes_count'] = (int) AccountService::getAccountLikesCount($pid);
 
         return $this->data($res);
     }

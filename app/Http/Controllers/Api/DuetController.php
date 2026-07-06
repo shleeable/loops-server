@@ -14,12 +14,14 @@ use App\Services\ConfigService;
 use App\Services\FederationDispatcher;
 use App\Services\SanitizeService;
 use App\Services\UserActivityService;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Illuminate\Bus\Batch;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
+#[ExcludeAllRoutesFromDocs]
 class DuetController extends Controller
 {
     use ApiHelpers;

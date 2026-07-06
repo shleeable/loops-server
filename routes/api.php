@@ -135,6 +135,7 @@ Route::middleware(['auth:web,api'])
     });
 
 Route::prefix('api')->group(function () {
+    Route::get('/v1/web/vmh', [WebPublicController::class, 'viteManifestHash']);
     Route::post('/v1/apps', [AuthController::class, 'registerApp']);
     Route::get('/v1/config', [WebPublicController::class, 'appConfiguration'])->middleware([OptionalAuth::class, 'throttle:api']);
 
@@ -174,6 +175,7 @@ Route::prefix('api')->group(function () {
     Route::apiResource('/v1/studio/playlists', PlaylistController::class)->middleware('auth:web,api');
     Route::get('/v1/studio/playlists/{playlist}/videos', [PlaylistController::class, 'videos'])->middleware('auth:web,api');
     Route::post('/v1/studio/playlists/{playlist}/videos', [PlaylistController::class, 'addVideo'])->middleware('auth:web,api');
+    Route::post('/v1/studio/playlists/{playlist}/videos/{video}/delete', [PlaylistController::class, 'removeVideo'])->middleware('auth:web,api');
     Route::delete('/v1/studio/playlists/{playlist}/videos/{video}', [PlaylistController::class, 'removeVideo'])->middleware('auth:web,api');
     Route::put('/v1/studio/playlists/{playlist}/reorder', [PlaylistController::class, 'reorder'])->middleware('auth:web,api');
     Route::get('/v1/studio/analytics/views', [StudioAnalyticsController::class, 'videoViews'])->middleware('auth:web,api');
@@ -192,8 +194,8 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/search/remote/status', [SearchController::class, 'remoteVideoStatus'])->middleware(['auth:web,api', 'throttle:searchV1Status']);
 
     // Feeds
-    Route::get('/v0/user/self', [AccountController::class, 'selfAccountInfo'])->middleware('auth:web,api');
-    Route::get('/v0/feed/for-you', [FeedController::class, 'getForYouFeed'])->middleware('auth:web,api');
+    Route::get('/v0/user/self', [AccountController::class, 'selfAccountInfoV0Deprecated'])->middleware('auth:web,api');
+    Route::get('/v0/feed/for-you', [FeedController::class, 'getForYouFeedDeprecated'])->middleware('auth:web,api');
     Route::get('/web/feed', [WebPublicController::class, 'getFeed'])->middleware('throttle:api');
 
     // Web Accounts
@@ -238,6 +240,7 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/account/settings/birthdate', [SettingsController::class, 'checkBirthdate'])->middleware('auth:web,api');
     Route::post('/v1/account/settings/birthdate', [SettingsController::class, 'setBirthdate'])->middleware('auth:web,api');
     Route::post('/v1/account/settings/bio', [SettingsController::class, 'storeBio'])->middleware('auth:web,api');
+    Route::post('/v1/account/settings/profile-bio', [SettingsController::class, 'storeProfileBio'])->middleware('auth:web,api');
     Route::post('/v1/account/settings/update-avatar', [SettingsController::class, 'updateAvatar'])->middleware('auth:web,api');
     Route::post('/v1/account/settings/delete-avatar', [SettingsController::class, 'deleteAvatar'])->middleware('auth:web,api');
     Route::get('/v1/account/settings/security-config', [SettingsController::class, 'securityConfig'])->middleware('auth:web,api');
@@ -554,9 +557,7 @@ Route::prefix('api')->group(function () {
         Route::post('/blocked-terms/flush-cache', [AdminController::class, 'blockedTermsBulkFlushCache']);
     });
 
-    Route::any('{any}', function () {
-        return response()->json(['message' => 'Not Found.'], 404);
-    })->where('any', '.*');
+    Route::any('{any}', [WebPublicController::class, 'apiCatchAll'])->where('any', '.*');
 });
 
 Route::prefix('/ap')->middleware([AuthorizedFetch::class])->group(function () {

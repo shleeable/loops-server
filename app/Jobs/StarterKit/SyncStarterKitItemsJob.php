@@ -82,9 +82,10 @@ class SyncStarterKitItemsJob implements ShouldBeUnique, ShouldQueue
                 continue;
             }
 
-            if (($item['featuredObjectType'] ?? null) !== 'Person') {
-                continue;
-            }
+            // Temporarily disable this due to Mastodon bug https://github.com/mastodon/mastodon/issues/39544
+            // if (($item['featuredObjectType'] ?? null) !== 'Person') {
+            //     continue;
+            // }
 
             $itemId = $item['id'] ?? null;
             $featuredObject = $item['featuredObject'] ?? null;

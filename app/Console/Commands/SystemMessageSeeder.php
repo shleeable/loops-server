@@ -28,6 +28,12 @@ class SystemMessageSeeder extends Command
      */
     public function handle()
     {
+        $enabled = (bool) config('loops.system_notifications.enabled');
+
+        if (! $enabled) {
+            return;
+        }
+
         $messages = Storage::disk('app')->json('notifications/system.json');
 
         foreach ($messages as $message) {

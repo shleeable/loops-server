@@ -199,6 +199,7 @@ class SanitizeService
         $domains = Instance::whereIsBlocked(true)->pluck('domain')->toArray();
 
         if (! empty($domains)) {
+            $domains = array_map('strtolower', $domains);
             Redis::sadd(self::BANNED_DOMAINS_SET_KEY, ...$domains);
         }
 
@@ -399,7 +400,7 @@ class SanitizeService
             if ($label === '' || strlen($label) > 63) {
                 return false;
             }
-            if (! preg_match('/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])$/i', $label)) {
+            if (! preg_match('/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i', $label)) {
                 return false;
             }
         }
@@ -618,6 +619,31 @@ class SanitizeService
         $cleaned = strip_tags($text);
         $cleaned = str_replace(["\r\n", "\r"], "\n", $cleaned);
         $cleaned = preg_replace("/\n{3,}/", "\n\n", $cleaned);
+
+        return trim($cleaned);
+    }
+
+    public function cleanPlainTextWithAllowedLineBreaks($text, $maxLineBreaks = 10)
+    {
+        if (empty($text)) {
+            return;
+        }
+
+        $cleaned = strip_tags($text);
+        $cleaned = str_replace(["\r\n", "\r"], "\n", $cleaned);
+        $cleaned = preg_replace('/[ \t]+(\n|$)/', '$1', $cleaned);
+        $cleaned = preg_replace("/\n{3,}/", "\n\n", $cleaned);
+
+        $lines = explode("\n", $cleaned);
+        if (count($lines) > $maxLineBreaks + 1) {
+            $kept = array_slice($lines, 0, $maxLineBreaks);
+            $remainder = array_slice($lines, $maxLineBreaks);
+
+            $merged = trim(preg_replace('/\s+/', ' ', implode(' ', $remainder)));
+
+            $lines = array_merge($kept, [$merged]);
+            $cleaned = implode("\n", $lines);
+        }
 
         return trim($cleaned);
     }

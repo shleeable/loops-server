@@ -8,9 +8,11 @@ use App\Models\CuratedApplicationNote;
 use App\Models\CuratedApplicationSettings;
 use App\Services\AdminDashboardService;
 use App\Services\CuratedOnboardingService;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+#[ExcludeAllRoutesFromDocs]
 class AdminCuratedApplicationController extends Controller
 {
     public function __construct(

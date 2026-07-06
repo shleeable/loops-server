@@ -14,12 +14,14 @@ use App\Services\AccountService;
 use App\Services\NotificationService;
 use App\Services\UsernameService;
 use Carbon\Carbon;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
+#[ExcludeAllRoutesFromDocs]
 class AdminInviteController extends Controller
 {
     const INVITE_SESSION_KEY = 'loops_admn_invite_session:';

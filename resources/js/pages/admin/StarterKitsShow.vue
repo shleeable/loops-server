@@ -59,6 +59,20 @@
                     Active
                 </span>
                 <span
+                    v-else-if="kit.status === 7"
+                    class="inline-flex items-center gap-1.5 px-6 py-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm font-medium rounded-full"
+                >
+                    <XCircleIcon class="w-5 h-5" />
+                    Disabled Account
+                </span>
+                <span
+                    v-else-if="kit.status === 8"
+                    class="inline-flex items-center gap-1.5 px-6 py-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm font-medium rounded-full"
+                >
+                    <XCircleIcon class="w-5 h-5" />
+                    Pending Delete
+                </span>
+                <span
                     v-else-if="kit.status === 5"
                     class="inline-flex items-center gap-1.5 px-6 py-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm font-medium rounded-full"
                 >
@@ -975,7 +989,7 @@ const actionButtons = computed(() => {
         ]
     }
 
-    if (kit.value.status === 10) {
+    if ([7, 8, 10].includes(kit.value.status)) {
         return [
             { label: 'View Kit', value: 'viewKit', icon: ArrowTopRightOnSquareIcon },
             { label: 'Disable', value: 'pending', theme: 'default', icon: ShieldExclamationIcon },

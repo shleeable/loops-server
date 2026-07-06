@@ -385,10 +385,12 @@ class ProcessSharedInboxActivity implements ShouldQueue
     {
         $type = $this->activity['type'] ?? null;
 
-        if ($type === 'Accept' && isset($this->activity['object']['type']) && $this->activity['object']['type'] === 'Follow') {
-            app(\App\Services\RelayService::class)->handleAccept($relay, $this->activity);
-            if (config('logging.dev_log')) {
-                Log::info('Relay subscription accepted', ['relay' => $relay->relay_url]);
+        if ($type === 'Accept') {
+            if (isset($this->activity['object']['type']) && $this->activity['object']['type'] === 'Follow') {
+                app(\App\Services\RelayService::class)->handleAccept($relay, $this->activity);
+                if (config('logging.dev_log')) {
+                    Log::info('Relay subscription accepted', ['relay' => $relay->relay_url]);
+                }
             }
 
             return;

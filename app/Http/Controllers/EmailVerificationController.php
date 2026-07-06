@@ -7,12 +7,14 @@ use App\Jobs\Auth\NewAccountEmailVerifyJob;
 use App\Models\User;
 use App\Models\UserRegisterVerify;
 use App\Support\VerificationCode;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
+#[ExcludeAllRoutesFromDocs]
 class EmailVerificationController extends Controller
 {
     /**

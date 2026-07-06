@@ -65,7 +65,6 @@
                         <li v-for="(video, idx) in videos" :key="video.id">
                             <router-link
                                 :to="`/v/${video.hid}?playlist_id=${playlist.id}`"
-                                @click="$emit('close')"
                                 class="flex items-stretch gap-3 py-3 group"
                             >
                                 <span

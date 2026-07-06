@@ -43,6 +43,11 @@ trait ApiHelpers
         return app(SanitizeService::class)->cleanPlainTextWithoutLineBreaks($text);
     }
 
+    public static function cleanPlainTextWithAllowedLineBreaks($text)
+    {
+        return app(SanitizeService::class)->cleanPlainTextWithAllowedLineBreaks($text);
+    }
+
     public function success()
     {
         return response()->json([

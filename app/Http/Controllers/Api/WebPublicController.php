@@ -36,14 +36,18 @@ use App\Services\StarterKitService;
 use App\Services\SystemMessageService;
 use App\Services\UserFilterService;
 use App\Support\CursorToken;
+use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
+use Dedoc\Scramble\Attributes\PathParameter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\Str;
 
 class WebPublicController extends Controller
 {
     use ApiHelpers;
 
+    #[ExcludeRouteFromDocs]
     public function getFeed(Request $request)
     {
         $res = Cache::remember('wpc:get-feed', now()->addMinutes(45), function () {
@@ -72,6 +76,7 @@ class WebPublicController extends Controller
         ]);
     }
 
+    #[PathParameter('video', description: 'Fetch a VideoResponse', type: 'string', format: 'snowflakeId', example: '40908285834039296')]
     public function showVideo(Request $request, $id)
     {
         $video = Video::with('profile')->published()->find($id);
@@ -508,6 +513,7 @@ class WebPublicController extends Controller
         $config['app']['software'] = 'loops';
         $config['app']['version'] = app('app_version');
         $config['hasKlipy'] = (bool) ! empty(config('klipy.api_key'));
+        $config['account']['max_bio_length'] = 500;
         unset($config['branding']);
 
         return response()->json($config);
@@ -677,6 +683,18 @@ class WebPublicController extends Controller
             ->cursorPaginate(6);
 
         return PlaylistResource::collection($playlists);
+    }
+
+    #[ExcludeRouteFromDocs]
+    public function viteManifestHash(Request $request)
+    {
+        return response()->json(['version' => Vite::manifestHash()])->header('Cache-Control', 'no-store');
+    }
+
+    #[ExcludeRouteFromDocs]
+    public function apiCatchAll(Request $request)
+    {
+        return response()->json(['message' => 'Not Found.'], 404);
     }
 
     private function defaultCollection($meta = [])

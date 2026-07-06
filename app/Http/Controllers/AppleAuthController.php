@@ -6,11 +6,13 @@ use App\Models\User;
 use App\Services\AccountService;
 use App\Services\AppleAuthService;
 use App\Services\StarterKitService;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
+#[ExcludeAllRoutesFromDocs]
 class AppleAuthController extends Controller
 {
     public function handle(Request $request)

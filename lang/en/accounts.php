@@ -8,8 +8,8 @@ return [
     'logoutAll' => 'Sign out all accounts',
     'maxReached' => 'Maximum of :max accounts reached',
     'removeAccount' => 'Remove from this device',
-    'signedInAs' => 'Signed in as',
     'signOut' => 'Sign out of account',
+    'signedInAs' => 'Signed in as',
     'switchAccount' => 'Switch account',
     'youCanSwitchAnytime' => 'You can switch back to your other accounts at any time.',
 ];

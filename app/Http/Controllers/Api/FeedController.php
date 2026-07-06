@@ -9,6 +9,7 @@ use App\Models\Video;
 use App\Services\FeedService;
 use App\Services\FollowerService;
 use App\Services\UserActivityService;
+use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
 use Illuminate\Http\Request;
 
 class FeedController extends Controller
@@ -39,7 +40,23 @@ class FeedController extends Controller
         return FeedService::getAccountFeed($request->user()->profile_id, $limit, $sort, $showPinned);
     }
 
+    #[ExcludeRouteFromDocs]
     public function getForYouFeed(Request $request)
+    {
+        $user = $request->user();
+        if ($user->cannot('viewAny', [Video::class])) {
+            return $this->error('Please finish setting up your account', 403);
+        }
+        app(UserActivityService::class)->markActive($user);
+        FeedService::enforcePaginationLimit($request);
+        $hideAi = $user->hide_ai;
+        $feed = FeedService::getVideoFeed($user->profile_id, 5, $hideAi);
+
+        return VideoResource::collection($feed);
+    }
+
+    #[ExcludeRouteFromDocs]
+    public function getForYouFeedDeprecated(Request $request)
     {
         $user = $request->user();
         if ($user->cannot('viewAny', [Video::class])) {

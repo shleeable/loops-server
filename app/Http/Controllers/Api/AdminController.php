@@ -62,6 +62,7 @@ use App\Services\StarterKitPendingChangeService;
 use App\Services\StarterKitService;
 use App\Services\VersionCheckService;
 use App\Services\VideoService;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -74,6 +75,7 @@ use Illuminate\Validation\Rule;
 use Laravel\Passport\Token;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+#[ExcludeAllRoutesFromDocs]
 class AdminController extends Controller
 {
     use ApiHelpers;
@@ -407,7 +409,23 @@ class AdminController extends Controller
         }
 
         if (! empty($search)) {
-            if (str_starts_with($search, 'bio:')) {
+            if (str_starts_with($search, 'ip:')) {
+                $ip = trim(substr($search, 3));
+                if (! empty($ip)) {
+                    if (! $this->queryHasJoin($query, 'users')) {
+                        $query->join('users', 'profiles.id', '=', 'users.profile_id');
+                    }
+                    $query->where('users.last_ip', $ip);
+                }
+            } elseif (str_starts_with($search, 'register_ip:')) {
+                $ip = trim(substr($search, 12));
+                if (! empty($ip)) {
+                    if (! $this->queryHasJoin($query, 'users')) {
+                        $query->join('users', 'profiles.id', '=', 'users.profile_id');
+                    }
+                    $query->where('users.register_ip', $ip);
+                }
+            } elseif (str_starts_with($search, 'bio:')) {
                 $bio = trim(substr($search, 4));
                 if (! empty($bio)) {
                     $query->where('profiles.bio', 'like', '%'.$bio.'%');
@@ -463,6 +481,7 @@ class AdminController extends Controller
             $res['has_push'] = (bool) $user->push_token;
             $res['has_2fa'] = (bool) $user->has_2fa && $user->two_factor_secret;
             $res['last_ip'] = $user->is_admin ? null : $user->last_ip;
+            $res['register_ip'] = $user->is_admin ? null : $user->register_ip;
             $res['push_platform'] = $user->push_token_platform;
             $res['can_embed'] = (bool) $user->can_embed;
             if ($user->last_active_at) {
@@ -1757,9 +1776,9 @@ class AdminController extends Controller
         }, $request->domains);
 
         $updatedCount = Instance::whereIn('domain', $domains)
-            ->update(['allow_video_posts' => $request->allow_video_posts]);
+            ->update(['allow_video_posts' => $request->allow_video_posts, 'allow_videos_in_fyf' => $request->allow_video_posts]);
 
-        app(AdminAuditLogService::class)->logInstanceDomainsUpdateAllowVideoPosts($request->user(), ['domains' => $domains, 'allow_video_posts' => $request->allow_video_posts]);
+        app(AdminAuditLogService::class)->logInstanceDomainsUpdateAllowVideoPosts($request->user(), ['domains' => $domains, 'allow_video_posts' => $request->allow_video_posts, 'allow_videos_in_fyf' => $request->allow_video_posts]);
         app(InstanceService::class)->flushStats();
 
         return response()->json([

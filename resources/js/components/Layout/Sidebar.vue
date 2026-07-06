@@ -410,6 +410,12 @@ const mainLinks = computed(() => {
         links = [
             { id: 'home', name: t('nav.local'), path: '/', icon: 'bx bx-home' },
             {
+                id: 'following',
+                name: t('common.following'),
+                path: '/feed/following',
+                icon: 'bx bx-user-plus'
+            },
+            {
                 id: 'explore',
                 name: t('common.explore'),
                 path: '/explore',
@@ -446,15 +452,6 @@ const mainLinks = computed(() => {
                 icon: 'bx bx-user'
             }
         ]
-
-        if (authStore.getUser.following_count) {
-            links.splice(1, 0, {
-                id: 'following',
-                name: t('common.following'),
-                path: '/feed/following',
-                icon: 'bx bx-user-plus'
-            })
-        }
 
         if (authStore.getUser && isLargeScreen.value) {
             links.splice(5, 0, {
@@ -544,13 +541,9 @@ const footerLinks = computed(() => {
         { name: t('nav.about'), path: '/about' },
         { name: t('nav.contact'), path: '/contact' },
         { name: 'Community', path: '/community-guidelines' },
+        { name: t('nav.developers'), path: 'https://joinloops.org/developers', external: true },
         { name: 'DMCA', path: '/dmca' },
-        {
-            name: 'Loops for iOS',
-            path: 'https://apps.apple.com/us/app/loops-by-pixelfed/id6499375182',
-            external: true
-        },
-        // { name: t('nav.developers'), path: '/platform/developers' },
+        { name: t('nav.getTheApp'), path: '/download-the-app' },
         // { name: t('nav.help'), path: '/help-center' },
         { name: t('nav.privacy'), path: '/privacy' },
         { name: t('nav.terms'), path: '/terms' }

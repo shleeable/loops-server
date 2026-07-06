@@ -134,25 +134,25 @@
                                         cols="30"
                                         rows="4"
                                         v-model="userBio"
-                                        maxlength="250"
+                                        maxlength="500"
                                         :placeholder="t('profile.bioPlaceholder')"
                                         :disabled="isSaving"
                                         class="resize-none w-full bg-[#F1F1F2] dark:bg-slate-900 dark:text-slate-50 text-gray-800 border dark:border-slate-800 border-gray-300 rounded-md py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-[#F02C56] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                                     ></textarea>
                                     <div class="flex justify-between mt-1">
                                         <div class="text-[11px] text-gray-500">
-                                            {{ t('profile.bioHelp') }}
+                                            Optional bio (up to 500 characters)
                                         </div>
                                         <div
                                             v-if="userBio"
                                             class="text-[11px]"
                                             :class="
-                                                userBio.length >= 200
+                                                userBio.length >= 400
                                                     ? 'text-orange-500'
                                                     : 'text-gray-500'
                                             "
                                         >
-                                            {{ userBio.length }}/250
+                                            {{ userBio.length }}/500
                                         </div>
                                     </div>
                                 </div>

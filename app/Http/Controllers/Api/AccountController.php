@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Traits\ApiHelpers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SearchFollowersRequest;
+use App\Http\Requests\UpdatePushNotificationRequest;
 use App\Http\Resources\AccountCompactResource;
 use App\Http\Resources\FollowerResource;
 use App\Http\Resources\FollowingResource;
@@ -43,6 +44,7 @@ use App\Services\UserActivityService;
 use App\Services\UserAuditLogService;
 use App\Services\UserFilterService;
 use App\Support\CursorToken;
+use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -55,6 +57,25 @@ class AccountController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+    }
+
+    #[ExcludeRouteFromDocs]
+    public function selfAccountInfoV0Deprecated(Request $request)
+    {
+        $user = $request->user();
+        $pid = $user->profile_id;
+        $profile = Profile::findOrFail($pid);
+        if ($profile->status != 1) {
+            return $this->error('This resource is not available', 403);
+        }
+        $res = (new ProfileResource($profile))->toArray($request);
+        $res['is_admin'] = (bool) $user->is_admin;
+        $res['is_owner'] = true;
+        $res['likes_count'] = (int) AccountService::getAccountLikesCount($pid);
+
+        app(UserActivityService::class)->markActive($user);
+
+        return response()->json(['data' => $res]);
     }
 
     public function selfAccountInfo(Request $request)
@@ -947,7 +968,7 @@ class AccountController extends Controller
         return $this->data($res);
     }
 
-    public function enablePushNotifications(Request $request)
+    public function enablePushNotifications(UpdatePushNotificationRequest $request)
     {
         $allowed = app(ConfigService::class)->pushNotifications();
 

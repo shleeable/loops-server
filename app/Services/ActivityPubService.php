@@ -10,10 +10,12 @@ use Illuminate\Support\Facades\Http;
 
 class ActivityPubService
 {
+    const MAX_RESPONSE_SIZE = 1048576;
+
     public function get($url, $params = [], $signed = true, $validateUrl = true, $validateContentType = true, $bypassCache = false)
     {
         if ($validateUrl) {
-            $valid = app(SanitizeService::class)->url($url, true);
+            $valid = app(SanitizeService::class)->url($url, true, false);
             if (! $valid) {
                 return false;
             }
@@ -74,10 +76,15 @@ class ActivityPubService
 
         try {
             $res = Http::withOptions([
-                'allow_redirects' => [
-                    'max' => 2,
-                    'protocols' => ['https'],
-                ]])
+                'allow_redirects' => false,
+                'stream' => true,
+                'on_headers' => function (\Psr\Http\Message\ResponseInterface $response) {
+                    $len = $response->getHeaderLine('Content-Length');
+                    if ($len !== '' && (int) $len > self::MAX_RESPONSE_SIZE) {
+                        throw new \RuntimeException('ActivityPub response exceeds max size');
+                    }
+                },
+            ])
                 ->withHeaders($headers)
                 ->timeout(5)
                 ->connectTimeout(3)
@@ -113,12 +120,32 @@ class ActivityPubService
                 return false;
             }
 
-            // Check if NOT in accepted types
             if (! in_array($contentType, $acceptedTypes)) {
                 return false;
             }
         }
 
-        return $res->json();
+        $body = $res->toPsrResponse()->getBody();
+        $contents = '';
+
+        try {
+            while (! $body->eof()) {
+                $contents .= $body->read(8192);
+
+                if (strlen($contents) > self::MAX_RESPONSE_SIZE) {
+                    return false;
+                }
+            }
+        } finally {
+            $body->close();
+        }
+
+        $decoded = json_decode($contents, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return false;
+        }
+
+        return $decoded;
     }
 }

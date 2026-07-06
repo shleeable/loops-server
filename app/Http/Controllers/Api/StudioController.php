@@ -94,6 +94,8 @@ class StudioController extends Controller
 
         $videos = Video::select('videos.*')
             ->publishedAndPublic()
+            ->leftJoin('playlist_video', 'videos.id', '=', 'playlist_video.video_id')
+            ->whereNull('playlist_video.video_id')
             ->where('videos.profile_id', $pid)
             ->when($search, function ($query, $search) {
                 $query->where('videos.caption', 'like', "%{$search}%");

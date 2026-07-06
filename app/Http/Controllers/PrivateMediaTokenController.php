@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\PrivateMediaTokenService;
+use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -14,6 +15,7 @@ class PrivateMediaTokenController extends Controller
         $this->middleware('auth');
     }
 
+    #[ExcludeRouteFromDocs]
     public function show(Request $request, string $tokenId): StreamedResponse
     {
         $user = $request->user();

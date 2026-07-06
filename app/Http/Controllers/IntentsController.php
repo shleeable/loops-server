@@ -9,8 +9,10 @@ use App\Rules\ValidUsername;
 use App\Services\ConfigService;
 use App\Services\SanitizeService;
 use App\Services\WebfingerService;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Illuminate\Http\Request;
 
+#[ExcludeAllRoutesFromDocs]
 class IntentsController extends Controller
 {
     use ApiHelpers;

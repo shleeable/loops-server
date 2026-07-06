@@ -70,7 +70,7 @@
                         class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
                     >
                         <div class="relative bg-black aspect-video">
-                            <video class="w-full h-full object-contain" controls>
+                            <video ref="videoEl" class="w-full h-full object-contain" controls>
                                 <source :src="video.media.src_url" type="video/mp4" />
                             </video>
                         </div>
@@ -1263,7 +1263,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, reactive } from 'vue'
+import { ref, onMounted, computed, reactive, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { videosApi } from '@/services/adminApi'
 import { useAlertModal } from '@/composables/useAlertModal.js'
@@ -1334,11 +1334,12 @@ const commentsPagination = ref({
     cursor: null,
     hasNext: false
 })
+const videoEl = ref(null)
 
 const loadAuditLogs = ref(localStorage.getItem('loops_admin_video_auditLogAutoLoad') || false)
 const auditLogs = ref([])
 const auditCursor = ref(null)
-const auditLogExpand = ref(localStorage.getItem('loops_admin_video_auditLogAutoLoad') || false)
+const auditLogExpand = ref(localStorage.getItem('loops_admin_video_auditLogExpand') || false)
 const hasMoreAudits = ref(false)
 const isLoadingAudits = ref(false)
 const isLoadingMoreAudits = ref(false)
@@ -1368,7 +1369,7 @@ const formatValue = (val) => {
     return String(val)
 }
 
-const statusBadge = computed(() => statusBadgeStyles[profile.value?.status] || defaultBadge)
+const statusBadge = computed(() => statusBadgeStyles[video.value?.status] || defaultBadge)
 
 const statusBadgeClasses = computed(() => {
     const status = video.value?.status
@@ -1719,6 +1720,10 @@ const deleteCommentReply = async (comment, parent = null) => {
 
 onMounted(() => {
     fetchVideo()
+})
+
+onBeforeUnmount(() => {
+    videoEl.value?.pause()
 })
 
 const auditTypeLabels = {

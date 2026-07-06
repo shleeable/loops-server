@@ -23,10 +23,14 @@ const selectedCategory = ref(null)
 const additionalText = ref('')
 
 export function useReportModal() {
-    const { alertModal, confirmModal } = useAlertModal()
+    const { alertModal } = useAlertModal()
     const { t } = useI18n()
 
     const REPORT_CATEGORIES = computed(() => [
+        {
+            key: '1009',
+            message: t('reports.types.1009', 'Untagged AI content')
+        },
         {
             key: '1010',
             message: t('reports.types.1010', 'Inappropriate and irrelevant search')

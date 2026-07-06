@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Services\AccountService;
 use App\Services\AccountSwitcherService;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+#[ExcludeAllRoutesFromDocs]
 class AccountSwitcherController extends Controller
 {
     public function __construct(

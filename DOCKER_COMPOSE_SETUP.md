@@ -1,13 +1,14 @@
 # Loops Docker Compose Setup with serversideup/php container
 
-This setup uses `serversideup/php:8.4-fpm-nginx` as the base image and is designed to work behind a reverse proxy like Cloudflare Tunnel, or Nginx (Proxy Manager) for HTTPS termination.
+This setup uses `serversideup/php` as the base image and is designed to work behind a reverse proxy like nginx, Caddy, Traefik, Cloudflare Tunnel, etc for HTTPS termination.
 
 ## Prerequisites
 
 - Docker and Docker Compose installed
-- A reverse proxy (e.g., Nginx Proxy Manager) for HTTPS
+- A reverse proxy (e.g., Nginx) for HTTPS
 - Domain name
 - Email Provider for sending emails
+- S3 bucket for storage
 
 ## Quick Start
 

@@ -72,7 +72,7 @@ class ObjectController extends Controller
 
         $video = Video::with('profile')->whereStatus(2)->findOrFail($id);
 
-        if ($request->wantsJson() && $video->is_local) {
+        if ($request->wantsJson()) {
             abort_if($video->profile->status != 1, 403, 'Resource is not available');
 
             $config = app(ConfigService::class);
@@ -100,8 +100,10 @@ class ObjectController extends Controller
                 $comment = CommentReply::with('parent')->where('visibility', 1)->whereNull('ap_id')->where('status', 'active')->where('video_id', $vid)->findOrFail($cid);
 
                 return $this->renderVideoCommentReplyObject($video, $comment, $videoHashId, $hashId, $vid, $cid);
-            } else {
+            } elseif ($video->is_local) {
                 return $this->renderVideoObject($video, $hashId);
+            } else {
+                return view('welcome');
             }
         }
 
@@ -239,6 +241,12 @@ class ObjectController extends Controller
             return response()->json(['error' => 'Resource does not exist'], 404);
         }
 
+        $isLocal = data_get($videoMetadata, 'is_local');
+
+        if ($isLocal === false) {
+            return response()->json(['error' => 'Resource does not exist'], 404);
+        }
+
         $acctId = data_get($videoMetadata, 'account.id', null);
 
         if (! hash_equals($acctId, $actor)) {
@@ -252,11 +260,6 @@ class ObjectController extends Controller
 
             if ($video && $video->is_local && $video->visibility === 1) {
                 abort_if($video->profile->status != 1, 403, 'Resource is not available');
-
-                // @phpstan-ignore-next-line
-                if ($video->visibility !== 1) {
-                    return $this->activityPubError('You do not have permission to access this resource.', 403);
-                }
 
                 return [
                     '@context' => 'https://www.w3.org/ns/activitystreams',
@@ -300,11 +303,6 @@ class ObjectController extends Controller
 
             if ($video && $video->is_local && $video->visibility === 1) {
                 abort_if($video->profile->status != 1, 403, 'Resource is not available');
-
-                // @phpstan-ignore-next-line
-                if ($video->visibility !== 1) {
-                    return $this->activityPubError('You do not have permission to access this resource.', 403);
-                }
 
                 return [
                     '@context' => 'https://www.w3.org/ns/activitystreams',

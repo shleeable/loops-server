@@ -7,6 +7,7 @@ class ReportService
     const REPORT_VERSION = '0.1';
 
     const REPORT_TYPES = [
+        1009 => 'Untagged AI content',
         1010 => 'Inappropriate and irrelevant search',
         1011 => 'Violence, abuse, and criminal exploitation',
         1012 => 'Hate and harassment',

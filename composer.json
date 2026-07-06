@@ -27,12 +27,13 @@
     ],
     "require": {
         "php": "^8.3|^8.4|^8.5",
-        "aws/aws-sdk-php": "3.382.1",
+        "aws/aws-sdk-php": "3.385.2",
         "bacon/bacon-qr-code": "^3.0",
         "dansup/klipy-php": "1.1.0",
+        "dedoc/scramble": "^0.13.26",
         "firebase/php-jwt": "^7.0",
         "intervention/image-laravel": "^1.5",
-        "laravel/framework": "^12.0",
+        "laravel/framework": "^13.0",
         "laravel/horizon": "^5.33",
         "laravel/passport": "^13.0",
         "laravel/sanctum": "^4.1",
@@ -41,14 +42,12 @@
         "lcobucci/jwt": "^5.6",
         "league/flysystem-aws-s3-v3": "^3.0",
         "pbmedia/laravel-ffmpeg": "^8.7",
-        "phpseclib/phpseclib": "3.0.52",
+        "phpseclib/phpseclib": "3.0.55",
         "pragmarx/google2fa-laravel": "^3.0",
         "predis/predis": "^3.2",
         "resend/resend-laravel": "^1.0.0",
         "spatie/laravel-backup": "^10.2",
         "stevebauman/purify": "^6.3",
-        "symfony/http-client": "^7.3",
-        "symfony/http-foundation": "7.3.7",
         "symfony/mailgun-mailer": "^7.3"
     },
     "require-dev": {
@@ -60,9 +59,9 @@
         "laravel/sail": "^1.26",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.1",
-        "pestphp/pest": "^3.0",
+        "pestphp/pest": "^4.0",
         "phpstan/phpstan": "^2.1",
-        "phpunit/phpunit": "^11.0.1"
+        "phpunit/phpunit": "^12.0"
     },
     "autoload": {
         "psr-4": {

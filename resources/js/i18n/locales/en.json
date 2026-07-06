@@ -7,8 +7,8 @@
         "logoutAll": "Sign out all accounts",
         "maxReached": "Maximum of {max} accounts reached",
         "removeAccount": "Remove from this device",
-        "signedInAs": "Signed in as",
         "signOut": "Sign out of account",
+        "signedInAs": "Signed in as",
         "switchAccount": "Switch account",
         "youCanSwitchAnytime": "You can switch back to your other accounts at any time."
     },
@@ -523,6 +523,21 @@
         "technicalSupportMessage": "Need help with our platform? Get technical assistance and troubleshooting support.",
         "visitForum": "Visit Forum"
     },
+    "download": {
+        "captureBody": "Capture vertical loops with a camera built for creators, not ads. Switch lenses, add captions, and post in seconds.",
+        "captureTitle": "Creator-first camera",
+        "fediverseBody": "Loops speaks ActivityPub, so your videos reach people on Mastodon, Pixelfed, and other compatible apps. You stay in control of your home server.",
+        "fediverseTitle": "Built for the fediverse",
+        "openSourceBody": "Loops is community-funded and fully open-source. No VC, no lock-in, built in the open.",
+        "openSourceTitle": "Free & open-source",
+        "privacyBody": "No ads, no tracking, no engagement-chasing algorithm deciding what you see.",
+        "privacyTitle": "Privacy first",
+        "subtitle": "All the fun of short-form video, none of the corporate control. Now on iOS and Android.",
+        "title": "Get the Loops app",
+        "webBody": "You can also use Loops right in your browser. No install required.",
+        "webCta": "Open Loops on the web",
+        "webTitle": "Prefer your browser?"
+    },
     "explore": {
         "discoverTrendingContent": "Discover trending content",
         "noVideosFoundForThisHashtag": "No videos found for this hashtag"
@@ -551,6 +566,7 @@
         "developers": "Developers",
         "federation": "Federation",
         "forYou": "For You",
+        "getTheApp": "Get the app",
         "help": "Help",
         "home": "Home",
         "join": "Join",
@@ -747,6 +763,7 @@
             "title": "Report Submitted!"
         },
         "types": {
+            "1009": "Untagged AI content",
             "1010": "Inappropriate and irrelevant search",
             "1011": "Violence, abuse, and criminal exploitation",
             "1012": "Hate and harassment",

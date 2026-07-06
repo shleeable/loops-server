@@ -110,7 +110,7 @@ class SearchController extends Controller
                 ->select(['id', 'profile_id', 'caption', 'likes', 'status', 'visibility', 'created_at'])
                 ->where('status', 2)
                 ->where('visibility', 1)
-                ->where('caption', 'like', '%'.$like)
+                ->where('caption', 'like', $like)
                 ->orderByDesc('likes')
                 ->orderByDesc('id')
                 ->cursorPaginate(
@@ -126,6 +126,10 @@ class SearchController extends Controller
             $nextLaravelCursor = $pager->nextCursor()?->encode();
             $nextCursorToken = CursorToken::encode($nextLaravelCursor, $ctx, $hops + 1);
 
+            if (str_starts_with($like, '@') && substr_count($like, '@') === 1) {
+                $like = substr($like, 1);
+            }
+
             $usersData = Profile::query()
                 ->select(['profiles.id', 'profiles.username', 'profiles.name', 'profiles.followers', 'profiles.status'])
                 ->withFollowingStatus($authProfileId)
@@ -138,6 +142,10 @@ class SearchController extends Controller
                 ->limit(2)
                 ->get();
 
+            if (str_starts_with($like, '#') && substr_count($like, '#') === 1) {
+                $like = substr($like, 1);
+            }
+
             $hashtags = Hashtag::query()
                 ->select(['id', 'name', 'name_normalized', 'count', 'can_search', 'created_at'])
                 ->where('can_search', true)
@@ -146,18 +154,23 @@ class SearchController extends Controller
                 ->limit(6)
                 ->get();
 
-            $starterKits = StarterKit::query()
-                ->select(['id', 'title', 'description', 'slug', 'remote_url', 'approved_accounts', 'is_local', 'is_discoverable', 'is_sensitive', 'uses', 'icon_url', 'header_url', 'profile_id', 'total_accounts', 'status', 'created_at', 'updated_at'])
-                ->where('status', 10)
-                ->where(function ($q) use ($like) {
-                    $q->where('title', 'like', $like)
-                        ->orWhere('description', 'like', $like);
-                })
-                ->orderByDesc('approved_accounts')
-                ->limit(3)
-                ->get();
+            $urlKit = $this->resolveStarterKitFromUrl($query);
+            if ($urlKit) {
+                $starterKitsData = collect([$urlKit]);
+            } else {
+                $starterKits = StarterKit::query()
+                    ->select(['id', 'title', 'description', 'slug', 'remote_url', 'approved_accounts', 'is_local', 'is_discoverable', 'is_sensitive', 'uses', 'icon_url', 'header_url', 'profile_id', 'total_accounts', 'status', 'created_at', 'updated_at'])
+                    ->where('status', 10)
+                    ->where(function ($q) use ($like) {
+                        $q->where('title', 'like', $like)
+                            ->orWhere('description', 'like', $like);
+                    })
+                    ->orderByDesc('approved_accounts')
+                    ->limit(3)
+                    ->get();
 
-            $starterKitsData = StarterKitResource::collection($starterKits);
+                $starterKitsData = StarterKitResource::collection($starterKits);
+            }
             $hashtagsData = $hashtags;
         }
 
@@ -184,6 +197,10 @@ class SearchController extends Controller
         }
 
         if ($type === 'users') {
+            if (str_starts_with($like, '@') && substr_count($like, '@') === 1) {
+                $like = substr($like, 1);
+            }
+
             $users = Profile::query()
                 ->select(['profiles.id', 'profiles.username', 'profiles.name', 'profiles.followers', 'profiles.status'])
                 ->withFollowingStatus($authProfileId)
@@ -209,11 +226,16 @@ class SearchController extends Controller
         }
 
         if ($type === 'hashtags') {
+            if (str_starts_with($like, '#') && substr_count($like, '#') === 1) {
+                $like = substr($like, 1);
+            }
+
             $hashtags = Hashtag::query()
                 ->select(['id', 'name', 'name_normalized', 'count', 'can_search', 'created_at'])
                 ->where('can_search', true)
                 ->where('name', 'like', $like)
                 ->orderByDesc('count')
+                ->orderByDesc('id')
                 ->cursorPaginate(
                     perPage: $limit,
                     columns: ['*'],
@@ -409,7 +431,7 @@ class SearchController extends Controller
 
     protected function isRemoteQuery(string $query): bool
     {
-        if (preg_match('/^@?[a-zA-Z0-9_]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $query)) {
+        if (preg_match('/^@?[a-zA-Z0-9_-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $query)) {
             return true;
         }
 
@@ -446,13 +468,17 @@ class SearchController extends Controller
             if (isset($match['hash']) && $match['hash']) {
                 $hashId = HashidService::safeDecode($match['hash']);
 
-                return StarterKit::where('status', 10)
-                    ->findOrFail($hashId);
+                $res = StarterKit::where('status', 10)->find($hashId);
+                if ($res) {
+                    return $res;
+                }
             }
 
             if (isset($match['id'])) {
-                return StarterKit::where('status', 10)
-                    ->findOrFail($match['id']);
+                $res = StarterKit::where('status', 10)->find($match['id']);
+                if ($res) {
+                    return $res;
+                }
             }
         }
 
@@ -570,7 +596,12 @@ class SearchController extends Controller
             }
 
             $actorUrl = $item['featuredObject'] ?? null;
-            if (! $actorUrl || ($item['featuredObjectType'] ?? null) !== 'Person') {
+            // Temporarily disable this due to Mastodon bug https://github.com/mastodon/mastodon/issues/39544
+            // if (! $actorUrl || ($item['featuredObjectType'] ?? null) !== 'Person') {
+            //     continue;
+            // }
+
+            if (! $actorUrl) {
                 continue;
             }
 
@@ -639,6 +670,35 @@ class SearchController extends Controller
         $query = trim($validated['q']);
         $currentUserId = $request->user()->profile_id;
 
+        // Matches @user@domain.ex (not @@, @user@, @@domain, @user@domain without FQDN)
+        $isWebfinger = (bool) preg_match('/^@[\w.-]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i', $query);
+
+        if ($isWebfinger) {
+            $res = app(WebfingerService::class)->lookup($query);
+            if ($res) {
+                return response()->json([
+                    'data' => [
+                        'hashtags' => [],
+                        'users' => [new ProfileResource($res)],
+                        'videos' => [],
+                        'starter_kits' => [],
+                    ],
+                    'links' => [
+                        'first' => null,
+                        'last' => null,
+                        'prev' => null,
+                        'next' => null,
+                    ],
+                    'meta' => [
+                        'path' => $request->url(),
+                        'per_page' => 10,
+                        'next_cursor' => null,
+                        'prev_cursor' => null,
+                    ],
+                ]);
+            }
+        }
+
         if (app(SanitizeService::class)->isLocalObject($query)) {
             $res = $this->resolveUrl($request, $query, $currentUserId);
 
@@ -698,10 +758,6 @@ class SearchController extends Controller
             ]);
         }
 
-        $validUrl = app(SanitizeService::class)->url($query, true, false);
-
-        abort_if(! $validUrl, 403, 'Invalid url');
-
         if (! filter_var($query, FILTER_VALIDATE_URL)) {
             $cleanQuery = Str::of($query)->startsWith('@') ? Str::substr($query, 1) : $query;
 
@@ -744,6 +800,14 @@ class SearchController extends Controller
                 ],
             ]);
         }
+
+        // URLs are validated against SSRF/sanitize rules before resolving.
+        // Bare fediverse handles (user@domain) are resolved via webfinger in the
+        // branch above and must skip this gate — url() requires an https:// URL,
+        // so a handle would otherwise 403 "Invalid url" before it can resolve.
+        $validUrl = app(SanitizeService::class)->url($query, true, false);
+
+        abort_if(! $validUrl, 403, 'Invalid url');
 
         $result = $this->resolveUrl($request, $query, $currentUserId);
 
@@ -853,8 +917,8 @@ class SearchController extends Controller
             if (isset($match['hash'])) {
                 $hashId = HashidService::safeDecode($match['hash']);
                 $video = $hashId ? Video::published()->find($hashId) : null;
-            } elseif (isset($match['id'], $match['profile_id'])) {
-                $video = Video::published()->whereProfileId($match['profile_id'])->find($match['id']);
+            } elseif (isset($match['id'], $match['profileId'])) {
+                $video = Video::published()->whereProfileId($match['profileId'])->find($match['id']);
             }
 
             if ($video) {
@@ -902,6 +966,17 @@ class SearchController extends Controller
 
             if ($existingKit) {
                 $kit = $this->findOrRefreshRemoteStarterKit($url, $existingKit);
+
+                if (! $kit) {
+                    return [
+                        'data' => [
+                            'hashtags' => [],
+                            'users' => [],
+                            'videos' => [],
+                            'starter_kits' => [],
+                        ],
+                    ];
+                }
 
                 return [
                     'data' => [
@@ -1060,6 +1135,17 @@ class SearchController extends Controller
     protected function handleRemoteFeaturedCollection($request, array $data, string $url): ?array
     {
         $kit = $this->importRemoteStarterKit($data, $url);
+
+        if (! $kit) {
+            return [
+                'data' => [
+                    'hashtags' => [],
+                    'users' => [],
+                    'videos' => [],
+                    'starter_kits' => [],
+                ],
+            ];
+        }
 
         return [
             'data' => [

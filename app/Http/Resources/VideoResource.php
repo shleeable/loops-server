@@ -45,6 +45,7 @@ class VideoResource extends JsonResource
             'shortcode' => $this->hashid(),
             'is_owner' => $pid && (int) $this->profile_id === (int) $pid,
             'is_sensitive' => (bool) $this->is_sensitive,
+            'is_local' => $this->is_local,
             'media' => [
                 'thumbnail' => $thumb,
                 'src_url' => $mediaUrl,

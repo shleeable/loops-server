@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
             $version = app('app_version');
             $url = config('app.url');
 
-            return "Loops/{$version} (Laravel/12.x; +{$url})";
+            return "Loops/{$version} (Laravel/13.x; +{$url})";
         });
 
         $this->app->singleton('push_relay', function () {
@@ -94,7 +94,7 @@ class AppServiceProvider extends ServiceProvider
                 return [
                     Limit::perMinute($perMinute)->by("m:$actor")->response($tooMany),
                     Limit::perHour($perHour)->by("h:$actor")->response($tooMany),
-                    Limit::perHour($perDay)->by("d:$actor")->response($tooMany),
+                    Limit::perDay($perDay)->by("d:$actor")->response($tooMany),
                 ];
             };
 

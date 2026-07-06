@@ -19,7 +19,7 @@ use App\Models\StarterKitAccount;
 use App\Models\StarterKitPendingChange;
 use App\Models\StarterKitTag;
 use App\Models\StarterKitUse;
-use App\Rules\ValidUsername;
+use App\Rules\ValidUsernameOrWebfinger;
 use App\Services\AccountService;
 use App\Services\AdminDashboardService;
 use App\Services\ConfigService;
@@ -48,16 +48,15 @@ class StarterKitController extends Controller
         $validated = $request->validate([
             'q' => [
                 'required',
-                new ValidUsername,
-                'max:80',
+                new ValidUsernameOrWebfinger,
+                'max:180',
             ],
         ]);
 
         $user = $request->user();
-        $q = $validated['q'];
+        $q = ltrim($validated['q'], '@');
 
-        $accounts = Profile::whereLocal(true)
-            ->whereStatus(1)
+        $accounts = Profile::whereStatus(1)
             ->where('can_use_starter_kits', true)
             ->whereIn('starter_kit_state', [1, 2, 3, 4, 5, 6])
             ->where(function ($query) use ($q) {
@@ -81,18 +80,17 @@ class StarterKitController extends Controller
         $validated = $request->validate([
             'q' => [
                 'required',
-                new ValidUsername,
-                'max:80',
+                new ValidUsernameOrWebfinger,
+                'max:100',
             ],
         ]);
 
         $user = $request->user();
         $starterKit = StarterKit::whereProfileId($user->profile_id)->findOrFail($id);
 
-        $q = $validated['q'];
+        $q = ltrim($validated['q'], '@');
 
-        $accounts = Profile::whereLocal(true)
-            ->whereStatus(1)
+        $accounts = Profile::whereStatus(1)
             ->where('can_use_starter_kits', true)
             ->whereIn('starter_kit_state', [1, 2, 3, 4, 5, 6])
             ->where(function ($query) use ($q) {
@@ -237,8 +235,8 @@ class StarterKitController extends Controller
 
             foreach ($tagNames as $index => $name) {
                 $hashtag = Hashtag::firstOrCreate(
-                    ['name_normalized' => strtolower($name), 'name' => $name],
-                    ['can_autolink' => true]
+                    ['name_normalized' => strtolower($name)],
+                    ['name' => $name, 'can_autolink' => true]
                 );
 
                 StarterKitTag::create([
@@ -1110,8 +1108,8 @@ class StarterKitController extends Controller
 
         $hashtagIds = $tagNames->map(function ($name, $index) {
             $hashtag = Hashtag::firstOrCreate(
-                ['name_normalized' => strtolower($name), 'name' => $name],
-                ['can_autolink' => true]
+                ['name_normalized' => strtolower($name)],
+                ['name' => $name, 'can_autolink' => true]
             );
 
             return ['id' => $hashtag->id, 'order' => $index];

@@ -13,11 +13,13 @@ use App\Models\UserRegisterVerify;
 use App\Services\ConfigService;
 use App\Support\VerificationCode;
 use Carbon\Carbon;
+use Dedoc\Scramble\Attributes\ExcludeAllRoutesFromDocs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
+#[ExcludeAllRoutesFromDocs]
 class UserRegisterVerifyController extends Controller
 {
     use ApiHelpers;
