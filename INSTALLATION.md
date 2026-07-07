@@ -19,6 +19,7 @@ Loops is a TikTok-like video sharing platform (with [ActivityPub](https://activi
 - Ctype
 - Fileinfo
 - JSON
+- Intl
 - Mbstring
 - OpenSSL
 - PDO
