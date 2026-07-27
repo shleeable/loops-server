@@ -113,15 +113,18 @@ class FeedService
 
     public static function getPublicVideoFeed($limit = 10)
     {
-        $videos = Video::published()
-            ->where('is_sensitive', false)
-            ->where('is_local', true)
-            ->where('created_at', '>', now()->subDays(93))
+        $postTtl = (int) config('loops.explore.feed.post_ttl_days', 1000);
+        $subDays = now()->subDays($postTtl);
+
+        $videos = Video::publishedAndSafe()
+            ->join('profiles', 'profiles.id', '=', 'videos.profile_id')
+            ->where('profiles.status', 1)
+            ->where('videos.is_local', true)
+            ->where('videos.created_at', '>', $subDays)
+            ->select('videos.*')
             ->orderBy('videos.likes', 'desc')
             ->limit($limit)
             ->get();
-
-        self::loadBookmarkStatus($videos, auth('web')->user() ?? auth('api')->user());
 
         return $videos;
     }

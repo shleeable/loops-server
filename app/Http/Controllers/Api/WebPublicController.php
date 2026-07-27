@@ -35,6 +35,7 @@ use App\Services\ReportService;
 use App\Services\StarterKitService;
 use App\Services\SystemMessageService;
 use App\Services\UserFilterService;
+use App\Services\VideoService;
 use App\Services\ViteService;
 use App\Support\CursorToken;
 use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
@@ -50,14 +51,40 @@ class WebPublicController extends Controller
     #[ExcludeRouteFromDocs]
     public function getFeed(Request $request)
     {
-        $res = Cache::remember('wpc:get-feed', now()->addMinutes(45), function () {
-            $request = new Request;
-            $feed = FeedService::getPublicVideoFeed(20);
+        $ttl = now()->addHours((int) config('loops.explore.feed.cache_hours', 45));
+        $limit = (int) config('loops.explore.feed.max_posts', 10);
 
-            $feed = collect($feed)->shuffle();
-
-            return VideoResource::collection($feed->all())->toArray($request);
+        $cache = Cache::remember('wpc:get-feed:v2', $ttl, function () {
+            return VideoResource::collection(
+                FeedService::getPublicVideoFeed(60)
+            )->toArray(request());
         });
+
+        $minLikes = (int) config('loops.explore.tags.min_likes.guest', 10);
+
+        $res = collect($cache)
+            ->filter(function ($video) use ($minLikes) {
+                $id = data_get($video, 'id');
+
+                if (! $id) {
+                    return false;
+                }
+
+                $videoData = app(VideoService::class)->getMediaData($id);
+
+                if (empty($videoData)) {
+                    return false;
+                }
+
+                if ((int) data_get($videoData, 'likes', 0) < $minLikes) {
+                    return false;
+                }
+
+                return (bool) data_get($videoData, 'account.id');
+            })
+            ->shuffle()
+            ->take($limit)
+            ->values();
 
         return response()->json([
             'data' => $res,

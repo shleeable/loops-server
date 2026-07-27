@@ -51,6 +51,11 @@ return [
     ],
 
     'explore' => [
+        'feed' => [
+            'cache_hours' => env('LOOPS_EXPLORE_PUBLIC_FEED_CACHE_HOURS_TTL', 45),
+            'post_ttl_days' => env('LOOPS_EXPLORE_PUBLIC_FEED_POST_TTL_DAYS', 1000),
+            'max_posts' => env('LOOPS_EXPLORE_PUBLIC_FEED_MAX_POSTS', 10),
+        ],
         'tags' => [
             'min_likes' => [
                 'guest' => env('LOOPS_EXPLORE_MIN_LIKES_GUEST', 10),

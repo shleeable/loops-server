@@ -210,7 +210,7 @@ class Video extends Model
      */
     protected function scopePublished(Builder $query): Builder
     {
-        return $query->where('status', 2);
+        return $query->where('videos.status', 2);
     }
 
     /**
@@ -246,7 +246,7 @@ class Video extends Model
      */
     protected function scopePublishedAndSafe(Builder $query): Builder
     {
-        return $query->where('status', 2)->where('is_sensitive', false);
+        return $query->where('videos.status', 2)->where('videos.is_sensitive', false);
     }
 
     #[Scope]
