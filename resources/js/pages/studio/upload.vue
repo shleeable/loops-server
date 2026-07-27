@@ -973,7 +973,7 @@ const TRANSCODE_SAFETY = 0.85
 const AUDIO_BITRATE = 96000
 
 let currentConversion = null
-let currentIntervalId = null
+const currentIntervalId = null
 
 const suggestionCache = reactive({
     hashtags: new Map(),
