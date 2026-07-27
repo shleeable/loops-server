@@ -24,10 +24,25 @@
                 <div v-for="post in displayPosts" :key="post.id">
                     <ProfileVideoCard :post="post" />
                 </div>
-                <div class="w-full h-20"></div>
+
+                <div
+                    v-for="n in skeletonsVisible ? SKELETON_COUNT : 0"
+                    :key="`skeleton-${n}`"
+                    :class="[
+                        'transition-opacity duration-500 ease-out',
+                        skeletonsFading ? 'opacity-0' : 'opacity-100'
+                    ]"
+                >
+                    <ProfileVideoCardSkeleton />
+                </div>
             </div>
 
-            <div v-if="profileStore.isLoadingMorePosts" class="flex justify-center py-8">
+            <div v-if="show" ref="sentinelRef" class="w-full h-20"></div>
+
+            <div
+                v-if="profileStore.isLoadingMorePosts && !skeletonsVisible"
+                class="flex justify-center py-8"
+            >
                 <Spinner />
             </div>
 
@@ -36,7 +51,12 @@
             </div>
 
             <div
-                v-else-if="displayPosts && displayPosts.length > 16 && !profileStore.hasMorePosts"
+                v-else-if="
+                    displayPosts &&
+                    displayPosts.length > 16 &&
+                    !profileStore.hasMorePosts &&
+                    !skeletonsVisible
+                "
                 class="flex justify-center py-8"
             >
                 <p class="text-gray-500 dark:text-gray-400 text-sm">
@@ -155,6 +175,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import MainLayout from '~/layouts/MainLayout.vue'
 import ProfileVideoCard from '~/components/Profile/ProfileVideoCard.vue'
+import ProfileVideoCardSkeleton from '~/components/Profile/ProfileVideoCardSkeleton.vue'
 import ProfilePlaylists from '~/components/Profile/ProfilePlaylists.vue'
 import { useProfileStore } from '~/stores/profile'
 import { useAuthStore } from '~/stores/auth'
@@ -180,6 +201,20 @@ const retryLoading = ref(false)
 const currentTab = ref('videos')
 const currentFilter = ref('Latest')
 const tabBarRef = ref(null)
+
+const SKELETON_COUNT = 20
+const FILL_THRESHOLD = 300
+const MAX_FILL_PASSES = 5
+const SKELETON_FADE_MS = 500
+
+const sentinelRef = ref(null)
+const skeletonsVisible = ref(false)
+const skeletonsFading = ref(false)
+
+let sentinelObserver = null
+let skeletonTimer = null
+let resizeTimer = null
+let isFilling = false
 
 const { posts, allLikes, bookmarkedPosts, playlists } = storeToRefs(profileStore)
 
@@ -274,7 +309,101 @@ useHead({
     ]
 })
 
-let scrollTimeout = null
+const revealSkeletons = () => {
+    if (skeletonTimer) {
+        clearTimeout(skeletonTimer)
+        skeletonTimer = null
+    }
+    skeletonsFading.value = false
+    skeletonsVisible.value = true
+}
+
+const dismissSkeletons = () => {
+    if (!skeletonsVisible.value) return
+    skeletonsFading.value = true
+    skeletonTimer = setTimeout(() => {
+        skeletonsVisible.value = false
+        skeletonsFading.value = false
+        skeletonTimer = null
+    }, SKELETON_FADE_MS)
+}
+
+const isPageScrollable = () => {
+    return document.documentElement.scrollHeight > window.innerHeight + FILL_THRESHOLD
+}
+
+const loadMorePosts = async () => {
+    if (!profileStore.id) return
+
+    try {
+        if (currentTab.value === 'bookmarks') {
+            await profileStore.loadMoreBookmarkedPosts()
+        } else {
+            await profileStore.loadMorePosts(profileStore.id)
+        }
+    } catch (err) {
+        console.error('Error loading more posts:', err)
+    }
+}
+
+const ensureViewportFilled = async () => {
+    if (isFilling) return
+    isFilling = true
+
+    try {
+        let passes = 0
+
+        while (passes < MAX_FILL_PASSES && profileStore.hasMorePosts && !isPageScrollable()) {
+            passes++
+            revealSkeletons()
+
+            const before = displayPosts.value.length
+            await loadMorePosts()
+            await nextTick()
+            await new Promise((resolve) => requestAnimationFrame(resolve))
+
+            if (displayPosts.value.length === before) break
+        }
+    } finally {
+        dismissSkeletons()
+        isFilling = false
+    }
+}
+
+const handleSentinel = async (entries) => {
+    if (!entries[0]?.isIntersecting) return
+    if (isFilling || profileStore.isLoadingMorePosts || !profileStore.hasMorePosts) return
+
+    revealSkeletons()
+    await loadMorePosts()
+    await nextTick()
+    await ensureViewportFilled()
+    dismissSkeletons()
+}
+
+const teardownObserver = () => {
+    if (sentinelObserver) {
+        sentinelObserver.disconnect()
+        sentinelObserver = null
+    }
+}
+
+const setupObserver = () => {
+    teardownObserver()
+    if (!sentinelRef.value) return
+
+    sentinelObserver = new IntersectionObserver(handleSentinel, {
+        rootMargin: '600px 0px',
+        threshold: 0
+    })
+
+    sentinelObserver.observe(sentinelRef.value)
+}
+
+const handleResize = () => {
+    if (resizeTimer) clearTimeout(resizeTimer)
+    resizeTimer = setTimeout(() => ensureViewportFilled(), 200)
+}
 
 const handleTabChange = async (tab) => {
     currentTab.value = tab
@@ -283,12 +412,15 @@ const handleTabChange = async (tab) => {
         try {
             profileStore.isLoadingMorePosts = true
             await profileStore.getBookmarkedPosts()
-        } catch (error) {
-            console.error('Error loading bookmarked posts:', error)
+        } catch (err) {
+            console.error('Error loading bookmarked posts:', err)
         } finally {
             profileStore.isLoadingMorePosts = false
         }
     }
+
+    await nextTick()
+    await ensureViewportFilled()
 }
 
 const handleFilterChange = async (filter) => {
@@ -304,6 +436,9 @@ const handleFilterChange = async (filter) => {
             profileStore.isLoadingMorePosts = false
         })
     }
+
+    await nextTick()
+    await ensureViewportFilled()
 }
 
 const openEditProfile = () => {
@@ -373,53 +508,25 @@ const retryLoad = async () => {
     }
 }
 
-const handleScroll = () => {
-    if (scrollTimeout) {
-        clearTimeout(scrollTimeout)
-    }
-
-    scrollTimeout = setTimeout(() => {
-        if (profileStore.isLoadingMorePosts || !profileStore.hasMorePosts) {
-            return
-        }
-
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-        const windowHeight = window.innerHeight
-        const documentHeight = document.documentElement.scrollHeight
-
-        const threshold = 300
-        const distanceFromBottom = documentHeight - (scrollTop + windowHeight)
-
-        if (distanceFromBottom < threshold) {
-            loadMorePosts()
-        }
-    }, 100)
-}
-
-const loadMorePosts = async () => {
-    if (!profileStore.id) return
-
-    try {
-        if (currentTab.value === 'bookmarks') {
-            await profileStore.loadMoreBookmarkedPosts()
-        } else {
-            await profileStore.loadMorePosts(profileStore.id)
-        }
-    } catch (error) {
-        console.error('Error loading more posts:', error)
-    }
-}
-
 onMounted(async () => {
     await loadProfileData(route.params.id)
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
-    window.removeEventListener('scroll', handleScroll)
-    if (scrollTimeout) {
-        clearTimeout(scrollTimeout)
+    teardownObserver()
+    window.removeEventListener('resize', handleResize)
+    if (skeletonTimer) clearTimeout(skeletonTimer)
+    if (resizeTimer) clearTimeout(resizeTimer)
+})
+
+watch(sentinelRef, async (el) => {
+    if (!el) {
+        teardownObserver()
+        return
     }
+    setupObserver()
+    await ensureViewportFilled()
 })
 
 watch(
