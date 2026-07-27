@@ -54,7 +54,7 @@ return [
         'tags' => [
             'min_likes' => [
                 'guest' => env('LOOPS_EXPLORE_MIN_LIKES_GUEST', 10),
-                'user' => env('LOOPS_EXPLORE_MIN_LIKES_USER', 10),
+                'user' => env('LOOPS_EXPLORE_MIN_LIKES_USER', 3),
             ],
             'recency_tiers' => [
                 ['hours' => 6,  'min_likes' => env('LOOPS_EXPLORE_TIERS_SIX_HOURS', 3)],
