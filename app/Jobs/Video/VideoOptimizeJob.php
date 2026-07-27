@@ -92,44 +92,93 @@ class VideoOptimizeJob implements ShouldQueue
                 throw new \Exception('Could not determine video dimensions');
             }
 
+            $rotation = 0;
+
+            if ($videoStream->has('side_data_list')) {
+                foreach ((array) $videoStream->get('side_data_list') as $sideData) {
+                    if (isset($sideData['rotation'])) {
+                        $rotation = abs((int) $sideData['rotation']) % 180;
+                    }
+                }
+            }
+
+            if ($rotation === 0 && $videoStream->has('tags')) {
+                $tags = (array) $videoStream->get('tags');
+                if (isset($tags['rotate'])) {
+                    $rotation = abs((int) $tags['rotate']) % 180;
+                }
+            }
+
+            if ($rotation === 90) {
+                [$width, $height] = [$height, $width];
+            }
+
+            $shortEdge = (int) config('loops.media.transcode.short_edge', 720);
+            $crf = (string) config('loops.media.transcode.crf', 23);
+            $preset = (string) config('loops.media.transcode.preset', 'slow');
+            $advanced = (bool) config('loops.media.transcode.advanced', false);
+
+            $scaleFactor = ($shortEdge / 720) ** 2;
+
             if ($height > $width) {
-                $scaleFilter = 'scale=720:-2';
-                $maxBitrate = '2500k';
-                $bufSize = '5000k';
-                $video->width = 720;
-                $video->height = (int) round($height * (720 / $width) / 2) * 2;
+                $scaleFilter = "scale={$shortEdge}:-2";
+                $baseKbps = 2500;
+                $video->width = $shortEdge;
+                $video->height = (int) round($height * ($shortEdge / $width) / 2) * 2;
             } elseif ($width > $height) {
-                $scaleFilter = 'scale=-2:720';
-                $maxBitrate = '3000k';
-                $bufSize = '6000k';
-                $video->width = (int) round($width * (720 / $height) / 2) * 2;
-                $video->height = 720;
+                $scaleFilter = "scale=-2:{$shortEdge}";
+                $baseKbps = 3000;
+                $video->width = (int) round($width * ($shortEdge / $height) / 2) * 2;
+                $video->height = $shortEdge;
             } else {
-                $scaleFilter = 'scale=720:720';
-                $maxBitrate = '2500k';
-                $bufSize = '5000k';
-                $video->width = 720;
-                $video->height = 720;
+                $scaleFilter = "scale={$shortEdge}:{$shortEdge}";
+                $baseKbps = 2500;
+                $video->width = $shortEdge;
+                $video->height = $shortEdge;
+            }
+
+            $maxKbps = (int) round($baseKbps * $scaleFactor);
+
+            $fps = 30;
+            if ($videoStream->has('avg_frame_rate')) {
+                $parts = explode('/', (string) $videoStream->get('avg_frame_rate'));
+                if (count($parts) === 2 && (float) $parts[1] > 0) {
+                    $fps = (int) round((float) $parts[0] / (float) $parts[1]) ?: 30;
+                }
+            }
+            $fps = max(1, min($fps, 60));
+
+            $params = [
+                '-preset', $preset,
+                '-crf', $crf,
+                '-maxrate', $maxKbps.'k',
+                '-bufsize', ($maxKbps * 2).'k',
+                '-profile:v', 'high',
+                '-level', '4.1',
+                '-movflags', '+faststart',
+                '-pix_fmt', 'yuv420p',
+                '-ac', '2',
+                '-t', (string) $maxDuration,
+            ];
+
+            if ($advanced) {
+                $params = array_merge($params, [
+                    '-g', (string) ($fps * 2),
+                    '-keyint_min', (string) $fps,
+                    '-x264-params', 'aq-mode=3:aq-strength=0.9:psy-rd=1.00,0.15:ref=4:bframes=3',
+                    '-color_primaries', 'bt709',
+                    '-color_trc', 'bt709',
+                    '-colorspace', 'bt709',
+                ]);
+            } else {
+                $params = array_merge($params, ['-nal-hrd', 'vbr', '-tune', 'film']);
             }
 
             $format = new X264('aac');
             $format
-                ->setAudioKiloBitrate(128)
+                ->setAudioKiloBitrate((int) config('loops.media.transcode.audio_kbps', 128))
                 ->setKiloBitrate(0)
-                ->setAdditionalParameters([
-                    '-preset', 'slow',
-                    '-crf', '23',
-                    '-maxrate', $maxBitrate,
-                    '-bufsize', $bufSize,
-                    '-nal-hrd', 'vbr',
-                    '-profile:v', 'high',
-                    '-level', '4.1',
-                    '-movflags', '+faststart',
-                    '-pix_fmt', 'yuv420p',
-                    '-tune', 'film',
-                    '-ac', '2',
-                    '-t', (string) $maxDuration,
-                ]);
+                ->setAdditionalParameters($params);
 
             $media = FFMpeg::fromDisk('s3')
                 ->open($video->vid)

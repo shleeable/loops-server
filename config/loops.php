@@ -1,6 +1,21 @@
 <?php
 
 return [
+    'media' => [
+        'video_types' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('LOOPS_VIDEO_TYPES', 'mp4,mov,m4v'))
+        ))),
+
+        'transcode' => [
+            'short_edge' => (int) env('LOOPS_TRANSCODE_SHORT_EDGE', 720),
+            'crf' => (int) env('LOOPS_TRANSCODE_CRF', 23),
+            'preset' => env('LOOPS_TRANSCODE_PRESET', 'slow'),
+            'audio_kbps' => (int) env('LOOPS_TRANSCODE_AUDIO_KBPS', 128),
+            'advanced' => (bool) env('LOOPS_TRANSCODE_ADVANCED', false),
+        ],
+    ],
+
     'api' => [
         'rate_limits' => [
             'enabled' => (bool) env('LOOPS_API_RATE_LIMITS_ENABLED', true),

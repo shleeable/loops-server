@@ -47,7 +47,7 @@ class StoreVideoRequest extends FormRequest
         return [
             'video' => [
                 'required',
-                File::types(['mp4'])
+                File::types(config('loops.media.video_types', ['mp4']))
                     ->min(250)
                     ->max($maxSize * 1024),
             ],
