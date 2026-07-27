@@ -116,6 +116,7 @@ declare module 'vue' {
     ProfilePlaylists: typeof import('./components/Profile/ProfilePlaylists.vue')['default']
     ProfileTabBar: typeof import('./components/Profile/ProfileTabBar.vue')['default']
     ProfileVideoCard: typeof import('./components/Profile/ProfileVideoCard.vue')['default']
+    ProfileVideoCardSkeleton: typeof import('./components/Profile/ProfileVideoCardSkeleton.vue')['default']
     Register: typeof import('./components/Register.vue')['default']
     RegistrationAlreadyAuthenticated: typeof import('./components/Layout/RegistrationAlreadyAuthenticated.vue')['default']
     RegistrationClosed: typeof import('./components/Layout/RegistrationClosed.vue')['default']
