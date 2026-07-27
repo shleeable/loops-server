@@ -17,7 +17,9 @@ class ExploreController extends Controller
 
     public function getTrendingTags(Request $request)
     {
-        return $this->data(app(ExploreService::class)->getTrendingTags());
+        $tags = app(ExploreService::class)->getTrendingTags();
+
+        return $this->data($request->user() ? $tags : array_slice($tags, 0, 6));
     }
 
     public function getTagFeed(Request $request, $id)
