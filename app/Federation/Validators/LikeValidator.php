@@ -2,6 +2,7 @@
 
 namespace App\Federation\Validators;
 
+use App\Models\Profile;
 use App\Services\SanitizeService;
 
 class LikeValidator extends BaseValidator
@@ -35,6 +36,12 @@ class LikeValidator extends BaseValidator
 
         if (! app(SanitizeService::class)->url($activity['object'], true)) {
             throw new \Exception('Like activity "object" URI is invalid.');
+        }
+
+        $actor = Profile::where('uri', $activity['actor'])->first();
+
+        if ($actor && ! $actor->can_like) {
+            throw new \Exception('Activity actor does not have permission to like.');
         }
     }
 }

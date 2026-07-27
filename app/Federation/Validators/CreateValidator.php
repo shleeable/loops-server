@@ -5,6 +5,7 @@ namespace App\Federation\Validators;
 use App\Models\Comment;
 use App\Models\CommentReply;
 use App\Models\Instance;
+use App\Models\Profile;
 use App\Models\Video;
 use App\Services\ActivityPubService;
 use App\Services\DmInboundService;
@@ -94,7 +95,13 @@ class CreateValidator extends BaseValidator
             throw new \Exception('Create activity actor does not match object attributedTo.');
         }
 
+        $actor = Profile::where('uri', $activity['actor'])->first();
+
         if (app(DmInboundService::class)->isDirectNote($activity)) {
+            if ($actor && ! $actor->can_dm) {
+                throw new \Exception('Create activity actor does not have permission to deliver Direct Messages.');
+            }
+
             $this->validateDirectMessage($activity['actor'], $object);
 
             return;
@@ -112,8 +119,15 @@ class CreateValidator extends BaseValidator
         }
 
         if ($hasVideoAttachment) {
+            if ($actor && ! $actor->can_upload) {
+                throw new \Exception('Create activity actor does not have permission to deliver videos.');
+            }
+
             $this->validateVideoPost($activity['actor'], $object);
         } elseif ($hasInReplyTo) {
+            if ($actor && ! $actor->can_comment) {
+                throw new \Exception('Create activity actor does not have permission to deliver comments or replies.');
+            }
             $this->validateReply($object);
         }
     }

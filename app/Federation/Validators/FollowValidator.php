@@ -2,6 +2,7 @@
 
 namespace App\Federation\Validators;
 
+use App\Models\Profile;
 use App\Services\SanitizeService;
 
 class FollowValidator extends BaseValidator
@@ -43,6 +44,12 @@ class FollowValidator extends BaseValidator
 
         if ($activity['actor'] === $activity['object']) {
             throw new \Exception('Follow activity rejected: actor cannot follow themselves.');
+        }
+
+        $actor = Profile::where('uri', $activity['actor'])->first();
+
+        if ($actor && ! $actor->can_follow) {
+            throw new \Exception('Activity actor does not have permission to follow.');
         }
     }
 }

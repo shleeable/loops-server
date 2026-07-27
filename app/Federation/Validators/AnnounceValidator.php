@@ -2,6 +2,7 @@
 
 namespace App\Federation\Validators;
 
+use App\Models\Profile;
 use App\Services\SanitizeService;
 
 class AnnounceValidator extends BaseValidator
@@ -35,6 +36,12 @@ class AnnounceValidator extends BaseValidator
 
         if (! app(SanitizeService::class)->url($activity['object'], true)) {
             throw new \Exception('Announce activity "object" URI is invalid.');
+        }
+
+        $actor = Profile::where('uri', $activity['actor'])->first();
+
+        if ($actor && ! $actor->can_share) {
+            throw new \Exception('Activity actor does not have permission to share.');
         }
     }
 }
