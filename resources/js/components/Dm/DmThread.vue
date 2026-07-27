@@ -36,6 +36,10 @@
                         :src="participant.avatar"
                         :alt="participant.username"
                         class="h-9 w-9 rounded-full object-cover"
+                        onerror="
+                            this.src = '/storage/avatars/default.jpg'
+                            this.onerror = null
+                        "
                     />
                 </router-link>
 
