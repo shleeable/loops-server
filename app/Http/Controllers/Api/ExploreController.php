@@ -43,20 +43,23 @@ class ExploreController extends Controller
         }
 
         if ($user) {
+            $minLikes = config('loops.explore.tags.min_likes.user', 10);
+            $tiers = $this->recencyTiers();
+
             $ctx = hash('sha256', implode('|', [
                 $user->id,
                 'explore-tags',
                 'hashtag:'.$hashtagId,
                 'limit:'.$limit,
                 'order:id_desc',
+                'minlikes:'.$minLikes,
+                'tiers:'.$this->tierFingerprint(),
             ]));
             $decodedCursor = null;
             $hops = 0;
 
-            $minLikes = config('loops.explore.tags.min_likes.user', 10);
-
-            $maxPages = $user->is_admin ? 100 : 10;
-            $maxItems = $user->is_admin ? 300 : 120;
+            $maxPages = $user->is_admin ? config('loops.explore.tags.pagination.admin.max_pages', 100) : config('loops.explore.tags.pagination.user.max_pages', 10);
+            $maxItems = $user->is_admin ? config('loops.explore.tags.pagination.admin.max_items', 300) : config('loops.explore.tags.pagination.user.max_items', 120);
 
             if ($request->filled('cursor')) {
                 ['cursor' => $decodedCursor, 'hops' => $hops] = CursorToken::decode($request->input('cursor'), $ctx);
@@ -77,8 +80,17 @@ class ExploreController extends Controller
                 ->join('videos', 'videos.id', '=', 'video_hashtags.video_id')
                 ->join('profiles', 'profiles.id', '=', 'videos.profile_id')
                 ->where('videos.status', 2)
-                ->where('videos.likes', '>', $minLikes)
                 ->where('profiles.status', 1)
+                ->where(function ($q) use ($minLikes, $tiers) {
+                    $q->where('videos.likes', '>', $minLikes);
+
+                    foreach ($tiers as $tier) {
+                        $q->orWhere(function ($inner) use ($tier) {
+                            $inner->where('videos.created_at', '>=', $tier['after'])
+                                ->where('videos.likes', '>=', $tier['min_likes']);
+                        });
+                    }
+                })
                 ->when(! empty($blockedIds), fn ($q) => $q->whereNotIn('videos.profile_id', $blockedIds))
                 ->select('video_hashtags.*')
                 ->orderByDesc('video_hashtags.id')
@@ -114,6 +126,24 @@ class ExploreController extends Controller
         }
 
         return VideoHashtagResource::collection($feed);
+    }
+
+    protected function recencyTiers(): array
+    {
+        return collect(config('loops.explore.tags.recency_tiers', []))
+            ->filter(fn ($tier) => isset($tier['hours'], $tier['min_likes']))
+            ->map(fn ($tier) => [
+                'after' => now()->subHours((int) $tier['hours']),
+                'min_likes' => (int) $tier['min_likes'],
+            ])
+            ->sortBy('min_likes')
+            ->values()
+            ->all();
+    }
+
+    protected function tierFingerprint(): string
+    {
+        return substr(hash('sha256', json_encode(config('loops.explore.tags.recency_tiers', []))), 0, 12);
     }
 
     public function defaultTagResponse($request, $limit)

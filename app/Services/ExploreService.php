@@ -10,7 +10,7 @@ class ExploreService
 {
     const TRENDING_TAGS_KEY = 'explore:trending_tags';
 
-    const GUEST_TAG_FEED_KEY = 'explore:getTagFeed_v0:';
+    const GUEST_TAG_FEED_KEY = 'explore:getTagFeed_v1:';
 
     public function getTrendingTags($refresh = false)
     {
@@ -22,7 +22,7 @@ class ExploreService
             return Hashtag::select(['id', 'name', 'count'])
                 ->where('can_trend', true)
                 ->orderByDesc('count')
-                ->limit(12)
+                ->limit(20)
                 ->get()
                 ->toArray();
         });
@@ -33,7 +33,7 @@ class ExploreService
         $key = self::GUEST_TAG_FEED_KEY.$hashtagId;
         $minLikes = (int) config('loops.explore.tags.min_likes.guest', 10);
 
-        $candidateHashtags = Cache::remember($key, now()->addHours(12), function () use ($hashtagId, $minLikes) {
+        $candidateHashtags = Cache::remember($key, now()->addHours(48), function () use ($hashtagId, $minLikes) {
             return VideoHashtag::where('video_hashtags.hashtag_id', $hashtagId)
                 ->where('video_hashtags.visibility', 1)
                 ->join('videos', 'videos.id', '=', 'video_hashtags.video_id')

@@ -56,6 +56,21 @@ return [
                 'guest' => env('LOOPS_EXPLORE_MIN_LIKES_GUEST', 10),
                 'user' => env('LOOPS_EXPLORE_MIN_LIKES_USER', 10),
             ],
+            'recency_tiers' => [
+                ['hours' => 6,  'min_likes' => env('LOOPS_EXPLORE_TIERS_SIX_HOURS', 3)],
+                ['hours' => 24, 'min_likes' => env('LOOPS_EXPLORE_TIERS_TWENTY_FOUR_HOURS', 5)],
+                ['hours' => 72, 'min_likes' => env('LOOPS_EXPLORE_TIERS_SEVENTY_TWO_HOURS', 10)],
+            ],
+            'pagination' => [
+                'admin' => [
+                    'max_pages' => env('LOOPS_EXPLORE_PAGINATION_ADMIN_MAX_PAGES', 100),
+                    'max_items' => env('LOOPS_EXPLORE_PAGINATION_ADMIN_MAX_ITEMS', 300),
+                ],
+                'user' => [
+                    'max_pages' => env('LOOPS_EXPLORE_PAGINATION_USER_MAX_PAGES', 10),
+                    'max_items' => env('LOOPS_EXPLORE_PAGINATION_USer_MAX_ITEMS', 120),
+                ],
+            ],
         ],
     ],
 
