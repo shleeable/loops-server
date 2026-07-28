@@ -55,7 +55,9 @@ class ReportResource extends JsonResource
             $comment = CommentReply::find($this->reported_comment_reply_id);
             if ($comment) {
                 $contentPreview = (new CommentReplyResource($comment))->toArray(request());
-                $contentPreview['parent'] = new CommentResource($comment->parent);
+                if ($comment->parent) {
+                    $contentPreview['parent'] = new CommentResource($comment->parent);
+                }
             }
         } elseif ($this->reported_hashtag_id) {
             $contentType = 'hashtag';
