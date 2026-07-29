@@ -371,13 +371,21 @@ const navigation = computed(() => [
         ]
     },
     {
+        title: 'Most used',
+        items: [
+            { name: 'Profiles', href: '/admin/profiles', icon: UserGroupIcon },
+            { name: 'Reports', href: '/admin/reports', icon: ExclamationTriangleIcon },
+            { name: 'Videos', href: '/admin/videos', icon: VideoCameraIcon },
+            { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon }
+        ]
+    },
+    {
         title: 'Content',
         items: [
             { name: 'Hashtags', href: '/admin/hashtags', icon: HashtagIcon },
             { name: 'Comments', href: '/admin/comments', icon: ChatBubbleOvalLeftIcon },
             { name: 'Playlists', href: '/admin/playlists', icon: QueueListIcon },
-            { name: 'Replies', href: '/admin/replies', icon: ChatBubbleLeftRightIcon },
-            { name: 'Videos', href: '/admin/videos', icon: VideoCameraIcon }
+            { name: 'Replies', href: '/admin/replies', icon: ChatBubbleLeftRightIcon }
         ]
     },
     {
@@ -388,7 +396,6 @@ const navigation = computed(() => [
                 href: '/admin/blocked-terms',
                 icon: ChatBubbleBottomCenterIcon
             },
-            { name: 'Reports', href: '/admin/reports', icon: ExclamationTriangleIcon },
             { name: 'Kit Updates', href: '/admin/starter-kits-review', icon: WalletIcon },
             ...(config.value?.curated_onboarding_enabled
                 ? [
@@ -404,7 +411,6 @@ const navigation = computed(() => [
     {
         title: 'Users',
         items: [
-            { name: 'Profiles', href: '/admin/profiles', icon: UserGroupIcon },
             { name: 'Starter Kits', href: '/admin/starterkits', icon: WalletIcon },
             {
                 name: 'Invites',
@@ -422,10 +428,6 @@ const navigation = computed(() => [
             { name: 'Instances', href: '/admin/instances', icon: ServerStackIcon },
             { name: 'Relays', href: '/admin/relays', icon: ArrowPathIcon }
         ]
-    },
-    {
-        title: 'System',
-        items: [{ name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon }]
     }
 ])
 
