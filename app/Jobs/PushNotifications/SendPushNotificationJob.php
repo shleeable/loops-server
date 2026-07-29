@@ -53,9 +53,9 @@ class SendPushNotificationJob implements ShouldBeUnique, ShouldQueue
         static::dispatch('newVideoComment', [$profileId, $videoId, $actorId, $commentId]);
     }
 
-    public static function dispatch_newCommentLike(int $profileId, int $videoId, int $actorId, int $commentId): void
+    public static function dispatch_newCommentLike(int $profileId, int $videoId, int $actorId, int $commentId, int $videoProfileId): void
     {
-        static::dispatch('newCommentLike', [$profileId, $videoId, $actorId, $commentId]);
+        static::dispatch('newCommentLike', [$profileId, $videoId, $actorId, $commentId, $videoProfileId]);
     }
 
     public static function dispatch_newVideoCommentReply(int $profileId, int $videoId, int $actorId, int $commentId): void

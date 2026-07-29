@@ -260,6 +260,7 @@ class LikeHandler extends BaseHandler
                     videoId: $video->id,
                     actorId: $actor->id,
                     commentId: $comment->id,
+                    videoProfileId: $video->profile_id,
                 );
             }
         }
