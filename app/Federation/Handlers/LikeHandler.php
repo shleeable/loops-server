@@ -254,7 +254,7 @@ class LikeHandler extends BaseHandler
 
         if (app(ConfigService::class)->pushNotifications()) {
             $video = $comment->video;
-            if ($actor->id != $comment->profile_id && ! $video->uri) {
+            if ($actor->id != $comment->profile_id && ! $comment->ap_id) {
                 SendPushNotificationJob::dispatch_newCommentLike(
                     profileId: $comment->profile_id,
                     videoId: $video->id,
@@ -274,6 +274,19 @@ class LikeHandler extends BaseHandler
             'profile_id' => $actor->id,
             'comment_id' => $comment->id,
         ]);
+
+        if (app(ConfigService::class)->pushNotifications()) {
+            $video = $comment->video;
+            if ($actor->id != $comment->profile_id && ! $comment->ap_id) {
+                SendPushNotificationJob::dispatch_newReplyLike(
+                    profileId: $comment->profile_id,
+                    videoId: $video->id,
+                    actorId: $actor->id,
+                    commentId: $comment->id,
+                    videoProfileId: $video->profile_id,
+                );
+            }
+        }
 
         return $like;
     }
