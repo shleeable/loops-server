@@ -75,12 +75,6 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
             );
 
             if (! $verificationResult['valid']) {
-                Log::warning('HTTP signature verification failed in queue', [
-                    'activity_type' => $this->activity['type'] ?? 'unknown',
-                    'activity_id' => $this->activity['id'] ?? null,
-                    'reason' => $verificationResult['reason'] ?? 'unknown',
-                ]);
-
                 return;
             }
 
@@ -88,11 +82,6 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
 
             if (($this->activity['type'] ?? null) === 'Delete') {
                 if (! $this->validateDeleteOrigin($verifiedActor)) {
-                    Log::info('Delete dropped at origin validation', [
-                        'activity_id' => $this->activity['id'] ?? null,
-                        'actor' => is_object($verifiedActor) ? ($verifiedActor->uri ?? null) : null,
-                    ]);
-
                     return;
                 }
             }
@@ -104,13 +93,6 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
             }
 
             if ($verifiedActor instanceof Profile && $verifiedActor->status !== 1) {
-                Log::info('Inbox activity dropped: suspended actor profile', [
-                    'activity_type' => $this->activity['type'] ?? 'unknown',
-                    'activity_id' => $this->activity['id'] ?? null,
-                    'profile_id' => $verifiedActor->id,
-                    'status' => $verifiedActor->status,
-                ]);
-
                 return;
             }
 
@@ -123,11 +105,6 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
             }
 
         } catch (Exception $e) {
-            Log::error('Failed to verify and process inbox activity', [
-                'activity_type' => $this->activity['type'] ?? 'unknown',
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
             throw $e;
         }
     }

@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\InstanceActor;
 use App\Models\Profile;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class WebfingerService
 {
@@ -122,16 +121,8 @@ class WebfingerService
                 return $response->json();
             }
 
-            Log::warning('Failed to fetch remote webfinger', [
-                'resource' => $resource,
-                'status' => $response->status(),
-                'domain' => $parsed['domain'],
-            ]);
         } catch (\Exception $e) {
-            Log::error('Exception during webfinger lookup', [
-                'resource' => $resource,
-                'error' => $e->getMessage(),
-            ]);
+
         }
 
         return null;
