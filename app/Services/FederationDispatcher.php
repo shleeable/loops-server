@@ -381,7 +381,7 @@ class FederationDispatcher
                 Bus::batch($jobs)
                     ->name("Delete Comment {$commentId} (chunk {$batchNumber})")
                     ->allowFailures()
-                    ->onQueue('activitypub-out')
+                    ->onQueue('activitypub-delete-fanout')
                     ->dispatch();
 
                 if (config('logging.dev_log')) {
