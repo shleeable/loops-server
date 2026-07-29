@@ -204,10 +204,6 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
 
         if (! $actorData || ! isset($actorData['publicKey']['publicKeyPem'])) {
             if (($this->activity['type'] ?? null) === 'Delete') {
-                Log::info('Accepting Delete despite missing actor (likely deleted)', [
-                    'actor' => $actorUrl,
-                ]);
-
                 $existing = Profile::where('uri', $actorUrl)->first();
 
                 if (! $existing) {
