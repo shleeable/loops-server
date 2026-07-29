@@ -548,8 +548,6 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
     protected function validateDeleteOrigin($actor): bool
     {
         if (! isset($this->activity['object'])) {
-            Log::info('Delete rejected: missing object', ['activity_id' => $this->activity['id'] ?? null]);
-
             return false;
         }
 
@@ -558,8 +556,6 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
             : data_get($this->activity, 'object');
 
         if (! $objectUrl) {
-            Log::info('Delete rejected: no object url', ['activity_id' => $this->activity['id'] ?? null]);
-
             return false;
         }
 
@@ -568,26 +564,12 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
             : null;
 
         if (! $actorDomain) {
-            Log::warning('Delete rejected: no actor domain', [
-                'activity_id' => $this->activity['id'] ?? null,
-                'actor_class' => get_class($actor),
-                'actor_uri' => ($actor->uri ?? null),
-            ]);
-
             return false;
         }
 
         $objectDomain = parse_url($objectUrl, PHP_URL_HOST);
 
         $match = $objectDomain && strtolower($actorDomain) === strtolower($objectDomain);
-
-        if (! $match) {
-            Log::warning('Delete rejected: cross-domain origin mismatch', [
-                'activity_id' => $this->activity['id'] ?? null,
-                'actor_domain' => $actorDomain,
-                'object_domain' => $objectDomain,
-            ]);
-        }
 
         return $match;
     }

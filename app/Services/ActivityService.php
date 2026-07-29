@@ -52,14 +52,6 @@ class ActivityService
             } catch (\Exception $e) {
                 $activity?->markAsProcessed();
 
-                if (config('logging.dev_ap_log')) {
-                    Log::warning("Activity validation failed: {$e->getMessage()}", [
-                        'actor' => $actor->uri,
-                        'activity_id' => $activityData['id'] ?? null,
-                        'raw_activity' => $activityData,
-                    ]);
-                }
-
                 return;
             }
         }
