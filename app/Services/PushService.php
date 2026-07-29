@@ -25,6 +25,15 @@ class PushService
         ]);
     }
 
+    public function newCommentLike(int $profileId, int $videoId, int $actorId, int $commentId): bool
+    {
+        $actor = $this->resolveUsername($actorId);
+
+        return $this->send($profileId, "{$actor} liked your comment", [
+            'url' => '/private/profile/feed/'.$videoId.'?profileId='.$profileId.'&commentId='.$commentId,
+        ]);
+    }
+
     public function newVideoComment(int $profileId, int $videoId, int $actorId, int $commentId): bool
     {
         $actor = $this->resolveUsername($actorId);

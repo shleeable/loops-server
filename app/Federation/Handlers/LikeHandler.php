@@ -2,6 +2,7 @@
 
 namespace App\Federation\Handlers;
 
+use App\Jobs\PushNotifications\SendPushNotificationJob;
 use App\Models\Comment;
 use App\Models\CommentLike;
 use App\Models\CommentReply;
@@ -10,6 +11,7 @@ use App\Models\Profile;
 use App\Models\UserFilter;
 use App\Models\Video;
 use App\Models\VideoLike;
+use App\Services\ConfigService;
 use App\Services\HashidService;
 use App\Services\SanitizeService;
 use Illuminate\Support\Facades\DB;
@@ -230,6 +232,16 @@ class LikeHandler extends BaseHandler
             'video_id' => $video->id,
         ]);
 
+        if (app(ConfigService::class)->pushNotifications()) {
+            if ($actor->id != $video->profile_id && ! $video->uri) {
+                SendPushNotificationJob::dispatch_newVideoLike(
+                    profileId: $video->profile_id,
+                    videoId: $video->id,
+                    actorId: $actor->id,
+                );
+            }
+        }
+
         return $like;
     }
 
@@ -239,6 +251,18 @@ class LikeHandler extends BaseHandler
             'profile_id' => $actor->id,
             'comment_id' => $comment->id,
         ]);
+
+        if (app(ConfigService::class)->pushNotifications()) {
+            $video = $comment->video;
+            if ($actor->id != $video->profile_id && ! $video->uri) {
+                SendPushNotificationJob::dispatch_newCommentLike(
+                    profileId: $video->profile_id,
+                    videoId: $video->id,
+                    actorId: $actor->id,
+                    commentId: $comment->id,
+                );
+            }
+        }
 
         return $like;
     }
