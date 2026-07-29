@@ -18,6 +18,7 @@ use App\Jobs\Federation\DeliverFollowRequest;
 use App\Jobs\Federation\DeliverUndoBlockActivity;
 use App\Jobs\Federation\DeliverUndoFollowActivity;
 use App\Jobs\Federation\DeliverUndoFollowRequestActivity;
+use App\Jobs\PushNotifications\SendPushNotificationJob;
 use App\Models\Follower;
 use App\Models\FollowRequest;
 use App\Models\HiddenSuggestion;
@@ -332,6 +333,15 @@ class AccountController extends Controller
 
                 if ($res->wasRecentlyCreated) {
                     NotificationService::newFollower($id, $pid);
+
+                    if (app(ConfigService::class)->pushNotifications()) {
+                        if ($pid != $profile->id) {
+                            SendPushNotificationJob::dispatch_newFollow(
+                                profileId: $profile->id,
+                                actorId: $pid,
+                            );
+                        }
+                    }
                 }
             } else {
                 // Delete existing follow request to force a new one, to fix broken federation

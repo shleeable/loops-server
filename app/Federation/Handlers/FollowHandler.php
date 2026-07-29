@@ -3,9 +3,11 @@
 namespace App\Federation\Handlers;
 
 use App\Jobs\Federation\DeliverAcceptActivity;
+use App\Jobs\PushNotifications\SendPushNotificationJob;
 use App\Models\Follower;
 use App\Models\Profile;
 use App\Models\UserFilter;
+use App\Services\ConfigService;
 use App\Services\NotificationService;
 use App\Services\SanitizeService;
 use Illuminate\Support\Facades\DB;
@@ -74,6 +76,15 @@ class FollowHandler extends BaseHandler
                     'target' => $targetProfile->username,
                     'activity_id' => $activity['id'] ?? 'unknown',
                 ]);
+            }
+
+            if (app(ConfigService::class)->pushNotifications()) {
+                if ($actor->id != $targetProfile->id && $targetProfile->local) {
+                    SendPushNotificationJob::dispatch_newFollow(
+                        profileId: $targetProfile->id,
+                        actorId: $actor->id,
+                    );
+                }
             }
 
             return $follower;
