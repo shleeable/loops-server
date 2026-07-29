@@ -76,7 +76,7 @@ class StudioController extends Controller
     public function getAvailableVideosForPlaylists(Request $request)
     {
         $validated = $request->validate([
-            'search' => ['sometimes', 'nullable', 'string', 'min:2', 'max:30'],
+            'search' => ['sometimes', 'nullable', 'string', 'max:30'],
             'limit' => ['sometimes', 'integer', 'min:1', 'max:10'],
             'sort_field' => ['sometimes', 'string', Rule::in(['created_at', 'likes', 'comments'])],
             'sort_direction' => ['sometimes', 'string', Rule::in(['asc', 'desc'])],
