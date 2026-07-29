@@ -102,6 +102,9 @@
                                     text-size="text-[14px]"
                                     root-class="whitespace-pre-wrap leading-relaxed pointer-events-auto drop-shadow-md"
                                     :max-char-limit="80"
+                                    read-more-class="text-gray-300 hover:text-gray-400 ml-1 font-semibold cursor-pointer"
+                                    mention-class="text-gray-100 hover:text-gray-300 hover:underline font-semibold"
+                                    hashtag-class="text-gray-100 hover:text-gray-300 hover:underline font-semibold"
                                 />
                             </div>
                         </div>
