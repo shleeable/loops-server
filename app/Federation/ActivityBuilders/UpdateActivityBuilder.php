@@ -23,6 +23,7 @@ class UpdateActivityBuilder
         $activityId = $actor->getActorId('#updates/'.time());
 
         $actorObject = $actor->toActivityPub();
+        $actorObject['updated'] = $actor->updated_at->toIso8601ZuluString();
 
         return [
             '@context' => [
@@ -32,7 +33,7 @@ class UpdateActivityBuilder
             'id' => $activityId,
             'type' => 'Update',
             'actor' => $actor->getActorId(),
-            'published' => now()->toIso8601String(),
+            'published' => now()->toIso8601ZuluString(),
             'to' => [
                 'https://www.w3.org/ns/activitystreams#Public',
             ],
@@ -60,7 +61,8 @@ class UpdateActivityBuilder
             'summary' => null,
             'inReplyTo' => null,
             'sensitive' => $video->is_sensitive,
-            'published' => $video->created_at->toIso8601String(),
+            'published' => $video->created_at->toIso8601ZuluString(),
+            'updated' => $video->updated_at->toIso8601ZuluString(),
             'to' => [],
             'cc' => [],
             'attachment' => [
@@ -117,7 +119,7 @@ class UpdateActivityBuilder
             'id' => $activityId,
             'type' => 'Update',
             'actor' => $actor->getActorId(),
-            'published' => now()->toIso8601String(),
+            'published' => now()->toIso8601ZuluString(),
             'to' => $videoObject['to'],
             'cc' => $videoObject['cc'],
             'object' => $videoObject,
@@ -144,7 +146,8 @@ class UpdateActivityBuilder
             'summary' => null,
             'inReplyTo' => $comment->video->getObjectUrl(),
             'sensitive' => $comment->is_sensitive,
-            'published' => $comment->created_at->toIso8601String(),
+            'published' => $comment->created_at->toIso8601ZuluString(),
+            'updated' => $comment->updated_at->toIso8601ZuluString(),
             'to' => [],
             'cc' => [],
         ];
@@ -193,7 +196,7 @@ class UpdateActivityBuilder
             'id' => $activityId,
             'type' => 'Update',
             'actor' => $actor->getActorId(),
-            'published' => now()->toIso8601String(),
+            'published' => now()->toIso8601ZuluString(),
             'to' => $commentObject['to'],
             'cc' => $commentObject['cc'],
             'object' => $commentObject,
@@ -220,7 +223,8 @@ class UpdateActivityBuilder
             'summary' => null,
             'inReplyTo' => $comment->parent->getObjectUrl(),
             'sensitive' => $comment->is_sensitive,
-            'published' => $comment->created_at->toIso8601String(),
+            'published' => $comment->created_at->toIso8601ZuluString(),
+            'updated' => $comment->updated_at->toIso8601ZuluString(),
             'to' => [],
             'cc' => [],
         ];
@@ -269,7 +273,7 @@ class UpdateActivityBuilder
             'id' => $activityId,
             'type' => 'Update',
             'actor' => $actor->getActorId(),
-            'published' => now()->toIso8601String(),
+            'published' => now()->toIso8601ZuluString(),
             'to' => $commentObject['to'],
             'cc' => $commentObject['cc'],
             'object' => $commentObject,

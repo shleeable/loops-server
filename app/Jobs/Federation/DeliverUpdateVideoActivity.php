@@ -39,7 +39,7 @@ class DeliverUpdateVideoActivity implements ShouldBeUnique, ShouldQueue
 
     public function uniqueId(): string
     {
-        return "deliver-video-update-{$this->video->id}-{$this->inboxUrl}";
+        return "deliver-video-update-{$this->video->id}-{$this->video->updated_at->getTimestamp()}-{$this->inboxUrl}";
     }
 
     /**
@@ -78,9 +78,10 @@ class DeliverUpdateVideoActivity implements ShouldBeUnique, ShouldQueue
     {
         $video = $this->video;
         $actor = $video->profile;
-        $inboxUrl = $this->inboxUrl;
 
         $activity = UpdateActivityBuilder::buildForVideo($actor, $video);
+
+        $payload = json_encode($activity, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
         $parsedUrl = $this->parsedUrl;
 
@@ -105,7 +106,7 @@ class DeliverUpdateVideoActivity implements ShouldBeUnique, ShouldQueue
                 $headers,
                 'POST',
                 $requestPath,
-                json_encode($activity)
+                $payload
             );
 
             $headers['Signature'] = $signature;
@@ -120,26 +121,28 @@ class DeliverUpdateVideoActivity implements ShouldBeUnique, ShouldQueue
             return;
         }
 
-        try {
-            $response = Http::timeout($this->deliveryTimeout)
-                ->withHeaders($headers)
-                ->post($this->inboxUrl, $activity);
+        $response = Http::timeout($this->deliveryTimeout)
+            ->withHeaders($headers)
+            ->withBody($payload, 'application/activity+json')
+            ->post($this->inboxUrl);
 
-            if ($response->successful()) {
-                return;
-            }
-
-            if ($response->clientError() && ! in_array($response->status(), [408, 429])) {
-                $this->delete();
-
-                return;
-            }
-
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            throw $e;
-        } catch (\Exception $e) {
-            throw $e;
+        if ($response->successful()) {
+            return;
         }
+
+        if ($response->clientError() && ! in_array($response->status(), [408, 429])) {
+            $this->devLog && Log::warning('Update delivery permanently rejected', [
+                'inbox' => $this->inboxUrl,
+                'status' => $response->status(),
+                'body' => substr($response->body(), 0, 500),
+            ]);
+
+            $this->delete();
+
+            return;
+        }
+
+        $response->throw();
     }
 
     public function failed(\Throwable $exception) {}
