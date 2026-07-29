@@ -652,14 +652,19 @@ class FederationDispatcher
             foreach ($source as $inbox) {
                 $inboxUrl = $inbox['inbox'];
 
-                if ($all->has($inboxUrl)) {
-                    $all[$inboxUrl]['profile_ids'] = array_values(array_unique(array_merge(
-                        $all[$inboxUrl]['profile_ids'],
-                        $inbox['profile_ids']
-                    )));
-                } else {
-                    $all[$inboxUrl] = $inbox;
+                if (! $all->has($inboxUrl)) {
+                    $all->put($inboxUrl, $inbox);
+
+                    continue;
                 }
+
+                $existing = $all->get($inboxUrl);
+                $existing['profile_ids'] = array_values(array_unique(array_merge(
+                    $existing['profile_ids'],
+                    $inbox['profile_ids']
+                )));
+
+                $all->put($inboxUrl, $existing);
             }
         }
 
