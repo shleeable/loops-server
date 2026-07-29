@@ -19,7 +19,7 @@ class InstanceStatsCollectorCommand extends Command
     protected $signature = 'app:instance-stats-collector-command
         {limit=500 : Maximum number of instances to process}
         {subDays=3 : Recollect stats older than this many days}
-        {--force : Skip the collection cutoff and process instances regardless of age}';
+        {--force : Skip the collection cutoff and process instances regardless of age or blocked status}';
 
     protected $description = 'Collect statistics for instances that need updating';
 
@@ -45,7 +45,9 @@ class InstanceStatsCollectorCommand extends Command
         $cutoff = $now->copy()->subDays($subDays);
 
         $instances = Instance::query()
-            ->where('is_blocked', false)
+            ->when(! $force, function (Builder $query): void {
+                $query->where('is_blocked', false);
+            })
             ->when(! $force, function (Builder $query) use ($cutoff): void {
                 $query->where(function (Builder $query) use ($cutoff): void {
                     $query
