@@ -1,8 +1,11 @@
 <?php
 
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -90,6 +93,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->dontReport([
             OAuthServerException::class,
+            ConnectionException::class,
+            ConnectException::class,
+            RequestException::class,
+
         ]);
 
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
