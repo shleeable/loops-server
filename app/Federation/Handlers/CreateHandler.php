@@ -4,11 +4,13 @@ namespace App\Federation\Handlers;
 
 use App\Federation\Audience;
 use App\Jobs\Federation\ProcessRemoteVideoJob;
+use App\Jobs\PushNotifications\SendPushNotificationJob;
 use App\Models\Comment;
 use App\Models\CommentReply;
 use App\Models\Profile;
 use App\Models\UserFilter;
 use App\Models\Video;
+use App\Services\ConfigService;
 use App\Services\DmInboundService;
 use App\Services\HashidService;
 use App\Services\SanitizeService;
@@ -359,6 +361,17 @@ class CreateHandler extends BaseHandler
         $comment->syncHashtagsFromCaption();
         $comment->syncMentionsFromCaption();
 
+        if (app(ConfigService::class)->pushNotifications()) {
+            if ($actor->id != $video->profile_id && ! $video->uri) {
+                SendPushNotificationJob::dispatch_newVideoComment(
+                    profileId: $video->profile_id,
+                    videoId: $video->id,
+                    actorId: $actor->id,
+                    commentId: $comment->id,
+                );
+            }
+        }
+
         return $comment;
     }
 
@@ -409,6 +422,17 @@ class CreateHandler extends BaseHandler
         $reply->save();
         $reply->syncHashtagsFromCaption();
         $reply->syncMentionsFromCaption();
+
+        if (app(ConfigService::class)->pushNotifications()) {
+            if ($actor->id != $video->profile_id && ! $video->uri) {
+                SendPushNotificationJob::dispatch_newVideoCommentReply(
+                    profileId: $video->profile_id,
+                    videoId: $video->id,
+                    actorId: $actor->id,
+                    commentId: $reply->id,
+                );
+            }
+        }
 
         return $reply;
     }
