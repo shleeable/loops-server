@@ -35,11 +35,11 @@ const props = defineProps({
     },
     mentionClass: {
         type: String,
-        default: 'text-blue-500 hover:text-blue-700 hover:underline font-semibold'
+        default: 'text-gray-100 hover:text-gray-300 hover:underline font-semibold'
     },
     hashtagClass: {
         type: String,
-        default: 'text-blue-500 hover:text-blue-700 hover:underline font-semibold'
+        default: 'text-gray-100 hover:text-gray-300 hover:underline font-semibold'
     },
     textSize: {
         type: String,
@@ -47,7 +47,8 @@ const props = defineProps({
     },
     rootClass: {
         type: String,
-        default: 'text-gray-800 dark:text-slate-300 whitespace-pre-wrap break-all leading-relaxed'
+        default:
+            'text-gray-100 whitespace-pre-wrap break-all leading-relaxed text-shadow-lg shadow-gray-800/60 drop-shadow'
     },
     maxCharLimit: {
         type: Number,
@@ -59,7 +60,7 @@ const props = defineProps({
     },
     readMoreClass: {
         type: String,
-        default: 'text-gray-500 hover:text-gray-700 ml-1 font-semibold cursor-pointer'
+        default: 'text-gray-300 hover:text-gray-400 ml-1 font-semibold cursor-pointer'
     }
 })
 

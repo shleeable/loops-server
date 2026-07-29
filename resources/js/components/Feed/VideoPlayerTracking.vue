@@ -100,7 +100,7 @@
                                     :mentions="mentions"
                                     :tags="hashtags"
                                     text-size="text-[14px]"
-                                    root-class="text-gray-300 dark:text-slate-300 whitespace-pre-wrap leading-relaxed pointer-events-auto drop-shadow-md"
+                                    root-class="whitespace-pre-wrap leading-relaxed pointer-events-auto drop-shadow-md"
                                     :max-char-limit="80"
                                 />
                             </div>
