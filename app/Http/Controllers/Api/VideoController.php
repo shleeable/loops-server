@@ -420,7 +420,7 @@ class VideoController extends Controller
         $config = app(ConfigService::class);
 
         if ($config->federation()) {
-            app(FederationDispatcher::class)->dispatchVideoDeleteToAllKnownInboxes($actor, $videoId, $videoObjectUrl);
+            app(FederationDispatcher::class)->dispatchVideoDelete($actor, $video->id, $videoObjectUrl, $video->mentions, $video->visibility);
         }
 
         Notification::where('video_id', $video->id)->delete();
@@ -826,10 +826,12 @@ class VideoController extends Controller
 
         $config = app(ConfigService::class);
         if ($config->federation()) {
-            app(FederationDispatcher::class)->dispatchCommentDeleteToAllKnownInboxes(
+            app(FederationDispatcher::class)->dispatchCommentDelete(
                 $request->user()->profile,
                 $commentId,
-                $commentObjectUrl
+                $commentObjectUrl,
+                $comment->mentions,
+                $comment->visibility
             );
         }
 
@@ -859,10 +861,12 @@ class VideoController extends Controller
 
         $config = app(ConfigService::class);
         if ($config->federation()) {
-            app(FederationDispatcher::class)->dispatchCommentReplyDeleteToAllKnownInboxes(
+            app(FederationDispatcher::class)->dispatchCommentReplyDelete(
                 $request->user()->profile,
                 $commentId,
-                $commentObjectUrl
+                $commentObjectUrl,
+                $comment->mentions,
+                $comment->visibility
             );
         }
         if ($parent->status != 'active' && $parent->children_count === 1) {

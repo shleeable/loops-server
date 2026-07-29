@@ -25,6 +25,8 @@ class DeliverDeleteCommentReplyActivity implements ShouldBeUnique, ShouldQueue
 
     public $recipientProfileIds;
 
+    public $visibility;
+
     private $parsedUrl;
 
     private $devLog;
@@ -57,12 +59,13 @@ class DeliverDeleteCommentReplyActivity implements ShouldBeUnique, ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(Profile $profile, string $inboxUrl, string $commentObjectUrl, array $recipientProfileIds = [])
+    public function __construct(Profile $profile, string $inboxUrl, string $commentObjectUrl, array $recipientProfileIds = [], int $visibility = 1)
     {
         $this->profile = $profile;
         $this->inboxUrl = $inboxUrl;
         $this->recipientProfileIds = $recipientProfileIds;
         $this->commentObjectUrl = $commentObjectUrl;
+        $this->visibility = $visibility;
 
         $this->parsedUrl = parse_url($inboxUrl);
 
@@ -82,7 +85,7 @@ class DeliverDeleteCommentReplyActivity implements ShouldBeUnique, ShouldQueue
         $actor = $this->profile;
         $inboxUrl = $this->inboxUrl;
 
-        $activity = DeleteActivityBuilder::buildForCommentReply($actor, $this->commentObjectUrl);
+        $activity = DeleteActivityBuilder::buildForCommentReply($actor, $this->commentObjectUrl, $this->visibility);
 
         $parsedUrl = $this->parsedUrl;
 

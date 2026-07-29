@@ -15,6 +15,7 @@ use App\Models\Comment;
 use App\Models\CommentReply;
 use App\Models\Profile;
 use App\Models\Video;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 
@@ -96,6 +97,7 @@ class FederationDispatcher
                     'inbox_count' => count($jobs),
                 ]);
             }
+
         }
 
         if ($actor->local && $video->visibility == 1) {
@@ -150,69 +152,73 @@ class FederationDispatcher
                     'video_id' => $video->id,
                 ]);
             }
+        } else {
+            $jobs = $allInboxes->map(function ($inbox) use ($video) {
+                return new DeliverUpdateVideoActivity(
+                    $video,
+                    $inbox['inbox'],
+                    $inbox['profile_ids']
+                );
+            })->toArray();
 
-            return;
-        }
+            Bus::batch($jobs)
+                ->name("Deliver Video Update {$video->id}")
+                ->allowFailures()
+                ->onQueue('activitypub-out')
+                ->dispatch();
 
-        $jobs = $allInboxes->map(function ($inbox) use ($video) {
-            return new DeliverUpdateVideoActivity(
-                $video,
-                $inbox['inbox'],
-                $inbox['profile_ids']
-            );
-        })->toArray();
-
-        Bus::batch($jobs)
-            ->name("Deliver Video Update {$video->id}")
-            ->allowFailures()
-            ->onQueue('activitypub-out')
-            ->dispatch();
-
-        if (config('logging.dev_log')) {
-            Log::info('Video update dispatched', [
-                'video_id' => $video->id,
-                'inbox_count' => count($jobs),
-                'total_recipients' => collect($jobs)->sum(fn ($job) => count($job->recipientProfileIds)),
-            ]);
+            if (config('logging.dev_log')) {
+                Log::info('Video update dispatched', [
+                    'video_id' => $video->id,
+                    'inbox_count' => count($jobs),
+                    'total_recipients' => collect($jobs)->sum(fn ($job) => count($job->recipientProfileIds)),
+                ]);
+            }
         }
     }
 
-    public function dispatchVideoDeleteToAllKnownInboxes(Profile $actor, $videoId, $objectUrl, int $chunkSize = 500): void
+    /**
+     * Deliver a video Delete to the object's actual audience.
+     *
+     * Must be called BEFORE the video row is removed: mentions and repost rows
+     * are read during inbox resolution.
+     *
+     * @param  \Illuminate\Support\Collection|null  $extraRecipients  Profile models (mentions)
+     * @param  int  $visibility  Public videos also reached relays and unrelated instances
+     */
+    public function dispatchVideoDelete(Profile $actor, $videoId, $objectUrl, $extraRecipients = null, int $visibility = 1): void
     {
-        $batchNumber = 0;
+        $isPublic = $visibility == 1;
 
-        $this->resolver->chunkAllKnownInboxesFlat(
-            function ($inboxes) use ($actor, $videoId, $objectUrl, &$batchNumber) {
-                $batchNumber++;
+        $inboxes = $this->resolveDeleteInboxes($actor, 'video', $videoId, $extraRecipients, $isPublic);
 
-                $jobs = $inboxes->map(fn ($inboxUrl) => new DeliverDeleteVideoActivity(
-                    $actor,
-                    $inboxUrl,
-                    $objectUrl
-                ))->toArray();
+        if ($inboxes->isEmpty()) {
+            if (config('logging.dev_log')) {
+                Log::info('No remote inboxes to deliver delete to', [
+                    'resource_type' => Video::class,
+                    'resource_id' => $videoId,
+                ]);
+            }
+        } else {
+            $jobs = $inboxes->map(fn ($inbox) => new DeliverDeleteVideoActivity(
+                $actor,
+                $inbox['inbox'],
+                $objectUrl
+            ))->toArray();
 
-                Bus::batch($jobs)
-                    ->name("Delete Video {$videoId} (chunk {$batchNumber})")
-                    ->allowFailures()
-                    ->onQueue('activitypub-out')
-                    ->dispatch();
+            Bus::batch($jobs)
+                ->name("Delete Video {$videoId}")
+                ->allowFailures()
+                ->onQueue('activitypub-out')
+                ->dispatch();
 
-                if (config('logging.dev_log')) {
-                    Log::info('Delete Video batch dispatched', [
-                        'video_id' => $videoId,
-                        'batch' => $batchNumber,
-                        'inbox_count' => count($jobs),
-                    ]);
-                }
-            },
-            $chunkSize
-        );
-
-        if ($batchNumber === 0) {
-            Log::info('No remote inboxes to deliver delete to', [
-                'resource_type' => Video::class,
-                'resource_id' => $videoId,
-            ]);
+            if (config('logging.dev_log')) {
+                Log::info('Delete Video dispatched', [
+                    'resource_type' => Video::class,
+                    'resource_id' => $videoId,
+                    'inbox_count' => count($jobs),
+                ]);
+            }
         }
     }
 
@@ -356,7 +362,7 @@ class FederationDispatcher
             ->dispatch();
 
         if (config('logging.dev_log')) {
-            Log::info('Comment creation dispatched', [
+            Log::info('Comment update dispatched', [
                 'comment_id' => $comment->id,
                 'inbox_count' => count($jobs),
                 'total_recipients' => collect($jobs)->sum(fn ($job) => count($job->recipientProfileIds)),
@@ -364,42 +370,60 @@ class FederationDispatcher
         }
     }
 
-    public function dispatchCommentDeleteToAllKnownInboxes(Profile $actor, $commentId, $objectUrl, int $chunkSize = 500): void
+    /**
+     * Deliver a comment Delete to the object's actual audience.
+     *
+     * Must be called BEFORE the comment row is removed.
+     *
+     * @param  \Illuminate\Support\Collection|null  $extraRecipients  Mention or Profile models (mentions, video author)
+     * @param  int  $visibility  Visibility of the comment being deleted
+     */
+    /**
+     * Deliver a comment Delete to the object's actual audience.
+     *
+     * Must be called BEFORE the comment row is removed.
+     *
+     * @param  \Illuminate\Support\Collection|null  $extraRecipients  Mention or Profile models (mentions, video author)
+     * @param  int  $visibility  Visibility of the comment being deleted
+     */
+    public function dispatchCommentDelete(Profile $actor, $commentId, $objectUrl, $extraRecipients = null, int $visibility = 1): void
     {
-        $batchNumber = 0;
+        if ($visibility == \App\Federation\Audience::VISIBILITY_LOCAL_ONLY) {
+            return;
+        }
 
-        $this->resolver->chunkAllKnownInboxesFlat(
-            function ($inboxes) use ($actor, $commentId, $objectUrl, &$batchNumber) {
-                $batchNumber++;
+        $inboxes = $this->resolveDeleteInboxes($actor, 'comment', $commentId, $extraRecipients);
 
-                $jobs = $inboxes->map(fn ($inboxUrl) => new DeliverDeleteCommentActivity(
-                    $actor,
-                    $inboxUrl,
-                    $objectUrl
-                ))->toArray();
+        if ($inboxes->isEmpty()) {
+            if (config('logging.dev_log')) {
+                Log::info('No remote inboxes to deliver delete to', [
+                    'resource_type' => Comment::class,
+                    'resource_id' => $commentId,
+                ]);
+            }
 
-                Bus::batch($jobs)
-                    ->name("Delete Comment {$commentId} (chunk {$batchNumber})")
-                    ->allowFailures()
-                    ->onQueue('activitypub-delete-fanout')
-                    ->dispatch();
+            return;
+        }
 
-                if (config('logging.dev_log')) {
-                    Log::info('Delete Comment batch dispatched', [
-                        'resource_type' => Comment::class,
-                        'resource_id' => $commentId,
-                        'batch' => $batchNumber,
-                        'inbox_count' => count($jobs),
-                    ]);
-                }
-            },
-            $chunkSize
-        );
+        $jobs = $inboxes->map(fn ($inbox) => new DeliverDeleteCommentActivity(
+            $actor,
+            $inbox['inbox'],
+            $objectUrl,
+            $inbox['profile_ids'],
+            $visibility
+        ))->toArray();
 
-        if ($batchNumber === 0) {
-            Log::info('No remote inboxes to deliver delete to', [
+        Bus::batch($jobs)
+            ->name("Delete Comment {$commentId}")
+            ->allowFailures()
+            ->onQueue('activitypub-out')
+            ->dispatch();
+
+        if (config('logging.dev_log')) {
+            Log::info('Delete Comment dispatched', [
                 'resource_type' => Comment::class,
                 'resource_id' => $commentId,
+                'inbox_count' => count($jobs),
             ]);
         }
     }
@@ -552,43 +576,93 @@ class FederationDispatcher
         }
     }
 
-    public function dispatchCommentReplyDeleteToAllKnownInboxes(Profile $actor, $commentId, $objectUrl, int $chunkSize = 500): void
+    /**
+     * Deliver a comment reply Delete to the object's actual audience.
+     *
+     * Must be called BEFORE the comment reply row is removed.
+     *
+     * @param  \Illuminate\Support\Collection|null  $extraRecipients  Mention or Profile models (mentions, parent comment author, video author)
+     * @param  int  $visibility  Visibility of the comment reply being deleted
+     */
+    public function dispatchCommentReplyDelete(Profile $actor, $commentId, $objectUrl, $extraRecipients = null, int $visibility = 1): void
     {
-        $batchNumber = 0;
+        if ($visibility == \App\Federation\Audience::VISIBILITY_LOCAL_ONLY) {
+            return;
+        }
 
-        $this->resolver->chunkAllKnownInboxesFlat(
-            function ($inboxes) use ($actor, $commentId, $objectUrl, &$batchNumber) {
-                $batchNumber++;
+        $inboxes = $this->resolveDeleteInboxes($actor, 'comment_reply', $commentId, $extraRecipients);
 
-                $jobs = $inboxes->map(fn ($inboxUrl) => new DeliverDeleteCommentReplyActivity(
-                    $actor,
-                    $inboxUrl,
-                    $objectUrl
-                ))->toArray();
+        if ($inboxes->isEmpty()) {
+            if (config('logging.dev_log')) {
+                Log::info('No remote inboxes to deliver delete to', [
+                    'resource_type' => CommentReply::class,
+                    'resource_id' => $commentId,
+                ]);
+            }
 
-                Bus::batch($jobs)
-                    ->name("Delete Comment Reply {$commentId} (chunk {$batchNumber})")
-                    ->allowFailures()
-                    ->onQueue('activitypub-out')
-                    ->dispatch();
+            return;
+        }
 
-                if (config('logging.dev_log')) {
-                    Log::info('Delete Comment Reply batch dispatched', [
-                        'resource_type' => CommentReply::class,
-                        'resource_id' => $commentId,
-                        'batch' => $batchNumber,
-                        'inbox_count' => count($jobs),
-                    ]);
-                }
-            },
-            $chunkSize
-        );
+        $jobs = $inboxes->map(fn ($inbox) => new DeliverDeleteCommentReplyActivity(
+            $actor,
+            $inbox['inbox'],
+            $objectUrl,
+            $inbox['profile_ids'],
+            $visibility
+        ))->toArray();
 
-        if ($batchNumber === 0) {
-            Log::info('No remote inboxes to deliver delete to', [
+        Bus::batch($jobs)
+            ->name("Delete Comment Reply {$commentId}")
+            ->allowFailures()
+            ->onQueue('activitypub-out')
+            ->dispatch();
+
+        if (config('logging.dev_log')) {
+            Log::info('Delete Comment Reply dispatched', [
                 'resource_type' => CommentReply::class,
                 'resource_id' => $commentId,
+                'inbox_count' => count($jobs),
             ]);
         }
+    }
+
+    /**
+     * Resolve the audience for a Delete: followers, explicit recipients
+     * (mentions, parent authors), reposters, and optionally the largest known
+     * instances for content that was distributed publicly.
+     *
+     * Followers are merged first so an inbox appearing in more than one source
+     * keeps its real recipient profile ids.
+     */
+    public function resolveDeleteInboxes(Profile $actor, string $shareType, $resourceId, $extraRecipients = null, bool $includeTopInstances = false): Collection
+    {
+        $all = collect();
+
+        $sources = [
+            $this->resolver->getFollowerInboxes($actor->id),
+            $this->resolver->getMentionInboxes($extraRecipients ?? collect()),
+            $this->resolver->getShareInboxes($shareType, $resourceId),
+        ];
+
+        if ($includeTopInstances) {
+            $sources[] = $this->resolver->getTopInstanceInboxes(50);
+        }
+
+        foreach ($sources as $source) {
+            foreach ($source as $inbox) {
+                $inboxUrl = $inbox['inbox'];
+
+                if ($all->has($inboxUrl)) {
+                    $all[$inboxUrl]['profile_ids'] = array_values(array_unique(array_merge(
+                        $all[$inboxUrl]['profile_ids'],
+                        $inbox['profile_ids']
+                    )));
+                } else {
+                    $all[$inboxUrl] = $inbox;
+                }
+            }
+        }
+
+        return $all->values();
     }
 }

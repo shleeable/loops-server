@@ -13,6 +13,7 @@ use App\Services\InstanceService;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class InstanceStatsCollectorCommand extends Command
 {
@@ -139,6 +140,8 @@ class InstanceStatsCollectorCommand extends Command
         app(InstanceService::class)->flushStats();
 
         $this->info('Collected stats for '.count($rows).' instances');
+
+        Cache::forget('federation:top-instance-inboxes:50');
 
         return self::SUCCESS;
     }
