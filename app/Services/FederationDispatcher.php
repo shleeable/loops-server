@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Federation\ActivityBuilders\CreateActivityBuilder;
+use App\Federation\Audience;
 use App\Jobs\Federation\DeliverCreateCommentActivity;
 use App\Jobs\Federation\DeliverCreateCommentReplyActivity;
 use App\Jobs\Federation\DeliverCreateVideoActivity;
@@ -31,42 +33,7 @@ class FederationDispatcher
     public function dispatchVideoCreation(Video $video, int $chunkSize = 50): void
     {
         $actor = $video->profile;
-        $allInboxes = collect();
-
-        $mentions = $video->mentions;
-        if ($mentions->isNotEmpty()) {
-            $mentionInboxes = $this->resolver->getMentionInboxes($mentions);
-
-            foreach ($mentionInboxes as $inbox) {
-                $inboxUrl = $inbox['inbox'];
-                if ($allInboxes->has($inboxUrl)) {
-                    $allInboxes[$inboxUrl]['profile_ids'] = array_unique(array_merge(
-                        $allInboxes[$inboxUrl]['profile_ids'],
-                        $inbox['profile_ids']
-                    ));
-                } else {
-                    $allInboxes[$inboxUrl] = $inbox;
-                }
-            }
-        }
-
-        $this->resolver->chunkFollowerInboxes(
-            $actor->id,
-            function ($inboxes) use (&$allInboxes) {
-                foreach ($inboxes as $inbox) {
-                    $inboxUrl = $inbox['inbox'];
-                    if ($allInboxes->has($inboxUrl)) {
-                        $allInboxes[$inboxUrl]['profile_ids'] = array_unique(array_merge(
-                            $allInboxes[$inboxUrl]['profile_ids'],
-                            $inbox['profile_ids']
-                        ));
-                    } else {
-                        $allInboxes[$inboxUrl] = $inbox;
-                    }
-                }
-            },
-            $chunkSize
-        );
+        $allInboxes = $this->resolveAuthorAudience($actor, $video->mentions, $chunkSize);
 
         if ($allInboxes->isEmpty()) {
             if (config('logging.dev_log')) {
@@ -76,13 +43,11 @@ class FederationDispatcher
                 ]);
             }
         } else {
-            $jobs = $allInboxes->map(function ($inbox) use ($video) {
-                return new DeliverCreateVideoActivity(
-                    $video,
-                    $inbox['inbox'],
-                    $inbox['profile_ids']
-                );
-            })->toArray();
+            $jobs = $allInboxes->map(fn ($inbox) => new DeliverCreateVideoActivity(
+                $video,
+                $inbox['inbox'],
+                $inbox['profile_ids']
+            ))->toArray();
 
             Bus::batch($jobs)
                 ->name("Deliver Video {$video->id}")
@@ -97,53 +62,17 @@ class FederationDispatcher
                     'inbox_count' => count($jobs),
                 ]);
             }
-
         }
 
-        if ($actor->local && $video->visibility == 1) {
-            app(\App\Services\RelayService::class)->deliverToRelays($actor, \App\Federation\ActivityBuilders\CreateActivityBuilder::buildForVideo($actor, $video));
+        if ($actor->local && $video->visibility == Audience::VISIBILITY_PUBLIC) {
+            app(RelayService::class)->deliverToRelays($actor, CreateActivityBuilder::buildForVideo($actor, $video));
         }
     }
 
     public function dispatchVideoUpdate(Video $video, int $chunkSize = 50): void
     {
         $actor = $video->profile;
-        $allInboxes = collect();
-
-        $mentions = $video->mentions;
-        if ($mentions->isNotEmpty()) {
-            $mentionInboxes = $this->resolver->getMentionInboxes($mentions);
-
-            foreach ($mentionInboxes as $inbox) {
-                $inboxUrl = $inbox['inbox'];
-                if ($allInboxes->has($inboxUrl)) {
-                    $allInboxes[$inboxUrl]['profile_ids'] = array_unique(array_merge(
-                        $allInboxes[$inboxUrl]['profile_ids'],
-                        $inbox['profile_ids']
-                    ));
-                } else {
-                    $allInboxes[$inboxUrl] = $inbox;
-                }
-            }
-        }
-
-        $this->resolver->chunkFollowerInboxes(
-            $actor->id,
-            function ($inboxes) use (&$allInboxes) {
-                foreach ($inboxes as $inbox) {
-                    $inboxUrl = $inbox['inbox'];
-                    if ($allInboxes->has($inboxUrl)) {
-                        $allInboxes[$inboxUrl]['profile_ids'] = array_unique(array_merge(
-                            $allInboxes[$inboxUrl]['profile_ids'],
-                            $inbox['profile_ids']
-                        ));
-                    } else {
-                        $allInboxes[$inboxUrl] = $inbox;
-                    }
-                }
-            },
-            $chunkSize
-        );
+        $allInboxes = $this->resolveAuthorAudience($actor, $video->mentions, $chunkSize);
 
         if ($allInboxes->isEmpty()) {
             if (config('logging.dev_log')) {
@@ -153,13 +82,11 @@ class FederationDispatcher
                 ]);
             }
         } else {
-            $jobs = $allInboxes->map(function ($inbox) use ($video) {
-                return new DeliverUpdateVideoActivity(
-                    $video,
-                    $inbox['inbox'],
-                    $inbox['profile_ids']
-                );
-            })->toArray();
+            $jobs = $allInboxes->map(fn ($inbox) => new DeliverUpdateVideoActivity(
+                $video,
+                $inbox['inbox'],
+                $inbox['profile_ids']
+            ))->toArray();
 
             Bus::batch($jobs)
                 ->name("Deliver Video Update {$video->id}")
@@ -183,12 +110,16 @@ class FederationDispatcher
      * Must be called BEFORE the video row is removed: mentions and repost rows
      * are read during inbox resolution.
      *
-     * @param  \Illuminate\Support\Collection|null  $extraRecipients  Profile models (mentions)
-     * @param  int  $visibility  Public videos also reached relays and unrelated instances
+     * @param  \Illuminate\Support\Collection|null  $extraRecipients  Mention or Profile models
+     * @param  int  $visibility  Visibility of the video being deleted
      */
-    public function dispatchVideoDelete(Profile $actor, $videoId, $objectUrl, $extraRecipients = null, int $visibility = 1): void
+    public function dispatchVideoDelete(Profile $actor, $videoId, $objectUrl, $extraRecipients = null, int $visibility = Audience::VISIBILITY_PUBLIC): void
     {
-        $isPublic = $visibility == 1;
+        if ($visibility == Audience::VISIBILITY_LOCAL_ONLY) {
+            return;
+        }
+
+        $isPublic = $visibility == Audience::VISIBILITY_PUBLIC;
 
         $inboxes = $this->resolveDeleteInboxes($actor, 'video', $videoId, $extraRecipients, $isPublic);
 
@@ -203,7 +134,9 @@ class FederationDispatcher
             $jobs = $inboxes->map(fn ($inbox) => new DeliverDeleteVideoActivity(
                 $actor,
                 $inbox['inbox'],
-                $objectUrl
+                $objectUrl,
+                $inbox['profile_ids'],
+                $visibility
             ))->toArray();
 
             Bus::batch($jobs)
@@ -225,42 +158,7 @@ class FederationDispatcher
     public function dispatchCommentCreation(Comment $comment, int $chunkSize = 50): void
     {
         $actor = $comment->profile;
-        $allInboxes = collect();
-
-        $mentions = $comment->mentions;
-        if ($mentions->isNotEmpty()) {
-            $mentionInboxes = $this->resolver->getMentionInboxes($mentions);
-
-            foreach ($mentionInboxes as $inbox) {
-                $inboxUrl = $inbox['inbox'];
-                if ($allInboxes->has($inboxUrl)) {
-                    $allInboxes[$inboxUrl]['profile_ids'] = array_unique(array_merge(
-                        $allInboxes[$inboxUrl]['profile_ids'],
-                        $inbox['profile_ids']
-                    ));
-                } else {
-                    $allInboxes[$inboxUrl] = $inbox;
-                }
-            }
-        }
-
-        $this->resolver->chunkFollowerInboxes(
-            $actor->id,
-            function ($inboxes) use (&$allInboxes) {
-                foreach ($inboxes as $inbox) {
-                    $inboxUrl = $inbox['inbox'];
-                    if ($allInboxes->has($inboxUrl)) {
-                        $allInboxes[$inboxUrl]['profile_ids'] = array_unique(array_merge(
-                            $allInboxes[$inboxUrl]['profile_ids'],
-                            $inbox['profile_ids']
-                        ));
-                    } else {
-                        $allInboxes[$inboxUrl] = $inbox;
-                    }
-                }
-            },
-            $chunkSize
-        );
+        $allInboxes = $this->resolveAuthorAudience($actor, $comment->mentions, $chunkSize);
 
         if ($allInboxes->isEmpty()) {
             if (config('logging.dev_log')) {
@@ -273,13 +171,11 @@ class FederationDispatcher
             return;
         }
 
-        $jobs = $allInboxes->map(function ($inbox) use ($comment) {
-            return new DeliverCreateCommentActivity(
-                $comment,
-                $inbox['inbox'],
-                $inbox['profile_ids']
-            );
-        })->toArray();
+        $jobs = $allInboxes->map(fn ($inbox) => new DeliverCreateCommentActivity(
+            $comment,
+            $inbox['inbox'],
+            $inbox['profile_ids']
+        ))->toArray();
 
         Bus::batch($jobs)
             ->name("Deliver Comment {$comment->id}")
@@ -299,42 +195,7 @@ class FederationDispatcher
     public function dispatchCommentUpdate(Comment $comment, int $chunkSize = 50): void
     {
         $actor = $comment->profile;
-        $allInboxes = collect();
-
-        $mentions = $comment->mentions;
-        if ($mentions->isNotEmpty()) {
-            $mentionInboxes = $this->resolver->getMentionInboxes($mentions);
-
-            foreach ($mentionInboxes as $inbox) {
-                $inboxUrl = $inbox['inbox'];
-                if ($allInboxes->has($inboxUrl)) {
-                    $allInboxes[$inboxUrl]['profile_ids'] = array_unique(array_merge(
-                        $allInboxes[$inboxUrl]['profile_ids'],
-                        $inbox['profile_ids']
-                    ));
-                } else {
-                    $allInboxes[$inboxUrl] = $inbox;
-                }
-            }
-        }
-
-        $this->resolver->chunkFollowerInboxes(
-            $actor->id,
-            function ($inboxes) use (&$allInboxes) {
-                foreach ($inboxes as $inbox) {
-                    $inboxUrl = $inbox['inbox'];
-                    if ($allInboxes->has($inboxUrl)) {
-                        $allInboxes[$inboxUrl]['profile_ids'] = array_unique(array_merge(
-                            $allInboxes[$inboxUrl]['profile_ids'],
-                            $inbox['profile_ids']
-                        ));
-                    } else {
-                        $allInboxes[$inboxUrl] = $inbox;
-                    }
-                }
-            },
-            $chunkSize
-        );
+        $allInboxes = $this->resolveAuthorAudience($actor, $comment->mentions, $chunkSize);
 
         if ($allInboxes->isEmpty()) {
             if (config('logging.dev_log')) {
@@ -347,13 +208,11 @@ class FederationDispatcher
             return;
         }
 
-        $jobs = $allInboxes->map(function ($inbox) use ($comment) {
-            return new DeliverUpdateCommentActivity(
-                $comment,
-                $inbox['inbox'],
-                $inbox['profile_ids']
-            );
-        })->toArray();
+        $jobs = $allInboxes->map(fn ($inbox) => new DeliverUpdateCommentActivity(
+            $comment,
+            $inbox['inbox'],
+            $inbox['profile_ids']
+        ))->toArray();
 
         Bus::batch($jobs)
             ->name("Deliver Comment Update {$comment->id}")
@@ -378,17 +237,9 @@ class FederationDispatcher
      * @param  \Illuminate\Support\Collection|null  $extraRecipients  Mention or Profile models (mentions, video author)
      * @param  int  $visibility  Visibility of the comment being deleted
      */
-    /**
-     * Deliver a comment Delete to the object's actual audience.
-     *
-     * Must be called BEFORE the comment row is removed.
-     *
-     * @param  \Illuminate\Support\Collection|null  $extraRecipients  Mention or Profile models (mentions, video author)
-     * @param  int  $visibility  Visibility of the comment being deleted
-     */
-    public function dispatchCommentDelete(Profile $actor, $commentId, $objectUrl, $extraRecipients = null, int $visibility = 1): void
+    public function dispatchCommentDelete(Profile $actor, $commentId, $objectUrl, $extraRecipients = null, int $visibility = Audience::VISIBILITY_PUBLIC): void
     {
-        if ($visibility == \App\Federation\Audience::VISIBILITY_LOCAL_ONLY) {
+        if ($visibility == Audience::VISIBILITY_LOCAL_ONLY) {
             return;
         }
 
@@ -431,42 +282,7 @@ class FederationDispatcher
     public function dispatchCommentReplyCreation(CommentReply $comment, int $chunkSize = 50): void
     {
         $actor = $comment->profile;
-        $allInboxes = collect();
-
-        $mentions = $comment->mentions;
-        if ($mentions->isNotEmpty()) {
-            $mentionInboxes = $this->resolver->getMentionInboxes($mentions);
-
-            foreach ($mentionInboxes as $inbox) {
-                $inboxUrl = $inbox['inbox'];
-                if ($allInboxes->has($inboxUrl)) {
-                    $allInboxes[$inboxUrl]['profile_ids'] = array_unique(array_merge(
-                        $allInboxes[$inboxUrl]['profile_ids'],
-                        $inbox['profile_ids']
-                    ));
-                } else {
-                    $allInboxes[$inboxUrl] = $inbox;
-                }
-            }
-        }
-
-        $this->resolver->chunkFollowerInboxes(
-            $actor->id,
-            function ($inboxes) use (&$allInboxes) {
-                foreach ($inboxes as $inbox) {
-                    $inboxUrl = $inbox['inbox'];
-                    if ($allInboxes->has($inboxUrl)) {
-                        $allInboxes[$inboxUrl]['profile_ids'] = array_unique(array_merge(
-                            $allInboxes[$inboxUrl]['profile_ids'],
-                            $inbox['profile_ids']
-                        ));
-                    } else {
-                        $allInboxes[$inboxUrl] = $inbox;
-                    }
-                }
-            },
-            $chunkSize
-        );
+        $allInboxes = $this->resolveAuthorAudience($actor, $comment->mentions, $chunkSize);
 
         if ($allInboxes->isEmpty()) {
             if (config('logging.dev_log')) {
@@ -479,13 +295,11 @@ class FederationDispatcher
             return;
         }
 
-        $jobs = $allInboxes->map(function ($inbox) use ($comment) {
-            return new DeliverCreateCommentReplyActivity(
-                $comment,
-                $inbox['inbox'],
-                $inbox['profile_ids']
-            );
-        })->toArray();
+        $jobs = $allInboxes->map(fn ($inbox) => new DeliverCreateCommentReplyActivity(
+            $comment,
+            $inbox['inbox'],
+            $inbox['profile_ids']
+        ))->toArray();
 
         Bus::batch($jobs)
             ->name("Deliver Comment Reply {$comment->id}")
@@ -505,42 +319,7 @@ class FederationDispatcher
     public function dispatchCommentReplyUpdate(CommentReply $comment, int $chunkSize = 50): void
     {
         $actor = $comment->profile;
-        $allInboxes = collect();
-
-        $mentions = $comment->mentions;
-        if ($mentions->isNotEmpty()) {
-            $mentionInboxes = $this->resolver->getMentionInboxes($mentions);
-
-            foreach ($mentionInboxes as $inbox) {
-                $inboxUrl = $inbox['inbox'];
-                if ($allInboxes->has($inboxUrl)) {
-                    $allInboxes[$inboxUrl]['profile_ids'] = array_unique(array_merge(
-                        $allInboxes[$inboxUrl]['profile_ids'],
-                        $inbox['profile_ids']
-                    ));
-                } else {
-                    $allInboxes[$inboxUrl] = $inbox;
-                }
-            }
-        }
-
-        $this->resolver->chunkFollowerInboxes(
-            $actor->id,
-            function ($inboxes) use (&$allInboxes) {
-                foreach ($inboxes as $inbox) {
-                    $inboxUrl = $inbox['inbox'];
-                    if ($allInboxes->has($inboxUrl)) {
-                        $allInboxes[$inboxUrl]['profile_ids'] = array_unique(array_merge(
-                            $allInboxes[$inboxUrl]['profile_ids'],
-                            $inbox['profile_ids']
-                        ));
-                    } else {
-                        $allInboxes[$inboxUrl] = $inbox;
-                    }
-                }
-            },
-            $chunkSize
-        );
+        $allInboxes = $this->resolveAuthorAudience($actor, $comment->mentions, $chunkSize);
 
         if ($allInboxes->isEmpty()) {
             if (config('logging.dev_log')) {
@@ -553,13 +332,11 @@ class FederationDispatcher
             return;
         }
 
-        $jobs = $allInboxes->map(function ($inbox) use ($comment) {
-            return new DeliverUpdateCommentReplyActivity(
-                $comment,
-                $inbox['inbox'],
-                $inbox['profile_ids']
-            );
-        })->toArray();
+        $jobs = $allInboxes->map(fn ($inbox) => new DeliverUpdateCommentReplyActivity(
+            $comment,
+            $inbox['inbox'],
+            $inbox['profile_ids']
+        ))->toArray();
 
         Bus::batch($jobs)
             ->name("Deliver Comment Reply Update {$comment->id}")
@@ -584,9 +361,9 @@ class FederationDispatcher
      * @param  \Illuminate\Support\Collection|null  $extraRecipients  Mention or Profile models (mentions, parent comment author, video author)
      * @param  int  $visibility  Visibility of the comment reply being deleted
      */
-    public function dispatchCommentReplyDelete(Profile $actor, $commentId, $objectUrl, $extraRecipients = null, int $visibility = 1): void
+    public function dispatchCommentReplyDelete(Profile $actor, $commentId, $objectUrl, $extraRecipients = null, int $visibility = Audience::VISIBILITY_PUBLIC): void
     {
-        if ($visibility == \App\Federation\Audience::VISIBILITY_LOCAL_ONLY) {
+        if ($visibility == Audience::VISIBILITY_LOCAL_ONLY) {
             return;
         }
 
@@ -627,6 +404,37 @@ class FederationDispatcher
     }
 
     /**
+     * Resolve the audience for a Create or Update: the author's remote
+     * followers plus any mentioned remote profiles.
+     *
+     * @param  \Illuminate\Support\Collection|null  $mentions  Mention or Profile models
+     */
+    protected function resolveAuthorAudience(Profile $actor, $mentions = null, int $chunkSize = 50): Collection
+    {
+        $allInboxes = collect();
+
+        $mentions = collect($mentions ?? []);
+
+        if ($mentions->isNotEmpty()) {
+            foreach ($this->resolver->getMentionInboxes($mentions) as $inbox) {
+                $this->mergeInbox($allInboxes, $inbox);
+            }
+        }
+
+        $this->resolver->chunkFollowerInboxes(
+            $actor->id,
+            function ($inboxes) use ($allInboxes) {
+                foreach ($inboxes as $inbox) {
+                    $this->mergeInbox($allInboxes, $inbox);
+                }
+            },
+            $chunkSize
+        );
+
+        return $allInboxes->values();
+    }
+
+    /**
      * Resolve the audience for a Delete: followers, explicit recipients
      * (mentions, parent authors), reposters, and optionally the largest known
      * instances for content that was distributed publicly.
@@ -650,24 +458,36 @@ class FederationDispatcher
 
         foreach ($sources as $source) {
             foreach ($source as $inbox) {
-                $inboxUrl = $inbox['inbox'];
-
-                if (! $all->has($inboxUrl)) {
-                    $all->put($inboxUrl, $inbox);
-
-                    continue;
-                }
-
-                $existing = $all->get($inboxUrl);
-                $existing['profile_ids'] = array_values(array_unique(array_merge(
-                    $existing['profile_ids'],
-                    $inbox['profile_ids']
-                )));
-
-                $all->put($inboxUrl, $existing);
+                $this->mergeInbox($all, $inbox);
             }
         }
 
         return $all->values();
+    }
+
+    /**
+     * Merge an inbox group into a map keyed by inbox URL.
+     *
+     * Collections return by value from offsetGet, so writing through
+     * $map[$key]['profile_ids'] silently modifies a temporary. get/put is the
+     * only way to mutate a nested value.
+     */
+    protected function mergeInbox(Collection $map, array $inbox): void
+    {
+        $inboxUrl = $inbox['inbox'];
+
+        if (! $map->has($inboxUrl)) {
+            $map->put($inboxUrl, $inbox);
+
+            return;
+        }
+
+        $existing = $map->get($inboxUrl);
+        $existing['profile_ids'] = array_values(array_unique(array_merge(
+            $existing['profile_ids'],
+            $inbox['profile_ids']
+        )));
+
+        $map->put($inboxUrl, $existing);
     }
 }

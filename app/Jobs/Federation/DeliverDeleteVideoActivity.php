@@ -25,6 +25,8 @@ class DeliverDeleteVideoActivity implements ShouldBeUnique, ShouldQueue
 
     public $recipientProfileIds;
 
+    public $visibility;
+
     private $parsedUrl;
 
     private $devLog;
@@ -57,12 +59,13 @@ class DeliverDeleteVideoActivity implements ShouldBeUnique, ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(Profile $profile, string $inboxUrl, string $videoObjectUrl, array $recipientProfileIds = [])
+    public function __construct(Profile $profile, string $inboxUrl, string $videoObjectUrl, array $recipientProfileIds = [], int $visibility = 1)
     {
         $this->profile = $profile;
         $this->inboxUrl = $inboxUrl;
         $this->recipientProfileIds = $recipientProfileIds;
         $this->videoObjectUrl = $videoObjectUrl;
+        $this->visibility = $visibility;
 
         $this->parsedUrl = parse_url($inboxUrl);
 
@@ -82,7 +85,7 @@ class DeliverDeleteVideoActivity implements ShouldBeUnique, ShouldQueue
         $actor = $this->profile;
         $inboxUrl = $this->inboxUrl;
 
-        $activity = DeleteActivityBuilder::buildForVideo($actor, $this->videoObjectUrl);
+        $activity = DeleteActivityBuilder::buildForVideo($actor, $this->videoObjectUrl, $this->visibility ?? 1);
 
         $parsedUrl = $this->parsedUrl;
 
