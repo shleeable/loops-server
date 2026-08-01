@@ -9,6 +9,7 @@ use App\Models\Conversation;
 use App\Models\ConversationParticipant;
 use App\Models\Profile;
 use App\Services\DirectMessageService;
+use App\Services\ShareSheetService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -191,6 +192,8 @@ class DmConversationController extends Controller
 
         $participant->update(['state' => ConversationParticipant::STATE_ACTIVE]);
 
+        ShareSheetService::forget($request->user()->profile_id);
+
         return new DmConversationResource($participant->fresh([
             'conversation.lastMessage.sender',
             'conversation.lastMessage.video',
@@ -229,6 +232,8 @@ class DmConversationController extends Controller
 
         $this->participantOrFail($request, $id)->update(['muted_at' => now()]);
 
+        ShareSheetService::forgetConversations($request->user()->profile_id);
+
         return response()->json(['muted' => true]);
     }
 
@@ -238,6 +243,8 @@ class DmConversationController extends Controller
 
         $this->participantOrFail($request, $id)->update(['muted_at' => null]);
 
+        ShareSheetService::forgetConversations($request->user()->profile_id);
+
         return response()->json(['muted' => false]);
     }
 
@@ -246,6 +253,8 @@ class DmConversationController extends Controller
         abort_unless($request->user()->can_dm == true, 403, 'You do not have permission for this action');
 
         $this->participantOrFail($request, $id)->update(['hidden_at' => now()]);
+
+        ShareSheetService::forgetConversations($request->user()->profile_id);
 
         return response()->json(['hidden' => true]);
     }
@@ -257,6 +266,8 @@ class DmConversationController extends Controller
         $participant = $this->participantOrFail($request, $id);
         $participant->update(['hidden_at' => null]);
 
+        ShareSheetService::forgetConversations($request->user()->profile_id);
+
         return new DmConversationResource($participant->fresh([
             'conversation.lastMessage.sender',
             'conversation.lastMessage.video',
@@ -266,105 +277,20 @@ class DmConversationController extends Controller
 
     public function suggested(Request $request)
     {
-        abort_unless($request->user()->can_dm == true, 403, 'You do not have permission for this action');
+        $user = $request->user();
 
-        $profileId = $request->user()->profile_id;
-        $includeGroups = $request->boolean('include_groups');
-        $limit = 12;
+        abort_unless($user->can_dm == true, 403, 'You do not have permission for this action');
 
-        $participants = ConversationParticipant::query()
-            ->select('conversation_participants.*', 'conversations.last_message_at as sort_last_message_at')
-            ->join('conversations', 'conversations.id', '=', 'conversation_participants.conversation_id')
-            ->where('conversation_participants.profile_id', $profileId)
-            ->where('conversation_participants.state', ConversationParticipant::STATE_ACTIVE)
-            ->whereNotNull('conversations.last_message_at')
-            ->orderByDesc('sort_last_message_at')
-            ->limit($limit * 2)
-            ->with('conversation.participants.profile')
-            ->get();
+        $profile = $user->profile;
 
-        $seenProfiles = [];
-        $suggestions = [];
-
-        foreach ($participants as $participant) {
-            if (count($suggestions) >= $limit) {
-                break;
-            }
-
-            $conversation = $participant->conversation;
-
-            if ($conversation === null) {
-                continue;
-            }
-
-            if ($conversation->type === Conversation::TYPE_GROUP) {
-                if (! $includeGroups) {
-                    continue;
-                }
-
-                $others = $conversation->participants
-                    ->where('profile_id', '!=', $profileId)
-                    ->filter(fn (ConversationParticipant $other) => $other->state !== ConversationParticipant::STATE_LEFT
-                        && $other->profile !== null)
-                    ->values();
-
-                if ($others->isEmpty()) {
-                    continue;
-                }
-
-                $names = $others
-                    ->map(fn (ConversationParticipant $other) => $other->profile->name
-                        ?? explode('@', $other->profile->username)[0])
-                    ->filter()
-                    ->values();
-
-                $display = $conversation->title
-                    ?: ($names->count() <= 3
-                        ? $names->implode(', ')
-                        : $names->take(3)->implode(', ').' +'.($names->count() - 3));
-
-                $suggestions[] = [
-                    'kind' => 'group',
-                    'id' => (string) $conversation->id,
-                    'conversation_id' => (string) $conversation->id,
-                    'username' => null,
-                    'name' => $display,
-                    'avatar' => null,
-                    'avatars' => $others
-                        ->take(2)
-                        ->map(fn (ConversationParticipant $other) => $other->profile->avatar)
-                        ->filter()
-                        ->values()
-                        ->all(),
-                    'member_count' => $others->count() + 1,
-                    'domain' => null,
-                    'is_remote' => false,
-                ];
-
-                continue;
-            }
-
-            $profile = $conversation->otherParticipant($profileId)?->profile;
-
-            if (! $profile || isset($seenProfiles[$profile->id])) {
-                continue;
-            }
-
-            $seenProfiles[$profile->id] = true;
-
-            $suggestions[] = [
-                'kind' => 'account',
-                'id' => (string) $profile->id,
-                'username' => $profile->username,
-                'name' => $profile->name ?? $profile->username,
-                'avatar' => $profile->avatar ?? null,
-                'domain' => $profile->domain,
-                'is_remote' => $profile->domain !== null,
-            ];
-        }
+        abort_if($profile === null, 403, 'You do not have permission for this action');
 
         return response()->json([
-            'data' => $suggestions,
+            'data' => ShareSheetService::suggested(
+                $profile,
+                $request->boolean('include_groups'),
+                14
+            ),
         ]);
     }
 

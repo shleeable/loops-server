@@ -13,7 +13,9 @@ class DmGroupController extends Controller
 {
     public function __construct(
         protected DirectMessageService $dms
-    ) {}
+    ) {
+        $this->middleware('auth');
+    }
 
     public function store(Request $request)
     {

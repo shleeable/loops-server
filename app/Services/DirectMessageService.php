@@ -85,7 +85,7 @@ class DirectMessageService
             || (int) $sender->followers < $minFollowers;
     }
 
-    protected function canInitiateConversation(Profile $sender, Profile $recipient): bool
+    public function canInitiateConversation(Profile $sender, Profile $recipient): bool
     {
         if (! $this->isRestrictedSender($sender)) {
             return true;

@@ -14,6 +14,7 @@ use App\Models\Profile;
 use App\Services\DirectMessageService;
 use App\Services\FollowerService;
 use App\Services\KlipyMediaSelector;
+use App\Services\ShareSheetService;
 use Illuminate\Http\Request;
 
 class DmMessageController extends Controller
@@ -80,19 +81,39 @@ class DmMessageController extends Controller
             $recipient = Profile::findOrFail($data['recipient_id']);
 
             $message = $this->service->send($sender, $recipient, $data);
+            ShareSheetService::forgetConversations($recipient->id);
         }
+
+        ShareSheetService::forgetConversations($sender->id);
 
         return new DmMessageResource($message);
     }
 
     public function destroy(Request $request, int $id)
     {
-        $message = Message::with('conversation.participants.profile')
+        $message = Message::with('conversation.participants')
             ->where('id', $id)
             ->where('profile_id', $request->user()->profile_id)
             ->firstOrFail();
 
+        $participants = $message->conversation
+            ? $message->conversation->participants
+                ->pluck('profile_id')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all()
+            : [];
+
         $this->service->deleteMessage($message);
+
+        foreach ($participants as $part) {
+            try {
+                ShareSheetService::forgetConversations((int) $part);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
 
         return response()->json(['deleted' => true]);
     }
@@ -138,7 +159,10 @@ class DmMessageController extends Controller
             $recipient = Profile::findOrFail($data['recipient_id']);
 
             $message = $this->service->send($sender, $recipient, $payload);
+            ShareSheetService::forgetConversations($recipient->id);
         }
+
+        ShareSheetService::forgetConversations($sender->id);
 
         return new DmMessageResource($message);
     }

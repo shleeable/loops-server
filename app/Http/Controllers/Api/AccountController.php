@@ -39,6 +39,7 @@ use App\Services\FollowerService;
 use App\Services\LinkLimitService;
 use App\Services\NotificationService;
 use App\Services\PushTokenCacheService;
+use App\Services\ShareSheetService;
 use App\Services\StudioService;
 use App\Services\SystemMessageService;
 use App\Services\UserActivityService;
@@ -266,6 +267,9 @@ class AccountController extends Controller
 
         FollowerService::refreshAndSync($pid, $profile->id);
 
+        ShareSheetService::forget($pid);
+        ShareSheetService::forget($profile->id);
+
         return response()->json($res);
     }
 
@@ -302,6 +306,9 @@ class AccountController extends Controller
         });
 
         FollowerService::refreshAndSync($pid, $profile->id);
+
+        ShareSheetService::forget($pid);
+        ShareSheetService::forget($profile->id);
 
         return response()->json($res);
     }
@@ -361,6 +368,8 @@ class AccountController extends Controller
             return AccountService::get($id);
         });
 
+        ShareSheetService::forget($profile->id);
+
         return $this->data($res);
     }
 
@@ -400,6 +409,8 @@ class AccountController extends Controller
             return AccountService::get($id);
         });
 
+        ShareSheetService::forget($profile->id);
+
         return $this->data($res);
     }
 
@@ -426,6 +437,8 @@ class AccountController extends Controller
 
             return AccountService::get($id);
         });
+
+        ShareSheetService::forget($profile->id);
 
         return $this->data($res);
     }

@@ -10,6 +10,7 @@ use App\Models\UserFilter;
 use App\Services\ConfigService;
 use App\Services\NotificationService;
 use App\Services\SanitizeService;
+use App\Services\ShareSheetService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -144,6 +145,9 @@ class FollowHandler extends BaseHandler
             'profile_is_local' => false,
             'following_is_local' => true,
         ]);
+
+        ShareSheetService::forget($actor->id);
+        ShareSheetService::forget($target->id);
 
         return $follower;
     }

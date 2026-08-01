@@ -23,6 +23,11 @@ class StudioAnalyticsController extends Controller
 
     private const CACHE_TTL_HOURS = 12;
 
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function videoViews(Request $request)
     {
         if ($request->user()->cannot('create', Video::class)) {

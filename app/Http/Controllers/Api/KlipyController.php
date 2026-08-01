@@ -14,6 +14,11 @@ class KlipyController extends Controller
 {
     protected const TYPES = ['gifs', 'stickers', 'memes', 'clips'];
 
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function trending(Request $request, string $type): JsonResponse
     {
         abort_unless(! empty(config('klipy.api_key')), 400, 'Klipy API key missing');

@@ -11,6 +11,11 @@ use Illuminate\Http\Request;
 
 class ConversationLookupController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function lookupOrCreate(Request $request, DirectMessageService $dm)
     {
         $request->validate(['participant_id' => 'required|integer']);
