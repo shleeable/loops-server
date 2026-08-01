@@ -1,6 +1,8 @@
 <template>
     <div v-if="enabled && store.meId">
-        <div class="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+        <div
+            class="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
             <template v-if="loading && !accounts.length">
                 <div
                     v-for="n in 5"

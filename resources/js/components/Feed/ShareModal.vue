@@ -77,7 +77,9 @@
 
                             <template v-else>
                                 <div>
-                                    <div class="-mx-1 flex gap-1.5 overflow-x-auto px-1 py-1">
+                                    <div
+                                        class="-mx-1 flex gap-1.5 overflow-x-auto px-1 py-1 [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                                    >
                                         <button
                                             type="button"
                                             class="flex w-14 shrink-0 cursor-pointer flex-col items-center gap-1.5"
@@ -152,7 +154,9 @@
                                 </div>
 
                                 <div>
-                                    <div class="-mx-1 flex gap-3 overflow-x-auto px-1 py-1">
+                                    <div
+                                        class="-mx-1 flex gap-3 overflow-x-auto px-1 py-1 [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                                    >
                                         <button
                                             v-for="platform in fediversePlatforms"
                                             :key="platform.id"
