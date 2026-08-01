@@ -360,7 +360,7 @@ class DirectMessageService
             return $message->load(['sender', 'video', 'media', 'conversation.participants.profile']);
         });
 
-        event(new DmMessageCreated($message));
+        // event(new DmMessageCreated($message));
 
         $this->deliverToRemoteParticipants($message);
         $this->notifyLocalParticipants($message);
@@ -474,7 +474,7 @@ class DirectMessageService
             return null;
         }
 
-        event(new DmMessageCreated($message));
+        // event(new DmMessageCreated($message));
 
         $this->notifyLocalParticipants($message);
 
@@ -522,7 +522,7 @@ class DirectMessageService
             ])->save();
         }
 
-        event(new DmMessageDeleted($conversation, (string) $message->id));
+        // event(new DmMessageDeleted($conversation, (string) $message->id));
 
         if ($activity && $remotes->isNotEmpty()) {
             foreach ($this->ap->inboxUrls($remotes) as $inbox) {
