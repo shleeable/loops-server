@@ -32,7 +32,7 @@
 
 ---
 
-The [federated](https://fediverse.info) short video sharing platform.
+The short video sharing platform for the social web. Powered by [ActivityPub](https://fediverse.info).
 
 <p align="center">
   <img src="./screenshot.png" alt="Loops Screenshot" />
