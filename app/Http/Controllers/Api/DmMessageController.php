@@ -65,6 +65,8 @@ class DmMessageController extends Controller
 
         $sender = Profile::findOrFail($request->user()->profile_id);
 
+        abort_if($sender->dm_privacy == 'off', 422, 'You have disabled direct messages, you cannot send one until you change your DM privacy settings.');
+
         $restricted = $sender->created_at->gt(now()->subDays($minAccountAgeDays)) || (int) $sender->followers < $minFollowers;
         if ($restricted && isset($data['recipient_id'])) {
             $exempt = app(FollowerService::class)->follows($data['recipient_id'], $sender->id) && app(FollowerService::class)->follows($sender->id, $data['recipient_id']);
@@ -72,8 +74,6 @@ class DmMessageController extends Controller
         }
 
         if (filled($data['conversation_id'] ?? null)) {
-            // The conversation is authoritative. Never collapse it to a
-            // recipient: sendMessage() handles both dm and group types.
             $conversation = $this->resolveConversation($sender, (int) $data['conversation_id']);
 
             $message = $this->service->sendMessage($sender, $conversation, $data);
@@ -125,6 +125,8 @@ class DmMessageController extends Controller
         $data = $request->validated();
 
         $sender = Profile::findOrFail($request->user()->profile_id);
+
+        abort_if($sender->dm_privacy == 'off', 422, 'You have disabled direct messages, you cannot send one until you change your DM privacy settings.');
 
         $body = $data['body'] ?? null;
         $item = $data['item'];
