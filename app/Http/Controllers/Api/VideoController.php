@@ -538,11 +538,11 @@ class VideoController extends Controller
         $video = Video::published()->canComment()->find($id);
 
         if (! $video || $request->user()->cannot('view', [Video::class, $video])) {
-            return $this->error('Video not found or is unavailable or has comments disabled', 404);
+            return $this->error('Video not found or is unavailable or has comments disabled', 422);
         }
 
         if ($request->user()) {
-            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($pid, $video->profile_id), 404, 'Resource not available');
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($pid, $video->profile_id), 422, 'Resource not available');
         }
 
         $comments = Comment::with('mediaAttachments')->withTrashed()
@@ -560,11 +560,11 @@ class VideoController extends Controller
         $video = Video::published()->canComment()->find($id);
 
         if (! $video || $request->user()->cannot('view', [Video::class, $video])) {
-            return $this->error('Video not found or is unavailable or has comments disabled', 404);
+            return $this->error('Video not found or is unavailable or has comments disabled', 422);
         }
 
         if ($request->user()) {
-            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($pid, $video->profile_id), 404, 'Resource not available');
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($pid, $video->profile_id), 422, 'Resource not available');
         }
 
         $comments = Comment::with('mediaAttachments')
@@ -594,7 +594,7 @@ class VideoController extends Controller
         }
 
         if ($request->user()) {
-            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($pid, $video->profile_id), 404, 'Resource not available');
+            abort_if(! $request->user()->is_admin && UserFilterService::isBlocking($pid, $video->profile_id), 422, 'Resource not available');
         }
 
         $comments = CommentReply::withTrashed()
@@ -616,7 +616,7 @@ class VideoController extends Controller
         $parentId = $request->filled('parent_id') ? $request->parent_id : false;
         $video = Video::published()->canComment()->find($vid);
         if (! $video || $request->user()->cannot('view', [Video::class, $video])) {
-            return $this->error('Video not found or is unavailable or has comments disabled', 404);
+            return $this->error('Video not found or is unavailable or has comments disabled', 422);
         }
 
         if ($parentId) {
@@ -691,7 +691,7 @@ class VideoController extends Controller
         $video = Video::published()->canComment()->find($vid);
 
         if (! $video || $user->cannot('view', [Video::class, $video])) {
-            return $this->error('Video not found or is unavailable or has comments disabled', 404);
+            return $this->error('Video not found or is unavailable or has comments disabled', 422);
         }
 
         $body = $request->filled('comment') ? $this->purifyText($request->comment) : null;
@@ -756,7 +756,7 @@ class VideoController extends Controller
 
         $video = Video::published()->canComment()->find($vid);
         if (! $video || $request->user()->cannot('view', [Video::class, $video])) {
-            return $this->error('Video not found or is unavailable or has comments disabled', 404);
+            return $this->error('Video not found or is unavailable or has comments disabled', 422);
         }
 
         $comment = Comment::whereProfileId($pid)->findOrFail($request->id);
@@ -787,7 +787,7 @@ class VideoController extends Controller
 
         $video = Video::published()->canComment()->find($vid);
         if (! $video || $request->user()->cannot('view', [Video::class, $video])) {
-            return $this->error('Video not found or is unavailable or has comments disabled', 404);
+            return $this->error('Video not found or is unavailable or has comments disabled', 422);
         }
 
         $comment = CommentReply::whereProfileId($pid)->findOrFail($request->id);
@@ -936,7 +936,7 @@ class VideoController extends Controller
         $video = Video::published()->canComment()->find($vid);
 
         if (! $video || $request->user()->cannot('view', [Video::class, $video])) {
-            return $this->error('Video not found or is unavailable or has comments disabled', 404);
+            return $this->error('Video not found or is unavailable or has comments disabled', 422);
         }
 
         $comment = CommentReply::whereVideoId($vid)->whereCommentId($pid)->findOrFail($id);
@@ -975,7 +975,7 @@ class VideoController extends Controller
         $video = Video::published()->canComment()->find($vid);
 
         if (! $video || $request->user()->cannot('view', [Video::class, $video])) {
-            return $this->error('Video not found or is unavailable or has comments disabled', 404);
+            return $this->error('Video not found or is unavailable or has comments disabled', 422);
         }
 
         $comment = CommentReply::whereVideoId($vid)->whereCommentId($pid)->findOrFail($id);
@@ -1022,7 +1022,7 @@ class VideoController extends Controller
         $video = Video::published()->canComment()->find($vid);
 
         if (! $video || $request->user()->cannot('view', [Video::class, $video])) {
-            return $this->error('Video not found or is unavailable or has comments disabled', 404);
+            return $this->error('Video not found or is unavailable or has comments disabled', 422);
         }
 
         $comment = Comment::whereVideoId($vid)->findOrFail($id);
@@ -1064,7 +1064,7 @@ class VideoController extends Controller
         $video = Video::published()->canComment()->find($vid);
 
         if (! $video || $request->user()->cannot('view', [Video::class, $video])) {
-            return $this->error('Video not found or is unavailable or has comments disabled', 404);
+            return $this->error('Video not found or is unavailable or has comments disabled', 422);
         }
 
         $comment = Comment::whereVideoId($vid)->findOrFail($id);
