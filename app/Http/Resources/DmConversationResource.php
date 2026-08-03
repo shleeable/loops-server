@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\Conversation;
 use App\Models\ConversationParticipant;
+use App\Services\AvatarService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -79,11 +80,17 @@ class DmConversationResource extends JsonResource
             return null;
         }
 
+        $avatarUrl = $profile->avatar ?? url('/storage/avatars/default.jpg');
+
+        if ($profile->uri || $profile->domain) {
+            $avatarUrl = AvatarService::remote($profile->id);
+        }
+
         return [
             'id' => (string) $profile->id,
             'username' => $profile->username,
             'name' => $profile->name ?? $profile->username,
-            'avatar' => $profile->avatar ?? url('/storage/avatars/default.jpg'),
+            'avatar' => $avatarUrl,
             'domain' => $profile->domain,
             'is_remote' => $profile->domain !== null,
             'state' => $other->state,

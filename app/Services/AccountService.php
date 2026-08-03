@@ -101,6 +101,9 @@ class AccountService
 
     public static function del($id)
     {
+        Cache::forget('api:s:avatar:'.$id);
+        Cache::forget('api:s:avatar:remote:'.$id);
+
         return Cache::forget(self::CACHE_KEY.$id);
     }
 
