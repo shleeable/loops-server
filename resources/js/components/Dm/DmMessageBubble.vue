@@ -17,7 +17,13 @@
             >
                 {{ (avatarUser.username ?? '?').slice(0, 1) }}
             </div>
-            <div v-else class="w-7 shrink-0" />
+
+            <img
+                v-else
+                src="/storage/avatars/default.jpg"
+                alt="Avatar"
+                class="flex h-7 w-7 shrink-0 rounded-full object-cover"
+            />
         </template>
 
         <span
