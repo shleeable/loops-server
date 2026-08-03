@@ -20,11 +20,11 @@ class LinkLimitService
 
     private const TIER_1_THRESHOLD = 5;
 
-    private const TIER_2_THRESHOLD = 1500;
+    private const TIER_2_THRESHOLD = 100;
 
-    private const TIER_3_THRESHOLD = 2000;
+    private const TIER_3_THRESHOLD = 250;
 
-    private const TIER_4_THRESHOLD = 2300;
+    private const TIER_4_THRESHOLD = 1500;
 
     private const TIER_5_THRESHOLD = 3000;
 
