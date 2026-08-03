@@ -14,6 +14,7 @@ use App\Models\VideoRepost;
 use App\Services\ActivityService;
 use App\Services\NotificationService;
 use App\Services\SanitizeService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -60,11 +61,12 @@ class AnnounceHandler extends BaseHandler
             if ($modelClass === 'App\Models\Video') {
                 $video = $modelObject;
 
-                $existingShare = VideoRepost::where('profile_id', $actor->id)
-                    ->where('video_id', $video->id)
-                    ->first();
+                [$share, $created] = $this->firstOrCreateRepost(VideoRepost::class, [
+                    'profile_id' => $actor->id,
+                    'video_id' => $video->id,
+                ]);
 
-                if ($existingShare) {
+                if (! $created) {
                     if (config('logging.dev_log')) {
                         Log::info('Announce already exists', [
                             'actor' => $actor->username,
@@ -74,11 +76,10 @@ class AnnounceHandler extends BaseHandler
 
                     DB::commit();
 
-                    return $existingShare;
+                    return $share;
                 }
 
-                $share = $this->createVideoRepostAnnounce($actor, $modelObject, $activity);
-                $this->updateVideoShareCount($modelObject);
+                $this->updateVideoShareCount($video);
 
                 if ((string) $actor->id !== (string) $video->profile_id) {
                     NotificationService::newVideoShare(
@@ -92,12 +93,13 @@ class AnnounceHandler extends BaseHandler
             } elseif ($modelClass === 'App\Models\Comment') {
                 $comment = $modelObject;
 
-                $existingShare = CommentRepost::where('profile_id', $actor->id)
-                    ->where('video_id', $comment->video_id)
-                    ->where('comment_id', $comment->id)
-                    ->first();
+                [$share, $created] = $this->firstOrCreateRepost(CommentRepost::class, [
+                    'profile_id' => $actor->id,
+                    'video_id' => $comment->video_id,
+                    'comment_id' => $comment->id,
+                ]);
 
-                if ($existingShare) {
+                if (! $created) {
                     if (config('logging.dev_log')) {
                         Log::info('Announce already exists', [
                             'actor' => $actor->username,
@@ -107,10 +109,8 @@ class AnnounceHandler extends BaseHandler
 
                     DB::commit();
 
-                    return $existingShare;
+                    return $share;
                 }
-
-                $share = $this->createCommentRepostAnnounce($actor, $comment, $activity);
 
                 if ((string) $actor->id !== (string) $comment->profile_id) {
                     NotificationService::newVideoCommentShare(
@@ -125,12 +125,14 @@ class AnnounceHandler extends BaseHandler
             } elseif ($modelClass === 'App\Models\CommentReply') {
                 $reply = $modelObject;
 
-                $existingShare = CommentReplyRepost::where('profile_id', $actor->id)
-                    ->where('video_id', $reply->video_id)
-                    ->where('reply_id', $reply->id)
-                    ->first();
+                [$share, $created] = $this->firstOrCreateRepost(CommentReplyRepost::class, [
+                    'profile_id' => $actor->id,
+                    'video_id' => $reply->video_id,
+                    'comment_id' => $reply->comment_id,
+                    'reply_id' => $reply->id,
+                ]);
 
-                if ($existingShare) {
+                if (! $created) {
                     if (config('logging.dev_log')) {
                         Log::info('Announce already exists', [
                             'actor' => $actor->username,
@@ -140,10 +142,8 @@ class AnnounceHandler extends BaseHandler
 
                     DB::commit();
 
-                    return $existingShare;
+                    return $share;
                 }
-
-                $share = $this->createCommentReplyRepostAnnounce($actor, $reply, $activity);
 
                 if ((string) $actor->id !== (string) $reply->profile_id) {
                     NotificationService::newVideoReplyShare(
@@ -169,6 +169,18 @@ class AnnounceHandler extends BaseHandler
 
             return $share;
 
+        } catch (UniqueConstraintViolationException $e) {
+            DB::rollBack();
+
+            if (config('logging.dev_log')) {
+                Log::info('Dropped duplicate Announce activity', [
+                    'actor' => $actor->username,
+                    'object' => $objectUrl,
+                    'activity_id' => $activity['id'] ?? 'unknown',
+                ]);
+            }
+
+            return null;
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -182,6 +194,32 @@ class AnnounceHandler extends BaseHandler
             }
 
             throw $e;
+        }
+    }
+
+    private function firstOrCreateRepost(string $modelClass, array $attributes): array
+    {
+        $existing = $modelClass::query()
+            ->where($attributes)
+            ->first();
+
+        if ($existing) {
+            return [$existing, false];
+        }
+
+        try {
+            return [$modelClass::create($attributes), true];
+        } catch (UniqueConstraintViolationException $e) {
+            $existing = $modelClass::query()
+                ->where($attributes)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $existing) {
+                throw $e;
+            }
+
+            return [$existing, false];
         }
     }
 
@@ -231,39 +269,6 @@ class AnnounceHandler extends BaseHandler
         }
 
         return false;
-    }
-
-    private function createVideoRepostAnnounce(Profile $actor, Video $video, array $activity): VideoRepost
-    {
-        $share = VideoRepost::firstOrCreate([
-            'profile_id' => $actor->id,
-            'video_id' => $video->id,
-        ]);
-
-        return $share;
-    }
-
-    private function createCommentRepostAnnounce(Profile $actor, Comment $comment, array $activity): CommentRepost
-    {
-        $share = CommentRepost::firstOrCreate([
-            'profile_id' => $actor->id,
-            'video_id' => $comment->video_id,
-            'comment_id' => $comment->id,
-        ]);
-
-        return $share;
-    }
-
-    private function createCommentReplyRepostAnnounce(Profile $actor, CommentReply $comment, array $activity): CommentReplyRepost
-    {
-        $share = CommentReplyRepost::firstOrCreate([
-            'profile_id' => $actor->id,
-            'video_id' => $comment->video_id,
-            'comment_id' => $comment->comment_id,
-            'reply_id' => $comment->id,
-        ]);
-
-        return $share;
     }
 
     private function updateVideoShareCount(Video $video): void
