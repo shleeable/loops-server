@@ -65,25 +65,7 @@ class ProcessInboxActivity implements ShouldQueue
     public function handle(ActivityService $activityService)
     {
         if (! $this->actor) {
-            if (config('logging.dev_log')) {
-                Log::error('Failed to process activity: missing actor', [
-                    'type' => $this->activity['type'] ?? 'unknown',
-                    'id' => $this->activity['id'] ?? null,
-                    'target' => $this->target?->id,
-                ]);
-            }
-
             return;
-        }
-
-        if (config('logging.dev_log')) {
-            Log::info('Processing incoming activity', [
-                'type' => $this->activity['type'] ?? 'unknown',
-                'actor' => $this->actorIdentifier(),
-                'id' => $this->activity['id'] ?? null,
-                'target' => $this->target?->id,
-                'instance_wide' => $this->target === null,
-            ]);
         }
 
         try {
@@ -93,17 +75,6 @@ class ProcessInboxActivity implements ShouldQueue
                 $this->target
             );
         } catch (\Throwable $exception) {
-            if (config('logging.dev_log')) {
-                Log::error('Failed to process activity', [
-                    'type' => $this->activity['type'] ?? 'unknown',
-                    'actor' => $this->actorIdentifier(),
-                    'activity_id' => $this->activity['id'] ?? null,
-                    'target' => $this->target?->id,
-                    'error' => $exception->getMessage(),
-                    'trace' => $exception->getTraceAsString(),
-                ]);
-            }
-
             throw $exception;
         }
     }

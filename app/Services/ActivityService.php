@@ -6,7 +6,6 @@ use App\Models\Activity;
 use App\Models\InstanceActor;
 use App\Models\Profile;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Log;
 
 class ActivityService
 {
@@ -22,21 +21,6 @@ class ActivityService
         $mapping = $this->getMapType($type);
 
         if (! $mapping) {
-            $ignoredTypes = ['EmojiReact', 'View', 'Question'];
-
-            if (in_array($type, $ignoredTypes, true)) {
-                return;
-            }
-
-            if (config('logging.dev_ap_log')) {
-                Log::warning("Unknown activity type: {$type}", [
-                    'actor' => $actor->uri,
-                    'activity' => $activityData['id'] ?? null,
-                ]);
-
-                throw new \Exception("Unknown activity type: {$type}");
-            }
-
             return;
         }
 
@@ -71,15 +55,6 @@ class ActivityService
 
             return $result;
         } catch (\Throwable $e) {
-            if (config('logging.dev_ap_log')) {
-                Log::error('Failed to process activity', [
-                    'type' => $type,
-                    'actor' => $actor->uri,
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                ]);
-            }
-
             throw $e;
         }
     }
@@ -239,18 +214,8 @@ class ActivityService
                 return $response;
             }
 
-            if (config('logging.dev_log')) {
-                Log::warning('Failed to fetch remote actor', [
-                    'url' => $url,
-                ]);
-            }
         } catch (\Exception $e) {
-            if (config('logging.dev_log')) {
-                Log::error('Exception fetching remote actor', [
-                    'url' => $url,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            return null;
         }
 
         return null;
@@ -267,19 +232,8 @@ class ActivityService
             if ($response) {
                 return $response;
             }
-
-            if (config('logging.dev_log')) {
-                Log::warning('Failed to fetch remote activity', [
-                    'url' => $url,
-                ]);
-            }
         } catch (\Exception $e) {
-            if (config('logging.dev_log')) {
-                Log::error('Exception fetching remote activity', [
-                    'url' => $url,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            return null;
         }
 
         return null;
