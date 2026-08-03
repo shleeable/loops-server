@@ -32,12 +32,12 @@ $profileMime = str_ends_with($profileAvatar, '.jpg') ? 'image/jpeg' : 'image/web
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <title>{{ $profileTitle }}</title>
     <link rel="icon" href="{{ url('/favicon.ico') }}" sizes="32x32">
     <link rel="icon" href="{{ url('/favicon.svg') }}" type="image/svg+xml">
     <link rel="apple-touch-icon" href="{{ url('/apple-touch-icon.png') }}">
-    <meta name="app-version" content="{{ Vite::manifestHash() }}">
+    <meta name="app-version" content="{{ \App\Services\ViteService::get() }}">
     @preloadFont('boxicons')
 
     @if($profile)<meta property="profile:username" content="{{ $profile->username }}" />@endif
