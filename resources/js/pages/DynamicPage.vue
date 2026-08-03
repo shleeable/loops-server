@@ -99,12 +99,12 @@
                         >
                             Contact Support
                         </router-link>
-                        <router-link
+                        <!-- <router-link
                             to="/help-center"
                             class="text-[#F02C56] hover:text-red-500 transition-colors duration-200 hover:underline"
                         >
                             Help Center
-                        </router-link>
+                        </router-link> -->
                     </div>
                 </div>
             </div>
