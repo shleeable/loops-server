@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command(SnapshotUsage::class)->dailyAt('00:05')->timezone('UTC')->onOneServer();
 Schedule::command('app:expire-user-register-verifications')->everyFiveMinutes()->onOneServer();
 Schedule::command('horizon:snapshot')->hourly()->onOneServer();
-Schedule::command('instances:update-stats --create-missing')->daily()->at('04:20')->onOneServer();
+Schedule::command('instances:update-stats')->daily()->at('04:20')->onOneServer();
 Schedule::command('feed:update-interests')->hourly()->onOneServer();
 Schedule::command('app:system-message-seeder')->daily()->onOneServer();
 Schedule::command('app:system-message-garbage-collector')->daily()->onOneServer();
