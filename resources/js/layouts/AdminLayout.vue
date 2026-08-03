@@ -328,7 +328,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
@@ -504,10 +504,50 @@ const handleToggleDarkMode = () => {
     sidebarOpen.value = false
 }
 
+const preventGestureZoom = (event) => {
+    event.preventDefault()
+}
+
+const preventMultiTouchZoom = (event) => {
+    if (event.touches.length > 1) {
+        event.preventDefault()
+    }
+}
+
 onMounted(() => {
     adminStore.initTheme()
     adminStore.fetchConfig()
     adminStore.fetchReportsCount()
     initializeExpandedGroups()
+
+    document.addEventListener('gesturestart', preventGestureZoom, {
+        passive: false
+    })
+
+    document.addEventListener('gesturechange', preventGestureZoom, {
+        passive: false
+    })
+
+    document.addEventListener('gestureend', preventGestureZoom, {
+        passive: false
+    })
+
+    document.addEventListener('touchmove', preventMultiTouchZoom, {
+        passive: false
+    })
+})
+
+onBeforeUnmount(() => {
+    document.removeEventListener('gesturestart', preventGestureZoom)
+    document.removeEventListener('gesturechange', preventGestureZoom)
+    document.removeEventListener('gestureend', preventGestureZoom)
+    document.removeEventListener('touchmove', preventMultiTouchZoom)
 })
 </script>
+
+<style scoped>
+html,
+body {
+    touch-action: pan-x pan-y;
+}
+</style>

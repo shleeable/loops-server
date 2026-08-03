@@ -11,27 +11,36 @@
             class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
         >
             <div class="border-b border-gray-200 dark:border-gray-700">
-                <nav class="flex space-x-8 px-6" aria-label="Tabs">
-                    <button
-                        v-for="tab in tabs"
-                        :key="tab.id"
-                        @click="activeTab = tab.id"
-                        :class="[
-                            'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors cursor-pointer',
-                            activeTab === tab.id
-                                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                        ]"
-                    >
-                        <div class="flex items-center gap-2">
-                            <component :is="tab.icon" class="w-5 h-5" />
-                            {{ tab.name }}
-                        </div>
-                    </button>
-                </nav>
+                <div
+                    class="settings-tabs-scrollbar overflow-x-auto overscroll-x-contain"
+                    style="-webkit-overflow-scrolling: touch"
+                >
+                    <nav class="flex min-w-max px-3 sm:px-6" aria-label="Settings tabs">
+                        <button
+                            v-for="tab in tabs"
+                            :key="tab.id"
+                            type="button"
+                            @click="activeTab = tab.id"
+                            :aria-current="activeTab === tab.id ? 'page' : undefined"
+                            :class="[
+                                'shrink-0 whitespace-nowrap border-b-2 px-3 py-4',
+                                'text-sm font-medium transition-colors cursor-pointer',
+                                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500',
+                                activeTab === tab.id
+                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300'
+                            ]"
+                        >
+                            <span class="flex items-center justify-center gap-2">
+                                <component :is="tab.icon" class="h-5 w-5 shrink-0" />
+                                <span>{{ tab.name }}</span>
+                            </span>
+                        </button>
+                    </nav>
+                </div>
             </div>
 
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
                 <div v-if="activeTab === 'general'" class="space-y-8">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -1357,79 +1366,93 @@
                     </div>
                 </div>
 
-                <div v-if="activeTab === 'pages'" class="space-y-8">
-                    <div class="flex gap-6 h-[700px]">
+                <div v-if="activeTab === 'pages'" class="space-y-6">
+                    <div
+                        class="grid min-w-0 grid-cols-1 gap-4 xl:h-[700px] xl:grid-cols-[20rem_minmax(0,1fr)] xl:gap-6"
+                    >
                         <div
-                            class="w-80 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+                            class="flex h-[22rem] min-h-0 w-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900 sm:h-[26rem] xl:h-full"
                         >
-                            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                                <div class="flex items-center justify-between mb-4">
+                            <div
+                                class="shrink-0 border-b border-gray-200 p-3 dark:border-gray-700 sm:p-4"
+                            >
+                                <div class="mb-4 flex items-center justify-between gap-3">
                                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                                         Pages
                                     </h3>
+
                                     <button
+                                        type="button"
                                         @click="createNewPage"
-                                        class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                                        class="inline-flex shrink-0 items-center justify-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
                                     >
-                                        <PlusIcon class="w-4 h-4 inline mr-1" />
+                                        <PlusIcon class="mr-1 h-4 w-4" />
                                         New
                                     </button>
                                 </div>
 
                                 <div class="relative">
                                     <MagnifyingGlassIcon
-                                        class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+                                        class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
                                     />
+
                                     <input
                                         v-model="pageSearchQuery"
-                                        type="text"
+                                        type="search"
                                         placeholder="Search pages..."
-                                        class="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        class="w-full rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 placeholder-gray-500 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                                     />
                                 </div>
                             </div>
 
-                            <div class="relative overflow-y-auto h-full">
-                                <div v-if="loadingPages" class="p-4 text-center text-gray-500">
+                            <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                                <div
+                                    v-if="loadingPages"
+                                    class="p-4 text-center text-gray-500 dark:text-gray-400"
+                                >
                                     Loading pages...
                                 </div>
+
                                 <div
                                     v-else-if="filteredPages.length === 0"
-                                    class="p-4 text-center text-gray-500"
+                                    class="p-4 text-center text-gray-500 dark:text-gray-400"
                                 >
                                     No pages found
                                 </div>
+
                                 <div v-else class="space-y-1 p-2">
                                     <div
                                         v-for="page in filteredPages"
                                         :key="page.id"
                                         @click="selectPage(page)"
                                         :class="[
-                                            'p-3 rounded-md cursor-pointer transition-colors',
+                                            'cursor-pointer rounded-md p-3 transition-colors',
                                             selectedPage?.id === page.id
-                                                ? 'bg-blue-100 dark:bg-blue-900 border-l-4 border-blue-500'
+                                                ? 'border-l-4 border-blue-500 bg-blue-100 dark:bg-blue-900'
                                                 : 'hover:bg-gray-100 dark:hover:bg-gray-800'
                                         ]"
                                     >
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex-1 min-w-0">
+                                        <div class="flex min-w-0 items-start justify-between gap-2">
+                                            <div class="min-w-0 flex-1">
                                                 <h4
-                                                    class="text-sm font-medium truncate"
                                                     :class="[
+                                                        'truncate text-sm font-medium',
                                                         page.system_page
-                                                            ? 'text-red-600 dark:text-white '
+                                                            ? 'text-red-600 dark:text-white'
                                                             : 'text-gray-900 dark:text-white'
                                                     ]"
                                                 >
                                                     {{ page.title }}
                                                 </h4>
+
                                                 <p
-                                                    class="text-xs text-gray-500 dark:text-gray-400 truncate"
+                                                    class="truncate text-xs text-gray-500 dark:text-gray-400"
                                                 >
                                                     /{{ page.slug }}
                                                 </p>
+
                                                 <p
-                                                    class="text-xs text-gray-400 dark:text-gray-500 mt-1"
+                                                    class="mt-1 text-xs text-gray-400 dark:text-gray-500"
                                                 >
                                                     Updated
                                                     {{
@@ -1439,10 +1462,11 @@
                                                     }}
                                                 </p>
                                             </div>
-                                            <div class="flex items-center gap-1">
+
+                                            <div class="flex shrink-0 items-center gap-1">
                                                 <span
                                                     :class="[
-                                                        'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+                                                        'inline-flex items-center rounded px-2 py-0.5 text-xs font-medium',
                                                         page.status === 'published'
                                                             ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                                             : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
@@ -1450,12 +1474,15 @@
                                                 >
                                                     {{ page.status }}
                                                 </span>
+
                                                 <button
                                                     v-if="!page.system_page"
+                                                    type="button"
+                                                    aria-label="Delete page"
                                                     @click.stop="deletePage(page.id)"
-                                                    class="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                                                    class="rounded p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/40"
                                                 >
-                                                    <TrashIcon class="w-4 h-4" />
+                                                    <TrashIcon class="h-4 w-4" />
                                                 </button>
                                             </div>
                                         </div>
@@ -1464,124 +1491,139 @@
                             </div>
                         </div>
 
-                        <div class="flex-1 flex flex-col">
+                        <div class="flex min-w-0 flex-col">
                             <div
                                 v-if="!selectedPage"
-                                class="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400"
+                                class="flex min-h-64 flex-1 items-center justify-center rounded-lg border border-dashed border-gray-300 px-4 text-gray-500 dark:border-gray-700 dark:text-gray-400 xl:min-h-0"
                             >
                                 <div class="text-center">
-                                    <DocumentIcon class="w-16 h-16 mx-auto mb-4 opacity-50" />
-                                    <p class="text-lg">Select a page to edit or create a new one</p>
+                                    <DocumentIcon
+                                        class="mx-auto mb-4 h-12 w-12 opacity-50 sm:h-16 sm:w-16"
+                                    />
+
+                                    <p class="text-base sm:text-lg">
+                                        Select a page to edit or create a new one
+                                    </p>
                                 </div>
                             </div>
 
-                            <div v-else class="flex-1 flex flex-col">
+                            <div v-else class="flex min-w-0 flex-1 flex-col">
                                 <div
-                                    class="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-700 mb-4"
+                                    class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900 sm:p-4"
                                 >
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
+                                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <div class="min-w-0">
                                             <label
-                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                                class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                                             >
                                                 Page Title
                                             </label>
+
                                             <input
                                                 v-model="selectedPage.title"
                                                 type="text"
-                                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                                             />
                                         </div>
-                                        <div>
+
+                                        <div class="min-w-0">
                                             <label
-                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                                class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                                             >
                                                 Slug
                                             </label>
+
                                             <input
                                                 v-model="selectedPage.slug"
                                                 :disabled="selectedPage.system_page"
                                                 type="text"
-                                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                                                class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-transparent focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                                             />
                                         </div>
                                     </div>
 
-                                    <div class="mt-4 flex items-center justify-between">
-                                        <div class="flex items-center gap-6">
-                                            <div
-                                                v-if="!selectedPage.system_page"
-                                                class="flex items-center gap-4"
-                                            >
-                                                <label class="flex items-center">
-                                                    <input
-                                                        v-model="selectedPage.status"
-                                                        type="radio"
-                                                        :disabled="selectedPage.system_page"
-                                                        value="published"
-                                                        class="mr-2 text-blue-600 focus:ring-blue-500"
-                                                    />
-                                                    <span
-                                                        class="text-sm text-gray-700 dark:text-gray-300"
-                                                        >Published</span
-                                                    >
-                                                </label>
-                                                <label class="flex items-center">
-                                                    <input
-                                                        v-model="selectedPage.status"
-                                                        type="radio"
-                                                        :disabled="selectedPage.system_page"
-                                                        value="draft"
-                                                        class="mr-2 text-blue-600 focus:ring-blue-500"
-                                                    />
-                                                    <span
-                                                        class="text-sm text-gray-700 dark:text-gray-300"
-                                                        >Draft</span
-                                                    >
-                                                </label>
-                                            </div>
-
-                                            <div
-                                                v-if="!selectedPage.system_page"
-                                                class="flex items-center gap-2"
-                                            >
-                                                <label
-                                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                    <div
+                                        class="mt-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+                                    >
+                                        <div
+                                            v-if="!selectedPage.system_page"
+                                            class="flex min-w-0 flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end"
+                                        >
+                                            <fieldset>
+                                                <legend
+                                                    class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"
                                                 >
-                                                    Location
-                                                </label>
-                                                <div class="relative group">
-                                                    <svg
-                                                        class="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-help"
-                                                        fill="currentColor"
-                                                        viewBox="0 0 20 20"
-                                                    >
-                                                        <path
-                                                            fill-rule="evenodd"
-                                                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                                                            clip-rule="evenodd"
-                                                        />
-                                                    </svg>
+                                                    Status
+                                                </legend>
 
-                                                    <div
-                                                        class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 w-64"
+                                                <div class="flex flex-wrap items-center gap-4">
+                                                    <label class="flex cursor-pointer items-center">
+                                                        <input
+                                                            v-model="selectedPage.status"
+                                                            type="radio"
+                                                            value="published"
+                                                            class="mr-2 text-blue-600 focus:ring-blue-500"
+                                                        />
+                                                        <span
+                                                            class="text-sm text-gray-700 dark:text-gray-300"
+                                                        >
+                                                            Published
+                                                        </span>
+                                                    </label>
+
+                                                    <label class="flex cursor-pointer items-center">
+                                                        <input
+                                                            v-model="selectedPage.status"
+                                                            type="radio"
+                                                            value="draft"
+                                                            class="mr-2 text-blue-600 focus:ring-blue-500"
+                                                        />
+                                                        <span
+                                                            class="text-sm text-gray-700 dark:text-gray-300"
+                                                        >
+                                                            Draft
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                            </fieldset>
+
+                                            <div class="min-w-0 flex-1 sm:min-w-52">
+                                                <div class="mb-2 flex items-center gap-2">
+                                                    <label
+                                                        class="text-sm font-medium text-gray-700 dark:text-gray-300"
                                                     >
-                                                        <div class="text-center">
-                                                            Add this page to the Side menu, Footer
+                                                        Location
+                                                    </label>
+
+                                                    <div class="group relative">
+                                                        <svg
+                                                            class="h-4 w-4 cursor-help text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                                            fill="currentColor"
+                                                            viewBox="0 0 20 20"
+                                                            aria-hidden="true"
+                                                        >
+                                                            <path
+                                                                fill-rule="evenodd"
+                                                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                                                clip-rule="evenodd"
+                                                            />
+                                                        </svg>
+
+                                                        <div
+                                                            class="invisible absolute bottom-full left-0 z-20 mb-2 w-64 max-w-[calc(100vw-3rem)] rounded-lg bg-gray-900 px-3 py-2 text-sm text-white opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100 sm:left-1/2 sm:-translate-x-1/2"
+                                                        >
+                                                            Add this page to the side menu, footer
                                                             menu, or hide it completely. Options
                                                             include user-only, guest-only, or all
                                                             visitors.
                                                         </div>
-                                                        <div
-                                                            class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"
-                                                        ></div>
                                                     </div>
                                                 </div>
+
                                                 <select
-                                                    v-model="selectedPage.location"
                                                     ref="locationSelect"
-                                                    :disabled="selectedPage.system_page"
-                                                    class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                                                    v-model="selectedPage.location"
+                                                    class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                                                 >
                                                     <option value="none">None</option>
                                                     <option value="side_menu_guest">
@@ -1604,16 +1646,21 @@
                                             </div>
                                         </div>
 
-                                        <div class="flex items-center gap-4">
+                                        <div
+                                            class="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto sm:items-center"
+                                        >
                                             <router-link
                                                 :to="`/${selectedPage.slug}`"
-                                                class="border-2 border-blue-300 rounded-lg text-blue-500 p-2 text-sm cursor-pointer"
-                                                >View page</router-link
+                                                class="inline-flex items-center justify-center rounded-md border-2 border-blue-300 px-3 py-2 text-center text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-950/40"
                                             >
+                                                View page
+                                            </router-link>
+
                                             <button
+                                                type="button"
                                                 @click="savePage"
                                                 :disabled="savingPage"
-                                                class="px-4 py-2 text-sm bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                class="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                                             >
                                                 {{ savingPage ? 'Saving...' : 'Save Page' }}
                                             </button>
@@ -1622,14 +1669,16 @@
                                 </div>
 
                                 <div
-                                    class="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+                                    class="min-w-0 flex-1 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
                                 >
                                     <MdEditor
+                                        ref="mdEditor"
                                         v-model="selectedPage.content"
                                         :theme="editorTheme"
-                                        :preview-theme="'github'"
-                                        :code-theme="'github'"
+                                        preview-theme="github"
+                                        code-theme="github"
                                         :toolbars="editorToolbars"
+                                        :preview="showPreview"
                                         :height="500"
                                         language="en-US"
                                         @save="savePage"
@@ -1864,7 +1913,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed, watch, nextTick } from 'vue'
+import { ref, reactive, onMounted, computed, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
@@ -1904,6 +1953,7 @@ const tabs = [
 const activeTab = ref('general')
 const saving = ref(false)
 
+const mdEditor = ref(null)
 const systemConfig = ref()
 const pages = ref([])
 const selectedPage = ref(null)
@@ -1923,9 +1973,17 @@ const isBulkView = ref(true)
 const allowedInstancesBulk = ref('')
 const blockedInstancesBulk = ref('')
 const isRecheckingRedisBfSupport = ref(false)
+const isMobile = ref(false)
+let mobileMediaQuery = null
+
+const showPreview = computed(() => !isMobile.value)
+
+const handleBreakpointChange = (event) => {
+    isMobile.value = event.matches
+}
 
 const editorTheme = ref(isDark.value ? 'dark' : 'light')
-const editorToolbars = [
+const baseToolbars = [
     'bold',
     'underline',
     'italic',
@@ -1949,10 +2007,19 @@ const editorToolbars = [
     'pageFullscreen',
     'fullscreen',
     'preview',
+    'previewOnly',
     'htmlPreview',
     'catalog',
     'save'
 ]
+
+const editorToolbars = computed(() =>
+    isMobile.value
+        ? baseToolbars.filter(
+              (t) => !['previewOnly', 'htmlPreview', 'catalog', 'fullscreen'].includes(t)
+          )
+        : baseToolbars
+)
 
 const videoFormats = ['mp4', 'webm', 'mov', 'avi', 'mkv']
 
@@ -2016,7 +2083,6 @@ const settings = reactive({
     }
 })
 
-// Deep linking functionality
 const isInitializing = ref(true)
 
 const updateUrlFromState = () => {
@@ -2058,7 +2124,6 @@ const setActiveTab = (tabId) => {
 }
 
 const initializeFromUrl = async () => {
-    // Set active tab from URL
     const urlTab = route.query.tab
     if (urlTab && tabs.find((tab) => tab.id === urlTab)) {
         activeTab.value = urlTab
@@ -2119,6 +2184,16 @@ watch(
             updateUrlFromState()
         }
     }
+)
+
+watch(
+    [showPreview, () => selectedPage.value?.id, activeTab],
+    async () => {
+        if (activeTab.value !== 'pages' || !selectedPage.value) return
+        await nextTick()
+        mdEditor.value?.togglePreview?.(showPreview.value)
+    },
+    { immediate: true }
 )
 
 const getLogoSource = () => {
@@ -2628,15 +2703,22 @@ const loadSettings = async () => {
 onMounted(async () => {
     isInitializing.value = true
 
+    mobileMediaQuery = window.matchMedia('(max-width: 767px)')
+    isMobile.value = mobileMediaQuery.matches
+    mobileMediaQuery.addEventListener('change', handleBreakpointChange)
+
     try {
         await loadSettings()
         await loadPages()
-
         await nextTick()
         await initializeFromUrl()
     } finally {
         isInitializing.value = false
     }
+})
+
+onBeforeUnmount(() => {
+    mobileMediaQuery?.removeEventListener('change', handleBreakpointChange)
 })
 
 defineExpose({
@@ -2647,3 +2729,13 @@ defineExpose({
     deletePage
 })
 </script>
+
+<style scoped>
+.settings-tabs-scrollbar {
+    scrollbar-width: none;
+}
+
+.settings-tabs-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+</style>
