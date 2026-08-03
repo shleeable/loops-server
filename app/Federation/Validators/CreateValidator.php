@@ -97,7 +97,7 @@ class CreateValidator extends BaseValidator
 
         $actor = Profile::where('uri', $activity['actor'])->first();
 
-        if (app(DmInboundService::class)->isDirectNote($activity)) {
+        if (app(DmInboundService::class)->isDirectNote($activity, $actor)) {
             if ($actor && ! $actor->can_dm) {
                 throw new \Exception('Create activity actor does not have permission to deliver Direct Messages.');
             }

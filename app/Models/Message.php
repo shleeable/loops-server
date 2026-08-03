@@ -92,6 +92,14 @@ class Message extends Model
     }
 
     /**
+     * @return BelongsTo<Message, $this>
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Message::class, 'in_reply_to_id');
+    }
+
+    /**
      * @return BelongsTo<Video, $this>
      */
     public function video(): BelongsTo

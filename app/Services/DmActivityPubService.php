@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Conversation;
 use App\Models\ConversationParticipant;
 use App\Models\Message;
 use App\Models\Profile;
@@ -9,6 +10,18 @@ use Illuminate\Support\Collection;
 
 class DmActivityPubService
 {
+    public const JSON_LD_CONTEXT = [
+        'https://www.w3.org/ns/activitystreams',
+        [
+            'ostatus' => 'http://ostatus.org#',
+            'litepub' => 'http://litepub.social/ns#',
+            'conversation' => 'ostatus:conversation',
+            'directMessage' => 'litepub:directMessage',
+            'sensitive' => 'as:sensitive',
+            'Hashtag' => 'as:Hashtag',
+        ],
+    ];
+
     public function objectUri(Message $message): string
     {
         return url("/ap/dm/{$message->id}");
@@ -58,10 +71,47 @@ class DmActivityPubService
             ->values();
     }
 
+    public function contextUri(Conversation $conversation): ?string
+    {
+        return $conversation->context_uri;
+    }
+
+    public function conversationUri(Conversation $conversation): ?string
+    {
+        return $conversation->remote_conversation_uri
+            ?: $conversation->remote_context_uri
+            ?: $conversation->context_uri;
+    }
+
+    public function inReplyToUri(Message $message): ?string
+    {
+        if ($message->relationLoaded('parent') && $message->parent) {
+            return $message->parent->ap_object_uri;
+        }
+
+        if ($message->in_reply_to_id) {
+            $parent = Message::withTrashed()
+                ->whereKey($message->in_reply_to_id)
+                ->first();
+
+            if ($parent?->ap_object_uri) {
+                return $parent->ap_object_uri;
+            }
+        }
+
+        return Message::withTrashed()
+            ->where('conversation_id', $message->conversation_id)
+            ->where('id', '<', $message->id)
+            ->whereNotNull('ap_object_uri')
+            ->orderByDesc('id')
+            ->value('ap_object_uri');
+    }
+
     public function buildNote(Message $message): array
     {
         $sender = $message->sender;
         $audience = $this->audience($message);
+        $contextUri = $this->contextUri($message->conversation);
 
         $note = [
             'id' => $message->ap_object_uri,
@@ -73,9 +123,9 @@ class DmActivityPubService
                 ->all(),
             'cc' => [],
             'published' => $message->created_at->toAtomString(),
-            'context' => $message->conversation->context_uri,
-            'conversation' => $message->conversation->context_uri,
             'content' => $this->renderContent($message),
+            'sensitive' => false,
+            'directMessage' => true,
             'tag' => $audience
                 ->map(fn (Profile $profile) => [
                     'type' => 'Mention',
@@ -85,6 +135,15 @@ class DmActivityPubService
                 ->values()
                 ->all(),
         ];
+
+        if ($inReplyTo = $this->inReplyToUri($message)) {
+            $note['inReplyTo'] = $inReplyTo;
+        }
+
+        if ($contextUri) {
+            $note['context'] = $contextUri;
+            $note['conversation'] = $contextUri;
+        }
 
         $attachments = $message->media->map->toApAttachment()->values()->all();
         if ($attachments) {
@@ -99,13 +158,14 @@ class DmActivityPubService
         $note = $this->buildNote($message);
 
         return [
-            '@context' => 'https://www.w3.org/ns/activitystreams',
+            '@context' => self::JSON_LD_CONTEXT,
             'id' => $message->ap_object_uri.'#activity',
             'type' => 'Create',
             'actor' => $this->actorUri($message->sender),
             'to' => $note['to'],
             'cc' => [],
             'published' => $note['published'],
+            'directMessage' => true,
             'object' => $note,
         ];
     }
@@ -113,7 +173,7 @@ class DmActivityPubService
     public function buildDelete(Message $message): array
     {
         return [
-            '@context' => 'https://www.w3.org/ns/activitystreams',
+            '@context' => self::JSON_LD_CONTEXT,
             'id' => $message->ap_object_uri.'#delete',
             'type' => 'Delete',
             'actor' => $this->actorUri($message->sender),

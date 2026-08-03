@@ -116,9 +116,15 @@ class DmInboundService
             return null;
         }
 
+        $parent = $this->resolveInReplyTo($object);
+        $thread = $this->extractThreadUris($object);
+
         $payload = [
             'object_uri' => $object['id'],
-            'context_uri' => $this->extractContext($object),
+            'context_uri' => $thread['conversation'] ?? $thread['context'],
+            'remote_context_uri' => $thread['context'],
+            'remote_conversation_uri' => $thread['conversation'],
+            'in_reply_to_id' => $parent?->id,
             'body' => $this->stripLeadingMentions($this->extractBody($object), $recipients),
             'media' => $this->extractMedia($object, $actor),
         ];
@@ -261,19 +267,61 @@ class DmInboundService
         }
     }
 
-    protected function extractContext(array $object): ?string
+    protected function resolveInReplyTo(array $object): ?Message
     {
-        $context = $object['context'] ?? $object['conversation'] ?? null;
+        $uri = $object['inReplyTo'] ?? null;
 
-        if (is_array($context)) {
-            $context = $context['id'] ?? null;
+        if (is_array($uri)) {
+            $uri = $uri['id'] ?? null;
         }
 
-        if (! is_string($context) || $context === '' || strlen($context) > 255) {
+        if (! is_string($uri) || $uri === '') {
             return null;
         }
 
-        return $context;
+        $message = Message::where('ap_object_uri', $uri)->first();
+
+        if ($message) {
+            return $message;
+        }
+
+        if (! $this->sanitizer->isLocalObject($uri)) {
+            return null;
+        }
+
+        $match = $this->sanitizer->matchUrlTemplate(
+            url: $uri,
+            templates: ['/ap/dm/{messageId}'],
+            useAppHost: true,
+            constraints: ['messageId' => '\d+']
+        );
+
+        if (! $match || ! isset($match['messageId'])) {
+            return null;
+        }
+
+        return Message::find($match['messageId']);
+    }
+
+    protected function extractThreadUris(array $object): array
+    {
+        return [
+            'context' => $this->normalizeUri($object['context'] ?? null),
+            'conversation' => $this->normalizeUri($object['conversation'] ?? null),
+        ];
+    }
+
+    protected function normalizeUri(mixed $value): ?string
+    {
+        if (is_array($value)) {
+            $value = $value['id'] ?? null;
+        }
+
+        if (! is_string($value) || $value === '' || strlen($value) > 255) {
+            return null;
+        }
+
+        return $value;
     }
 
     protected function extractBody(array $object): ?string

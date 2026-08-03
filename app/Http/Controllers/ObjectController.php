@@ -290,6 +290,12 @@ class ObjectController extends Controller
             return response()->json(['error' => 'Resource does not exist'], 404);
         }
 
+        $isLocal = data_get($videoMetadata, 'is_local');
+
+        if ($isLocal === false) {
+            return response()->json(['error' => 'Resource does not exist'], 404);
+        }
+
         $acctId = data_get($videoMetadata, 'account.id', null);
 
         if (! hash_equals($acctId, $actor)) {
