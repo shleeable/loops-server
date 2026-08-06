@@ -121,7 +121,7 @@ class ProcessRemoteVideoJob implements ShouldBeUnique, ShouldQueue
                 'status' => self::STATUS_PUBLISHED,
                 'has_processed' => true,
                 'alt_text' => isset($this->attachment['name']) && ! empty($this->attachment['name']) ? app(SanitizeService::class)->cleanPlainText($this->attachment['name']) : null,
-                'is_sensitive' => ! empty($this->object['sensitive']) ? (bool) $this->object['sensitive'] : false,
+                'is_sensitive' => $profile->enforce_nsfw_label || (bool) ($this->object['sensitive'] ?? false),
             ]);
 
             if ($video->caption) {
