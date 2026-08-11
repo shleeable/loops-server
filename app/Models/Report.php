@@ -67,6 +67,17 @@ class Report extends Model
 
     public $guarded = [];
 
+    public const REPORTABLE_KEYS = [
+        'reported_profile_id',
+        'reported_video_id',
+        'reported_conversation_id',
+        'reported_sound_id',
+        'reported_starter_kit_id',
+        'reported_comment_id',
+        'reported_comment_reply_id',
+        'reported_hashtag_id',
+    ];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -197,5 +208,34 @@ class Report extends Model
     public function adminUrl()
     {
         return url('/admin/reports/'.$this->id);
+    }
+
+    /**
+     * @return 'reported_comment_id'|'reported_video_id'|'reported_hashtag_id'|'reported_profile_id'|'reported_comment_reply_id'|null
+     */
+    public function reportableKey(): ?string
+    {
+        foreach (self::REPORTABLE_KEYS as $key) {
+            if ($this->{$key}) {
+                return $key;
+            }
+        }
+
+        return null;
+    }
+
+    public function dismissSimilar(): int
+    {
+        $key = $this->reportableKey();
+
+        if (! $key) {
+            return 0;
+        }
+
+        return static::where('admin_seen', false)
+            ->where($key, $this->{$key})
+            ->where('report_type', $this->report_type)
+            ->whereKeyNot($this->getKey())
+            ->update(['admin_seen' => true]);
     }
 }

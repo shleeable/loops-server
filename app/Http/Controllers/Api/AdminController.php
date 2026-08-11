@@ -1015,6 +1015,7 @@ class AdminController extends Controller
         $video->save();
         $report->admin_seen = true;
         $report->save();
+        $report->dismissSimilar();
 
         app(AdminAuditLogService::class)->logReportUpdateMarkAsNsfw($request->user(), $report, ['vid' => $video->id, 'profile_id' => $report->reporter_profile_id]);
         app(AdminDashboardService::class)->getReportsCount(true);
@@ -1030,6 +1031,7 @@ class AdminController extends Controller
         $video->save();
         $report->admin_seen = true;
         $report->save();
+        $report->dismissSimilar();
 
         app(AdminAuditLogService::class)->logReportUpdateMarkAsAi($request->user(), $report, ['vid' => $video->id, 'profile_id' => $report->reporter_profile_id]);
         app(AdminDashboardService::class)->getReportsCount(true);
@@ -1045,6 +1047,7 @@ class AdminController extends Controller
         $video->save();
         $report->admin_seen = true;
         $report->save();
+        $report->dismissSimilar();
 
         app(AdminAuditLogService::class)->logReportUpdateMarkAsAd($request->user(), $report, ['vid' => $video->id, 'profile_id' => $report->reporter_profile_id]);
         app(AdminDashboardService::class)->getReportsCount(true);
@@ -1061,6 +1064,7 @@ class AdminController extends Controller
         $video->save();
         $report->admin_seen = true;
         $report->save();
+        $report->dismissSimilar();
 
         app(AdminAuditLogService::class)->logReportUpdateMarkAsAiAndAd($request->user(), $report, ['vid' => $video->id, 'profile_id' => $report->reporter_profile_id]);
         app(AdminDashboardService::class)->getReportsCount(true);
@@ -1071,8 +1075,13 @@ class AdminController extends Controller
     public function reportDismiss(Request $request, $id)
     {
         $report = Report::where('admin_seen', false)->findOrFail($id);
-        $report->admin_seen = true;
-        $report->save();
+
+        DB::transaction(function () use ($report) {
+            $report->admin_seen = true;
+            $report->save();
+
+            $report->dismissSimilar();
+        });
 
         app(AdminAuditLogService::class)->logReportDismiss($request->user(), $report, ['profile_id' => $report->reporter_profile_id]);
         app(AdminDashboardService::class)->getReportsCount(true);
@@ -1103,6 +1112,7 @@ class AdminController extends Controller
         $videoId = $report->reported_video_id;
         $report->admin_seen = true;
         $report->save();
+        $report->dismissSimilar();
 
         $video = Video::published()->findOrFail($videoId);
         app(AdminAuditLogService::class)->logReportDeleteVideo($request->user(), $report, ['vid' => $videoId, 'video_caption' => $video->caption, 'video_profile_id' => $video->profile_id, 'video_likes' => $video->likes, 'video_comments' => $video->comments]);
