@@ -7,6 +7,7 @@ use App\Models\Video;
 use App\Services\AccountService;
 use App\Services\AtomFeedService;
 use App\Services\StudioService;
+use App\Services\VideoService;
 
 class VideoObserver
 {
