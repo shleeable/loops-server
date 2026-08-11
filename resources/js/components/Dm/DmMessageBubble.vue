@@ -38,13 +38,44 @@
             <TrashIcon class="h-4 w-4" />
         </button>
 
-        <div :class="['max-w-[75%]', message.pending ? 'opacity-60' : '']" :title="timeTitle">
+        <div
+            :class="[
+                'flex max-w-[75%] flex-col',
+                own ? 'items-end' : 'items-start',
+                message.pending ? 'opacity-60' : ''
+            ]"
+        >
             <p
                 v-if="showName && senderName"
                 class="mb-0.5 px-1 text-[11px] font-medium text-slate-500 dark:text-slate-400"
             >
                 {{ senderName }}
             </p>
+
+            <div v-if="showMentions" class="relative mb-0.5 px-1">
+                <button
+                    type="button"
+                    class="peer inline-flex items-center gap-1 text-[11px] font-medium text-slate-400 transition hover:text-slate-600 focus:outline-none dark:text-slate-500 dark:hover:text-slate-300"
+                    @click="mentionsOpen = !mentionsOpen"
+                    @blur="mentionsOpen = false"
+                >
+                    <AtSymbolIcon class="h-3 w-3" />
+                    Mentions
+                </button>
+                <div
+                    :class="[
+                        'pointer-events-none absolute bottom-full z-10 mb-1 w-max max-w-[240px] rounded-lg bg-slate-900 px-2.5 py-1.5 text-left text-[11px] leading-relaxed text-white shadow-lg transition dark:bg-slate-700',
+                        own ? 'right-1' : 'left-1',
+                        mentionsOpen
+                            ? 'opacity-100'
+                            : 'opacity-0 peer-hover:opacity-100 peer-focus-visible:opacity-100'
+                    ]"
+                >
+                    <span v-for="mention in mentions" :key="mention" class="block break-words">
+                        {{ mention }}
+                    </span>
+                </div>
+            </div>
 
             <div
                 v-if="message.type === 'loop_share' && video"
@@ -116,13 +147,18 @@
                 </a>
 
                 <div
-                    v-if="message.body"
+                    v-if="displayBody"
                     :class="[
                         'whitespace-pre-wrap break-words px-3.5 py-2 text-sm',
                         own ? 'text-white' : 'text-slate-900 dark:text-slate-100'
                     ]"
                 >
-                    {{ message.body }}
+                    <template v-for="(segment, index) in bodySegments" :key="index">
+                        <router-link v-if="segment.link" :to="segment.link" :class="mentionClass">{{
+                            segment.text
+                        }}</router-link>
+                        <template v-else>{{ segment.text }}</template>
+                    </template>
                 </div>
             </div>
 
@@ -194,7 +230,12 @@
                         own ? 'text-white' : 'text-slate-900 dark:text-slate-100'
                     ]"
                 >
-                    {{ message.body }}
+                    <template v-for="(segment, index) in bodySegments" :key="index">
+                        <router-link v-if="segment.link" :to="segment.link" :class="mentionClass">{{
+                            segment.text
+                        }}</router-link>
+                        <template v-else>{{ segment.text }}</template>
+                    </template>
                 </div>
             </div>
 
@@ -231,8 +272,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { FlagIcon, PlayIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { computed, ref } from 'vue'
+import { AtSymbolIcon, FlagIcon, PlayIcon, TrashIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
     message: { type: Object, required: true },
@@ -243,6 +284,14 @@ const props = defineProps({
     participant: { type: Object, default: () => ({}) }
 })
 const emit = defineEmits(['retry', 'delete', 'report'])
+
+const MENTION_PATTERN =
+    '@[a-zA-Z0-9_](?:[a-zA-Z0-9_.-]*[a-zA-Z0-9_])?(?:@[a-zA-Z0-9](?:[a-zA-Z0-9.-]*[a-zA-Z0-9])?)?'
+const LEADING_MENTION_RUN = new RegExp('^(?:' + MENTION_PATTERN + '\\s*)+')
+const MENTION_TOKEN = new RegExp(MENTION_PATTERN, 'g')
+const LINKABLE_MENTION = new RegExp('(?<![\\w@./])' + MENTION_PATTERN, 'g')
+
+const mentionsOpen = ref(false)
 
 const avatarUser = computed(() => props.sender ?? props.participant ?? {})
 
@@ -259,9 +308,61 @@ const deletable = computed(
         !String(props.message.id).startsWith('temp-')
 )
 
+const leadingMentionRun = computed(() => {
+    const body = props.message.body
+    if (!body) return null
+    const match = body.match(LEADING_MENTION_RUN)
+    return match ? match[0] : null
+})
+
+const mentions = computed(() => {
+    const run = leadingMentionRun.value
+    if (!run) return []
+    return [...new Set(run.match(MENTION_TOKEN) ?? [])]
+})
+
+const displayBody = computed(() => {
+    const body = props.message.body ?? ''
+    const run = leadingMentionRun.value
+    if (!run) return body
+    const stripped = body
+        .slice(run.length)
+        .replace(/^[,:]\s*/, '')
+        .trimStart()
+    return stripped.length ? stripped : body
+})
+
+const showMentions = computed(
+    () => mentions.value.length > 0 && displayBody.value !== (props.message.body ?? '')
+)
+
+const bodySegments = computed(() => {
+    const body = displayBody.value
+    if (!body) return []
+    const segments = []
+    let cursor = 0
+    for (const match of body.matchAll(LINKABLE_MENTION)) {
+        if (match.index > cursor) {
+            segments.push({ text: body.slice(cursor, match.index), link: null })
+        }
+        segments.push({ text: match[0], link: `/@${match[0].slice(1)}` })
+        cursor = match.index + match[0].length
+    }
+    if (cursor < body.length) {
+        segments.push({ text: body.slice(cursor), link: null })
+    }
+    return segments
+})
+
+const mentionClass = computed(() =>
+    props.own
+        ? 'font-medium underline decoration-white/60 hover:decoration-white'
+        : 'font-medium text-[#F02C56] hover:underline'
+)
+
 const hasMedia = computed(() => Boolean(props.message.media?.length))
 const hasCaption = computed(
-    () => Boolean(props.message.body) && (props.message.type !== 'loop_share' || !video.value)
+    () => Boolean(displayBody.value) && (props.message.type !== 'loop_share' || !video.value)
 )
 
 const video = computed(() => props.message.video ?? null)
