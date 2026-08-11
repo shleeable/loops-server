@@ -111,7 +111,8 @@ class DmActivityPubService
     {
         $sender = $message->sender;
         $audience = $this->audience($message);
-        $contextUri = $this->contextUri($message->conversation);
+        $conversation = $message->conversation;
+        $contextUri = $this->contextUri($conversation);
 
         $note = [
             'id' => $message->ap_object_uri,
@@ -142,7 +143,7 @@ class DmActivityPubService
 
         if ($contextUri) {
             $note['context'] = $contextUri;
-            $note['conversation'] = $contextUri;
+            $note['conversation'] = $this->conversationUri($conversation) ?: $contextUri;
         }
 
         $attachments = $message->media->map->toApAttachment()->values()->all();
@@ -199,6 +200,12 @@ class DmActivityPubService
         if ($message->type === Message::TYPE_LOOP_SHARE && $message->video) {
             $url = $message->video->shareUrl();
             $parts[] = '<a href="'.$url.'" rel="noopener noreferrer">'.$url.'</a>';
+        }
+
+        if (! $parts) {
+            $parts[] = $message->media->isNotEmpty()
+                ? '&#128247;'
+                : '&#8203;';
         }
 
         return '<p>'.implode('<br />', $parts).'</p>';

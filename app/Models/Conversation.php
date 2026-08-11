@@ -102,4 +102,16 @@ class Conversation extends Model
     {
         return $this->type === self::TYPE_GROUP;
     }
+
+    public static function groupHash(array $profileIds): string
+    {
+        $ids = collect($profileIds)->map(fn ($id) => (int) $id)->unique()->sort()->values();
+
+        return hash('sha256', 'group:'.$ids->implode(':'));
+    }
+
+    public function contexts()
+    {
+        return $this->hasMany(ConversationContext::class);
+    }
 }

@@ -6,6 +6,7 @@ use App\Events\DmMessageCreated;
 use App\Events\DmMessageDeleted;
 use App\Jobs\Federation\DeliverDmActivity;
 use App\Models\Conversation;
+use App\Models\ConversationContext;
 use App\Models\ConversationParticipant;
 use App\Models\Message;
 use App\Models\Profile;
@@ -32,6 +33,17 @@ use Illuminate\Support\Str;
 class DirectMessageService
 {
     public const INBOUND_REQUEST_SOFT_CAP = 5;
+
+    protected const CONTEXT_KEYS = [
+        'context_uri',
+        'remote_conversation_uri',
+        'remote_context_uri',
+        'context',
+        'conversation',
+        'ostatus:conversation',
+    ];
+
+    protected const MAX_CONTEXT_LENGTH = 255;
 
     public function __construct(
         protected DmActivityPubService $ap
@@ -141,16 +153,25 @@ class DirectMessageService
         });
     }
 
-    public function findOrCreateDm(Profile $a, Profile $b, ?string $contextUri = null): Conversation
+    /**
+     * context_uri is always minted by us. Remote thread identifiers are
+     * recorded separately on remote_context_uri / remote_conversation_uri
+     * and indexed in conversation_contexts.
+     */
+    public function findOrCreateDm(Profile $a, Profile $b): Conversation
     {
-        return Conversation::firstOrCreate(
+        $conversation = Conversation::firstOrCreate(
             ['participants_hash' => Conversation::dmHash($a->id, $b->id)],
             [
                 'type' => Conversation::TYPE_DM,
                 'created_by_profile_id' => $a->id,
-                'context_uri' => $contextUri ?? url('/ap/contexts/'.Str::uuid()),
+                'context_uri' => url('/ap/contexts/'.Str::uuid()),
             ]
         );
+
+        $this->registerOwnContext($conversation);
+
+        return $conversation;
     }
 
     /**
@@ -200,11 +221,16 @@ class DirectMessageService
         abort_if($deliverable->isEmpty(), 403, 'Message not deliverable.');
 
         return DB::transaction(function () use ($creator, $deliverable, $states) {
+            $seedIds = $deliverable->pluck('id')->push($creator->id)->all();
+
             $conversation = Conversation::create([
                 'type' => Conversation::TYPE_GROUP,
                 'created_by_profile_id' => $creator->id,
                 'context_uri' => url('/ap/contexts/'.Str::uuid()),
+                'seed_participants_hash' => Conversation::groupHash($seedIds),
             ]);
+
+            $this->registerOwnContext($conversation);
 
             $this->ensureParticipant(
                 $conversation,
@@ -330,11 +356,14 @@ class DirectMessageService
                 'hidden_at' => null,
             ])->save();
 
+            $replyParentId = $payload['in_reply_to_id'] ?? $conversation->last_message_id;
+
             $message = $conversation->messages()->create([
                 'profile_id' => $sender->id,
                 'type' => $payload['type'],
                 'body' => $payload['body'] ?? null,
                 'video_id' => $payload['video_id'] ?? null,
+                'in_reply_to_id' => $replyParentId,
             ]);
 
             if (isset($payload['video_id'])) {
@@ -371,6 +400,7 @@ class DirectMessageService
     /**
      * Handle an inbound Create activity.
      *
+     *
      * @param  Collection<int, Profile>  $recipients
      */
     public function receive(Profile $sender, Collection $recipients, array $payload): ?Message
@@ -384,7 +414,13 @@ class DirectMessageService
             return null;
         }
 
-        if (Message::where('ap_object_uri', $payload['object_uri'])->exists()) {
+        $objectUri = $payload['object_uri'] ?? null;
+
+        if (! is_string($objectUri) || $objectUri === '') {
+            return null;
+        }
+
+        if (Message::withTrashed()->where('ap_object_uri', $objectUri)->exists()) {
             return null;
         }
 
@@ -400,12 +436,10 @@ class DirectMessageService
             return null;
         }
 
-        $isGroup = $recipients->count() > 1;
+        $message = DB::transaction(function () use ($sender, $recipients, $states, $payload, $objectUri) {
+            $conversation = $this->resolveInboundConversation($sender, $recipients, $payload);
 
-        $message = DB::transaction(function () use ($sender, $recipients, $states, $payload, $isGroup) {
-            $conversation = $isGroup
-                ? $this->findOrCreateGroup($sender, $payload['context_uri'] ?? null)
-                : $this->findOrCreateDm($sender, $recipients->first(), $payload['context_uri'] ?? null);
+            $this->rememberRemoteThreadUris($conversation, $payload);
 
             $senderParticipant = $this->ensureParticipant(
                 $conversation,
@@ -433,7 +467,7 @@ class DirectMessageService
                 );
             }
 
-            if (! $isGroup) {
+            if (! $conversation->isGroup()) {
                 $recipientParticipant = $recipientParticipants[$recipients->first()->id] ?? null;
 
                 if (! $recipientParticipant) {
@@ -453,10 +487,11 @@ class DirectMessageService
                 'profile_id' => $sender->id,
                 'type' => ! empty($payload['media']) ? Message::TYPE_MEDIA : Message::TYPE_TEXT,
                 'body' => $payload['body'] ?? null,
+                'in_reply_to_id' => $this->threadParentId($conversation, $payload),
             ]);
 
             $message->forceFill([
-                'ap_object_uri' => $payload['object_uri'],
+                'ap_object_uri' => $objectUri,
             ])->save();
 
             /** @var list<DmMediaAttributes> $mediaList */
@@ -481,22 +516,285 @@ class DirectMessageService
         return $message;
     }
 
-    protected function findOrCreateGroup(Profile $sender, ?string $contextUri): Conversation
-    {
-        $conversation = Conversation::firstOrCreate(
-            ['context_uri' => $contextUri ?? url('/ap/contexts/'.Str::uuid())],
-            [
-                'type' => Conversation::TYPE_GROUP,
-                'created_by_profile_id' => $sender->id,
-            ]
-        );
+    /**
+     * Resolve which conversation an inbound message belongs to.
+     *
+     * @param  Collection<int, Profile>  $recipients
+     */
+    protected function resolveInboundConversation(
+        Profile $sender,
+        Collection $recipients,
+        array $payload
+    ): Conversation {
+        $contextUris = $this->contextUris($payload);
 
-        if ($conversation->type !== Conversation::TYPE_GROUP) {
-            $conversation->forceFill([
-                'type' => Conversation::TYPE_GROUP,
-                'participants_hash' => null,
-            ])->save();
+        foreach ($contextUris as $contextUri) {
+            $candidate = $this->conversationByContext($contextUri);
+
+            if ($candidate && $this->canJoinExisting($candidate, $sender, $recipients)) {
+                $this->linkContexts($candidate, $contextUris);
+
+                return $candidate;
+            }
         }
+
+        $parent = $this->inboundParent($payload);
+
+        if ($parent?->conversation && $this->canJoinExisting($parent->conversation, $sender, $recipients)) {
+            $this->linkContexts($parent->conversation, $contextUris);
+
+            return $parent->conversation;
+        }
+
+        $isGroup = $recipients->count() > 1;
+
+        $candidate = $isGroup
+            ? $this->findGroupByParticipants($sender, $recipients)
+            : Conversation::with('participants')
+                ->where('participants_hash', Conversation::dmHash($sender->id, $recipients->first()->id))
+                ->first();
+
+        if (! $candidate) {
+            $candidate = $isGroup
+                ? $this->createInboundGroup($sender, $recipients)
+                : $this->findOrCreateDm($sender, $recipients->first());
+        }
+
+        $this->linkContexts($candidate, $contextUris);
+
+        return $candidate;
+    }
+
+    /**
+     * Every usable thread identifier in the payload, deduped and in
+     * precedence order.
+     *
+     * @return list<string>
+     */
+    protected function contextUris(array $payload): array
+    {
+        $uris = [];
+
+        foreach (self::CONTEXT_KEYS as $key) {
+            $uri = $this->normalizeContextValue($payload[$key] ?? null);
+
+            if ($uri !== null) {
+                $uris[$uri] = true;
+            }
+        }
+
+        return array_keys($uris);
+    }
+
+    protected function normalizeContextValue(mixed $value): ?string
+    {
+        if (is_array($value)) {
+            $value = $value['id'] ?? null;
+        }
+
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        if ($value === '' || strlen($value) > self::MAX_CONTEXT_LENGTH) {
+            return null;
+        }
+
+        if (! filter_var($value, FILTER_VALIDATE_URL) && ! Str::startsWith($value, 'tag:')) {
+            return null;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Record the remote's own thread identifiers so buildNote() can echo them
+     * back as `conversation`
+     *
+     * Never stores a URI in our own namespace.
+     */
+    protected function rememberRemoteThreadUris(Conversation $conversation, array $payload): void
+    {
+        $localHost = strtolower((string) parse_url((string) config('app.url'), PHP_URL_HOST));
+
+        $updates = [];
+
+        $candidates = [
+            'remote_context_uri' => $payload['remote_context_uri'] ?? $payload['context'] ?? null,
+            'remote_conversation_uri' => $payload['remote_conversation_uri'] ?? $payload['conversation'] ?? null,
+        ];
+
+        foreach ($candidates as $column => $value) {
+            if ($conversation->{$column}) {
+                continue;
+            }
+
+            $uri = $this->normalizeContextValue($value);
+
+            if (! $uri) {
+                continue;
+            }
+
+            $host = strtolower((string) parse_url($uri, PHP_URL_HOST));
+
+            if ($host !== '' && $host === $localHost) {
+                continue;
+            }
+
+            $updates[$column] = $uri;
+        }
+
+        if ($updates) {
+            $conversation->forceFill($updates)->save();
+        }
+    }
+
+    protected function conversationByContext(string $contextUri): ?Conversation
+    {
+        $conversationId = ConversationContext::where('context_uri', $contextUri)
+            ->value('conversation_id');
+
+        if ($conversationId) {
+            return Conversation::with('participants')->find($conversationId);
+        }
+
+        return Conversation::with('participants')
+            ->where('context_uri', $contextUri)
+            ->first();
+    }
+
+    /**
+     * Record remote thread identifiers as aliases for one of our convos
+     *
+     * @param  list<string>  $contextUris
+     */
+    protected function linkContexts(Conversation $conversation, array $contextUris): void
+    {
+        foreach ($contextUris as $contextUri) {
+            if ($contextUri === $conversation->context_uri) {
+                continue;
+            }
+
+            ConversationContext::firstOrCreate(
+                ['context_uri' => $contextUri],
+                ['conversation_id' => $conversation->id]
+            );
+        }
+    }
+
+    protected function registerOwnContext(Conversation $conversation): void
+    {
+        if (! $conversation->context_uri) {
+            return;
+        }
+
+        ConversationContext::firstOrCreate(
+            ['context_uri' => $conversation->context_uri],
+            ['conversation_id' => $conversation->id]
+        );
+    }
+
+    protected function inboundParent(array $payload): ?Message
+    {
+        $parentId = $payload['in_reply_to_id'] ?? null;
+
+        if (is_numeric($parentId)) {
+            return Message::withTrashed()
+                ->with('conversation.participants')
+                ->find((int) $parentId);
+        }
+
+        $parentUri = $payload['in_reply_to'] ?? null;
+
+        if (! is_string($parentUri) || $parentUri === '') {
+            return null;
+        }
+
+        return Message::withTrashed()
+            ->with('conversation.participants')
+            ->where('ap_object_uri', $parentUri)
+            ->first();
+    }
+
+    protected function threadParentId(Conversation $conversation, array $payload): ?int
+    {
+        $parent = $this->inboundParent($payload);
+
+        if (! $parent || (int) $parent->conversation_id !== (int) $conversation->id) {
+            return null;
+        }
+
+        return (int) $parent->id;
+    }
+
+    /**
+     * Whether an inbound sender may post into an existing conversation.
+     *
+     * @param  Collection<int, Profile>  $recipients
+     */
+    protected function canJoinExisting(
+        Conversation $conversation,
+        Profile $sender,
+        Collection $recipients
+    ): bool {
+        $conversation->loadMissing('participants');
+
+        if (! $conversation->participants->firstWhere('profile_id', $sender->id)) {
+            return false;
+        }
+
+        if ($conversation->isGroup()) {
+            return true;
+        }
+
+        if ($recipients->count() !== 1) {
+            return false;
+        }
+
+        $existing = $conversation->participants->pluck('profile_id')
+            ->map(fn ($id) => (int) $id)->sort()->values()->all();
+
+        $envelope = collect([$sender->id, $recipients->first()->id])
+            ->map(fn ($id) => (int) $id)->sort()->values()->all();
+
+        return $existing === $envelope;
+    }
+
+    /**
+     * Last-resort group match on the seed participant set.
+     *
+     * @param  Collection<int, Profile>  $recipients
+     */
+    protected function findGroupByParticipants(Profile $sender, Collection $recipients): ?Conversation
+    {
+        $ids = $recipients->pluck('id')->push($sender->id)->all();
+
+        $candidates = Conversation::with('participants')
+            ->where('type', Conversation::TYPE_GROUP)
+            ->where('seed_participants_hash', Conversation::groupHash($ids))
+            ->limit(2)
+            ->get();
+
+        return $candidates->count() === 1 ? $candidates->first() : null;
+    }
+
+    /**
+     * @param  Collection<int, Profile>  $recipients
+     */
+    protected function createInboundGroup(Profile $sender, Collection $recipients): Conversation
+    {
+        $seedIds = $recipients->pluck('id')->push($sender->id)->all();
+
+        $conversation = Conversation::create([
+            'type' => Conversation::TYPE_GROUP,
+            'created_by_profile_id' => $sender->id,
+            'context_uri' => url('/ap/contexts/'.Str::uuid()),
+            'seed_participants_hash' => Conversation::groupHash($seedIds),
+        ]);
+
+        $this->registerOwnContext($conversation);
 
         return $conversation;
     }

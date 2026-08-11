@@ -279,7 +279,7 @@ class DmInboundService
             return null;
         }
 
-        $message = Message::where('ap_object_uri', $uri)->first();
+        $message = Message::withTrashed()->where('ap_object_uri', $uri)->first();
 
         if ($message) {
             return $message;
@@ -307,7 +307,9 @@ class DmInboundService
     {
         return [
             'context' => $this->normalizeUri($object['context'] ?? null),
-            'conversation' => $this->normalizeUri($object['conversation'] ?? null),
+            'conversation' => $this->normalizeUri(
+                $object['conversation'] ?? $object['ostatus:conversation'] ?? null
+            ),
         ];
     }
 
