@@ -764,6 +764,7 @@ class StarterKitController extends Controller
 
             if (Follower::whereProfileId($pid)->whereFollowingId($account->id)->exists()) {
                 $alreadyFollowingCount++;
+
                 continue;
             }
 
@@ -868,6 +869,7 @@ class StarterKitController extends Controller
 
             if (Follower::whereProfileId($pid)->whereFollowingId($account->id)->exists()) {
                 $alreadyFollowingCount++;
+
                 continue;
             }
 
