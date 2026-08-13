@@ -241,7 +241,7 @@ const federationNotice = computed(() => {
         remoteDomains.value.length === 1
             ? remoteDomains.value[0]
             : `${remoteDomains.value.length} servers`
-    return `This conversation federates to ${target}. Messages are not end-to-end encrypted.`
+    return `This conversation may be federated across ${remoteDomains.value.length} ${remoteDomains.value.length === 1 ? 'server' : 'servers'} and messages are not end-to-end encrypted. Avoid sharing sensitive or private information here. For confidential conversations, use a trusted end-to-end encrypted messaging service instead.`
 })
 
 function isOwn(message) {
