@@ -82,66 +82,9 @@ export default defineConfig({
             output: {
                 manualChunks(id) {
                     if (!id.includes('node_modules')) return
-
-                    if (/[\\/](vue|vue-router|pinia|@vueuse)[\\/]/.test(id)) {
-                        return 'vendor-vue'
+                    if (/[\\/](vue|@vue|vue-router|pinia|@vueuse|@unhead)[\\/]/.test(id)) {
+                        return 'vendor-core'
                     }
-
-                    if (id.includes('@unhead') || id.includes('vue-i18n')) {
-                        return 'vendor-meta'
-                    }
-
-                    if (id.includes('@headlessui') || id.includes('@heroicons')) {
-                        return 'vendor-ui'
-                    }
-
-                    if (id.includes('@tanstack') || id.includes('axios')) {
-                        return 'vendor-data'
-                    }
-
-                    if (id.includes('echarts') || id.includes('zrender')) {
-                        return 'vendor-charts'
-                    }
-
-                    if (
-                        id.includes('video.js') ||
-                        id.includes('@videojs') ||
-                        id.includes('videojs-') ||
-                        id.includes('mpd-parser') ||
-                        id.includes('m3u8-parser') ||
-                        id.includes('mux.js') ||
-                        id.includes('aes-decrypter') ||
-                        id.includes('@babel/runtime') ||
-                        id.includes('global/window') ||
-                        id.includes('global/document') ||
-                        id.includes('mediabunny')
-                    ) {
-                        return 'vendor-video'
-                    }
-
-                    if (
-                        id.includes('@tiptap') ||
-                        id.includes('prosemirror') ||
-                        id.includes('md-editor-v3') ||
-                        id.includes('markdown-it') ||
-                        id.includes('highlight.js')
-                    ) {
-                        return 'vendor-editor'
-                    }
-
-                    if (
-                        id.includes('vue-advanced-cropper') ||
-                        id.includes('emoji-mart-vue-fast') ||
-                        id.includes('vue-draggable-next')
-                    ) {
-                        return 'vendor-media-tools'
-                    }
-
-                    if (id.includes('date-fns')) {
-                        return 'vendor-utils'
-                    }
-
-                    return 'vendor'
                 }
             }
         }

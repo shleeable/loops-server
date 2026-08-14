@@ -660,16 +660,17 @@ const router = createRouter({
 })
 
 let authInitialized = false
+let authReady = null
 
 router.beforeEach(async (to, from, next) => {
     const authStore = useAuthStore()
 
-    if (!authInitialized) {
-        await initializeAuth()
-        authInitialized = true
+    if (!authReady) authReady = initializeAuth()
+
+    if (to.matched.some((r) => r.meta.requiresAuth || r.meta.requiresAdmin)) {
+        await authReady
     }
 
-    // Check if route requires admin access
     if (to.matched.some((record) => record.meta.requiresAdmin)) {
         if (!authStore.user || !authStore.user.is_admin) {
             next('/')

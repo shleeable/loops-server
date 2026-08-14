@@ -1,5 +1,5 @@
 import './bootstrap'
-import { createApp } from 'vue'
+import { createApp, defineAsyncComponent } from 'vue'
 import { createPinia } from 'pinia'
 import { createHead } from '@unhead/vue/client'
 import axiosPlugin from './plugins/axios'
@@ -10,26 +10,37 @@ import App from './App.vue'
 import router from './routes/index'
 import i18n from './i18n/locales'
 
-import AdminLayout from '@/layouts/AdminLayout.vue'
-import BlankLayout from '@/layouts/BlankLayout.vue'
 import FeedLayout from '@/layouts/FeedLayout.vue'
-import FullLayout from '@/layouts/FullLayout.vue'
 import MainLayout from '@/layouts/MainLayout.vue'
-import SettingsLayout from '@/layouts/SettingsLayout.vue'
-import StudioLayout from '@/layouts/StudioLayout.vue'
 
 import '../css/fonts.css'
 import '../sass/next.css'
 
 const app = createApp(App)
 
-app.component('AdminLayout', AdminLayout)
-app.component('BlankLayout', BlankLayout)
-app.component('FeedLayout', FeedLayout)
-app.component('FullLayout', FullLayout)
 app.component('MainLayout', MainLayout)
-app.component('SettingsLayout', SettingsLayout)
-app.component('StudioLayout', StudioLayout)
+app.component('FeedLayout', FeedLayout)
+
+app.component(
+    'AdminLayout',
+    defineAsyncComponent(() => import('@/layouts/AdminLayout.vue'))
+)
+app.component(
+    'StudioLayout',
+    defineAsyncComponent(() => import('@/layouts/StudioLayout.vue'))
+)
+app.component(
+    'SettingsLayout',
+    defineAsyncComponent(() => import('@/layouts/SettingsLayout.vue'))
+)
+app.component(
+    'BlankLayout',
+    defineAsyncComponent(() => import('@/layouts/BlankLayout.vue'))
+)
+app.component(
+    'FullLayout',
+    defineAsyncComponent(() => import('@/layouts/FullLayout.vue'))
+)
 
 app.config.globalProperties.$appConfig = window.appConfig
 app.provide('appConfig', window.appConfig)
