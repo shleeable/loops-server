@@ -173,43 +173,36 @@
                                             Revoke API sessions
                                         </DropdownItem>
 
+                                        <DropdownItem @click="toggleVerification">
+                                            <CheckBadgeIcon class="h-4 w-4 mr-1.5" />
+                                            {{
+                                                profile.email_verified
+                                                    ? 'Unverify email'
+                                                    : 'Verify email'
+                                            }}
+                                        </DropdownItem>
                                         <DropdownDivider class="my-1" />
                                     </template>
 
-                                    <DropdownItem
-                                        v-if="!profile.is_admin && profile.local"
-                                        @click="toggleVerification"
-                                    >
-                                        <CheckBadgeIcon class="h-4 w-4 mr-1.5" />
-                                        {{
-                                            profile.email_verified
-                                                ? 'Unverify email'
-                                                : 'Verify email'
-                                        }}
-                                    </DropdownItem>
+                                    <template v-if="!profile.is_admin">
+                                        <DropdownItem destructive @click="handleDeleteAvatar">
+                                            <UserCircleIcon class="h-4 w-4 mr-1.5" />
+                                            Delete Avatar
+                                        </DropdownItem>
 
-                                    <DropdownItem
-                                        v-if="!profile.is_admin"
-                                        destructive
-                                        @click="handleDeleteAllComments"
-                                    >
-                                        <ChatBubbleBottomCenterIcon class="h-4 w-4 mr-1.5" />
-                                        Delete All Comments
-                                    </DropdownItem>
+                                        <DropdownItem destructive @click="handleDeleteAllComments">
+                                            <ChatBubbleBottomCenterIcon class="h-4 w-4 mr-1.5" />
+                                            Delete All Comments
+                                        </DropdownItem>
 
-                                    <DropdownItem destructive @click="handleDeleteAvatar">
-                                        <UserCircleIcon class="h-4 w-4 mr-1.5" />
-                                        Delete Avatar
-                                    </DropdownItem>
-
-                                    <DropdownItem
-                                        v-if="!profile.is_admin"
-                                        destructive
-                                        @click="showDeleteAllVideosModal = true"
-                                    >
-                                        <VideoCameraIcon class="h-4 w-4 mr-1.5" />
-                                        Delete All Videos
-                                    </DropdownItem>
+                                        <DropdownItem
+                                            destructive
+                                            @click="showDeleteAllVideosModal = true"
+                                        >
+                                            <VideoCameraIcon class="h-4 w-4 mr-1.5" />
+                                            Delete All Videos
+                                        </DropdownItem>
+                                    </template>
 
                                     <DropdownDivider class="my-1" v-if="!profile.is_admin" />
 
