@@ -672,7 +672,7 @@
         "noMorePostsToLoad": "Plus rien à charger",
         "noVideosYet": "Pas encore de vidéos",
         "notFollowingAnyone": "Ne suit personne",
-        "profile404ErrorMessage": "Impossible de trouver un profil avec le pseudo &commat;<b>{userid}<\/b>. Vérifiez le pseudo et réessayez.",
+        "profile404ErrorMessage": "Impossible de trouver un profil avec le pseudo {'@'}{userId}. Vérifiez le pseudo et réessayez.",
         "profile500ErrorMessage": "Nos serveurs ont un souci en ce moment. Réessayez dans quelques instants.",
         "profileNotFound": "Profil introuvable",
         "profileOfflineErrorMessage": "Vérifiez votre connexion internet et réessayez.",
@@ -702,7 +702,7 @@
             "title": "Signaler une erreur"
         },
         "success": {
-            "message": "Votre signalement a bien été envoyé et sera examiné par notre équipe de modération.<br \/><br \/>Merci d'aider à garder notre communauté sûre ❤️",
+            "message": "Votre signalement a bien été envoyé et sera examiné par notre équipe de modération.\n\nMerci d'aider à garder notre communauté sûre ❤️",
             "title": "Signalement envoyé !"
         },
         "types": {

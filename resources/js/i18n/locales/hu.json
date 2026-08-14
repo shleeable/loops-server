@@ -672,7 +672,7 @@
         "noMorePostsToLoad": "Nincs több betölthető poszt",
         "noVideosYet": "Még nincsenek videók",
         "notFollowingAnyone": "Még nem követsz senkit",
-        "profile404ErrorMessage": "&commat;<b>{userid}<\/b> felhasználónévvel nem található fiók. Kérlek ellenőrizd a felhasználónevet és próbálkozz újra.",
+        "profile404ErrorMessage": "{'@'}{userId} felhasználónévvel nem található fiók. Kérlek ellenőrizd a felhasználónevet és próbálkozz újra.",
         "profile500ErrorMessage": "Szervereink problémába ütköztek. Kérlek próbálkozz újra néhány pillanat múlva.",
         "profileNotFound": "Profil nem található",
         "profileOfflineErrorMessage": "Kérlek ellenőrizd az internetkapcsolatot és próbálkozz újra.",
@@ -702,7 +702,7 @@
             "title": "Report Error"
         },
         "success": {
-            "message": "Your report was successfully sent and will be reviewed by our content moderation team.<br \/><br \/>Thank you for helping keeping our community safe ❤️",
+            "message": "Your report was successfully sent and will be reviewed by our content moderation team.\n\nThank you for helping keeping our community safe ❤️",
             "title": "Report Submitted!"
         },
         "types": {

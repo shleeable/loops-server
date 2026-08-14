@@ -672,7 +672,7 @@
         "noMorePostsToLoad": "Žádné další příspěvky k načtení",
         "noVideosYet": "Zatím nemáte žádná videa",
         "notFollowingAnyone": "Nikoho nesledujete",
-        "profile404ErrorMessage": "Nepodařilo se nám najít profil s uživatelským jménem &commat;<b>{userid}<\/b>. Zkontrolujte prosím uživatelské jméno a zkuste to znovu.",
+        "profile404ErrorMessage": "Nepodařilo se nám najít profil s uživatelským jménem {'@'}{userId}. Zkontrolujte prosím uživatelské jméno a zkuste to znovu.",
         "profile500ErrorMessage": "Naše servery mají nyní potíže. Zkuste to prosím znovu za pár okamžiků.",
         "profileNotFound": "Profil nenalezen",
         "profileOfflineErrorMessage": "Zkontrolujte prosím připojení k internetu a zkuste to znovu.",
@@ -702,7 +702,7 @@
             "title": "Report Error"
         },
         "success": {
-            "message": "Your report was successfully sent and will be reviewed by our content moderation team.<br \/><br \/>Thank you for helping keeping our community safe ❤️",
+            "message": "Your report was successfully sent and will be reviewed by our content moderation team.\n\nThank you for helping keeping our community safe ❤️",
             "title": "Report Submitted!"
         },
         "types": {

@@ -129,10 +129,20 @@
                               : $t('common.somethingWentWrong')
                     }}
                 </h2>
-                <p
+                <I18nT
+                    v-if="error.type === 'not-found'"
+                    keypath="profile.profile404ErrorMessage"
+                    tag="p"
+                    scope="global"
                     class="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed"
-                    v-html="error.message"
-                ></p>
+                >
+                    <template #userId>
+                        <b>{{ error.userId }}</b>
+                    </template>
+                </I18nT>
+                <p v-else class="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+                    {{ error.message }}
+                </p>
 
                 <div class="flex flex-col gap-3 w-full">
                     <AnimatedButton
@@ -180,7 +190,7 @@ import ProfilePlaylists from '~/components/Profile/ProfilePlaylists.vue'
 import { useProfileStore } from '~/stores/profile'
 import { useAuthStore } from '~/stores/auth'
 import { useUtils } from '@/composables/useUtils'
-import { useI18n } from 'vue-i18n'
+import { useI18n, Translation as I18nT } from 'vue-i18n'
 import { useHead } from '@unhead/vue'
 import { BookmarkIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
 
@@ -450,12 +460,6 @@ const gotoProfile = (id) => {
     router.push(`/@${id}`)
 }
 
-const sanitize = (s) =>
-    s.replace(
-        /[<>&"']/g,
-        (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' })[c]
-    )
-
 const loadProfileData = async (userId) => {
     try {
         isLoading.value = true
@@ -469,9 +473,7 @@ const loadProfileData = async (userId) => {
         if (err.response?.status === 404) {
             error.value = {
                 type: 'not-found',
-                message: t('profile.profile404ErrorMessage', {
-                    userid: sanitize(userId)
-                })
+                userId
             }
         } else if ([500, 502, 503].includes(err.response?.status)) {
             error.value = {

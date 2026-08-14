@@ -672,7 +672,7 @@
         "noMorePostsToLoad": "No hay más publicaciones para cargar",
         "noVideosYet": "Aún no hay videos",
         "notFollowingAnyone": "No sigues a nadie",
-        "profile404ErrorMessage": "No se ha encontrado un perfil con el nombre de usuario &commat;<b>{userid}<\/b>. Por favor verifica el nombre de usuario e inténtalo de nuevo.",
+        "profile404ErrorMessage": "No se ha encontrado un perfil con el nombre de usuario {'@'}{userId}. Por favor verifica el nombre de usuario e inténtalo de nuevo.",
         "profile500ErrorMessage": "Nuestros servidores están teniendo problemas en este momento. Por favor inténtalo de nuevo en unos momentos.",
         "profileNotFound": "Perfil no encontrado",
         "profileOfflineErrorMessage": "Por favor verifica tu conexión a internet e inténtalo de nuevo.",
@@ -702,7 +702,7 @@
             "title": "Error de reporte"
         },
         "success": {
-            "message": "Tu reporte ha sido enviado con éxito y será revisado por el equipo de moderación de contenido.<br \/><br \/>Gracias por ayudar a mantener segura nuestra comunidad ❤️",
+            "message": "Tu reporte ha sido enviado con éxito y será revisado por el equipo de moderación de contenido.\n\nGracias por ayudar a mantener segura nuestra comunidad ❤️",
             "title": "¡Denuncia enviada!"
         },
         "types": {

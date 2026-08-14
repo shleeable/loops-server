@@ -8,10 +8,10 @@ import AlertModalPlugin from '@/composables/useAlertModal.js'
 import storePlugin from './plugins/stores'
 import App from './App.vue'
 import router from './routes/index'
-import i18n from './i18n/locales'
+import i18n, { initLocale } from './i18n/locales'
 
-import FeedLayout from '@/layouts/FeedLayout.vue'
 import MainLayout from '@/layouts/MainLayout.vue'
+import FeedLayout from '@/layouts/FeedLayout.vue'
 
 import '../css/fonts.css'
 import '../sass/next.css'
@@ -20,18 +20,9 @@ const app = createApp(App)
 
 app.component('MainLayout', MainLayout)
 app.component('FeedLayout', FeedLayout)
-
 app.component(
     'AdminLayout',
     defineAsyncComponent(() => import('@/layouts/AdminLayout.vue'))
-)
-app.component(
-    'StudioLayout',
-    defineAsyncComponent(() => import('@/layouts/StudioLayout.vue'))
-)
-app.component(
-    'SettingsLayout',
-    defineAsyncComponent(() => import('@/layouts/SettingsLayout.vue'))
 )
 app.component(
     'BlankLayout',
@@ -40,6 +31,14 @@ app.component(
 app.component(
     'FullLayout',
     defineAsyncComponent(() => import('@/layouts/FullLayout.vue'))
+)
+app.component(
+    'SettingsLayout',
+    defineAsyncComponent(() => import('@/layouts/SettingsLayout.vue'))
+)
+app.component(
+    'StudioLayout',
+    defineAsyncComponent(() => import('@/layouts/StudioLayout.vue'))
 )
 
 app.config.globalProperties.$appConfig = window.appConfig
@@ -63,4 +62,5 @@ app.use(createPinia())
             }
         }
     })
-    .mount('#app')
+
+initLocale().finally(() => app.mount('#app'))

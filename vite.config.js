@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite'
+import { fileURLToPath, URL } from 'node:url'
 import laravel from 'laravel-vite-plugin'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
+import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 
 export default defineConfig({
     plugins: [
@@ -26,6 +28,13 @@ export default defineConfig({
             }
         }),
         tailwindcss(),
+        VueI18nPlugin({
+            include: [
+                fileURLToPath(new URL('./resources/js/i18n/locales/*.json', import.meta.url))
+            ],
+            strictMessage: false,
+            dropMessageCompiler: true
+        }),
         AutoImport({
             imports: [
                 'vue',
@@ -82,7 +91,11 @@ export default defineConfig({
             output: {
                 manualChunks(id) {
                     if (!id.includes('node_modules')) return
-                    if (/[\\/](vue|@vue|vue-router|pinia|@vueuse|@unhead)[\\/]/.test(id)) {
+                    if (
+                        /[\\/](vue|@vue|vue-router|vue-i18n|@intlify|pinia|@vueuse|@unhead)[\\/]/.test(
+                            id
+                        )
+                    ) {
                         return 'vendor-core'
                     }
                 }
@@ -91,6 +104,9 @@ export default defineConfig({
     },
     define: {
         __VUE_PROD_DEVTOOLS__: false,
-        __VUE_OPTIONS_API__: true
+        __VUE_OPTIONS_API__: true,
+        __VUE_I18N_LEGACY_API__: false,
+        __VUE_I18N_FULL_INSTALL__: false,
+        __INTLIFY_PROD_DEVTOOLS__: false
     }
 })

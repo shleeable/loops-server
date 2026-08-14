@@ -672,7 +672,7 @@
         "noMorePostsToLoad": "Keine weiteren Beiträge zu laden",
         "noVideosYet": "Noch keine Videos",
         "notFollowingAnyone": "Sie folgen niemandem",
-        "profile404ErrorMessage": "Wir konnten kein Profil mit dem Benutzernamen &commat;<b>{userid}<\/b> finden. Bitte überprüfen Sie den Benutzernamen und versuchen Sie es erneut.",
+        "profile404ErrorMessage": "Wir konnten kein Profil mit dem Benutzernamen {'@'}{userId} finden. Bitte überprüfen Sie den Benutzernamen und versuchen Sie es erneut.",
         "profile500ErrorMessage": "Unsere Server haben momentan Probleme. Bitte versuchen Sie es in wenigen Augenblicken erneut.",
         "profileNotFound": "Profil nicht gefunden",
         "profileOfflineErrorMessage": "Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
@@ -702,7 +702,7 @@
             "title": "Fehler melden"
         },
         "success": {
-            "message": "Deine Meldung wurde erfolgreich gesendet und wird von unserem Moderationsteam überprüft.<br \/><br \/>Danke, dass du dazu beiträgst, unsere Community sicher zu halten ❤️",
+            "message": "Deine Meldung wurde erfolgreich gesendet und wird von unserem Moderationsteam überprüft.\n\nDanke, dass du dazu beiträgst, unsere Community sicher zu halten ❤️",
             "title": "Meldung eingereicht!"
         },
         "types": {
