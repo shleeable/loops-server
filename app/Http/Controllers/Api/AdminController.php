@@ -479,6 +479,13 @@ class AdminController extends Controller
         return AdminProfileResource::collection($profiles);
     }
 
+    public function profileVideos(Request $request, $id)
+    {
+        $videos = Video::published()->where('profile_id', $id)->cursorPaginate(10)->withQueryString();
+
+        return AdminVideoResource::collection($videos);
+    }
+
     public function profileShow(Request $request, $id)
     {
         $profile = Profile::findOrFail($id);

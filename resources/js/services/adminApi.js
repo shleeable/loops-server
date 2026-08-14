@@ -397,6 +397,10 @@ export const profilesApi = {
         return await apiClient.post(`/api/v1/admin/profiles/${id}/revoke-all-sessions`)
     },
 
+    async getProfileVideos(id, params = {}) {
+        return await apiClient.get(`/api/v1/admin/profiles/${id}/videos`, params)
+    },
+
     async deleteProfile(id) {
         return { success: true }
     }

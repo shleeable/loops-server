@@ -202,6 +202,15 @@
                                         Delete Avatar
                                     </DropdownItem>
 
+                                    <DropdownItem
+                                        v-if="!profile.is_admin"
+                                        destructive
+                                        @click="showDeleteAllVideosModal = true"
+                                    >
+                                        <VideoCameraIcon class="h-4 w-4 mr-1.5" />
+                                        Delete All Videos
+                                    </DropdownItem>
+
                                     <DropdownDivider class="my-1" v-if="!profile.is_admin" />
 
                                     <DropdownItem
@@ -992,7 +1001,9 @@
                 </div>
             </div>
         </Teleport>
+    </div>
 
+    <template v-if="profile">
         <AdminSendEmailModal
             :show="showSendEmailModal"
             :profile="profile"
@@ -1016,7 +1027,14 @@
             @close="closeModPermissionModal"
             @confirm="confirmModPermission"
         />
-    </div>
+
+        <AdminDeleteAllVideosModal
+            :show="showDeleteAllVideosModal"
+            :profile="profile"
+            @close="showDeleteAllVideosModal = false"
+            @complete="handleDeleteAllVideosComplete"
+        />
+    </template>
 </template>
 
 <script setup>
@@ -1083,6 +1101,7 @@ import DropdownDivider from '@/components/DropdownDivider.vue'
 import AdminSendEmailModal from '@/components/Admin/AdminSendEmailModal.vue'
 import AdminResetPasswordModal from '@/components/Admin/AdminResetPasswordModal.vue'
 import AdminModPermissionModal from '@/components/Admin/AdminModPermissionModal.vue'
+import AdminDeleteAllVideosModal from '@/components/Admin/AdminDeleteAllVideosModal.vue'
 
 const { formatDate, formatNumber, formatTimeAgo } = useUtils()
 const { confirmModal } = useAlertModal()
@@ -1104,6 +1123,7 @@ const isDeleting = ref(false)
 const deleteInputRef = ref(null)
 const showSendEmailModal = ref(false)
 const showResetPasswordModal = ref(false)
+const showDeleteAllVideosModal = ref(false)
 
 const auditLogs = ref([])
 const auditCursor = ref(null)
@@ -1898,9 +1918,9 @@ watch(bioRef, async () => {
     observeBio()
 })
 
-const fetchProfile = async (id) => {
+const fetchProfile = async (id, { silent = false } = {}) => {
     const token = ++fetchToken
-    isLoading.value = true
+    if (!silent) isLoading.value = true
     notFound.value = false
 
     try {
@@ -1923,10 +1943,10 @@ const fetchProfile = async (id) => {
         checkBioOverflow()
     } catch (error) {
         if (token !== fetchToken) return
-        notFound.value = true
+        if (!silent) notFound.value = true
         console.error('Error fetching profile:', error)
     } finally {
-        if (token === fetchToken) isLoading.value = false
+        if (token === fetchToken && !silent) isLoading.value = false
     }
 }
 
@@ -2089,6 +2109,11 @@ const handleDeleteAllComments = async () => {
     } catch (error) {
         console.error('Error deleting all profile comments:', error)
     }
+}
+
+const handleDeleteAllVideosComplete = async () => {
+    await fetchProfile(profile.value.id, { silent: true })
+    await fetchAuditLog(profile.value.id)
 }
 
 const handleDeleteAvatar = async () => {
