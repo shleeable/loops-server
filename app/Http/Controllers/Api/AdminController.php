@@ -38,6 +38,7 @@ use App\Models\CommentReply;
 use App\Models\Follower;
 use App\Models\Hashtag;
 use App\Models\Instance;
+use App\Models\Notification;
 use App\Models\Playlist;
 use App\Models\Profile;
 use App\Models\Report;
@@ -52,9 +53,12 @@ use App\Services\AccountSuggestionService;
 use App\Services\AdminAuditLogService;
 use App\Services\AdminDashboardService;
 use App\Services\AvatarService;
+use App\Services\ConfigService;
 use App\Services\ExploreService;
+use App\Services\FederationDispatcher;
 use App\Services\InstanceService;
 use App\Services\NodeinfoCrawlerService;
+use App\Services\NotificationService;
 use App\Services\PrivateMediaTokenService;
 use App\Services\ProfanityFilterService;
 use App\Services\PushTokenCacheService;
@@ -225,6 +229,17 @@ class AdminController extends Controller
 
             app(AdminAuditLogService::class)->logVideoDelete($request->user(), $video, ['vid' => $video->id, 'caption' => $video->caption, 'profile_id' => $video->profile_id, 'likes' => $video->likes]);
 
+            $config = app(ConfigService::class);
+
+            if ($config->federation()) {
+                $videoId = $video->id;
+                $videoObjectUrl = $video->getObjectUrl();
+                $actor = $video->profile;
+                app(FederationDispatcher::class)->dispatchVideoDelete($actor, $video->id, $videoObjectUrl, $video->mentions, $video->visibility);
+            }
+
+            Notification::where('video_id', $video->id)->delete();
+            NotificationService::clearUnreadCount($pid);
             $video->forceDelete();
 
             AccountService::del($pid);
