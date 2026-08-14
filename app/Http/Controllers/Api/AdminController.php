@@ -405,7 +405,7 @@ class AdminController extends Controller
                 $query->join('users', 'profiles.id', '=', 'users.profile_id')
                     ->where('users.status', 1);
             } else {
-                $query->where('status', 1);
+                $query->where('users.status', 1);
             }
         }
 
