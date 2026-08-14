@@ -2523,15 +2523,15 @@ class AdminController extends Controller
         ];
 
         if ($sort && $sort == 'suspended') {
-            $query->where('status', 6)->orderByDesc('updated_at');
+            $query->where('profiles.status', 6)->orderByDesc('updated_at');
 
             return $query;
         } elseif ($sort && $sort == 'disabled') {
-            $query->where('status', 7)->orderByDesc('updated_at');
+            $query->where('profiles.status', 7)->orderByDesc('updated_at');
 
             return $query;
         } elseif ($sort && $sort == 'deleted') {
-            $query->where('status', 8)->orderByDesc('updated_at');
+            $query->where('profiles.status', 8)->orderByDesc('updated_at');
 
             return $query;
         } elseif ($sort && isset($sortOptions[$sort])) {
