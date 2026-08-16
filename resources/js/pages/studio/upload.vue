@@ -692,6 +692,129 @@
                                     <ToggleSwitch v-model="settings.containsAi" />
                                 </div>
                             </div>
+
+                            <div class="w-full h-[1px] bg-gray-100 dark:bg-gray-700 my-6"></div>
+
+                            <div v-if="showSchedule" class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="max-w-[70%]">
+                                        <span
+                                            class="text-sm font-medium text-gray-700 dark:text-gray-200"
+                                            >Schedule</span
+                                        >
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                            Pick a time to publish this loop. Nobody can see it
+                                            until then.
+                                        </div>
+                                    </div>
+                                    <ToggleSwitch v-model="settings.schedule" />
+                                </div>
+
+                                <div
+                                    v-if="settings.schedule"
+                                    class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-4 space-y-4"
+                                >
+                                    <div class="flex flex-wrap gap-2">
+                                        <button
+                                            v-for="preset in schedulePresets"
+                                            :key="preset.key"
+                                            type="button"
+                                            @click="applyPreset(preset)"
+                                            :class="[
+                                                'px-3 py-1.5 text-xs font-medium rounded-full border transition-colors cursor-pointer',
+                                                activePresetKey === preset.key
+                                                    ? 'border-[#F02C56] bg-[#F02C56]/10 text-[#F02C56]'
+                                                    : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
+                                            ]"
+                                        >
+                                            {{ preset.label }}
+                                        </button>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label
+                                                class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1"
+                                                >Date</label
+                                            >
+                                            <input
+                                                v-model="scheduleDay"
+                                                type="date"
+                                                :min="minDayInput"
+                                                :max="maxDayInput"
+                                                class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1"
+                                                >Time</label
+                                            >
+                                            <input
+                                                v-model="scheduleTime"
+                                                type="time"
+                                                step="900"
+                                                class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        v-if="scheduleError"
+                                        class="flex items-start gap-2 text-sm text-red-500"
+                                    >
+                                        <svg
+                                            class="w-4 h-4 mt-0.5 flex-shrink-0"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.74-3L13.74 4a2 2 0 00-3.48 0L3.33 16a2 2 0 001.74 3z"
+                                            />
+                                        </svg>
+                                        <span>{{ scheduleError }}</span>
+                                    </div>
+
+                                    <div
+                                        v-else-if="scheduleDateTime"
+                                        class="flex items-start gap-3 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3"
+                                    >
+                                        <svg
+                                            class="w-5 h-5 mt-0.5 flex-shrink-0 text-[#F02C56]"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                            />
+                                        </svg>
+                                        <div class="min-w-0">
+                                            <p
+                                                class="text-sm font-medium text-gray-900 dark:text-gray-100"
+                                            >
+                                                {{ scheduleLabel }}
+                                            </p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                                Publishes {{ scheduleRelative }} in
+                                                {{ timezoneLabel }}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <p v-else class="text-xs text-gray-500 dark:text-gray-400">
+                                        Choose one of the options above, or set your own date and
+                                        time. Earliest is 6 hours from now.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -810,7 +933,7 @@
                                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                         ></path>
                                     </svg>
-                                    {{ isSubmitting ? 'Posting...' : 'Post' }}
+                                    {{ submitLabel }}
                                 </button>
                                 <button
                                     @click="handleDiscard"
@@ -918,8 +1041,10 @@ import {
     Mp4OutputFormat,
     Conversion,
     QUALITY_VERY_HIGH,
-    QUALITY_HIGH
+    QUALITY_HIGH,
+    canEncodeAudio
 } from 'mediabunny'
+import { registerAacEncoder } from '@mediabunny/aac-encoder'
 import AnimatedButton from '@/components/AnimatedButton.vue'
 
 const router = useRouter()
@@ -966,11 +1091,15 @@ const transcodeProgress = ref(0)
 const thumbnailFile = ref(null)
 const thumbnailPreview = ref(null)
 const thumbnailError = ref(null)
+const scheduleDay = ref('')
+const scheduleTime = ref('')
 
 const ffmpegInstance = ref(null)
 const isFFmpegLoaded = ref(false)
 const TRANSCODE_SAFETY = 0.85
 const AUDIO_BITRATE = 96000
+const MIN_LEAD_MS = 6 * 60 * 60 * 1000
+const MAX_HORIZON_MS = 90 * 24 * 60 * 60 * 1000
 
 let currentConversion = null
 const currentIntervalId = null
@@ -989,8 +1118,11 @@ const settings = reactive({
     allowEmbeds: true,
     allowStitch: true,
     containsAd: false,
-    containsAi: false
+    containsAi: false,
+    schedule: false
 })
+
+const showSchedule = ref(false)
 
 const videoMetadata = ref({ width: 0, height: 0, duration: 0, orientation: 'portrait' })
 
@@ -1048,8 +1180,155 @@ const previewCaption = computed(() => {
         : 'Add a caption to tell people what this loop is about ✨'
 })
 
+const padTwo = (value) => String(value).padStart(2, '0')
+
+const toDayValue = (date) =>
+    `${date.getFullYear()}-${padTwo(date.getMonth() + 1)}-${padTwo(date.getDate())}`
+
+const toTimeValue = (date) => `${padTwo(date.getHours())}:${padTwo(date.getMinutes())}`
+
+const roundUpToQuarter = (date) => {
+    const copy = new Date(date)
+    copy.setSeconds(0, 0)
+    copy.setMinutes(Math.ceil(copy.getMinutes() / 15) * 15)
+    return copy
+}
+
+const earliestSchedule = computed(() => roundUpToQuarter(new Date(Date.now() + MIN_LEAD_MS)))
+
+const minDayInput = computed(() => toDayValue(earliestSchedule.value))
+
+const maxDayInput = computed(() => toDayValue(new Date(Date.now() + MAX_HORIZON_MS)))
+
+const timezoneLabel = computed(() => {
+    try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone
+    } catch (e) {
+        return 'your local time'
+    }
+})
+
+const schedulePresets = computed(() => {
+    const floor = earliestSchedule.value
+
+    const atClockTime = (daysAhead, hours) => {
+        const date = new Date()
+        date.setDate(date.getDate() + daysAhead)
+        date.setHours(hours, 0, 0, 0)
+
+        while (date.getTime() < floor.getTime()) {
+            date.setDate(date.getDate() + 1)
+        }
+
+        return date
+    }
+
+    return [
+        { key: 'earliest', label: 'In 6 hours', date: floor },
+        { key: 'morning', label: 'Tomorrow morning', date: atClockTime(1, 9) },
+        { key: 'evening', label: 'Tomorrow evening', date: atClockTime(1, 19) },
+        { key: 'weekly', label: 'Next week', date: atClockTime(7, 9) }
+    ]
+})
+
+const scheduleDateTime = computed(() => {
+    if (!scheduleDay.value || !scheduleTime.value) return null
+
+    const parsed = new Date(`${scheduleDay.value}T${scheduleTime.value}`)
+
+    return isNaN(parsed.getTime()) ? null : parsed
+})
+
+const activePresetKey = computed(() => {
+    const current = scheduleDateTime.value
+
+    if (!current) return null
+
+    const match = schedulePresets.value.find(
+        (preset) => Math.abs(preset.date.getTime() - current.getTime()) < 60 * 1000
+    )
+
+    return match ? match.key : null
+})
+
+const applyPreset = (preset) => {
+    scheduleDay.value = toDayValue(preset.date)
+    scheduleTime.value = toTimeValue(preset.date)
+}
+
+const scheduleError = computed(() => {
+    if (!settings.schedule) return null
+
+    if (!scheduleDay.value || !scheduleTime.value) return null
+
+    const date = scheduleDateTime.value
+
+    if (!date) {
+        return 'Enter a valid date and time.'
+    }
+
+    if (date.getTime() < Date.now() + MIN_LEAD_MS) {
+        return 'Pick a time at least 6 hours from now.'
+    }
+
+    if (date.getTime() > Date.now() + MAX_HORIZON_MS) {
+        return 'Pick a time within the next 90 days.'
+    }
+
+    return null
+})
+
+const scheduleLabel = computed(() => {
+    const date = scheduleDateTime.value
+
+    if (!date) return null
+
+    return date.toLocaleString(undefined, {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+    })
+})
+
+const scheduleRelative = computed(() => {
+    const date = scheduleDateTime.value
+
+    if (!date) return null
+
+    const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
+    const minutes = Math.round((date.getTime() - Date.now()) / 60000)
+
+    if (Math.abs(minutes) < 60) {
+        return formatter.format(minutes, 'minute')
+    }
+
+    const hours = Math.round(minutes / 60)
+
+    if (Math.abs(hours) < 48) {
+        return formatter.format(hours, 'hour')
+    }
+
+    return formatter.format(Math.round(hours / 24), 'day')
+})
+
+const submitLabel = computed(() => {
+    if (isSubmitting.value) {
+        return settings.schedule ? 'Scheduling...' : 'Posting...'
+    }
+
+    return settings.schedule ? 'Schedule' : 'Post'
+})
+
 const canSubmit = computed(() => {
-    return uploadedFile.value
+    if (!uploadedFile.value) return false
+
+    if (settings.schedule) {
+        return !!scheduleDateTime.value && !scheduleError.value
+    }
+
+    return true
 })
 
 const filteredSuggestions = computed(() => {
@@ -1336,6 +1615,8 @@ const resetForm = () => {
     thumbnailFile.value = null
     thumbnailPreview.value = null
     thumbnailError.value = null
+    scheduleDay.value = ''
+    scheduleTime.value = ''
     privacy.value = 'everyone'
     settings.allowComments = true
     settings.allowDuets = true
@@ -1343,6 +1624,7 @@ const resetForm = () => {
     settings.allowEmbeds = true
     settings.containsAd = false
     settings.containsAi = false
+    settings.schedule = false
     showAutocomplete.value = false
     apiSuggestions.value = []
     isLoadingSuggestions.value = false
@@ -1419,8 +1701,8 @@ const handleTranscode = async () => {
         return null
     }
 
-    if (isSafari) {
-        return uploadedFile.value
+    if (!(await canEncodeAudio('aac'))) {
+        registerAacEncoder()
     }
 
     const originalFile = uploadedFile.value
@@ -1435,6 +1717,21 @@ const handleTranscode = async () => {
         source: new BlobSource(originalFile),
         formats: ALL_FORMATS
     })
+
+    const primaryAudioTrack = await input.getPrimaryAudioTrack()
+
+    if (primaryAudioTrack) {
+        console.debug('Audio:', {
+            codec: await primaryAudioTrack.getCodec(),
+            codecString: await primaryAudioTrack.getCodecParameterString(),
+            channels: await primaryAudioTrack.getNumberOfChannels(),
+            sampleRate: await primaryAudioTrack.getSampleRate(),
+            canDecode: await primaryAudioTrack.canDecode(),
+            canEncodeAAC: await canEncodeAudio('aac')
+        })
+    } else {
+        console.debug('Input has no audio track')
+    }
 
     try {
         isConverting.value = true
@@ -1489,6 +1786,14 @@ const handleTranscode = async () => {
             )
             return null
         }
+
+        console.debug(
+            'Discarded tracks:',
+            currentConversion.discardedTracks.map(({ track, reason }) => ({
+                type: track.isAudioTrack() ? 'audio' : 'other',
+                reason
+            }))
+        )
 
         currentConversion.onProgress = (p) => {
             transcodeProgress.value = Math.floor(p * 100)
@@ -1574,6 +1879,10 @@ const handleSubmit = async () => {
         formData.append('contains_ad', settings.containsAd ? 1 : 0)
         formData.append('contains_ai', settings.containsAi ? 1 : 0)
 
+        if (settings.schedule && scheduleDateTime.value) {
+            formData.append('scheduled_at', scheduleDateTime.value.toISOString())
+        }
+
         if (thumbnailFile.value) {
             formData.append('thumbnail', thumbnailFile.value)
         }
@@ -1611,8 +1920,10 @@ const handleSubmit = async () => {
         uploadProgress.value = 100
         await new Promise((resolve) => setTimeout(resolve, 300))
 
+        const wasScheduled = settings.schedule
+
         resetForm()
-        router.push('/studio/posts')
+        router.push(wasScheduled ? '/studio/scheduled' : '/studio/posts')
     } catch (error) {
         hasReceivedResponse = true
         if (progressInterval) {
