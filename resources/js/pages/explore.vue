@@ -216,7 +216,7 @@ const { fetchHashtags, setActiveHashtag, loadMore } = exploreStore
 const starterKitIndex = ref(0)
 
 const randomizeStarterKitIndex = () => {
-    const count = Math.min(6, currentVideos.value.length)
+    const count = Math.min(4, currentVideos.value.length)
     starterKitIndex.value = count > 0 ? Math.floor(Math.random() * count) : 0
 }
 
