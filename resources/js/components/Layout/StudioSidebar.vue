@@ -18,8 +18,10 @@
         >
             <div class="flex items-center gap-2">
                 <img width="32" src="/nav-logo.png" alt="Loops Logo" class="rounded-full" />
-                <span class="text-lg font-bold text-black dark:text-white">Loops</span>
-                <span class="text-lg font-light text-black dark:text-white">Studio</span>
+                <span>
+                    <span class="text-2xl font-bold text-black dark:text-white">Loops </span>
+                    <span class="text-2xl font-light text-black dark:text-white">Studio</span>
+                </span>
             </div>
             <button
                 v-if="isMobile && isOpen"
