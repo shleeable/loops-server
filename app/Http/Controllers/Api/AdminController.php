@@ -1571,6 +1571,7 @@ class AdminController extends Controller
         app(AdminAuditLogService::class)->logHashtagUpdate($request->user(), $hashtag, ['old' => $oldValues, 'new' => $validated]);
 
         app(ExploreService::class)->getTrendingTags(true);
+        app(ExploreService::class)->getGuestTagFeed($hashtag->id, true);
 
         Cache::forget(ExploreService::GUEST_TAG_FEED_KEY.$hashtag->id);
 
