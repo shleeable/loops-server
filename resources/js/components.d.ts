@@ -20,6 +20,7 @@ declare module 'vue' {
     AlertModal: typeof import('./components/AlertModal.vue')['default']
     AlertTriangleIcon: typeof import('./components/Layout/AlertTriangleIcon.vue')['default']
     AnimatedButton: typeof import('./components/AnimatedButton.vue')['default']
+    AuthBrandPanel: typeof import('./components/Auth/AuthBrandPanel.vue')['default']
     AuthModal: typeof import('./components/AuthModal.vue')['default']
     AutolinkedText: typeof import('./components/AutolinkedText.vue')['default']
     Avatar: typeof import('./components/Profile/Avatar.vue')['default']
