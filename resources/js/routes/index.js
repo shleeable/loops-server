@@ -318,6 +318,12 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
+            path: '/studio/scheduled',
+            name: 'studioScheduled',
+            component: () => import('~/pages/studio/scheduled.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/studio/playlists',
             name: 'playlists',
             component: () => import('~/pages/studio/playlists/index.vue'),
@@ -662,22 +668,28 @@ const router = createRouter({
 let authInitialized = false
 let authReady = null
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, from) => {
     const authStore = useAuthStore()
 
-    if (!authReady) authReady = initializeAuth()
+    const requiresAuth = to.matched.some(
+        (record) => record.meta.requiresAuth || record.meta.requiresAdmin
+    )
 
-    if (to.matched.some((r) => r.meta.requiresAuth || r.meta.requiresAdmin)) {
+    const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin)
+
+    if (!authReady) {
+        authReady = initializeAuth()
+    }
+
+    if (requiresAuth) {
         await authReady
     }
 
-    if (to.matched.some((record) => record.meta.requiresAdmin)) {
-        if (!authStore.user || !authStore.user.is_admin) {
-            next('/')
-            return
-        }
+    if (requiresAdmin && (!authStore.user || !authStore.user.is_admin)) {
+        return '/'
     }
-    authMiddleware(to, from, next)
+
+    return authMiddleware(to, from)
 })
 
 router.onError((error, to) => {

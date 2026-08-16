@@ -43,12 +43,27 @@ class VideoProcessingCompleteJob implements ShouldQueue
             $video->processing_status = 'completed';
             $video->save();
 
+            $scheduler = app(\App\Services\VideoScheduleService::class);
+
+            if ($scheduler->shouldHoldForSchedule($video)) {
+                return;
+            }
+
+            if ($video->isScheduled()) {
+                if ($scheduler->claim($video->id)) {
+                    $scheduler->publish($video->fresh());
+                }
+
+                return;
+            }
+
             $config = app(ConfigService::class);
 
             if ($config->federation() && ! $video->federated_at) {
                 app(FederationDispatcher::class)->dispatchVideoCreation($video);
 
                 $video->federated_at = now();
+                $video->ap_published_at = now();
                 $video->save();
             }
 

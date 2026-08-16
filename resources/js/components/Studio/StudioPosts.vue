@@ -1,14 +1,12 @@
 <template>
-    <div class="max-w-6xl mx-auto px-4 py-8">
-        <div
-            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6"
-        >
-            <div class="p-6">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="mb-6">
+            <div class="py-6">
                 <div
                     class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0"
                 >
-                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                        <div class="text-xl font-bold dark:text-white">
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0">
+                        <div class="text-3xl font-bold dark:text-white">
                             {{ $t('studio.myPosts') }}
                         </div>
                     </div>
@@ -108,23 +106,59 @@
                         >
                             <td class="px-6 py-4">
                                 <div class="flex items-center space-x-3">
-                                    <img
-                                        :src="post.media.thumbnail"
-                                        :alt="`${post.caption} thumbnail`"
-                                        class="w-12 h-12 rounded-lg object-cover"
-                                        onerror="
-                                            this.src = '/storage/videos/video-placeholder.jpg'
-                                            this.onerror = null
-                                        "
-                                    />
-                                    <div>
+                                    <div class="w-16">
+                                        <img
+                                            :src="post.media.thumbnail"
+                                            :alt="`${post.caption} thumbnail`"
+                                            class="w-12 h-12 rounded-lg object-cover"
+                                            onerror="
+                                                this.src = '/storage/videos/video-placeholder.jpg'
+                                                this.onerror = null
+                                            "
+                                        />
+                                    </div>
+                                    <div class="flex-1">
                                         <div
+                                            v-if="post.caption"
                                             class="text-sm font-medium text-gray-900 dark:text-gray-100"
                                         >
                                             {{ post.caption }}
                                         </div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">
-                                            {{ formatDate(post.created_at) }}
+                                        <div
+                                            v-else
+                                            class="text-sm font-medium italic text-gray-500"
+                                        >
+                                            No caption provided
+                                        </div>
+                                        <div
+                                            v-if="post.scheduled_at && post.status === 'scheduled'"
+                                        >
+                                            <p class="text-sm text-gray-700 dark:text-gray-300">
+                                                <span class="text-gray-500 dark:text-gray-400"
+                                                    >Scheduled to go live at
+                                                </span>
+                                                <span class="font-bold">{{
+                                                    absoluteTime(post.scheduled_at)
+                                                }}</span>
+                                            </p>
+                                            <p
+                                                class="text-xs text-gray-500 dark:text-gray-400 mt-0.5"
+                                            >
+                                                {{ relativeTime(post.scheduled_at) }} in the
+                                                {{ timezoneLabel }}
+                                                timezone.
+                                            </p>
+                                        </div>
+                                        <div
+                                            v-else
+                                            class="flex items-center gap-1 text-gray-500 dark:text-gray-400"
+                                        >
+                                            <span
+                                                class="bx bx-time text-gray-300 dark:text-gray-600"
+                                            ></span>
+                                            <span class="text-sm">
+                                                {{ formatDate(post.created_at) }}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -136,14 +170,14 @@
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                                 {{
-                                    post.status === 'processing' ? '-' : post.likes.toLocaleString()
+                                    post.status === 'published' ? post.likes.toLocaleString() : '-'
                                 }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                                 {{
-                                    post.status === 'processing'
-                                        ? '-'
-                                        : post.comments.toLocaleString()
+                                    post.status === 'published'
+                                        ? post.comments.toLocaleString()
+                                        : '-'
                                 }}
                             </td>
                             <td class="px-6 py-4">
@@ -162,6 +196,14 @@
                                     >
                                         {{ $t('common.edit') }}
                                     </button>
+
+                                    <router-link
+                                        v-if="post.status === 'scheduled'"
+                                        to="/studio/scheduled"
+                                        class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300 text-sm font-medium transition-colors cursor-pointer"
+                                    >
+                                        Manage
+                                    </router-link>
                                 </div>
                             </td>
                         </tr>
@@ -268,6 +310,7 @@ const videoStore = inject('videoStore')
 const { formatContentDate, formatDate } = useUtils()
 const showEditModal = ref(false)
 const currentVideo = computed(() => videoStore.video)
+const now = ref(Date.now())
 
 const filters = reactive({
     privacy: '',
@@ -298,6 +341,46 @@ const totalCount = computed(() => pagination.total)
 
 const canGoPrevious = computed(() => pagination.hasPrevious)
 const canGoNext = computed(() => pagination.hasMore)
+
+const timezoneLabel = computed(() => {
+    try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone
+    } catch (e) {
+        return 'your local time'
+    }
+})
+
+const absoluteTime = (value) => {
+    if (!value) return ''
+
+    return new Date(value).toLocaleString(undefined, {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+    })
+}
+
+const relativeTime = (value) => {
+    if (!value) return ''
+
+    const target = value instanceof Date ? value : new Date(value)
+    const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
+    const minutes = Math.round((target.getTime() - now.value) / 60000)
+
+    if (Math.abs(minutes) < 60) {
+        return formatter.format(minutes, 'minute')
+    }
+
+    const hours = Math.round(minutes / 60)
+
+    if (Math.abs(hours) < 48) {
+        return formatter.format(hours, 'hour')
+    }
+
+    return formatter.format(Math.round(hours / 24), 'day')
+}
 
 const debounce = (func, wait) => {
     let timeout
@@ -432,6 +515,8 @@ const getStatusBadgeClass = (status) => {
             return `${baseClasses} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`
         case 'processing':
             return `${baseClasses} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`
+        case 'scheduled':
+            return `${baseClasses} bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200`
         default:
             return `${baseClasses} bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200`
     }

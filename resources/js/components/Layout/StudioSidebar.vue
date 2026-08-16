@@ -93,15 +93,30 @@ const isMobile = computed(() => windowWidth.value < 1024)
 
 const sections = computed(() => {
     const manageLinks = [
-        { name: 'Analytics', path: '/studio/', icon: 'bx bx-bar-chart' },
         { name: t('studio.posts'), path: '/studio/posts', icon: 'bx bx-video' },
-        { name: t('studio.playlists'), path: '/studio/playlists', icon: 'bx bx-list-ul' }
+        { name: t('studio.playlists'), path: '/studio/playlists', icon: 'bx bx-list-ul' },
+        { name: 'Scheduled', path: '/studio/scheduled', icon: 'bx bx-timer' }
+    ]
+
+    const analyticsLinks = [{ name: 'Analytics', path: '/studio/', icon: 'bx bx-bar-chart' }]
+
+    const otherLinks = [
+        { name: 'Atom', path: '/dashboard/sharing', icon: 'bx bx-rss' },
+        { name: 'Embeds', path: '/dashboard/content', icon: 'bx bx-tab' }
     ]
 
     return [
         {
-            title: 'Manage',
+            title: 'Analytics',
+            links: analyticsLinks
+        },
+        {
+            title: 'Content',
             links: manageLinks
+        },
+        {
+            title: 'More',
+            links: otherLinks
         }
     ]
 })

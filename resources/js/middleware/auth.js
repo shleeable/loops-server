@@ -1,13 +1,20 @@
 import { useAuthStore } from '~/stores/auth'
 
-export function authMiddleware(to, from, next) {
+export function authMiddleware(to, from) {
     const authStore = useAuthStore()
 
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-        next({ name: 'login', query: { redirect: to.fullPath } })
-    } else if (to.meta.guestOnly && authStore.isAuthenticated) {
-        next({ name: 'dashboard' })
-    } else {
-        next()
+        return {
+            name: 'login',
+            query: { redirect: to.fullPath }
+        }
     }
+
+    if (to.meta.guestOnly && authStore.isAuthenticated) {
+        return {
+            name: 'dashboard'
+        }
+    }
+
+    return
 }

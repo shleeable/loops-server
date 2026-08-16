@@ -59,6 +59,7 @@ use App\Services\NotificationService;
 use App\Services\SanitizeService;
 use App\Services\UserActivityService;
 use App\Services\UserFilterService;
+use App\Services\VideoScheduleService;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -155,6 +156,12 @@ class VideoController extends Controller
             // @phpstan-ignore-next-line
             $model->media_metadata = $videoMeta;
             $model->save();
+
+            if ($request->filled('scheduled_at')) {
+                if (app(VideoScheduleService::class)->canSchedule($profile)) {
+                    app(VideoScheduleService::class)->schedule($model, now()->parse($request->scheduled_at)->utc());
+                }
+            }
 
             try {
                 $s3Path = $request->video->store('videos/'.$pid.'/'.$model->id, 's3');

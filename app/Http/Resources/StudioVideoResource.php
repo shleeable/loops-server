@@ -8,6 +8,7 @@ use App\Services\HashidService;
 use App\Services\VideoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
@@ -56,6 +57,25 @@ class StudioVideoResource extends JsonResource
             'is_sensitive' => (bool) $this->is_sensitive,
             'created_at' => $this->created_at->format('c'),
         ];
+
+        if ($this->scheduled_at && $this->status == 1) {
+
+            $thumb = url('/storage/videos/video-placeholder.jpg');
+            if ($this->has_thumb) {
+                if ($this->thumbnail) {
+                    $thumb = $this->thumbnail;
+                } elseif ($this->thumbnail_path) {
+                    $thumb = Storage::disk('s3')->url($this->thumbnail_path);
+                } else {
+                    $ext = pathinfo($this->vid, PATHINFO_EXTENSION);
+                    $url = str_replace('.'.$ext, '.jpg', $this->vid);
+                    $thumb = Storage::disk('s3')->url($url);
+                }
+            }
+            $res['media']['thumbnail'] = $thumb;
+            $res['status'] = 'scheduled';
+            $res['scheduled_at'] = $this->scheduled_at;
+        }
 
         if ($this->status === 2) {
             $res = array_merge([

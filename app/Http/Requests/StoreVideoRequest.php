@@ -70,6 +70,7 @@ class StoreVideoRequest extends FormRequest
             'alt_text' => 'nullable|sometimes|string|max:2000',
             'contains_ai' => 'nullable|boolean',
             'contains_ad' => 'nullable|boolean',
+            'scheduled_at' => 'sometimes|nullable|date',
             'lang' => [
                 'sometimes',
                 'string',

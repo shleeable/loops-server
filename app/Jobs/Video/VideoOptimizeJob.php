@@ -2,6 +2,7 @@
 
 namespace App\Jobs\Video;
 
+use App\Models\Video;
 use App\Services\VideoService;
 use FFMpeg\Format\Video\X264;
 use Illuminate\Bus\Queueable;
@@ -12,6 +13,7 @@ use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 
 class VideoOptimizeJob implements ShouldQueue
@@ -53,6 +55,8 @@ class VideoOptimizeJob implements ShouldQueue
             return;
         }
 
+        $isScheduled = (int) $video->publish_state === Video::PUBLISH_STATE_SCHEDULED;
+
         try {
             if (! Storage::disk('s3')->exists($video->vid)) {
                 throw new \Exception('Source video file not found on S3: '.$video->vid);
@@ -60,11 +64,16 @@ class VideoOptimizeJob implements ShouldQueue
 
             $maxDuration = 180;
             $ext = pathinfo($video->vid, PATHINFO_EXTENSION);
-            $name = str_replace('.'.$ext, '.720p.mp4', $video->vid);
+            $randomStr = Str::random(20);
+            $name = str_replace('.'.$ext, $randomStr.'.720p.mp4', $video->vid);
 
             if ($video->vid_optimized || Storage::disk('s3')->exists($name)) {
                 $video->has_processed = true;
-                $video->status = 2;
+
+                if (! $isScheduled) {
+                    $video->status = 2;
+                }
+
                 $video->save();
 
                 return;
@@ -203,7 +212,11 @@ class VideoOptimizeJob implements ShouldQueue
             $video->vid_optimized = $name;
             $video->has_processed = true;
             $video->has_audio = (bool) $hasAudio;
-            $video->status = 2;
+
+            if (! $isScheduled) {
+                $video->status = 2;
+            }
+
             $video->save();
 
             $media->cleanupTemporaryFiles();
@@ -240,6 +253,11 @@ class VideoOptimizeJob implements ShouldQueue
             $video->processing_error = 'Optimization: '.$exception->getMessage();
             $video->processing_failed_at = now();
             $video->save();
+
+            if ($video->isScheduled()) {
+                app(\App\Services\VideoScheduleService::class)
+                    ->markFailed($video, 'transcode_failed');
+            }
         }
 
         Log::error('Video optimization job permanently failed', [

@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\StudioController;
 use App\Http\Controllers\Api\UserPreferencesController;
 use App\Http\Controllers\Api\VideoController;
 use App\Http\Controllers\Api\VideoPlaylistController;
+use App\Http\Controllers\Api\VideoScheduleController;
 use App\Http\Controllers\Api\VideoSoundController;
 use App\Http\Controllers\Api\WebPublicController;
 use App\Http\Controllers\AppleAuthController;
@@ -189,6 +190,11 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/studio/analytics/shares', [StudioAnalyticsController::class, 'shares'])->middleware('auth:web,api');
     Route::get('/v1/studio/analytics/links', [StudioAnalyticsController::class, 'profileLinks'])->middleware('auth:web,api');
     Route::get('/v1/studio/analytics/summary', [StudioAnalyticsController::class, 'summary'])->middleware('auth:web,api');
+    Route::get('/v1/studio/scheduled', [VideoScheduleController::class, 'index'])->middleware('auth:web,api');
+    Route::get('/v1/studio/scheduled/count', [VideoScheduleController::class, 'pendingCount'])->middleware('auth:web,api');
+    Route::post('/v1/video/schedule/{id}', [VideoScheduleController::class, 'update'])->middleware('auth:web,api');
+    Route::delete('/v1/video/schedule/{id}', [VideoScheduleController::class, 'destroy'])->middleware('auth:web,api');
+    Route::post('/v1/video/publish/{id}', [VideoScheduleController::class, 'publishNow'])->middleware('auth:web,api');
 
     // Search
     Route::get('/v1/search', [SearchController::class, 'search'])->middleware(['auth:web,api', 'throttle:searchV1']);
@@ -365,6 +371,8 @@ Route::prefix('api')->group(function () {
     Route::get('/v1/video/comments/{id}', [WebPublicController::class, 'comments'])->middleware('throttle:api');
     Route::get('/v1/video/comments/{vid}/hidden', [VideoController::class, 'showHiddenComments'])->middleware('auth:web,api');
     Route::get('/v1/video/comments/{vid}/replies', [WebPublicController::class, 'commentsThread'])->middleware('throttle:api');
+    Route::post('/v1/video/repost/{id}', [VideoController::class, 'repost'])->middleware('auth:web,api');
+    Route::post('/v1/video/unrepost/{id}', [VideoController::class, 'unrepost'])->middleware('auth:web,api');
     Route::get('/v1/video/comments/{videoId}/comment/{commentId}', [WebPublicController::class, 'getCommentById'])->middleware('throttle:api');
     Route::get('/v1/video/comments/{videoId}/reply/{replyId}', [WebPublicController::class, 'getReplyById'])->middleware('throttle:api');
 

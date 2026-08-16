@@ -168,6 +168,14 @@ class Video extends Model
 
     public $guarded = [];
 
+    public const PUBLISH_STATE_DRAFT = 0;
+
+    public const PUBLISH_STATE_SCHEDULED = 1;
+
+    public const PUBLISH_STATE_PUBLISHED = 2;
+
+    public const PUBLISH_STATE_FAILED = 3;
+
     /**
      * Get the attributes that should be cast.
      *
@@ -201,6 +209,10 @@ class Video extends Model
             'has_hidden_comments' => 'boolean',
             'thumbnail_width' => 'integer',
             'thumbnail_height' => 'integer',
+            'scheduled_at' => 'datetime',
+            'publishing_at' => 'datetime',
+            'ap_published_at' => 'datetime',
+            'publish_state' => 'integer',
         ];
     }
 
@@ -229,6 +241,26 @@ class Video extends Model
     protected function scopeLocal(Builder $query): Builder
     {
         return $query->where('is_local', true);
+    }
+
+    public function isLive(): bool
+    {
+        return (int) $this->status === 2;
+    }
+
+    public function isScheduled(): bool
+    {
+        return $this->publish_state === self::PUBLISH_STATE_SCHEDULED && ! $this->isLive();
+    }
+
+    /**
+     * @param  Builder<Video>  $query
+     * @return Builder<Video>
+     */
+    public function scopeScheduled($query)
+    {
+        return $query->where('publish_state', self::PUBLISH_STATE_SCHEDULED)
+            ->where('status', '!=', 2);
     }
 
     /**

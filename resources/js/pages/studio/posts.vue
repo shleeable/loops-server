@@ -1,6 +1,8 @@
 <template>
     <StudioLayout>
-        <StudioPosts api-base="/api/v1/studio/posts" />
+        <div class="w-full min-h-screen bg-gray-50 dark:bg-gray-950">
+            <StudioPosts api-base="/api/v1/studio/posts" />
+        </div>
     </StudioLayout>
 </template>
 

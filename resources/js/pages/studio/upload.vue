@@ -693,7 +693,10 @@
                                 </div>
                             </div>
 
-                            <div class="w-full h-[1px] bg-gray-100 dark:bg-gray-700 my-6"></div>
+                            <div
+                                v-if="showSchedule"
+                                class="w-full h-[1px] bg-gray-100 dark:bg-gray-700 my-6"
+                            ></div>
 
                             <div v-if="showSchedule" class="space-y-4">
                                 <div class="flex items-center justify-between">
@@ -1099,7 +1102,7 @@ const isFFmpegLoaded = ref(false)
 const TRANSCODE_SAFETY = 0.85
 const AUDIO_BITRATE = 96000
 const MIN_LEAD_MS = 6 * 60 * 60 * 1000
-const MAX_HORIZON_MS = 90 * 24 * 60 * 60 * 1000
+const MAX_HORIZON_MS = 30 * 24 * 60 * 60 * 1000
 
 let currentConversion = null
 const currentIntervalId = null
@@ -1153,9 +1156,22 @@ const handleBeforeUnload = (e) => {
     }
 }
 
+const checkScheduleAllowed = async () => {
+    try {
+        const response = await axios.get('/api/v1/studio/scheduled/count')
+
+        if (response.data.can_schedule) {
+            showSchedule.value = true
+        }
+    } catch (err) {
+        console.log(err)
+    }
+}
+
 onMounted(async () => {
     window.addEventListener('beforeunload', handleBeforeUnload)
     await appStore.ensureLanguages()
+    await checkScheduleAllowed()
 })
 
 onBeforeUnmount(() => {
@@ -1272,7 +1288,7 @@ const scheduleError = computed(() => {
     }
 
     if (date.getTime() > Date.now() + MAX_HORIZON_MS) {
-        return 'Pick a time within the next 90 days.'
+        return 'Pick a time within the next 30 days.'
     }
 
     return null
