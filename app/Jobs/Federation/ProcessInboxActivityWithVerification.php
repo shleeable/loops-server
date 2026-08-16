@@ -397,6 +397,10 @@ class ProcessInboxActivityWithVerification implements ShouldQueue
             return false;
         }
 
+        if (! isset($actorData['inbox']) || empty($actorData['inbox'])) {
+            return false;
+        }
+
         $actorInbox = app(SanitizeService::class)->url($actorData['inbox'], true);
         if (! $actorInbox) {
             return false;
