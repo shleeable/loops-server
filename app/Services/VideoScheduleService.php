@@ -237,6 +237,10 @@ class VideoScheduleService
     {
         try {
             app(FederationDispatcher::class)->dispatchVideoCreation($video);
+            $video->federated_at = now();
+            $video->ap_published_at = now();
+            $video->save();
+
         } catch (\Throwable $e) {
             Log::error('[schedule] federation dispatch failed', [
                 'video_id' => $video->id,
