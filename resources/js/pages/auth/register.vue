@@ -1,145 +1,211 @@
 <template>
-    <FullLayout>
-        <div
-            class="w-full flex items-center justify-center px-4"
-            style="min-height: calc(100dvh - 60px)"
-        >
-            <div
-                v-if="registrationClosed"
-                class="max-w-md w-full bg-white/80 dark:bg-gray-900/80 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl p-8 text-center backdrop-blur"
-            >
-                <div
-                    class="mx-auto mb-4 flex size-30 items-center justify-center rounded-full bg-red-50 dark:bg-red-900/30"
-                >
-                    <LockClosedIcon class="size-20 text-red-500" />
-                </div>
+    <BlankLayout>
+        <div class="w-full h-screen grid grid-cols-1 lg:grid-cols-2">
+            <AuthBrandPanel
+                :heading="$t('auth.brandHeadingRegister')"
+                :subheading="$t('auth.brandSubheadingRegister')"
+            />
 
-                <h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    {{ $t('auth.registrationsAreCurrentlyClosed') }}
-                </h1>
+            <div class="flex items-center justify-center bg-white px-6 py-16 dark:bg-gray-950">
+                <div class="w-full max-w-sm">
+                    <div class="mb-10 flex flex-col items-center lg:hidden">
+                        <img src="/img/logo-light.svg" alt="Loops" class="h-12 w-auto" />
+                        <span
+                            class="mt-3 text-2xl font-bold tracking-tight text-gray-900 dark:text-white"
+                        >
+                            Loops
+                        </span>
+                    </div>
 
-                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    {{ $t('auth.thisServerIsntAccepting') }}
-                </p>
+                    <div v-if="registrationClosed">
+                        <div
+                            class="flex size-16 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-900/30"
+                        >
+                            <LockClosedIcon class="size-8 text-red-500" />
+                        </div>
 
-                <div class="flex gap-3">
-                    <AnimatedButton
-                        class="flex-grow-1 mt-5"
-                        variant="outline"
-                        pill
-                        @click="router.push('/')"
-                    >
-                        <div class="flex gap-2 items-center">
-                            <ChevronLeftIcon class="w-5 h-5" />
+                        <h2
+                            class="mt-6 text-3xl font-bold tracking-tight text-gray-900 dark:text-white"
+                        >
+                            {{ $t('auth.registrationsAreCurrentlyClosed') }}
+                        </h2>
+
+                        <p class="mt-2 text-gray-500 dark:text-gray-400">
+                            {{ $t('auth.thisServerIsntAccepting') }}
+                        </p>
+
+                        <div class="mt-8 flex flex-col gap-3">
+                            <AnimatedButton
+                                v-if="showLoopsVideo"
+                                class="w-full"
+                                variant="primaryGradient"
+                                size="lg"
+                                pill
+                                @click="redirectToLoopsVideo"
+                            >
+                                <div class="flex gap-2 items-center justify-center">
+                                    <UserPlusIcon class="w-5 h-5 text-white" />
+                                    {{ $t('auth.joinLoopsVideo') }}
+                                </div>
+                            </AnimatedButton>
+
+                            <AnimatedButton
+                                class="w-full"
+                                variant="outline"
+                                size="lg"
+                                pill
+                                @click="router.push('/')"
+                            >
+                                <div class="flex gap-2 items-center justify-center">
+                                    <ChevronLeftIcon class="w-5 h-5" />
+                                    {{ $t('common.goBackHome') }}
+                                </div>
+                            </AnimatedButton>
+                        </div>
+                    </div>
+
+                    <div v-else-if="registrationCurated">
+                        <div
+                            class="flex size-16 items-center justify-center rounded-2xl bg-green-50 dark:bg-green-900/30"
+                        >
+                            <ShieldCheckIcon class="size-8 text-green-500" />
+                        </div>
+
+                        <h2
+                            class="mt-6 text-3xl font-bold tracking-tight text-gray-900 dark:text-white"
+                        >
+                            {{ $t('auth.curatedOnboarding') }}
+                        </h2>
+
+                        <p class="mt-2 text-gray-500 dark:text-gray-400">
+                            {{ $t('auth.curatedOnboardingDesc') }}
+                        </p>
+
+                        <div class="mt-8 flex flex-col gap-3">
+                            <AnimatedButton
+                                class="w-full"
+                                variant="primaryGradient"
+                                size="lg"
+                                pill
+                                @click="router.push('/auth/curated')"
+                            >
+                                <div class="flex gap-2 items-center justify-center">
+                                    <UserPlusIcon class="w-5 h-5 text-white" />
+                                    {{ $t('auth.applyToJoin') }}
+                                </div>
+                            </AnimatedButton>
+
+                            <AnimatedButton
+                                class="w-full"
+                                variant="outline"
+                                size="lg"
+                                pill
+                                @click="router.push('/')"
+                            >
+                                <div class="flex gap-2 items-center justify-center">
+                                    <ChevronLeftIcon class="w-5 h-5" />
+                                    {{ $t('common.goBackHome') }}
+                                </div>
+                            </AnimatedButton>
+                        </div>
+                    </div>
+
+                    <div v-else>
+                        <h2 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                            {{ $t('auth.createYourAccount') }}
+                        </h2>
+
+                        <p class="mt-2 text-gray-500 dark:text-gray-400">
+                            {{ $t('auth.createYourAccountDesc') }}
+                        </p>
+
+                        <div class="mt-8 flex flex-col gap-3">
+                            <AnimatedButton
+                                class="w-full"
+                                variant="primaryGradient"
+                                size="lg"
+                                pill
+                                @click="openAuth('register')"
+                            >
+                                <div class="flex gap-2 items-center justify-center">
+                                    <UserPlusIcon class="w-5 h-5 text-white" />
+                                    {{ $t('auth.createAnAccount') }}
+                                </div>
+                            </AnimatedButton>
+
+                            <AnimatedButton
+                                class="w-full"
+                                variant="outline"
+                                size="lg"
+                                pill
+                                @click="openAuth('login')"
+                            >
+                                {{ $t('auth.alreadyHaveAnAccount') }}
+                            </AnimatedButton>
+                        </div>
+
+                        <router-link
+                            to="/"
+                            class="mt-8 flex items-center justify-center gap-2 text-sm font-medium text-gray-500 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                        >
+                            <ChevronLeftIcon class="h-4 w-4" />
                             {{ $t('common.goBackHome') }}
-                        </div>
-                    </AnimatedButton>
-
-                    <AnimatedButton
-                        v-if="showLoopsVideo"
-                        class="flex-grow-1 mt-5"
-                        variant="primaryGradient"
-                        pill
-                        @click="redirectToLoopsVideo"
-                    >
-                        <div class="flex gap-2 items-center">
-                            <UserPlusIcon class="w-5 h-5 text-white" />
-                            Join Loops.video
-                        </div>
-                    </AnimatedButton>
+                        </router-link>
+                    </div>
                 </div>
             </div>
-
-            <div
-                v-else-if="registrationCurated"
-                class="max-w-md w-full bg-white/80 dark:bg-gray-900/80 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl p-8 text-center backdrop-blur"
-            >
-                <div
-                    class="mx-auto mb-4 flex size-30 items-center justify-center rounded-full bg-green-50 dark:bg-green-900/30"
-                >
-                    <ShieldCheckIcon class="size-20 text-green-500" />
-                </div>
-
-                <h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    {{ $t('auth.curatedOnboarding') }}
-                </h1>
-
-                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    {{ $t('auth.curatedOnboardingDesc') }}
-                </p>
-
-                <AnimatedButton
-                    class="w-full mt-10"
-                    variant="primaryGradient"
-                    pill
-                    @click="router.push('/auth/curated')"
-                    size="lg"
-                >
-                    <div class="flex gap-2 items-center">
-                        <UserPlusIcon class="w-5 h-5 text-white" />
-                        {{ $t('auth.applyToJoin') }}
-                    </div>
-                </AnimatedButton>
-
-                <AnimatedButton
-                    class="w-full mt-5"
-                    variant="outline"
-                    size="lg"
-                    pill
-                    @click="router.push('/')"
-                >
-                    <div class="flex gap-2 items-center">
-                        <ChevronLeftIcon class="w-5 h-5" />
-                        {{ $t('common.goBackHome') }}
-                    </div>
-                </AnimatedButton>
-            </div>
-
-            <router-link
-                v-else
-                to="/"
-                class="text-lg text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-700 px-6 py-2 rounded-xl"
-            >
-                {{ $t('common.goBackHome') }}
-            </router-link>
         </div>
-    </FullLayout>
+    </BlankLayout>
 </template>
 
 <script setup>
-import { onMounted, inject, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import FullLayout from '@/layouts/FullLayout.vue'
+import { onMounted, watch, inject, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import AuthBrandPanel from '@/components/Auth/AuthBrandPanel.vue'
 import AnimatedButton from '@/components/AnimatedButton.vue'
 import {
-    CheckCircleIcon,
     ChevronLeftIcon,
     LockClosedIcon,
     ShieldCheckIcon,
     UserPlusIcon
 } from '@heroicons/vue/24/outline'
+import BlankLayout from '@/layouts/BlankLayout.vue'
 
 const authStore = inject('authStore')
 const appConfig = inject('appConfig')
 
-const route = useRoute()
 const router = useRouter()
 
-const registrationClosed = computed(() => appConfig && appConfig.registration_mode === 'closed')
-const registrationCurated = computed(() => appConfig && appConfig.registration_mode === 'curated')
-const showLoopsVideo = computed(() => appConfig && appConfig.app.url != 'https://loops.video')
+const registrationClosed = computed(() => appConfig?.registration_mode === 'closed')
+const registrationCurated = computed(() => appConfig?.registration_mode === 'curated')
+const registrationOpen = computed(() => !registrationClosed.value && !registrationCurated.value)
+const showLoopsVideo = computed(() => appConfig?.app?.url !== 'https://loops.video')
 
 const redirectToLoopsVideo = () => {
     window.location.href = 'https://loops.video/register'
 }
 
+const openAuth = (mode) => {
+    authStore.openAuthModal(mode)
+}
+
 onMounted(() => {
     if (authStore.authenticated) {
-        router.push('/')
-    } else if (registrationClosed.value || registrationCurated.value) {
-    } else {
         router.replace('/')
-        authStore.openAuthModal('register')
+        return
+    }
+
+    if (registrationOpen.value) {
+        openAuth('register')
     }
 })
+
+watch(
+    () => authStore.authenticated,
+    (value) => {
+        if (value) {
+            router.replace('/')
+        }
+    }
+)
 </script>
