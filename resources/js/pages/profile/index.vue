@@ -90,7 +90,9 @@
                 "
                 class="flex flex-col items-center justify-center py-16"
             >
-                <div class="text-6xl mb-4">📹</div>
+                <div class="bg-gray-100 p-6 rounded-full mb-4 dark:bg-gray-800 dark:text-white">
+                    <Squares2X2Icon class="w-13 h-13" />
+                </div>
                 <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
                     {{ $t('profile.noVideosYet') }}
                 </h3>
@@ -192,7 +194,7 @@ import { useAuthStore } from '~/stores/auth'
 import { useUtils } from '@/composables/useUtils'
 import { useI18n, Translation as I18nT } from 'vue-i18n'
 import { useHead } from '@unhead/vue'
-import { BookmarkIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
+import { BookmarkIcon, ExclamationTriangleIcon, Squares2X2Icon } from '@heroicons/vue/24/outline'
 
 const { formatCount } = useUtils()
 const authStore = useAuthStore()

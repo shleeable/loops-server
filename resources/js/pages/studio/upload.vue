@@ -1980,14 +1980,18 @@ const handleSubmit = async () => {
                     'A server error occurred while uploading your video. Please try again later.'
             }
         } else if (status >= 400 && status < 500) {
-            if (responseData?.errors && typeof responseData.errors === 'object') {
+            if (status == 403 && responseData.error.message === 'This action is unauthorized.') {
+                errorTitle = 'Permission Error'
+                errorMessage =
+                    'You are restricted from uploading any new content. For more information, please contact us.'
+            } else if (responseData?.errors && typeof responseData.errors === 'object') {
                 errors.value = responseData.errors
                 const firstErrorArray = Object.values(responseData.errors)[0]
                 errorMessage = Array.isArray(firstErrorArray) ? firstErrorArray[0] : firstErrorArray
             } else if (responseData?.message) {
                 errorMessage = responseData.message
             } else if (responseData?.error) {
-                errorMessage = responseData.error
+                errorMessage = responseData.error?.message
             }
         } else if (errorMsg === 'Network Error') {
             errorTitle = 'Network Error'
@@ -1998,7 +2002,7 @@ const handleSubmit = async () => {
         }
 
         let errorHtml = `<div class="space-y-3">
-            <p class="text-gray-700">${errorMessage}</p>`
+            <p class="text-gray-700 dark:text-gray-400">${errorMessage}</p>`
 
         if (status) {
             errorHtml += `<p class="text-sm text-gray-500">Error code: ${status}</p>`
