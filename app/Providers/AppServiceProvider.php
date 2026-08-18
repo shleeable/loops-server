@@ -38,6 +38,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton('observatory', function () {
             return 'https://beacon.joinloops.org';
         });
+
+        $this->app->singleton('denylist_url', function () {
+            return 'https://about.iftas.org/wp-content/uploads/2025/10/iftas-dni-latest.csv';
+        });
     }
 
     /**

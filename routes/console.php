@@ -19,6 +19,10 @@ Schedule::command('admin:check-activity')->everySixHours(15)->runInBackground()-
 Schedule::command('app:purge-old-activities')->daily()->at('16:20')->runInBackground()->onOneServer();
 Schedule::command('loops:publish-scheduled')->everyTenMinutes()->withoutOverlapping(5)->runInBackground()->onOneServer();
 
+if (config('denylist.enabled')) {
+    Schedule::command('instances:sync-denylist')->dailyAt('04:15')->withoutOverlapping()->onOneServer()->runInBackground();
+}
+
 if (config('loops.admin_dashboard.autoUpdate')) {
     Schedule::command('admin:refresh-dashboard-30d')->everyThirtyMinutes()->runInBackground()->onOneServer();
 }
