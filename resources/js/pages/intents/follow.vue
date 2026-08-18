@@ -35,7 +35,7 @@
                             <AnimatedButton
                                 class="w-full"
                                 size="lg"
-                                @click="authStore.openAuthModal('login', fullPath)"
+                                @click="authStore.openAuthModal('login', returnPath)"
                             >
                                 <div class="flex items-center justify-center gap-2">
                                     <UserIcon class="w-5 h-5" />
@@ -94,6 +94,7 @@
                             </AnimatedButton>
 
                             <button
+                                v-if="objectUrl"
                                 @click="fetchActor"
                                 class="w-full py-3 text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 font-medium transition-colors cursor-pointer"
                             >
@@ -117,7 +118,7 @@
                     <div class="p-6">
                         <div class="flex items-start space-x-4 mb-6">
                             <img
-                                :src="actor.avatar || '/storage/avatars/default.jpg'"
+                                :src="safeAvatar"
                                 :alt="actor.username"
                                 class="w-16 h-16 rounded-full object-cover border-2 border-gray-200 dark:border-slate-700"
                             />
@@ -206,9 +207,10 @@
                             </template>
 
                             <a
-                                :href="actor.url"
+                                v-if="safeActorUrl"
+                                :href="safeActorUrl"
                                 target="_blank"
-                                rel="noopener noreferrer"
+                                rel="noopener noreferrer nofollow ugc"
                                 class="block w-full py-3 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-900 dark:text-slate-100 font-medium rounded-lg transition-colors text-center cursor-pointer flex items-center justify-center gap-2"
                             >
                                 <ArrowTopRightOnSquareIcon class="w-5 h-5" />
@@ -234,8 +236,8 @@
 import { ref, onMounted, inject, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useHashids } from '@/composables/useHashids'
 import { useUtils } from '@/composables/useUtils'
+import { useSafeUrl } from '@/composables/useSafeUrl'
 import axios from '@/plugins/axios'
 import AnimatedButton from '@/components/AnimatedButton.vue'
 import {
@@ -251,17 +253,22 @@ import {
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const appStore = inject('appStore')
 const profileStore = inject('profileStore')
-const { decodeHashid } = useHashids()
 const axiosInstance = axios.getAxiosInstance()
 const { formatCount } = useUtils()
+const { parseSafeUrl, isSameOrigin, safeExternalUrl, safeInternalPath } = useSafeUrl()
 
 const actor = ref(null)
 const isLoading = ref(true)
 const isSubmitting = ref(false)
 const error = ref(null)
-const fullPath = computed(() => route.fullPath)
+
+const objectUrl = computed(() => parseSafeUrl(route.query.object))
+const returnPath = computed(() => safeInternalPath(route.fullPath))
+const safeActorUrl = computed(() => safeExternalUrl(actor.value?.url))
+const safeAvatar = computed(() =>
+    safeExternalUrl(actor.value?.avatar, '/storage/avatars/default.jpg')
+)
 
 const getHeaderText = computed(() => {
     if (profileStore.isSelf) {
@@ -276,18 +283,25 @@ const getHeaderText = computed(() => {
     return 'Follow User'
 })
 
+const resolveRedirect = (value) => {
+    const url = parseSafeUrl(value)
+    if (!url) return null
+    if (isSameOrigin(url)) return url
+    if (objectUrl.value && objectUrl.value.origin === url.origin) return url
+    return null
+}
+
 const fetchActor = async () => {
     try {
         isLoading.value = true
         error.value = null
 
-        const objectUrl = route.query.object
-        if (!objectUrl) {
-            throw new Error('Missing object parameter')
+        if (!objectUrl.value) {
+            throw new Error('Missing or invalid object parameter')
         }
 
         const response = await axiosInstance.post('/api/v1/intents/follow/account', {
-            query: encodeURI(objectUrl)
+            query: objectUrl.value.href
         })
 
         if (![200, 201].includes(response.status)) {
@@ -318,7 +332,7 @@ const fetchActor = async () => {
 
 const handleFollow = async () => {
     if (!authStore.isAuthenticated) {
-        authStore.openAuthModal('login', fullPath.value)
+        authStore.openAuthModal('login', returnPath.value)
         return
     }
 
@@ -341,7 +355,7 @@ const handleFollow = async () => {
 
 const handleUnfollow = async () => {
     if (!authStore.isAuthenticated) {
-        authStore.openAuthModal('login', fullPath.value)
+        authStore.openAuthModal('login', returnPath.value)
         return
     }
 
@@ -358,7 +372,7 @@ const handleUnfollow = async () => {
 
 const handleUndoRequest = async () => {
     if (!authStore.isAuthenticated) {
-        authStore.openAuthModal('login', fullPath.value)
+        authStore.openAuthModal('login', returnPath.value)
         return
     }
 
@@ -374,25 +388,33 @@ const handleUndoRequest = async () => {
 }
 
 const handleSuccessRedirect = () => {
-    const onSuccess = route.query['on-success']
-    if (onSuccess === '(close)') {
+    if (route.query['on-success'] === '(close)') {
         window.close()
-    } else if (onSuccess) {
-        window.location.href = onSuccess
-    } else {
-        router.push(`/@${actor.value.username}`)
+        return
     }
+
+    const target = resolveRedirect(route.query['on-success'])
+    if (target) {
+        window.location.assign(target.href)
+        return
+    }
+
+    router.push(`/@${encodeURIComponent(actor.value.username)}`)
 }
 
 const handleCancel = () => {
-    const onCancel = route.query['on-cancel']
-    if (onCancel === '(close)') {
+    if (route.query['on-cancel'] === '(close)') {
         window.close()
-    } else if (onCancel) {
-        window.location.href = onCancel
-    } else {
-        router.push('/')
+        return
     }
+
+    const target = resolveRedirect(route.query['on-cancel'])
+    if (target) {
+        window.location.assign(target.href)
+        return
+    }
+
+    router.push('/')
 }
 
 onMounted(() => {
