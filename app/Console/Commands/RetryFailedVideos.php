@@ -17,7 +17,7 @@ class RetryFailedVideos extends Command
 
     public function handle()
     {
-        $query = Video::where('is_local', true)->where('processing_status', 'failed');
+        $query = Video::where('is_local', true)->where('processing_status', 'failed')->whereNull('scheduled_at');
 
         if ($this->option('id')) {
             $query->where('id', $this->option('id'));
