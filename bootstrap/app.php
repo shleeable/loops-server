@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->throttleWithRedis();
         $middleware->statefulApi();
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
@@ -96,7 +97,6 @@ return Application::configure(basePath: dirname(__DIR__))
             ConnectionException::class,
             ConnectException::class,
             RequestException::class,
-
         ]);
 
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
