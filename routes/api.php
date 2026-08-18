@@ -195,6 +195,7 @@ Route::prefix('api')->group(function () {
     Route::post('/v1/video/schedule/{id}', [VideoScheduleController::class, 'update'])->middleware('auth:web,api');
     Route::delete('/v1/video/schedule/{id}', [VideoScheduleController::class, 'destroy'])->middleware('auth:web,api');
     Route::post('/v1/video/publish/{id}', [VideoScheduleController::class, 'publishNow'])->middleware('auth:web,api');
+    Route::post('/v1/studio/posts/{id}/thumbnail', [VideoController::class, 'updateThumbnail'])->middleware('auth:web');
 
     // Search
     Route::get('/v1/search', [SearchController::class, 'search'])->middleware(['auth:web,api', 'throttle:searchV1']);

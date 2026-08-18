@@ -232,13 +232,13 @@
                         </div>
 
                         <template v-if="authStore.isAuthenticated">
-                            <button
+                            <router-link
                                 v-if="userId === currentVideo.account.id"
-                                @click="showEditModal = true"
+                                :to="`/studio/posts/${currentVideo.id}/edit`"
                                 class="flex items-center bg-[#F02C56] text-white border dark:border-red-400 hover:bg-[#F02C56]/70 rounded-md px-4 sm:px-8 py-2 sm:py-[6px] text-sm sm:text-base font-medium whitespace-nowrap flex-shrink-0 cursor-pointer"
                             >
                                 {{ $t('post.edit') }}
-                            </button>
+                            </router-link>
                             <template v-else>
                                 <button
                                     v-if="!profileStore.isFollowing"

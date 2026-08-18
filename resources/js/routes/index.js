@@ -348,6 +348,12 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
+            path: '/studio/posts/:id/edit',
+            name: 'studio.posts.edit',
+            component: () => import('~/pages/studio/editPost.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/login',
             name: 'login',
             component: () => import('~/pages/auth/login.vue'),

@@ -3,6 +3,7 @@
 namespace App\Jobs\Video;
 
 use App\Models\Video;
+use App\Services\VideoService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -41,17 +42,20 @@ class VideoCustomThumbnailJob implements ShouldQueue
             }
 
             $image = Image::decodeBinary($contents);
-            $image->cover(1080, 1920);
+            $image->cover(720, 1280);
 
-            $tempPath = sys_get_temp_dir().'/'.uniqid($this->video->id.'_thumb_').'.webp';
+            $width = $image->width();
+            $height = $image->height();
+
+            $tempPath = sys_get_temp_dir().'/'.uniqid($this->video->id.'_thumb_'.Str::random(12)).'.webp';
             $image->encodeUsingFormat(
                 Format::WEBP,
-                quality: 95,
+                quality: 80,
                 strip: true,
             )->save($tempPath);
 
             $pid = $this->video->profile_id;
-            $fileName = 'thumb_'.Str::random(8).'.webp';
+            $fileName = Str::random(40).'_thumb_'.Str::random(8).'.webp';
             $s3Path = 'videos/'.$pid.'/'.$this->video->id.'/'.$fileName;
 
             $disk->put($s3Path, file_get_contents($tempPath), 'public');
@@ -64,10 +68,12 @@ class VideoCustomThumbnailJob implements ShouldQueue
 
             $this->video->has_thumb = true;
             $this->video->thumbnail_path = $s3Path;
-            $this->video->thumbnail_width = 1080;
-            $this->video->thumbnail_height = 1920;
+            $this->video->thumbnail_width = $width;
+            $this->video->thumbnail_height = $height;
             $this->video->thumbnail_mime = 'image/webp';
             $this->video->save();
+
+            VideoService::getMediaData($this->video->id, true);
 
         } catch (\Exception $e) {
             if (config('logging.dev_log')) {

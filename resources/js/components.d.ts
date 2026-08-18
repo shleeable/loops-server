@@ -153,6 +153,7 @@ declare module 'vue' {
     TagNsfwWarning: typeof import('./components/Tag/TagNsfwWarning.vue')['default']
     TextInput: typeof import('./components/Form/TextInput.vue')['default']
     ThemeToggleButton: typeof import('./components/Layout/ThemeToggleButton.vue')['default']
+    ThumbnailUploader: typeof import('./components/Studio/ThumbnailUploader.vue')['default']
     TiptapEditor: typeof import('./components/Admin/TiptapEditor.vue')['default']
     ToggleSwitch: typeof import('./components/Form/ToggleSwitch.vue')['default']
     Tooltip: typeof import('./components/Tooltip.vue')['default']

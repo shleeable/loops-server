@@ -189,13 +189,14 @@
                                     >
                                         {{ $t('studio.view') }}
                                     </router-link>
-                                    <button
+
+                                    <router-link
                                         v-if="post.status === 'published'"
-                                        @click="editPost(post)"
+                                        :to="`/studio/posts/${post.id}/edit`"
                                         class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300 text-sm font-medium transition-colors cursor-pointer"
                                     >
                                         {{ $t('common.edit') }}
-                                    </button>
+                                    </router-link>
 
                                     <router-link
                                         v-if="post.status === 'scheduled'"

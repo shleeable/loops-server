@@ -13,6 +13,7 @@ use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\StoreCommentUpdateRequest;
 use App\Http\Requests\StoreVideoRequest;
 use App\Http\Requests\UpdateVideoRequest;
+use App\Http\Requests\UpdateVideoThumbnailRequest;
 use App\Http\Resources\CommentCaptionEditResource;
 use App\Http\Resources\CommentReplyCaptionEditResource;
 use App\Http\Resources\CommentReplyResource;
@@ -65,6 +66,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class VideoController extends Controller
 {
@@ -437,6 +439,60 @@ class VideoController extends Controller
         AccountService::del($pid);
 
         return $this->success();
+    }
+
+    public function updateThumbnail(UpdateVideoThumbnailRequest $request, string $id)
+    {
+        $video = Video::published()
+            ->whereProfileId($request->user()->profile_id)
+            ->findOrFail($id);
+
+        $this->authorize('update', $video);
+
+        $disk = 's3';
+        $file = $request->file('thumbnail');
+
+        $path = $this->buildThumbnailPath($video);
+
+        Storage::disk($disk)->put($path, file_get_contents($file->getRealPath()), 'public');
+
+        $previous = $video->thumbnail_path;
+
+        [$width, $height] = getimagesize($file->getRealPath()) ?: [null, null];
+
+        if ($previous && $previous !== $path && ! Str::contains($previous, 'video-placeholder')) {
+            Storage::disk($disk)->delete($previous);
+        }
+
+        $video->thumbnail_path = $path;
+        $video->thumbnail_width = $width;
+        $video->thumbnail_height = $height;
+        $video->has_thumb = true;
+        $video->thumbnail_mime = $file->getMimeType();
+        $video->save();
+
+        $video->refresh();
+        VideoService::getMediaData($video->id, true);
+
+        VideoCustomThumbnailJob::dispatch($video);
+
+        return new VideoResource($video);
+    }
+
+    protected function buildThumbnailPath(Video $video): string
+    {
+        $existing = $video->thumbnail_path;
+
+        $directory = $existing && str_contains($existing, '/')
+            ? dirname($existing)
+            : sprintf('videos/%s/%s', $video->profile_id, $video->id);
+
+        return sprintf(
+            '%s/%s_thumb_%s.jpg',
+            $directory,
+            Str::random(40),
+            Str::random(8)
+        );
     }
 
     /**
