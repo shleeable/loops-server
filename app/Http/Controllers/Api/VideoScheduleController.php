@@ -29,7 +29,16 @@ class VideoScheduleController extends Controller
 
     public function pendingCount(Request $request)
     {
-        $count = app(VideoScheduleService::class)->pendingCount($request->user()->profile);
+        $user = $request->user();
+        if (! $user->can_upload) {
+            return response()->json([
+                'max_allowed' => 0,
+                'pending_count' => 0,
+                'can_schedule' => false,
+            ]);
+        }
+
+        $count = app(VideoScheduleService::class)->pendingCount($user->profile);
 
         return response()->json([
             'max_allowed' => VideoScheduleService::MAX_PENDING,
